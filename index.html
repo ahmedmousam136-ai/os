@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuraScale OS — Clinic Operating System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  /* ── PALETTE ────────────────────────────────── */
+  --bg-void:        #060c09;
+  --bg-base:        #0b1a12;       /* Deep Forest Green */
+  --bg-surface:     #0f1f16;
+  --bg-card:        #0F1110;       /* Charcoal/Near Black — secondary sections */
+  --bg-elevated:    #151c13;
+  --bg-glass:       rgba(11,26,18,0.85);
+
+  --forest-900:     #060c09;
+  --forest-800:     #0b1a12;
+  --forest-700:     #0F1110;
+  --forest-600:     #122018;
+  --forest-500:     #1a2e1f;
+  --forest-400:     #243828;
+  --forest-300:     #2e4534;
+  --forest-200:     #3a5441;
+
+  --gold:           #C29B47;       /* Muted Gold / Warm Ochre */
+  --gold-dim:       #9a7a34;
+  --gold-ghost:     rgba(194,155,71,0.10);
+  --gold-glow:      rgba(194,155,71,0.18);
+
+  --teal-cta:       #134E4A;       /* Deep Teal CTA */
+  --teal-hover:     #1a6560;
+  --teal-active:    #0e3b38;
+
+  --text-white:     #FFFFFF;       /* Primary headings */
+  --text-cream:     #E8ECE9;       /* Body / subtitles */
+  --text-muted:     #7a9080;
+  --text-faint:     #435549;
+  --text-gold:      #C29B47;
+  --text-cta:       #FFFFFF;
+
+  --border-subtle:  rgba(255,255,255,0.05);
+  --border-mid:     rgba(255,255,255,0.09);
+  --border-forest:  rgba(58,84,65,0.5);
+  --border-gold:    rgba(194,155,71,0.22);
+  --border-cta:     rgba(19,78,74,0.6);
+
+  --sidebar-w:      248px;
+  --topbar-h:       64px;
+
+  --font-display:   'Fraunces', serif;
+  --font-body:      'DM Sans', sans-serif;
+  --font-mono:      'DM Mono', monospace;
+
+  --r-xs:  4px;
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  14px;
+  --r-xl:  20px;
+
+  --shadow-card:    0 4px 28px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4);
+  --shadow-cta:     0 2px 14px rgba(19,78,74,0.35);
+}
+
+html,body{height:100%;background:var(--bg-void);color:var(--text-cream);font-family:var(--font-body);font-size:14px;line-height:1.65;overflow:hidden}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--forest-300);border-radius:3px}
+
+/* ── LAYOUT ─────────────────────────────────── */
+.app-shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ─────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;
+  background:var(--bg-base);
+  border-right:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;overflow:hidden;
+  position:relative;z-index:10;
+}
+.sidebar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:200px;
+  background:linear-gradient(180deg,rgba(194,155,71,0.04) 0%,transparent 100%);
+  pointer-events:none;
+}
+
+.sidebar-brand{
+  padding:22px 20px 18px;
+  border-bottom:1px solid var(--border-subtle);
+  display:flex;align-items:center;gap:12px;
+}
+.brand-mark{
+  width:36px;height:36px;border-radius:var(--r-md);
+  background:var(--teal-cta);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:700;font-size:16px;color:#fff;
+  letter-spacing:-0.3px;flex-shrink:0;
+  border:1px solid rgba(255,255,255,0.12);
+}
+.brand-text{display:flex;flex-direction:column;gap:2px}
+.brand-name{font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--text-white);letter-spacing:0.1px;line-height:1}
+.brand-sub{font-size:9px;font-weight:500;color:var(--text-gold);letter-spacing:1.8px;text-transform:uppercase;opacity:0.8}
+
+.clinic-switcher{
+  margin:14px 12px 0;
+  padding:10px 14px;
+  background:var(--bg-card);
+  border:1px solid var(--border-forest);
+  border-radius:var(--r-md);
+  display:flex;align-items:center;gap:9px;cursor:pointer;
+  transition:border-color 0.2s;
+}
+.clinic-switcher:hover{border-color:var(--border-gold)}
+.clinic-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.clinic-name{font-size:12px;font-weight:500;color:var(--text-cream);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clinic-arrow{font-size:10px;color:var(--text-muted)}
+
+.nav-section{padding:18px 0 4px}
+.nav-label{
+  padding:0 20px;
+  font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-faint);margin-bottom:6px;
+  font-family:var(--font-mono);
+}
+.nav-item{
+  display:flex;align-items:center;gap:11px;
+  padding:9px 14px 9px 20px;margin:1px 8px;
+  border-radius:var(--r-md);
+  cursor:pointer;transition:all 0.15s;
+  text-decoration:none;color:var(--text-muted);
+  font-size:13px;font-weight:400;position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text-cream)}
+.nav-item.active{
+  background:rgba(194,155,71,0.08);
+  color:var(--gold);
+  border:1px solid var(--border-gold);
+}
+.nav-item.active::before{
+  content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+  width:2px;height:16px;background:var(--gold);border-radius:0 2px 2px 0;
+}
+.nav-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.nav-badge{
+  margin-left:auto;
+  background:rgba(194,155,71,0.12);color:var(--gold);
+  font-size:10px;font-weight:500;
+  padding:2px 7px;border-radius:20px;
+  font-family:var(--font-mono);
+}
+.nav-badge.muted{background:rgba(255,255,255,0.05);color:var(--text-muted)}
+
+.sidebar-footer{
+  margin-top:auto;padding:12px;
+  border-top:1px solid var(--border-subtle);
+}
+.user-card{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:var(--r-md);
+  cursor:pointer;transition:background 0.15s;
+}
+.user-card:hover{background:var(--bg-surface)}
+.user-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--teal-cta);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:600;font-size:11px;color:#fff;
+  flex-shrink:0;border:1px solid rgba(255,255,255,0.1);
+}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:12px;font-weight:500;color:var(--text-white);line-height:1.3}
+.user-role{font-size:10px;color:var(--text-muted);line-height:1.3}
+
+/* ── MAIN ────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg-void)}
+
+.topbar{
+  height:var(--topbar-h);min-height:var(--topbar-h);
+  background:var(--bg-base);
+  border-bottom:1px solid var(--border-subtle);
+  display:flex;align-items:center;padding:0 28px;gap:16px;
+}
+.topbar-title{
+  font-family:var(--font-display);
+  font-weight:600;font-size:17px;
+  color:var(--text-white);flex:1;
+  letter-spacing:-0.2px;
+}
+.topbar-subtitle{font-family:var(--font-body);font-size:12px;color:var(--text-muted);font-weight:300;margin-left:8px;font-style:italic}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+
+.search-bar{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-card);
+  border:1px solid var(--border-forest);
+  border-radius:var(--r-lg);
+  padding:8px 14px;width:240px;
+  transition:border-color 0.2s;
+}
+.search-bar:focus-within{border-color:var(--border-gold)}
+.search-bar input{background:transparent;border:none;outline:none;color:var(--text-cream);font-family:var(--font-body);font-size:13px;flex:1;min-width:0}
+.search-bar input::placeholder{color:var(--text-faint)}
+.search-icon{color:var(--text-faint);font-size:14px}
+
+.topbar-btn{
+  width:36px;height:36px;border-radius:var(--r-md);
+  background:var(--bg-card);border:1px solid var(--border-forest);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--text-muted);font-size:15px;
+  transition:all 0.15s;position:relative;
+}
+.topbar-btn:hover{border-color:var(--border-gold);color:var(--text-cream)}
+.notif-dot{
+  position:absolute;top:8px;right:8px;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--gold);border:1.5px solid var(--bg-base);
+}
+
+/* CTA BUTTON */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 18px;border-radius:var(--r-md);
+  font-family:var(--font-body);font-size:13px;font-weight:500;
+  cursor:pointer;border:1px solid transparent;
+  transition:all 0.18s;white-space:nowrap;letter-spacing:0.1px;
+}
+.btn-primary{
+  background:var(--teal-cta);color:var(--text-cta);
+  border-color:rgba(255,255,255,0.08);
+  box-shadow:var(--shadow-cta);
+}
+.btn-primary:hover{background:var(--teal-hover);transform:translateY(-1px);box-shadow:0 4px 18px rgba(19,78,74,0.45)}
+.btn-primary:active{background:var(--teal-active);transform:translateY(0)}
+.btn-ghost{
+  background:transparent;color:var(--text-muted);
+  border-color:var(--border-forest);
+}
+.btn-ghost:hover{background:var(--bg-card);color:var(--text-cream);border-color:var(--border-gold)}
+.btn-gold{
+  background:var(--gold-ghost);color:var(--gold);
+  border-color:var(--border-gold);
+}
+.btn-gold:hover{background:rgba(194,155,71,0.16)}
+
+/* ── CONTENT ─────────────────────────────────── */
+.content{flex:1;overflow-y:auto;padding:28px;display:flex;flex-direction:column;gap:28px}
+.page{display:none;flex-direction:column;gap:24px}
+.page.active{display:flex}
+
+/* ── STAT CARDS ──────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat-card{
+  background:var(--bg-card);
+  border:1px solid var(--border-forest);
+  border-radius:var(--r-lg);padding:20px;
+  position:relative;overflow:hidden;
+  transition:border-color 0.2s,transform 0.2s;cursor:default;
+}
+.stat-card:hover{border-color:rgba(194,155,71,0.25);transform:translateY(-1px)}
+.stat-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(194,155,71,0.12),transparent);
+}
+.stat-card.gold-accent{border-color:rgba(194,155,71,0.2)}
+.stat-card.gold-accent::after{background:linear-gradient(90deg,transparent,rgba(194,155,71,0.3),transparent)}
+
+.stat-icon{
+  width:34px;height:34px;border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;margin-bottom:14px;
+}
+.si-gold{background:var(--gold-ghost);color:var(--gold)}
+.si-teal{background:rgba(19,78,74,0.25);color:#5dbdb6}
+.si-blue{background:rgba(40,80,160,0.15);color:#7aa0e8}
+.si-rose{background:rgba(180,60,80,0.12);color:#e07b8a}
+.si-muted{background:rgba(255,255,255,0.04);color:var(--text-muted)}
+
+.stat-val{font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--text-white);line-height:1;margin-bottom:4px;letter-spacing:-0.5px}
+.stat-label{font-size:11px;color:var(--text-muted);font-weight:300;letter-spacing:0.3px;text-transform:uppercase}
+.stat-delta{
+  position:absolute;top:18px;right:16px;
+  font-size:10px;font-weight:500;font-family:var(--font-mono);
+  padding:3px 8px;border-radius:20px;
+}
+.delta-up{background:rgba(19,78,74,0.2);color:#5dbdb6;border:1px solid rgba(93,189,182,0.2)}
+.delta-down{background:rgba(180,60,60,0.1);color:#e07b8a;border:1px solid rgba(224,123,138,0.2)}
+
+/* ── CARDS ───────────────────────────────────── */
+.card{
+  background:var(--bg-card);
+  border:1px solid var(--border-forest);
+  border-radius:var(--r-lg);overflow:hidden;
+}
+.card-header{
+  padding:16px 20px;border-bottom:1px solid var(--border-subtle);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text-white);letter-spacing:-0.1px}
+.card-meta{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.card-body{padding:20px}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+
+/* ── PAGE HEADER ─────────────────────────────── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:4px}
+.page-h1{font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-white);line-height:1.2;letter-spacing:-0.5px}
+.page-sub{font-size:13px;color:var(--text-muted);margin-top:5px;font-weight:300}
+
+/* ── APPOINTMENT LIST ────────────────────────── */
+.appt-list{display:flex;flex-direction:column}
+.appt-item{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 20px;border-bottom:1px solid var(--border-subtle);
+  transition:background 0.12s;cursor:pointer;
+}
+.appt-item:last-child{border-bottom:none}
+.appt-item:hover{background:rgba(194,155,71,0.03)}
+.appt-time{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);min-width:48px}
+.appt-avatar{
+  width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:600;font-size:11px;
+  flex-shrink:0;
+}
+.av-forest{background:rgba(19,78,74,0.3);color:#5dbdb6;border:1px solid rgba(93,189,182,0.15)}
+.av-gold{background:var(--gold-ghost);color:var(--gold);border:1px solid var(--border-gold)}
+.av-blue{background:rgba(40,80,160,0.15);color:#7aa0e8;border:1px solid rgba(122,160,232,0.15)}
+.av-rose{background:rgba(180,60,80,0.12);color:#e07b8a;border:1px solid rgba(224,123,138,0.15)}
+.av-sage{background:rgba(80,120,80,0.15);color:#8fc48f;border:1px solid rgba(143,196,143,0.15)}
+
+.appt-info{flex:1;min-width:0}
+.appt-name{font-size:13px;font-weight:500;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appt-type{font-size:11px;color:var(--text-muted);margin-top:1px;font-weight:300}
+
+/* ── BADGES ──────────────────────────────────── */
+.badge{
+  font-size:9px;font-weight:600;letter-spacing:0.7px;
+  padding:3px 9px;border-radius:20px;
+  text-transform:uppercase;white-space:nowrap;font-family:var(--font-mono);
+}
+.badge-confirmed{background:rgba(19,78,74,0.2);color:#5dbdb6;border:1px solid rgba(93,189,182,0.2)}
+.badge-pending{background:var(--gold-ghost);color:var(--gold);border:1px solid var(--border-gold)}
+.badge-arrived{background:rgba(60,130,80,0.15);color:#7fc47f;border:1px solid rgba(127,196,127,0.2)}
+.badge-missed{background:rgba(180,60,60,0.1);color:#e07b8a;border:1px solid rgba(224,123,138,0.15)}
+.badge-followup{background:rgba(80,80,180,0.12);color:#9a9ae0;border:1px solid rgba(154,154,224,0.2)}
+.badge-vip{background:linear-gradient(135deg,rgba(194,155,71,0.2),rgba(154,122,52,0.12));color:var(--gold);border:1px solid var(--border-gold)}
+
+/* ── METRICS ─────────────────────────────────── */
+.metric-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-subtle)}
+.metric-row:last-child{border-bottom:none}
+.metric-name{font-size:11px;color:var(--text-muted);min-width:130px;font-weight:300;letter-spacing:0.2px}
+.metric-val{font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--text-white);min-width:36px;text-align:right}
+.metric-bar-wrap{flex:1;margin:0 14px;height:3px;background:var(--bg-elevated);border-radius:2px;overflow:hidden}
+.metric-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal-cta),#1a6560)}
+.metric-bar-fill.gold{background:linear-gradient(90deg,var(--gold-dim),var(--gold))}
+
+/* ── PROGRESS ────────────────────────────────── */
+.progress-track{height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal-cta),#1d6e6a);transition:width 0.6s ease}
+.progress-fill.gold{background:linear-gradient(90deg,var(--gold-dim),var(--gold))}
+
+/* ── CHART BARS ──────────────────────────────── */
+.chart-wrap{height:80px;display:flex;align-items:flex-end;gap:3px;padding-top:8px}
+.chart-bar{flex:1;background:rgba(255,255,255,0.05);border-radius:2px 2px 0 0;transition:background 0.2s;min-height:4px}
+.chart-bar:hover{background:rgba(194,155,71,0.2)}
+.chart-bar.active{background:linear-gradient(180deg,var(--gold),var(--gold-dim))}
+.chart-bar.partial{background:rgba(194,155,71,0.25)}
+
+/* ── ACTIVITY FEED ───────────────────────────── */
+.activity-list{display:flex;flex-direction:column}
+.activity-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 20px;border-bottom:1px solid var(--border-subtle);
+  transition:background 0.12s;
+}
+.activity-item:last-child{border-bottom:none}
+.activity-item:hover{background:rgba(255,255,255,0.01)}
+.activity-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.ad-gold{background:var(--gold)}
+.ad-teal{background:#5dbdb6}
+.ad-red{background:#e07b8a}
+.ad-sage{background:#8fc48f}
+.activity-content{flex:1}
+.activity-msg{font-size:12px;color:var(--text-muted);line-height:1.6}
+.activity-msg strong{color:var(--text-cream);font-weight:500}
+.activity-time{font-size:10px;color:var(--text-faint);margin-top:2px;font-family:var(--font-mono)}
+
+/* ── WORKFLOW STEPS ──────────────────────────── */
+.workflow-flow{display:flex;flex-direction:column}
+.workflow-step{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:15px 20px;border-bottom:1px solid var(--border-subtle);
+  transition:background 0.12s;
+}
+.workflow-step:last-child{border-bottom:none}
+.workflow-step:hover{background:rgba(194,155,71,0.02)}
+.wf-num{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:10px;font-weight:600;
+  flex-shrink:0;margin-top:1px;border:1px solid;
+}
+.wf-num.done{background:rgba(19,78,74,0.2);border-color:rgba(93,189,182,0.3);color:#5dbdb6}
+.wf-num.active{background:var(--gold-ghost);border-color:var(--border-gold);color:var(--gold)}
+.wf-num.pending{background:rgba(255,255,255,0.03);border-color:var(--border-forest);color:var(--text-faint)}
+.wf-info{flex:1}
+.wf-title{font-size:13px;font-weight:500;color:var(--text-white);margin-bottom:2px}
+.wf-desc{font-size:11px;color:var(--text-muted);line-height:1.5;font-weight:300}
+.wf-timing{font-family:var(--font-mono);font-size:10px;color:var(--gold);margin-top:4px;opacity:0.8}
+
+/* TOGGLE */
+.wf-toggle{
+  width:34px;height:18px;border-radius:9px;border:none;cursor:pointer;
+  position:relative;transition:background 0.2s;flex-shrink:0;margin-top:5px;
+}
+.wf-toggle.on{background:var(--teal-cta)}
+.wf-toggle.off{background:var(--bg-elevated)}
+.wf-toggle::after{
+  content:'';position:absolute;top:3px;width:12px;height:12px;
+  border-radius:50%;background:#fff;transition:left 0.2s;
+}
+.wf-toggle.on::after{left:19px}
+.wf-toggle.off::after{left:3px}
+
+/* ── PATIENT TABLE ───────────────────────────── */
+.ptable{width:100%;border-collapse:collapse}
+.ptable th{
+  padding:10px 16px;text-align:left;
+  font-size:9px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--text-faint);border-bottom:1px solid var(--border-subtle);
+  font-family:var(--font-mono);white-space:nowrap;
+}
+.ptable td{
+  padding:12px 16px;border-bottom:1px solid var(--border-subtle);
+  font-size:13px;color:var(--text-muted);transition:background 0.1s;
+}
+.ptable tr:last-child td{border-bottom:none}
+.ptable tr:hover td{background:rgba(194,155,71,0.03);color:var(--text-cream)}
+.ptable td:first-child{color:var(--text-cream)}
+.ptable .patient-cell{display:flex;align-items:center;gap:10px}
+.mono{font-family:var(--font-mono);font-size:11px}
+
+/* ── REVIEW LIST ─────────────────────────────── */
+.review-item{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:14px 20px;border-bottom:1px solid var(--border-subtle);
+}
+.review-item:last-child{border-bottom:none}
+.review-stars{display:flex;gap:1px;font-size:12px;color:var(--gold)}
+.review-info{flex:1}
+.review-name{font-size:13px;font-weight:500;color:var(--text-white)}
+.review-date{font-size:10px;color:var(--text-faint);margin-top:2px;font-family:var(--font-mono)}
+
+/* ── TABS ────────────────────────────────────── */
+.tabs{display:flex;gap:2px;background:var(--bg-card);border:1px solid var(--border-forest);border-radius:var(--r-lg);padding:3px}
+.tab{
+  padding:6px 14px;border-radius:var(--r-md);
+  font-size:12px;font-weight:400;cursor:pointer;
+  color:var(--text-faint);transition:all 0.15s;
+  border:1px solid transparent;white-space:nowrap;
+}
+.tab.active{background:var(--bg-surface);color:var(--text-cream);border-color:var(--border-forest)}
+.tab:hover:not(.active){color:var(--text-muted)}
+
+/* ── WA ACTIONS ──────────────────────────────── */
+.wa-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wa-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:12px;background:var(--bg-surface);
+  border:1px solid var(--border-forest);border-radius:var(--r-md);
+  cursor:pointer;transition:all 0.15s;
+}
+.wa-btn:hover{background:var(--bg-elevated);border-color:var(--border-gold)}
+.wa-btn-icon{
+  width:32px;height:32px;border-radius:var(--r-xs);
+  background:rgba(19,78,74,0.2);color:#5dbdb6;
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+}
+.wa-btn-title{font-size:12px;font-weight:500;color:var(--text-white);line-height:1.3}
+.wa-btn-sub{font-size:10px;color:var(--text-faint);margin-top:1px;font-weight:300}
+
+/* ── HERO CARD ───────────────────────────────── */
+.hero-card{
+  background:var(--bg-card);
+  border:1px solid var(--border-forest);
+  border-radius:var(--r-xl);
+  padding:28px;position:relative;overflow:hidden;
+}
+.hero-card::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(194,155,71,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 10%,rgba(194,155,71,0.25) 50%,transparent 90%);
+}
+
+/* ── GLOW CARD ───────────────────────────────── */
+.glow-card{
+  background:var(--bg-surface);
+  border:1px solid var(--border-forest);
+  border-radius:var(--r-lg);padding:18px;
+}
+.glow-card.gold-tint{border-color:var(--border-gold);background:rgba(194,155,71,0.03)}
+
+/* ── CHIP ────────────────────────────────────── */
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:20px;
+  font-size:10px;font-weight:500;
+  background:var(--bg-elevated);color:var(--text-muted);
+  border:1px solid var(--border-subtle);font-family:var(--font-mono);
+}
+.chip.gold{background:var(--gold-ghost);color:var(--gold);border-color:var(--border-gold)}
+.chip.teal{background:rgba(19,78,74,0.2);color:#5dbdb6;border-color:rgba(93,189,182,0.2)}
+
+/* ── FORM ────────────────────────────────────── */
+.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.form-label{font-size:9px;font-weight:600;letter-spacing:1.4px;color:var(--text-faint);text-transform:uppercase;font-family:var(--font-mono)}
+.form-input{
+  padding:10px 14px;background:var(--bg-surface);
+  border:1px solid var(--border-forest);border-radius:var(--r-md);
+  color:var(--text-cream);font-family:var(--font-body);font-size:13px;
+  outline:none;transition:border-color 0.15s;
+}
+.form-input:focus{border-color:var(--border-gold)}
+.form-input::placeholder{color:var(--text-faint)}
+select.form-input{cursor:pointer;appearance:none}
+
+/* ── NOTIFICATION PANEL ──────────────────────── */
+.notif-panel{
+  position:absolute;top:calc(var(--topbar-h) + 8px);right:28px;
+  width:300px;background:var(--bg-elevated);
+  border:1px solid var(--border-forest);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);z-index:100;overflow:hidden;display:none;
+}
+.notif-panel.visible{display:block}
+.notif-panel-head{padding:12px 16px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between}
+.notif-panel-title{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--text-white)}
+.notif-clear{font-size:10px;color:var(--gold);cursor:pointer;font-family:var(--font-mono)}
+.notif-entry{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border-subtle);cursor:pointer;transition:background 0.1s}
+.notif-entry:last-child{border-bottom:none}
+.notif-entry:hover{background:rgba(255,255,255,0.02)}
+.notif-entry-dot{width:6px;height:6px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.notif-entry-msg{font-size:12px;color:var(--text-muted);line-height:1.5}
+.notif-entry-msg strong{color:var(--text-cream)}
+.notif-entry-time{font-size:10px;color:var(--text-faint);margin-top:2px;font-family:var(--font-mono)}
+
+/* ── ONBOARDING ──────────────────────────────── */
+.ob-step{
+  background:var(--bg-card);border:1px solid var(--border-forest);
+  border-radius:var(--r-lg);padding:22px;
+  display:flex;align-items:center;gap:18px;margin-bottom:10px;
+  transition:all 0.2s;
+}
+.ob-step:last-child{margin-bottom:0}
+.ob-step.done{border-color:rgba(93,189,182,0.15)}
+.ob-check{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;border:1.5px solid;
+}
+.ob-check.done{background:rgba(19,78,74,0.15);border-color:rgba(93,189,182,0.3);color:#5dbdb6}
+.ob-check.next{background:var(--gold-ghost);border-color:var(--border-gold);color:var(--gold)}
+.ob-check.wait{background:rgba(255,255,255,0.02);border-color:var(--border-forest);color:var(--text-faint)}
+.ob-info{flex:1}
+.ob-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text-white);margin-bottom:3px}
+.ob-desc{font-size:12px;color:var(--text-muted);font-weight:300}
+
+/* ── TABLE WRAP ──────────────────────────────── */
+.table-wrap{overflow-x:auto}
+
+/* ── DIVIDER ─────────────────────────────────── */
+.divider{border:none;border-top:1px solid var(--border-subtle);margin:4px 0}
+
+/* ── LEGEND ──────────────────────────────────── */
+.legend-list{display:flex;flex-direction:column;gap:8px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted)}
+.legend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── DONUT ───────────────────────────────────── */
+.donut-wrap{display:flex;justify-content:center;align-items:center;position:relative;height:140px}
+.donut-svg{width:140px;height:140px}
+.donut-center{position:absolute;text-align:center}
+.donut-pct{font-family:var(--font-display);font-size:26px;font-weight:600;color:var(--text-white);line-height:1}
+.donut-lbl{font-size:10px;color:var(--text-muted);margin-top:2px;font-family:var(--font-mono);letter-spacing:0.5px}
+
+/* ── FADE IN ─────────────────────────────────── */
+.fade-in{animation:fadeIn 0.28s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--forest-300)}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">A</div>
+      <div class="brand-text">
+        <div class="brand-name">AuraScale</div>
+        <div class="brand-sub">OS Platform</div>
+      </div>
+    </div>
+
+    <div class="clinic-switcher" onclick="switchClinic()">
+      <div class="clinic-dot"></div>
+      <div class="clinic-name">Lumina Derma Clinic</div>
+      <div class="clinic-arrow">⌄</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a class="nav-item active" onclick="showPage('dashboard')">
+        <div class="nav-icon">⬡</div><span>Dashboard</span>
+      </a>
+      <a class="nav-item" onclick="showPage('appointments')">
+        <div class="nav-icon">◷</div><span>Appointments</span>
+        <div class="nav-badge">4</div>
+      </a>
+      <a class="nav-item" onclick="showPage('patients')">
+        <div class="nav-icon">◑</div><span>Patients</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Automation</div>
+      <a class="nav-item" onclick="showPage('reminders')">
+        <div class="nav-icon">◌</div><span>Reminders</span>
+        <div class="nav-badge muted">2</div>
+      </a>
+      <a class="nav-item" onclick="showPage('whatsapp')">
+        <div class="nav-icon">◎</div><span>WhatsApp</span>
+      </a>
+      <a class="nav-item" onclick="showPage('followups')">
+        <div class="nav-icon">↻</div><span>Follow-Ups</span>
+        <div class="nav-badge">6</div>
+      </a>
+      <a class="nav-item" onclick="showPage('reviews')">
+        <div class="nav-icon">✦</div><span>Reviews</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Insights</div>
+      <a class="nav-item" onclick="showPage('analytics')">
+        <div class="nav-icon">◈</div><span>Analytics</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Clinic</div>
+      <a class="nav-item" onclick="showPage('onboarding')">
+        <div class="nav-icon">◻</div><span>Setup Guide</span>
+        <div class="nav-badge">3</div>
+      </a>
+      <a class="nav-item" onclick="alert('Settings coming soon')">
+        <div class="nav-icon">⚙</div><span>Settings</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">DR</div>
+        <div class="user-info">
+          <div class="user-name">Dr. Riya Mehta</div>
+          <div class="user-role">Clinic Owner · Admin</div>
+        </div>
+        <span style="font-size:10px;color:var(--text-faint)">⌄</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">
+        Good morning, Dr. Riya
+        <span class="topbar-subtitle">Monday, 18 May 2026</span>
+      </div>
+      <div class="topbar-actions">
+        <div class="search-bar">
+          <span class="search-icon">⌕</span>
+          <input type="text" placeholder="Search patients, appointments…">
+        </div>
+        <div class="topbar-btn" onclick="toggleNotif()">
+          🔔<div class="notif-dot"></div>
+        </div>
+        <div class="topbar-btn">⊕</div>
+        <button class="btn btn-primary" onclick="showPage('appointments')">+ New Appointment</button>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION PANEL -->
+    <div class="notif-panel" id="notif-panel">
+      <div class="notif-panel-head">
+        <div class="notif-panel-title">Notifications</div>
+        <div class="notif-clear">Mark all read</div>
+      </div>
+      <div class="notif-entry">
+        <div class="notif-entry-dot" style="background:#5dbdb6"></div>
+        <div>
+          <div class="notif-entry-msg"><strong>Priya Sharma</strong> confirmed her 11:30 AM appointment</div>
+          <div class="notif-entry-time">5 min ago</div>
+        </div>
+      </div>
+      <div class="notif-entry">
+        <div class="notif-entry-dot" style="background:var(--gold)"></div>
+        <div>
+          <div class="notif-entry-msg"><strong>3 follow-up reminders</strong> due to be sent today</div>
+          <div class="notif-entry-time">22 min ago</div>
+        </div>
+      </div>
+      <div class="notif-entry">
+        <div class="notif-entry-dot" style="background:#e07b8a"></div>
+        <div>
+          <div class="notif-entry-msg"><strong>Ankit Rao</strong> missed his appointment — recovery prompt ready</div>
+          <div class="notif-entry-time">1 hr ago</div>
+        </div>
+      </div>
+      <div class="notif-entry">
+        <div class="notif-entry-dot" style="background:#9a9ae0"></div>
+        <div>
+          <div class="notif-entry-msg"><strong>Google Review received</strong> — 5 stars from Meena Patel</div>
+          <div class="notif-entry-time">2 hr ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="page active fade-in" id="page-dashboard">
+
+        <div class="hero-card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px">
+            <div>
+              <div style="font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Clinic Health Score</div>
+              <div style="font-family:var(--font-display);font-size:44px;font-weight:600;color:var(--text-white);line-height:1;letter-spacing:-1px">87<span style="font-size:22px;color:var(--text-faint);font-weight:300">/100</span></div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:8px;font-weight:300">Your clinic is performing well · <span style="color:var(--gold)">3 items need attention</span></div>
+            </div>
+            <div style="display:flex;gap:32px;padding-top:4px">
+              <div style="text-align:center">
+                <div style="font-family:var(--font-display);font-size:24px;font-weight:600;color:#5dbdb6;letter-spacing:-0.5px">94%</div>
+                <div style="font-size:10px;color:var(--text-faint);margin-top:3px;font-family:var(--font-mono);letter-spacing:0.5px;text-transform:uppercase">Retention</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--gold);letter-spacing:-0.5px">4.8★</div>
+                <div style="font-size:10px;color:var(--text-faint);margin-top:3px;font-family:var(--font-mono);letter-spacing:0.5px;text-transform:uppercase">Google</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-white);letter-spacing:-0.5px">12</div>
+                <div style="font-size:10px;color:var(--text-faint);margin-top:3px;font-family:var(--font-mono);letter-spacing:0.5px;text-transform:uppercase">Today</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:20px">
+            <div class="progress-track" style="height:5px">
+              <div class="progress-fill" style="width:87%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon si-teal">◑</div>
+            <div class="stat-val">247</div>
+            <div class="stat-label">Total Patients</div>
+            <div class="stat-delta delta-up">+18 this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon si-blue">◷</div>
+            <div class="stat-val">12</div>
+            <div class="stat-label">Appointments Today</div>
+            <div class="stat-delta delta-up">+2 vs yesterday</div>
+          </div>
+          <div class="stat-card gold-accent">
+            <div class="stat-icon si-gold">✦</div>
+            <div class="stat-val">4.8</div>
+            <div class="stat-label">Google Rating</div>
+            <div class="stat-delta delta-up">+0.2 this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon si-rose">↻</div>
+            <div class="stat-val">6</div>
+            <div class="stat-label">Follow-Ups Pending</div>
+            <div class="stat-delta delta-down">3 overdue</div>
+          </div>
+        </div>
+
+        <div class="three-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Today's Schedule</div>
+              <span class="badge badge-confirmed">18 May</span>
+            </div>
+            <div class="appt-list">
+              <div class="appt-item">
+                <div class="appt-time">09:00</div>
+                <div class="appt-avatar av-forest">PS</div>
+                <div class="appt-info">
+                  <div class="appt-name">Priya Sharma</div>
+                  <div class="appt-type">Skin Consultation</div>
+                </div>
+                <span class="badge badge-arrived">Arrived</span>
+              </div>
+              <div class="appt-item">
+                <div class="appt-time">10:30</div>
+                <div class="appt-avatar av-gold">NK</div>
+                <div class="appt-info">
+                  <div class="appt-name">Neha Kapoor</div>
+                  <div class="appt-type">Laser Treatment</div>
+                </div>
+                <span class="badge badge-confirmed">Confirmed</span>
+              </div>
+              <div class="appt-item">
+                <div class="appt-time">11:30</div>
+                <div class="appt-avatar av-blue">AM</div>
+                <div class="appt-info">
+                  <div class="appt-name">Amir Malhotra</div>
+                  <div class="appt-type">Botox Follow-up</div>
+                </div>
+                <span class="badge badge-confirmed">Confirmed</span>
+              </div>
+              <div class="appt-item">
+                <div class="appt-time">14:00</div>
+                <div class="appt-avatar av-rose">SR</div>
+                <div class="appt-info">
+                  <div class="appt-name">Sneha Rao <span class="badge badge-vip" style="margin-left:6px">VIP</span></div>
+                  <div class="appt-type">Annual Checkup</div>
+                </div>
+                <span class="badge badge-pending">Pending</span>
+              </div>
+              <div class="appt-item">
+                <div class="appt-time">15:30</div>
+                <div class="appt-avatar av-sage">VJ</div>
+                <div class="appt-info">
+                  <div class="appt-name">Vikram Joshi</div>
+                  <div class="appt-type">Derma Review</div>
+                </div>
+                <span class="badge badge-missed">Missed</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Quick Actions</div></div>
+              <div class="card-body" style="padding:12px">
+                <div class="wa-actions">
+                  <div class="wa-btn" onclick="showPage('whatsapp')">
+                    <div class="wa-btn-icon">📱</div>
+                    <div><div class="wa-btn-title">Send Reminder</div><div class="wa-btn-sub">via WhatsApp</div></div>
+                  </div>
+                  <div class="wa-btn" onclick="showPage('reviews')">
+                    <div class="wa-btn-icon" style="background:var(--gold-ghost);color:var(--gold)">★</div>
+                    <div><div class="wa-btn-title">Request Review</div><div class="wa-btn-sub">Google auto-send</div></div>
+                  </div>
+                  <div class="wa-btn" onclick="showPage('followups')">
+                    <div class="wa-btn-icon" style="background:rgba(80,80,180,0.12);color:#9a9ae0">↻</div>
+                    <div><div class="wa-btn-title">Follow-Up</div><div class="wa-btn-sub">6 pending</div></div>
+                  </div>
+                  <div class="wa-btn" onclick="showPage('patients')">
+                    <div class="wa-btn-icon" style="background:rgba(40,80,160,0.15);color:#7aa0e8">◑</div>
+                    <div><div class="wa-btn-title">Add Patient</div><div class="wa-btn-sub">New record</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Live Activity</div>
+                <div class="card-meta">Today</div>
+              </div>
+              <div class="activity-list">
+                <div class="activity-item">
+                  <div class="activity-dot ad-teal"></div>
+                  <div class="activity-content">
+                    <div class="activity-msg">Reminder sent to <strong>Neha Kapoor</strong> for 10:30 AM</div>
+                    <div class="activity-time">08:30 AM</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot ad-red"></div>
+                  <div class="activity-content">
+                    <div class="activity-msg"><strong>Vikram Joshi</strong> marked missed — recovery prompt queued</div>
+                    <div class="activity-time">07:45 AM</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot ad-gold"></div>
+                  <div class="activity-content">
+                    <div class="activity-msg">Review request auto-sent to <strong>Meena Patel</strong></div>
+                    <div class="activity-time">Yesterday, 6 PM</div>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot ad-sage"></div>
+                  <div class="activity-content">
+                    <div class="activity-msg"><strong>Follow-up #3</strong> triggered for Ankit Rao (30-day)</div>
+                    <div class="activity-time">Yesterday, 3 PM</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ APPOINTMENTS ══ -->
+      <div class="page fade-in" id="page-appointments">
+        <div class="page-header">
+          <div>
+            <div class="page-h1">Appointments</div>
+            <div class="page-sub">Manage and track all patient appointments</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <div class="tabs">
+              <div class="tab active">Today</div>
+              <div class="tab">This Week</div>
+              <div class="tab">All</div>
+            </div>
+            <button class="btn btn-primary">+ Schedule</button>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-icon si-muted">◷</div><div class="stat-val">12</div><div class="stat-label">Today's Total</div></div>
+          <div class="stat-card"><div class="stat-icon si-teal">✓</div><div class="stat-val">8</div><div class="stat-label">Confirmed</div></div>
+          <div class="stat-card gold-accent"><div class="stat-icon si-gold">⚠</div><div class="stat-val">3</div><div class="stat-label">Pending Response</div></div>
+          <div class="stat-card"><div class="stat-icon si-rose">✗</div><div class="stat-val">1</div><div class="stat-label">Missed Today</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Monday, 18 May 2026</div>
+            <div style="display:flex;gap:8px">
+              <div class="chip teal">● Live</div>
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px">Export</button>
+            </div>
+          </div>
+          <div class="appt-list">
+            <div class="appt-item">
+              <div class="appt-time">09:00</div>
+              <div class="appt-avatar av-forest">PS</div>
+              <div class="appt-info"><div class="appt-name">Priya Sharma</div><div class="appt-type">Skin Consultation · 30 min</div></div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge badge-arrived">Arrived</span>
+                <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">📱 WA</button>
+              </div>
+            </div>
+            <div class="appt-item">
+              <div class="appt-time">10:30</div>
+              <div class="appt-avatar av-gold">NK</div>
+              <div class="appt-info"><div class="appt-name">Neha Kapoor</div><div class="appt-type">Laser Treatment · 60 min</div></div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge badge-confirmed">Confirmed</span>
+                <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">📱 WA</button>
+              </div>
+            </div>
+            <div class="appt-item">
+              <div class="appt-time">11:30</div>
+              <div class="appt-avatar av-blue">AM</div>
+              <div class="appt-info"><div class="appt-name">Amir Malhotra</div><div class="appt-type">Botox Follow-up · 45 min</div></div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge badge-confirmed">Confirmed</span>
+                <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">📱 WA</button>
+              </div>
+            </div>
+            <div class="appt-item">
+              <div class="appt-time">14:00</div>
+              <div class="appt-avatar av-rose">SR</div>
+              <div class="appt-info"><div class="appt-name">Sneha Rao <span class="badge badge-vip" style="margin-left:6px">VIP</span></div><div class="appt-type">Annual Checkup · 45 min</div></div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge badge-pending">Pending</span>
+                <button class="btn btn-primary" style="font-size:11px;padding:5px 12px">Send Reminder</button>
+              </div>
+            </div>
+            <div class="appt-item">
+              <div class="appt-time">15:30</div>
+              <div class="appt-avatar av-sage">VJ</div>
+              <div class="appt-info"><div class="appt-name">Vikram Joshi</div><div class="appt-type">Derma Review · 30 min</div></div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge badge-missed">Missed</span>
+                <button class="btn btn-gold" style="font-size:11px;padding:5px 12px">Recover</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PATIENTS ══ -->
+      <div class="page fade-in" id="page-patients">
+        <div class="page-header">
+          <div>
+            <div class="page-h1">Patient Database</div>
+            <div class="page-sub">247 registered patients · 18 added this month</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <div class="search-bar" style="width:200px">
+              <span class="search-icon">⌕</span>
+              <input type="text" placeholder="Search patients…">
+            </div>
+            <button class="btn btn-primary">+ Add Patient</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">All Patients</div>
+            <div class="tabs" style="padding:2px">
+              <div class="tab active">All</div>
+              <div class="tab">VIP</div>
+              <div class="tab">Inactive</div>
+              <div class="tab">At-Risk</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="ptable">
+              <thead>
+                <tr>
+                  <th>Patient</th><th>Last Visit</th><th>Next Appt</th><th>Total Visits</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="patient-cell"><div class="appt-avatar av-forest" style="width:30px;height:30px;font-size:10px">PS</div><div><div style="font-size:13px;color:var(--text-white);font-weight:500">Priya Sharma</div><div class="mono" style="color:var(--text-faint)">+91 98202 11034</div></div></div></td>
+                  <td class="mono">18 May 2026</td>
+                  <td class="mono" style="color:#5dbdb6">Today, 9 AM</td>
+                  <td style="font-weight:600;color:var(--text-white)">14</td>
+                  <td><span class="badge badge-arrived">Active</span></td>
+                  <td><button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">📱 WA</button></td>
+                </tr>
+                <tr>
+                  <td><div class="patient-cell"><div class="appt-avatar av-rose" style="width:30px;height:30px;font-size:10px">SR</div><div><div style="font-size:13px;color:var(--text-white);font-weight:500">Sneha Rao <span class="badge badge-vip" style="margin-left:4px">VIP</span></div><div class="mono" style="color:var(--text-faint)">+91 99100 88822</div></div></div></td>
+                  <td class="mono">12 Apr 2026</td>
+                  <td class="mono" style="color:var(--gold)">Today, 2 PM</td>
+                  <td style="font-weight:600;color:var(--text-white)">31</td>
+                  <td><span class="badge badge-vip">VIP</span></td>
+                  <td><button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">📱 WA</button></td>
+                </tr>
+                <tr>
+                  <td><div class="patient-cell"><div class="appt-avatar av-gold" style="width:30px;height:30px;font-size:10px">NK</div><div><div style="font-size:13px;color:var(--text-white);font-weight:500">Neha Kapoor</div><div class="mono" style="color:var(--text-faint)">+91 88001 23456</div></div></div></td>
+                  <td class="mono">02 May 2026</td>
+                  <td class="mono" style="color:#5dbdb6">Today, 10:30</td>
+                  <td style="font-weight:600;color:var(--text-white)">7</td>
+                  <td><span class="badge badge-confirmed">Active</span></td>
+                  <td><button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">📱 WA</button></td>
+                </tr>
+                <tr>
+                  <td><div class="patient-cell"><div class="appt-avatar av-sage" style="width:30px;height:30px;font-size:10px">VJ</div><div><div style="font-size:13px;color:var(--text-white);font-weight:500">Vikram Joshi</div><div class="mono" style="color:var(--text-faint)">+91 77002 98765</div></div></div></td>
+                  <td class="mono">20 Mar 2026</td>
+                  <td class="mono" style="color:var(--text-faint)">—</td>
+                  <td style="font-weight:600;color:var(--text-white)">3</td>
+                  <td><span class="badge badge-missed">At-Risk</span></td>
+                  <td><button class="btn btn-gold" style="font-size:11px;padding:5px 10px">Re-engage</button></td>
+                </tr>
+                <tr>
+                  <td><div class="patient-cell"><div class="appt-avatar av-blue" style="width:30px;height:30px;font-size:10px">AR</div><div><div style="font-size:13px;color:var(--text-white);font-weight:500">Ankit Rao</div><div class="mono" style="color:var(--text-faint)">+91 90009 11122</div></div></div></td>
+                  <td class="mono">15 Feb 2026</td>
+                  <td class="mono" style="color:var(--text-faint)">—</td>
+                  <td style="font-weight:600;color:var(--text-white)">2</td>
+                  <td><span class="badge badge-followup">Follow-up</span></td>
+                  <td><button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">Send WA</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ REMINDERS ══ -->
+      <div class="page fade-in" id="page-reminders">
+        <div class="page-header">
+          <div>
+            <div class="page-h1">Reminder Workflows</div>
+            <div class="page-sub">Automated appointment reminders via WhatsApp</div>
+          </div>
+          <button class="btn btn-primary">+ New Workflow</button>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Reminder Sequence</div>
+              <span class="badge badge-confirmed">Active</span>
+            </div>
+            <div class="workflow-flow">
+              <div class="workflow-step"><div class="wf-num done">✓</div><div class="wf-info"><div class="wf-title">Booking Confirmation</div><div class="wf-desc">Instant WhatsApp message with appointment details and clinic address</div><div class="wf-timing">→ Sent immediately on booking</div></div><button class="wf-toggle on"></button></div>
+              <div class="workflow-step"><div class="wf-num done">✓</div><div class="wf-info"><div class="wf-title">48-Hour Reminder</div><div class="wf-desc">Friendly reminder with reschedule option 2 days before appointment</div><div class="wf-timing">→ 48 hrs before appointment</div></div><button class="wf-toggle on"></button></div>
+              <div class="workflow-step"><div class="wf-num active">3</div><div class="wf-info"><div class="wf-title">Day-Before Reminder</div><div class="wf-desc">Confirmation request — patient taps Confirm or Reschedule</div><div class="wf-timing">→ 24 hrs before, 6:00 PM</div></div><button class="wf-toggle on"></button></div>
+              <div class="workflow-step"><div class="wf-num pending">4</div><div class="wf-info"><div class="wf-title">Morning of Reminder</div><div class="wf-desc">Quick "See you today" message with exact time and prep instructions</div><div class="wf-timing">→ Day of, 8:00 AM</div></div><button class="wf-toggle on"></button></div>
+              <div class="workflow-step"><div class="wf-num pending">5</div><div class="wf-info"><div class="wf-title">Missed Appointment Recovery</div><div class="wf-desc">Auto-detects no-show, sends reschedule prompt with 1-tap booking</div><div class="wf-timing">→ 30 min after missed slot</div></div><button class="wf-toggle off"></button></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-header"><div class="card-title">This Week's Impact</div></div>
+              <div class="card-body">
+                <div class="metric-row"><div class="metric-name">Reminders sent</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:88%"></div></div><div class="metric-val">44</div></div>
+                <div class="metric-row"><div class="metric-name">Confirmations received</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:75%"></div></div><div class="metric-val">33</div></div>
+                <div class="metric-row"><div class="metric-name">Rescheduled (saved)</div><div class="metric-bar-wrap"><div class="metric-bar-fill gold" style="width:25%"></div></div><div class="metric-val">11</div></div>
+                <div class="metric-row"><div class="metric-name">No-shows prevented</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:20%"></div></div><div class="metric-val">9</div></div>
+              </div>
+            </div>
+            <div class="glow-card gold-tint">
+              <div style="font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Reminder Performance</div>
+              <div class="chart-wrap" style="height:70px">
+                <div class="chart-bar" style="height:55%"></div>
+                <div class="chart-bar" style="height:70%"></div>
+                <div class="chart-bar" style="height:60%"></div>
+                <div class="chart-bar" style="height:85%"></div>
+                <div class="chart-bar active" style="height:90%"></div>
+                <div class="chart-bar" style="height:80%"></div>
+                <div class="chart-bar partial" style="height:40%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:8px">
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">Mon</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">Tue</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">Wed</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">Thu</span>
+                <span style="font-size:10px;color:var(--gold);font-family:var(--font-mono)">Today</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">Sat</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">Sun</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ WHATSAPP ══ -->
+      <div class="page fade-in" id="page-whatsapp">
+        <div class="page-header">
+          <div>
+            <div class="page-h1">WhatsApp Quick Actions</div>
+            <div class="page-sub">Send messages, reminders and follow-ups instantly</div>
+          </div>
+          <div class="chip teal">● Connected</div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Message Templates</div></div>
+            <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+              <div style="background:var(--bg-surface);border:1px solid var(--border-forest);border-radius:var(--r-md);padding:16px">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                  <div class="wa-btn-icon">📅</div>
+                  <div style="font-size:13px;font-weight:500;color:var(--text-white)">Appointment Reminder</div>
+                  <span class="badge badge-confirmed" style="margin-left:auto">Ready</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);line-height:1.7;padding:12px;background:var(--bg-void);border-radius:var(--r-xs);border:1px solid var(--border-subtle);font-family:var(--font-mono)">"Hi {Patient Name}, your appointment at Lumina Derma Clinic is confirmed for {Date} at {Time}. Reply YES to confirm or NO to reschedule."</div>
+                <button class="btn btn-primary" style="margin-top:10px;font-size:12px">Send to Patient</button>
+              </div>
+              <div style="background:var(--bg-surface);border:1px solid var(--border-forest);border-radius:var(--r-md);padding:16px">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                  <div class="wa-btn-icon" style="background:var(--gold-ghost);color:var(--gold)">★</div>
+                  <div style="font-size:13px;font-weight:500;color:var(--text-white)">Review Request</div>
+                  <span class="badge badge-pending" style="margin-left:auto">Gold tier</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);line-height:1.7;padding:12px;background:var(--bg-void);border-radius:var(--r-xs);border:1px solid var(--border-subtle);font-family:var(--font-mono)">"Hi {Patient Name}, thank you for visiting us today! We'd love your feedback — share a Google review in just 1 minute: {Link}"</div>
+                <button class="btn btn-primary" style="margin-top:10px;font-size:12px">Send Review Request</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Send to Patient</div></div>
+              <div class="card-body">
+                <div class="form-row"><div class="form-label">Select Patient</div><select class="form-input"><option>Search or select patient…</option><option>Priya Sharma</option><option>Sneha Rao (VIP)</option><option>Vikram Joshi</option></select></div>
+                <div class="form-row"><div class="form-label">Message Type</div><select class="form-input"><option>Appointment Reminder</option><option>Follow-Up Check-In</option><option>Review Request</option><option>Custom Message</option></select></div>
+                <div class="form-row"><div class="form-label">Schedule</div><select class="form-input"><option>Send Now</option><option>Schedule for Later</option><option>Add to Automation</option></select></div>
+                <button class="btn btn-primary" style="width:100%;justify-content:center">📱 Send via WhatsApp</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Message Stats · Today</div></div>
+              <div class="card-body">
+                <div class="metric-row"><div class="metric-name">Sent</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:100%"></div></div><div class="metric-val">28</div></div>
+                <div class="metric-row"><div class="metric-name">Delivered</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:93%"></div></div><div class="metric-val">26</div></div>
+                <div class="metric-row"><div class="metric-name">Read</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:82%"></div></div><div class="metric-val">23</div></div>
+                <div class="metric-row"><div class="metric-name">Replied</div><div class="metric-bar-wrap"><div class="metric-bar-fill gold" style="width:54%"></div></div><div class="metric-val">15</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ FOLLOW-UPS ══ -->
+      <div class="page fade-in" id="page-followups">
+        <div class="page-header">
+          <div>
+            <div class="page-h1">Follow-Up Management</div>
+            <div class="page-sub">Re-engage patients · Reduce drop-offs · Increase repeat visits</div>
+          </div>
+          <button class="btn btn-primary">Run All Pending</button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card gold-accent"><div class="stat-icon si-gold">↻</div><div class="stat-val">6</div><div class="stat-label">Due Today</div></div>
+          <div class="stat-card"><div class="stat-icon si-rose">⚠</div><div class="stat-val">3</div><div class="stat-label">Overdue</div><div class="stat-delta delta-down">Action needed</div></div>
+          <div class="stat-card"><div class="stat-icon si-teal">✓</div><div class="stat-val">19</div><div class="stat-label">Completed This Month</div></div>
+          <div class="stat-card"><div class="stat-icon si-blue">◑</div><div class="stat-val">68%</div><div class="stat-label">Re-engagement Rate</div><div class="stat-delta delta-up">+5% vs last month</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Pending Follow-Ups</div>
+            <div class="tabs" style="padding:2px"><div class="tab active">All</div><div class="tab">Overdue</div><div class="tab">30-Day</div><div class="tab">Inactive</div></div>
+          </div>
+          <div class="appt-list">
+            <div class="appt-item"><div class="appt-avatar av-sage">VJ</div><div class="appt-info"><div class="appt-name">Vikram Joshi</div><div class="appt-type">Last visit: 20 Mar 2026 · 59 days inactive</div></div><div style="display:flex;gap:8px;align-items:center"><span class="badge badge-missed">Overdue</span><button class="btn btn-gold" style="font-size:11px;padding:5px 10px">Re-engage</button></div></div>
+            <div class="appt-item"><div class="appt-avatar av-blue">AR</div><div class="appt-info"><div class="appt-name">Ankit Rao</div><div class="appt-type">Last visit: 15 Feb 2026 · 92 days inactive</div></div><div style="display:flex;gap:8px;align-items:center"><span class="badge badge-missed">Overdue</span><button class="btn btn-gold" style="font-size:11px;padding:5px 10px">Re-engage</button></div></div>
+            <div class="appt-item"><div class="appt-avatar av-forest">MP</div><div class="appt-info"><div class="appt-name">Meena Patel</div><div class="appt-type">Last visit: 18 Apr 2026 · 30-day follow-up due</div></div><div style="display:flex;gap:8px;align-items:center"><span class="badge badge-followup">Due Today</span><button class="btn btn-primary" style="font-size:11px;padding:5px 10px">Send Now</button></div></div>
+            <div class="appt-item"><div class="appt-avatar av-gold">RK</div><div class="appt-info"><div class="appt-name">Rohit Kumar</div><div class="appt-type">Post-treatment follow-up · 7-day check-in</div></div><div style="display:flex;gap:8px;align-items:center"><span class="badge badge-followup">Due Today</span><button class="btn btn-primary" style="font-size:11px;padding:5px 10px">Send Now</button></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ REVIEWS ══ -->
+      <div class="page fade-in" id="page-reviews">
+        <div class="page-header">
+          <div>
+            <div class="page-h1">Google Review Automation</div>
+            <div class="page-sub">Build your clinic's online reputation automatically</div>
+          </div>
+          <button class="btn btn-primary">Configure Auto-Send</button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card gold-accent"><div class="stat-icon si-gold">★</div><div class="stat-val">4.8</div><div class="stat-label">Google Rating</div><div class="stat-delta delta-up">↑ from 4.5</div></div>
+          <div class="stat-card"><div class="stat-icon si-teal">✉</div><div class="stat-val">47</div><div class="stat-label">Requests Sent · Month</div></div>
+          <div class="stat-card"><div class="stat-icon si-blue">✓</div><div class="stat-val">28</div><div class="stat-label">Reviews Received</div><div class="stat-delta delta-up">59% response rate</div></div>
+          <div class="stat-card"><div class="stat-icon si-muted">◑</div><div class="stat-val">3</div><div class="stat-label">Awaiting Response</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Recent Reviews</div>
+              <span class="badge badge-vip">★ 4.8 avg</span>
+            </div>
+            <div>
+              <div class="review-item"><div class="appt-avatar av-forest">MP</div><div class="review-info"><div class="review-name">Meena Patel</div><div class="review-stars">★★★★★</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;font-weight:300">Excellent experience. Dr. Riya was thorough and the staff were professional throughout.</div><div class="review-date">16 May 2026</div></div><span class="badge badge-confirmed">Published</span></div>
+              <div class="review-item"><div class="appt-avatar av-gold">NK</div><div class="review-info"><div class="review-name">Neha Kapoor</div><div class="review-stars">★★★★★</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;font-weight:300">Amazing results from my laser session. Highly recommend Lumina Clinic!</div><div class="review-date">14 May 2026</div></div><span class="badge badge-confirmed">Published</span></div>
+              <div class="review-item"><div class="appt-avatar av-blue">RK</div><div class="review-info"><div class="review-name">Rohit Kumar</div><div class="review-stars">★★★★<span style="color:var(--text-faint)">★</span></div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;font-weight:300">Good clinic, friendly staff. Waiting time could be improved slightly.</div><div class="review-date">10 May 2026</div></div><span class="badge badge-confirmed">Published</span></div>
+              <div class="review-item"><div class="appt-avatar av-rose">DS</div><div class="review-info"><div class="review-name">Deepa Singh</div><div style="font-size:11px;color:var(--text-faint);font-style:italic;margin-top:4px">Request sent · Awaiting response</div><div class="review-date">Sent: 17 May 2026</div></div><span class="badge badge-pending">Pending</span></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Auto-Send Settings</div></div>
+              <div class="card-body">
+                <div class="workflow-step" style="padding:12px 0;border-bottom:1px solid var(--border-subtle)"><div class="wf-info"><div class="wf-title">Send after appointment</div><div class="wf-desc">Auto-send review request to all patients post-visit</div></div><button class="wf-toggle on"></button></div>
+                <div class="workflow-step" style="padding:12px 0;border-bottom:1px solid var(--border-subtle)"><div class="wf-info"><div class="wf-title">Timing: 2 hours after visit</div><div class="wf-desc">When emotion is highest — best conversion window</div></div><button class="wf-toggle on"></button></div>
+                <div class="workflow-step" style="padding:12px 0"><div class="wf-info"><div class="wf-title">Send only to 4★+ patients</div><div class="wf-desc">Filter based on satisfaction signals before requesting</div></div><button class="wf-toggle on"></button></div>
+              </div>
+            </div>
+            <div class="glow-card gold-tint">
+              <div style="font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Rating Distribution</div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--gold);width:22px;font-family:var(--font-mono)">5★</span><div class="progress-track" style="flex:1"><div class="progress-fill gold" style="width:75%"></div></div><span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);width:22px">21</span></div>
+                <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--gold);width:22px;font-family:var(--font-mono)">4★</span><div class="progress-track" style="flex:1"><div class="progress-fill gold" style="width:21%"></div></div><span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);width:22px">6</span></div>
+                <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--text-faint);width:22px;font-family:var(--font-mono)">3★</span><div class="progress-track" style="flex:1"><div class="metric-bar-fill" style="width:4%;height:100%;border-radius:2px;background:var(--bg-elevated)"></div></div><span style="font-size:11px;color:var(--text-faint);font-family:var(--font-mono);width:22px">1</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ANALYTICS ══ -->
+      <div class="page fade-in" id="page-analytics">
+        <div class="page-header">
+          <div>
+            <div class="page-h1">Analytics Overview</div>
+            <div class="page-sub">Clinic performance at a glance</div>
+          </div>
+          <div class="tabs">
+            <div class="tab active">This Month</div>
+            <div class="tab">Last 3 Months</div>
+            <div class="tab">Year</div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-icon si-teal">◑</div><div class="stat-val">247</div><div class="stat-label">Total Patients</div><div class="stat-delta delta-up">+18 this month</div></div>
+          <div class="stat-card"><div class="stat-icon si-blue">◷</div><div class="stat-val">89</div><div class="stat-label">Appointments · May</div><div class="stat-delta delta-up">+12% vs Apr</div></div>
+          <div class="stat-card gold-accent"><div class="stat-icon si-gold">★</div><div class="stat-val">4.8</div><div class="stat-label">Avg Google Rating</div><div class="stat-delta delta-up">↑ 0.3 pts</div></div>
+          <div class="stat-card"><div class="stat-icon si-rose">↻</div><div class="stat-val">94%</div><div class="stat-label">Retention Rate</div><div class="stat-delta delta-up">+2% vs last month</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Appointment Volume — May 2026</div></div>
+            <div class="card-body">
+              <div class="chart-wrap" style="height:120px;gap:3px">
+                <div class="chart-bar" style="height:60%"></div><div class="chart-bar" style="height:75%"></div><div class="chart-bar" style="height:55%"></div><div class="chart-bar" style="height:90%"></div><div class="chart-bar" style="height:70%"></div><div class="chart-bar" style="height:80%"></div><div class="chart-bar" style="height:65%"></div><div class="chart-bar" style="height:95%"></div><div class="chart-bar" style="height:85%"></div><div class="chart-bar" style="height:75%"></div><div class="chart-bar" style="height:100%"></div><div class="chart-bar" style="height:88%"></div><div class="chart-bar" style="height:72%"></div><div class="chart-bar" style="height:90%"></div><div class="chart-bar" style="height:78%"></div><div class="chart-bar" style="height:85%"></div><div class="chart-bar active" style="height:70%"></div><div class="chart-bar partial" style="height:30%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:8px">
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">1 May</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">7</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">10</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">14</span>
+                <span style="font-size:10px;color:var(--gold);font-family:var(--font-mono)">Today</span>
+                <span style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">19</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Patient Activity</div></div>
+            <div class="card-body">
+              <div class="donut-wrap">
+                <svg class="donut-svg" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#1a2e1f" stroke-width="16"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#134E4A" stroke-width="16" stroke-dasharray="204 122" stroke-dashoffset="0" transform="rotate(-90 70 70)" opacity="0.9"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#C29B47" stroke-width="16" stroke-dasharray="84 242" stroke-dashoffset="-204" transform="rotate(-90 70 70)" opacity="0.8"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#3a5441" stroke-width="16" stroke-dasharray="36 290" stroke-dashoffset="-288" transform="rotate(-90 70 70)" opacity="0.6"/>
+                </svg>
+                <div class="donut-center">
+                  <div class="donut-pct">247</div>
+                  <div class="donut-lbl">Patients</div>
+                </div>
+              </div>
+              <div class="legend-list" style="margin-top:14px">
+                <div class="legend-item"><div class="legend-dot" style="background:#134E4A"></div>Active — 163 (66%)</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Occasional — 57 (23%)</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--forest-200)"></div>Inactive — 27 (11%)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Key Performance Metrics</div></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+              <div>
+                <div class="metric-row"><div class="metric-name">No-show rate</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:8%"></div></div><div class="metric-val">8%</div></div>
+                <div class="metric-row"><div class="metric-name">Confirmation rate</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:91%"></div></div><div class="metric-val">91%</div></div>
+                <div class="metric-row"><div class="metric-name">Reschedule rate</div><div class="metric-bar-wrap"><div class="metric-bar-fill gold" style="width:14%"></div></div><div class="metric-val">14%</div></div>
+              </div>
+              <div>
+                <div class="metric-row"><div class="metric-name">Avg visits/patient</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:72%"></div></div><div class="metric-val">4.3</div></div>
+                <div class="metric-row"><div class="metric-name">Review response</div><div class="metric-bar-wrap"><div class="metric-bar-fill gold" style="width:59%"></div></div><div class="metric-val">59%</div></div>
+                <div class="metric-row"><div class="metric-name">Follow-up success</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:68%"></div></div><div class="metric-val">68%</div></div>
+              </div>
+              <div>
+                <div class="metric-row"><div class="metric-name">WhatsApp open rate</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:82%"></div></div><div class="metric-val">82%</div></div>
+                <div class="metric-row"><div class="metric-name">Patient retention</div><div class="metric-bar-wrap"><div class="metric-bar-fill" style="width:94%"></div></div><div class="metric-val">94%</div></div>
+                <div class="metric-row"><div class="metric-name">VIP patient ratio</div><div class="metric-bar-wrap"><div class="metric-bar-fill gold" style="width:19%"></div></div><div class="metric-val">19%</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ONBOARDING ══ -->
+      <div class="page fade-in" id="page-onboarding">
+        <div class="page-header">
+          <div>
+            <div class="page-h1">Setup Guide</div>
+            <div class="page-sub">Get your clinic fully operational · 3 steps remaining</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">5 of 8 complete</div>
+            <div style="width:100px"><div class="progress-track" style="height:5px"><div class="progress-fill" style="width:62%"></div></div></div>
+            <div style="font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--gold)">62%</div>
+          </div>
+        </div>
+
+        <div class="ob-step done"><div class="ob-check done">✓</div><div class="ob-info"><div class="ob-title">Clinic Profile Created</div><div class="ob-desc">Lumina Derma Clinic — all basic details saved and verified</div></div><span class="badge badge-arrived">Done</span></div>
+        <div class="ob-step done"><div class="ob-check done">✓</div><div class="ob-info"><div class="ob-title">First Patients Added</div><div class="ob-desc">247 patients imported — database is live</div></div><span class="badge badge-arrived">Done</span></div>
+        <div class="ob-step done"><div class="ob-check done">✓</div><div class="ob-info"><div class="ob-title">WhatsApp Connected</div><div class="ob-desc">WhatsApp Business API linked — messaging is operational</div></div><span class="badge badge-arrived">Done</span></div>
+        <div class="ob-step done"><div class="ob-check done">✓</div><div class="ob-info"><div class="ob-title">Reminder Workflow Activated</div><div class="ob-desc">Appointment reminder automation is live and running</div></div><span class="badge badge-arrived">Done</span></div>
+        <div class="ob-step done"><div class="ob-check done">✓</div><div class="ob-info"><div class="ob-title">First Appointment Scheduled</div><div class="ob-desc">System tested with a real patient booking</div></div><span class="badge badge-arrived">Done</span></div>
+        <div class="ob-step"><div class="ob-check next">6</div><div class="ob-info"><div class="ob-title">Connect Google Reviews</div><div class="ob-desc">Link your Google Business Profile to enable automatic review collection</div></div><button class="btn btn-primary" style="font-size:12px">Connect Now</button></div>
+        <div class="ob-step"><div class="ob-check wait">7</div><div class="ob-info"><div class="ob-title">Set Follow-Up Triggers</div><div class="ob-desc">Configure 7-day, 30-day, and custom follow-up automation rules</div></div><button class="btn btn-ghost" style="font-size:12px">Configure</button></div>
+        <div class="ob-step"><div class="ob-check wait">8</div><div class="ob-info"><div class="ob-title">Invite Team Members</div><div class="ob-desc">Add your receptionist or assistant to help manage appointments</div></div><button class="btn btn-ghost" style="font-size:12px">Invite</button></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if(page){page.classList.add('active');page.classList.remove('fade-in');void page.offsetWidth;page.classList.add('fade-in');}
+  const nav = document.querySelector(`.nav-item[onclick="showPage('${name}')"]`);
+  if(nav) nav.classList.add('active');
+  const titles = {dashboard:'Good morning, Dr. Riya',appointments:'Appointments',patients:'Patient Database',reminders:'Reminder Workflows',whatsapp:'WhatsApp Actions',followups:'Follow-Up Management',reviews:'Review Automation',analytics:'Analytics',onboarding:'Setup Guide'};
+  const t = document.getElementById('topbar-title');
+  if(t) t.innerHTML = (titles[name]||name) + (name==='dashboard' ? '<span class="topbar-subtitle">Monday, 18 May 2026</span>' : '');
+}
+function toggleNotif() {
+  const p = document.getElementById('notif-panel');
+  p.classList.toggle('visible');
+  setTimeout(() => document.addEventListener('click', function h(e){if(!p.contains(e.target)){p.classList.remove('visible');document.removeEventListener('click',h);}}, {once:false}), 10);
+}
+function switchClinic(){alert('Clinic switcher — multi-clinic support coming in v2');}
+document.querySelectorAll('.tabs').forEach(tabs => {
+  tabs.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {tabs.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');});
+  });
+});
+document.querySelectorAll('.wf-toggle').forEach(t => {
+  t.addEventListener('click', () => {t.classList.toggle('on');t.classList.toggle('off');});
+});
+</script>
+</body>
+</html>
