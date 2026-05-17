@@ -1,335 +1,378 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>AuraScale OS — Clinical Intelligence Platform</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-/* ── RESET & TOKENS ───────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --canvas:#0B291B;
-  --charcoal:#0F1110;
-  --surface:#112018;
-  --border:#1a2a1e;
-  --border-gold:rgba(194,155,71,0.25);
-  --teal:#134E4A;
-  --teal-hover:#1a5f5a;
+  --charcoal:#0D1410;
+  --surface:#0F1A12;
+  --surface2:#111f15;
+  --border:#1c2e20;
+  --border-soft:#162018;
   --gold:#C29B47;
-  --gold-dim:rgba(194,155,71,0.15);
+  --gold-dim:rgba(194,155,71,0.13);
+  --gold-glow:rgba(194,155,71,0.07);
+  --teal:#134E4A;
+  --teal-hover:#0f3d3a;
+  --teal-light:rgba(19,78,74,0.35);
+  --teal-faint:rgba(19,78,74,0.12);
   --white:#FFFFFF;
   --cream:#E8ECE9;
-  --muted:rgba(232,236,233,0.45);
-  --faint:rgba(232,236,233,0.25);
+  --muted:rgba(232,236,233,0.5);
+  --faint:rgba(232,236,233,0.28);
   --emerald:#34D399;
   --amber:#FBBF24;
   --blue:#60A5FA;
   --red:#F87171;
-  --sidebar-w:252px;
+  --sidebar-w:268px;
+  --header-h:60px;
 }
 html{background:var(--canvas);scroll-behavior:smooth}
-body{background:var(--canvas);color:var(--cream);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:var(--canvas)}
-::-webkit-scrollbar-thumb{background:#1a3a2a;border-radius:2px}
+body{background:var(--canvas);color:var(--cream);font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#1e3825;border-radius:2px}
 ::-webkit-scrollbar-thumb:hover{background:var(--gold)}
-input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.4)}
-button{font-family:'DM Sans',sans-serif;outline:none}
-input,textarea{font-family:'DM Sans',sans-serif;outline:none}
+button{font-family:'Plus Jakarta Sans',sans-serif;outline:none;cursor:pointer}
+input,textarea,select{font-family:'Plus Jakarta Sans',sans-serif;outline:none}
 a{color:inherit;text-decoration:none}
+.serif{font-family:'Playfair Display',Georgia,serif}
 
-/* ── LAYOUT ───────────────────────────────────────── */
+/* ── LAYOUT ── */
 #app{display:flex;min-height:100vh}
 
-/* ── SIDEBAR ──────────────────────────────────────── */
+/* ── SIDEBAR ── */
 #sidebar{
   width:var(--sidebar-w);min-height:100vh;
-  background:var(--charcoal);border-right:1px solid var(--border);
+  background:var(--charcoal);
+  border-right:1px solid var(--border);
   display:flex;flex-direction:column;
-  position:fixed;top:0;left:0;bottom:0;z-index:30;
-  transition:transform .3s ease;
+  position:fixed;top:0;left:0;bottom:0;z-index:40;
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
 }
-#sidebar.hidden{transform:translateX(-100%)}
 #sidebar-overlay{
-  display:none;position:fixed;inset:0;z-index:29;
-  background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  display:none;position:fixed;inset:0;z-index:39;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
 }
 #sidebar-overlay.visible{display:block}
 
-.sidebar-logo{padding:20px 24px 16px;border-bottom:1px solid var(--border)}
-.sidebar-logo .brand{font-size:15px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
-.sidebar-logo .brand .w{color:var(--white)}.sidebar-logo .brand .g{color:var(--gold)}
-.sidebar-logo .sub{color:var(--faint);font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-top:3px}
+/* Logo */
+.sb-logo{padding:22px 22px 18px;border-bottom:1px solid var(--border)}
+.sb-logo-text{font-size:18px;letter-spacing:-.02em;line-height:1;display:flex;align-items:baseline;gap:0}
+.sb-logo-text .aura{color:var(--white);font-family:'Playfair Display',serif;font-weight:700}
+.sb-logo-text .scale{color:var(--gold);font-family:'Playfair Display',serif;font-weight:700}
+.sb-logo-text .tm{font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;color:var(--gold);vertical-align:super;margin-left:1px}
+.sb-logo-sub{font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-top:5px;font-weight:500}
 
-.doctor-card{padding:14px 16px;border-bottom:1px solid var(--border)}
-.doctor-inner{background:var(--canvas);border:1px solid var(--border);border-radius:12px;padding:14px}
-.doctor-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.doctor-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,rgba(194,155,71,.3),#134E4A);border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:800;font-size:18px;flex-shrink:0}
-.doctor-name{color:var(--white);font-size:12px;font-weight:700;line-height:1.2}
-.doctor-reg{color:var(--gold);font-size:10px;font-weight:600;margin-top:2px}
-.doctor-spec{color:var(--faint);font-size:10px;line-height:1.5}
-.doctor-status{margin-top:8px;display:flex;align-items:center;gap:6px}
+/* Doctor card */
+.sb-doctor{padding:14px 16px;border-bottom:1px solid var(--border)}
+.sb-doc-inner{background:linear-gradient(135deg,rgba(19,78,74,.18),rgba(194,155,71,.04));border:1px solid rgba(194,155,71,.12);border-radius:14px;padding:14px}
+.sb-doc-top{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.sb-doc-av{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(19,78,74,.7),rgba(194,155,71,.2));border:1px solid rgba(194,155,71,.3);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;font-size:16px;color:var(--gold);flex-shrink:0}
+.sb-doc-name{color:var(--white);font-size:12.5px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.sb-doc-reg{display:inline-block;margin-top:5px;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);background:rgba(194,155,71,.08);border:1px solid rgba(194,155,71,.18);padding:3px 8px;border-radius:5px;font-weight:600}
+.sb-doc-spec{color:var(--faint);font-size:11px;line-height:1.55}
+.sb-doc-status{display:flex;align-items:center;gap:6px;margin-top:9px}
 .dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
-.dot-gold{background:var(--gold)}.dot-emerald{background:var(--emerald)}.dot-red{background:var(--red)}
+.dot-emerald{background:var(--emerald)}.dot-gold{background:var(--gold)}.dot-red{background:var(--red)}.dot-blue{background:var(--blue)}.dot-amber{background:var(--amber)}
 
-.role-toggle{padding:12px 16px;border-bottom:1px solid var(--border)}
-.role-label{color:var(--faint);font-size:9px;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
-.role-wrap{display:flex;background:var(--canvas);border:1px solid var(--border);border-radius:8px;padding:3px}
-.role-btn{flex:1;padding:6px 0;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid transparent;background:transparent;color:var(--muted);transition:all .2s;text-transform:capitalize}
-.role-btn.active{background:var(--teal);border-color:var(--border-gold);color:var(--gold)}
+/* Role toggle */
+.sb-role{padding:12px 14px;border-bottom:1px solid var(--border)}
+.sb-role-label{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:7px}
+.sb-role-wrap{display:flex;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:9px;padding:3px}
+.sb-role-btn{flex:1;padding:6px 4px;border-radius:7px;font-size:11px;font-weight:700;border:1px solid transparent;background:transparent;color:var(--muted);transition:all .2s;letter-spacing:.01em}
+.sb-role-btn.active{background:var(--teal);border-color:rgba(194,155,71,.2);color:var(--gold)}
 
-nav{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
-.nav-btn{width:100%;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;cursor:pointer;background:transparent;border:1px solid transparent;border-left:2px solid transparent;color:var(--muted);text-align:left;font-weight:500;font-size:12px;transition:all .2s}
-.nav-btn:hover:not(.active){background:rgba(19,78,74,.2);color:var(--cream)}
-.nav-btn.active{background:rgba(19,78,74,.6);border-color:var(--border-gold);border-left-color:var(--gold);color:var(--gold);font-weight:700}
+/* Nav */
+nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-label{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(232,236,233,.18);font-weight:700;padding:8px 10px 4px;margin-top:4px}
+.nav-btn{width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;border:1px solid transparent;border-left:2px solid transparent;background:transparent;color:var(--muted);text-align:left;font-size:12.5px;font-weight:500;transition:all .2s;white-space:nowrap}
+.nav-btn:hover:not(.active){background:rgba(19,78,74,.15);color:var(--cream);border-color:var(--border)}
+.nav-btn.active{background:linear-gradient(90deg,rgba(19,78,74,.45),rgba(19,78,74,.2));border-color:var(--border);border-left-color:var(--gold);color:var(--gold);font-weight:700}
+.nav-icon{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
-.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border)}
-.sidebar-footer .compliance{display:flex;align-items:center;gap:7px;color:var(--faint);margin-bottom:6px;font-size:9px}
-.sidebar-footer .signout{display:flex;align-items:center;gap:7px;color:rgba(232,236,233,.2);cursor:pointer;font-size:9px}
+/* Sidebar footer */
+.sb-foot{padding:14px 18px;border-top:1px solid var(--border)}
+.sb-compliance{display:flex;align-items:center;gap:6px;color:rgba(232,236,233,.22);font-size:9px;letter-spacing:.05em;margin-bottom:8px}
+.sb-signout{display:flex;align-items:center;gap:7px;color:rgba(232,236,233,.2);font-size:9px;letter-spacing:.05em;cursor:pointer;transition:color .2s}
+.sb-signout:hover{color:var(--red)}
 
-/* ── MAIN ─────────────────────────────────────────── */
+/* ── MAIN ── */
 #main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
 
-/* ── HEADER ───────────────────────────────────────── */
+/* ── HEADER ── */
 header{
+  height:var(--header-h);
   background:var(--charcoal);border-bottom:1px solid var(--border);
-  padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:20;gap:12px;
+  padding:0 24px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:30;gap:12px;
 }
-.header-brand .brand-name{font-size:15px;font-weight:800;letter-spacing:-.01em}
-.header-brand .tab-title{color:var(--faint);font-size:10px;margin-top:1px}
-.header-right{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
-.date-chip{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;background:var(--canvas);border:1px solid var(--border);padding:6px 12px;border-radius:8px;white-space:nowrap}
-.market-dropdown{position:relative}
-.market-btn{display:flex;align-items:center;gap:8px;background:var(--teal);border:1px solid var(--border-gold);color:var(--white);padding:8px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap}
-.market-btn .g{color:var(--gold)}
-.market-menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--charcoal);border:1px solid var(--border-gold);border-radius:12px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.7);z-index:50;min-width:210px;display:none}
+.hdr-brand .brand-name{font-size:15px;font-weight:800;letter-spacing:-.015em;line-height:1;display:flex;align-items:baseline;gap:0}
+.hdr-brand .brand-name .w{color:var(--white);font-family:'Playfair Display',serif;font-weight:700}
+.hdr-brand .brand-name .g{color:var(--gold);font-family:'Playfair Display',serif;font-weight:700}
+.hdr-brand .tab-title{color:var(--faint);font-size:9.5px;letter-spacing:.04em;margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.date-pill{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.market-dd{position:relative}
+.market-btn{display:flex;align-items:center;gap:7px;background:var(--teal);border:1px solid rgba(194,155,71,.25);color:var(--white);padding:8px 13px;border-radius:10px;font-size:11.5px;font-weight:700;transition:background .2s;white-space:nowrap}
+.market-btn:hover{background:var(--teal-hover)}
+.market-btn .flag{font-size:14px}
+.market-btn .lbl{color:var(--gold)}
+.market-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--charcoal);border:1px solid rgba(194,155,71,.2);border-radius:13px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.75);z-index:60;min-width:220px;display:none}
 .market-menu.open{display:block}
-.market-opt{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:transparent;border:none;cursor:pointer;text-align:left}
-.market-opt:hover{background:rgba(19,78,74,.25)}
-.market-opt.sel{background:rgba(19,78,74,.35)}
-.market-opt-label{color:var(--cream);font-size:12px;font-weight:600}
-.market-opt-sub{color:var(--faint);font-size:10px;margin-top:2px}
-.bell-btn{position:relative;width:34px;height:34px;background:var(--canvas);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;flex-shrink:0}
-.bell-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;background:var(--gold);border-radius:50%}
-.hamburger{display:none;width:34px;height:34px;background:var(--canvas);border:1px solid var(--border);border-radius:8px;align-items:center;justify-content:center;cursor:pointer;color:var(--cream);flex-shrink:0}
+.mkt-opt{width:100%;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:transparent;border:none;cursor:pointer;text-align:left;transition:background .15s}
+.mkt-opt:hover{background:rgba(19,78,74,.2)}
+.mkt-opt.sel{background:rgba(19,78,74,.3)}
+.mkt-opt-name{color:var(--cream);font-size:12px;font-weight:600}
+.mkt-opt-sub{color:var(--faint);font-size:10px;margin-top:2px}
+.bell-btn{width:36px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted);position:relative;transition:border-color .2s}
+.bell-btn:hover{border-color:rgba(194,155,71,.3)}
+.bell-dot{position:absolute;top:7px;right:7px;width:5px;height:5px;background:var(--gold);border-radius:50%}
+.hamburger{display:none;width:36px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:9px;align-items:center;justify-content:center;color:var(--cream)}
 
-/* ── CONTENT ──────────────────────────────────────── */
-main{flex:1;padding:24px;overflow-y:auto;background:var(--canvas)}
-.market-banner{margin-bottom:20px;display:inline-flex;align-items:center;gap:8px;background:var(--charcoal);border:1px solid var(--border-gold);border-radius:10px;padding:8px 14px;font-size:11px;flex-wrap:wrap}
+/* ── CONTENT ── */
+main{flex:1;padding:24px;background:var(--canvas);overflow-y:auto}
+
+.market-banner{display:inline-flex;align-items:center;gap:8px;background:var(--charcoal);border:1px solid rgba(194,155,71,.18);border-radius:9px;padding:7px 14px;font-size:10.5px;margin-bottom:22px;flex-wrap:wrap}
 .market-banner .mkt-name{color:var(--gold);font-weight:700}
-.market-banner .clinic{color:var(--muted)}
+.market-banner .mkt-clinic{color:var(--muted)}
 
-/* ── VIEWS ────────────────────────────────────────── */
-.view{display:none;flex-direction:column;gap:24px}
+/* ── VIEWS ── */
+.view{display:none;flex-direction:column;gap:22px}
 .view.active{display:flex}
 
-/* ── METRIC GRID ──────────────────────────────────── */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}
-.metric-card{background:var(--charcoal);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s;cursor:default}
-.metric-card:hover{border-color:var(--border-gold)}
-.metric-top{display:flex;align-items:center;justify-content:space-between}
-.metric-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
-.metric-icon{width:32px;height:32px;border-radius:8px;background:var(--canvas);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold)}
-.metric-value{font-size:26px;font-weight:800;color:var(--white);letter-spacing:-.02em;line-height:1}
-.metric-sub{color:var(--faint);font-size:11px}
+/* ── METRICS GRID ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.metric-card{background:var(--charcoal);border:1px solid var(--border);border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;gap:14px;transition:border-color .25s,transform .2s;cursor:default;position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;border-radius:50%;background:var(--gold-glow);pointer-events:none}
+.metric-card:hover{border-color:rgba(194,155,71,.22);transform:translateY(-1px)}
+.metric-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.metric-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;font-weight:700;color:var(--muted);line-height:1.4;flex:1}
+.metric-icon{width:30px;height:30px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0}
+.metric-value{font-size:28px;font-weight:800;color:var(--gold);letter-spacing:-.03em;line-height:1;font-family:'Playfair Display',serif}
+.metric-sub{font-size:10px;color:var(--faint);letter-spacing:.02em}
 
-/* ── TWO-COL GRID ─────────────────────────────────── */
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+/* ── TWO COL ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .panel{background:var(--charcoal);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)}
-.panel-title{display:flex;align-items:center;gap:10px;color:var(--white);font-weight:700;font-size:13px}
-.badge{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px}
-.badge-gold{color:var(--gold);background:var(--gold-dim);border:1px solid var(--border-gold)}
-.badge-red{color:var(--red);background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25)}
-.badge-green{color:var(--emerald);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.panel-title{display:flex;align-items:center;gap:9px;color:var(--white);font-weight:700;font-size:12.5px}
+.badge{display:inline-flex;align-items:center;font-size:9.5px;padding:2px 9px;border-radius:5px;font-weight:700;letter-spacing:.04em;font-family:'Plus Jakarta Sans',sans-serif}
+.badge-gold{color:var(--gold);background:var(--gold-dim);border:1px solid rgba(194,155,71,.2)}
+.badge-red{color:var(--red);background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2)}
+.badge-green{color:var(--emerald);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2)}
 
-/* ── QUEUE ROW ────────────────────────────────────── */
-.queue-row{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--border)}
-.token-box{width:32px;height:32px;border-radius:8px;background:var(--canvas);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:10px;font-weight:800;font-family:'DM Mono',monospace;flex-shrink:0}
-.queue-info{margin-left:12px}
-.queue-name{color:var(--cream);font-size:13px;font-weight:500}
-.queue-time{color:var(--faint);font-size:11px;display:flex;align-items:center;gap:4px;margin-top:2px}
+/* ── QUEUE ROW ── */
+.queue-row{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(28,46,32,.7);transition:background .15s}
+.queue-row:hover{background:rgba(19,78,74,.08)}
+.queue-row:last-child{border-bottom:none}
+.token-box{width:30px;height:30px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:9px;font-weight:800;font-family:'Playfair Display',serif;flex-shrink:0}
+.queue-name{color:var(--cream);font-size:12.5px;font-weight:500}
+.queue-time{color:var(--faint);font-size:10.5px;display:flex;align-items:center;gap:4px;margin-top:1px}
 
-/* ── STATUS BADGE ─────────────────────────────────── */
-.status{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
-.s-checkedin{background:rgba(52,211,153,.12);color:#34D399;border:1px solid rgba(52,211,153,.25)}
-.s-waiting{background:rgba(251,191,36,.10);color:#FBBF24;border:1px solid rgba(251,191,36,.22)}
-.s-inprogress{background:rgba(96,165,250,.12);color:#60A5FA;border:1px solid rgba(96,165,250,.25)}
-.s-missed{background:rgba(248,113,113,.10);color:#F87171;border:1px solid rgba(248,113,113,.22)}
-.s-Active{background:rgba(52,211,153,.10);color:#34D399;border:1px solid rgba(52,211,153,.22)}
-.s-AtRisk{background:rgba(251,191,36,.10);color:#FBBF24;border:1px solid rgba(251,191,36,.22)}
-.s-Inactive{background:rgba(248,113,113,.08);color:#F87171;border:1px solid rgba(248,113,113,.18)}
+/* ── STATUS BADGE ── */
+.status{display:inline-flex;align-items:center;padding:2px 9px;border-radius:5px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.s-checkedin{background:rgba(52,211,153,.1);color:#34D399;border:1px solid rgba(52,211,153,.22)}
+.s-waiting{background:rgba(251,191,36,.08);color:#FBBF24;border:1px solid rgba(251,191,36,.18)}
+.s-inprogress{background:rgba(96,165,250,.1);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
+.s-missed{background:rgba(248,113,113,.08);color:#F87171;border:1px solid rgba(248,113,113,.18)}
+.s-Active{background:rgba(52,211,153,.08);color:#34D399;border:1px solid rgba(52,211,153,.18)}
+.s-AtRisk{background:rgba(251,191,36,.08);color:#FBBF24;border:1px solid rgba(251,191,36,.18)}
+.s-Inactive{background:rgba(248,113,113,.07);color:#F87171;border:1px solid rgba(248,113,113,.15)}
 
-/* ── ALERT ROW ────────────────────────────────────── */
-.alert-row{padding:14px 20px;border-bottom:1px solid var(--border)}
+/* ── ALERT ROW ── */
+.alert-row{padding:13px 18px;border-bottom:1px solid rgba(28,46,32,.7);transition:background .15s}
+.alert-row:hover{background:rgba(19,78,74,.08)}
+.alert-row:last-child{border-bottom:none}
 .alert-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.alert-name{color:var(--cream);font-size:13px;font-weight:500}
-.alert-cond{color:rgba(194,155,71,.7);font-size:11px;margin-top:2px}
-.alert-due{color:var(--faint);font-size:11px;margin-top:4px}
-.alert-due span{color:var(--amber)}
-.remind-btn{flex-shrink:0;background:var(--teal);border:1px solid var(--border-gold);color:var(--white);font-size:11px;padding:6px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:700}
+.alert-name{color:var(--cream);font-size:12.5px;font-weight:600}
+.alert-cond{color:rgba(194,155,71,.65);font-size:10.5px;margin-top:2px}
+.alert-due{color:var(--faint);font-size:10.5px;margin-top:4px}
+.alert-due span{color:var(--amber);font-weight:600}
+.remind-btn{flex-shrink:0;background:var(--teal);border:1px solid rgba(194,155,71,.2);color:var(--white);font-size:10.5px;padding:6px 11px;border-radius:8px;display:flex;align-items:center;gap:5px;font-weight:700;transition:background .2s}
+.remind-btn:hover{background:var(--teal-hover)}
 
-/* ── APPOINTMENTS VIEW ────────────────────────────── */
-.apts-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.apts-title{color:var(--white);font-weight:800;font-size:18px}
-.apts-sub{color:var(--faint);font-size:11px;margin-top:2px}
-.add-btn{background:var(--teal);border:1px solid var(--border-gold);color:var(--white);padding:10px 16px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;box-shadow:0 4px 16px rgba(19,78,74,.4)}
-.search-bar{background:var(--charcoal);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px}
-.search-bar input{background:none;border:none;color:var(--cream);font-size:13px;flex:1}
+/* ── APPOINTMENTS ── */
+.apts-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.apts-title{font-family:'Playfair Display',serif;color:var(--white);font-size:22px;font-weight:700;letter-spacing:-.02em}
+.apts-sub{color:var(--faint);font-size:10.5px;margin-top:3px}
+.add-btn{background:var(--teal);border:1px solid rgba(194,155,71,.25);color:var(--white);padding:10px 16px;border-radius:12px;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;transition:background .2s;box-shadow:0 6px 20px rgba(19,78,74,.35)}
+.add-btn:hover{background:var(--teal-hover)}
+.search-bar{background:var(--charcoal);border:1px solid var(--border);border-radius:11px;padding:10px 14px;display:flex;align-items:center;gap:10px;transition:border-color .2s}
+.search-bar:focus-within{border-color:rgba(194,155,71,.25)}
+.search-bar input{background:none;border:none;color:var(--cream);font-size:12.5px;flex:1}
 .search-bar input::placeholder{color:var(--muted)}
 .table-wrap{background:var(--charcoal);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.table-head{display:grid;grid-template-columns:3fr 3fr 2fr 1fr 2fr 40px;padding:10px 20px;border-bottom:1px solid var(--border);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
-.table-head span{display:flex;align-items:center}
+.table-head{display:grid;grid-template-columns:3fr 2.5fr 1.8fr 1fr 2fr 40px;padding:9px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.2)}
+.table-head span{font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--faint);display:flex;align-items:center}
 .table-head .center{justify-content:center}
-.table-row{display:grid;grid-template-columns:3fr 3fr 2fr 1fr 2fr 40px;padding:13px 20px;align-items:center;border-bottom:1px solid var(--border);transition:background .15s}
-.table-row:hover{background:rgba(19,78,74,.15)}
-.pat-cell{display:flex;align-items:center;gap:10px}
-.pat-avatar{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(194,155,71,.2),rgba(19,78,74,.5));border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:11px;font-weight:800;flex-shrink:0}
-.pat-name{color:var(--cream);font-size:13px;font-weight:500}
-.pat-phone{color:var(--muted);font-size:12px;font-family:'DM Mono',monospace}
-.pat-date{color:var(--muted);font-size:12px}
-.pat-visits{text-align:center;color:var(--gold);font-size:13px;font-weight:800}
+.table-row{display:grid;grid-template-columns:3fr 2.5fr 1.8fr 1fr 2fr 40px;padding:12px 18px;align-items:center;border-bottom:1px solid rgba(28,46,32,.6);transition:background .15s}
+.table-row:hover{background:rgba(19,78,74,.1)}
+.table-row:last-child{border-bottom:none}
+.pat-cell{display:flex;align-items:center;gap:9px}
+.pat-av{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(194,155,71,.15),rgba(19,78,74,.4));border:1px solid rgba(194,155,71,.2);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:11px;font-weight:800;font-family:'Playfair Display',serif;flex-shrink:0}
+.pat-name{color:var(--cream);font-size:12.5px;font-weight:500}
+.pat-phone{color:var(--muted);font-size:11px;font-family:'Playfair Display',serif;letter-spacing:.03em}
+.pat-date{color:var(--muted);font-size:11px}
+.pat-visits{text-align:center;color:var(--gold);font-size:14px;font-weight:800;font-family:'Playfair Display',serif}
 .pat-status{display:flex;justify-content:center}
 .pat-action{display:flex;justify-content:flex-end}
-.wa-icon-btn{background:none;border:none;cursor:pointer;color:var(--teal);padding:4px}
+.wa-icon-btn{background:none;border:none;color:rgba(19,78,74,.8);padding:4px;transition:color .2s}
+.wa-icon-btn:hover{color:var(--teal)}
 
-/* ── WHATSAPP VIEW ────────────────────────────────── */
-.wa-title{color:var(--white);font-weight:800;font-size:18px}
-.wa-sub{color:var(--faint);font-size:11px;margin-top:2px}
-.automation-row{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
-.auto-label{color:var(--cream);font-size:13px;font-weight:500}
-.auto-desc{color:var(--faint);font-size:11px;margin-top:3px}
-.toggle{position:relative;display:inline-flex;height:24px;width:44px;align-items:center;border-radius:12px;cursor:pointer;border:none;transition:background .25s;outline:none;flex-shrink:0}
-.toggle.on{background:var(--teal)}.toggle.off{background:var(--border)}
+/* ── WHATSAPP VIEW ── */
+.wa-title{font-family:'Playfair Display',serif;color:var(--white);font-size:22px;font-weight:700;letter-spacing:-.02em}
+.wa-sub{color:var(--faint);font-size:10.5px;margin-top:3px}
+.automation-row{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid rgba(28,46,32,.7);transition:background .15s}
+.automation-row:hover{background:rgba(19,78,74,.05)}
+.automation-row:last-child{border-bottom:none}
+.auto-label{color:var(--cream);font-size:12.5px;font-weight:600}
+.auto-desc{color:var(--faint);font-size:10.5px;margin-top:3px}
+.toggle{position:relative;display:inline-flex;width:44px;height:24px;align-items:center;border-radius:12px;border:none;cursor:pointer;transition:background .25s;flex-shrink:0}
+.toggle.on{background:var(--teal)}.toggle.off{background:rgba(255,255,255,.08)}
 .toggle-knob{position:absolute;width:16px;height:16px;border-radius:50%;transition:left .25s,background .25s}
 .toggle.on .toggle-knob{left:24px;background:var(--gold)}.toggle.off .toggle-knob{left:4px;background:var(--muted)}
-.quick-row{padding:14px 20px;border-bottom:1px solid var(--border)}
-.quick-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.quick-user{display:flex;align-items:center;gap:12px}
-.quick-avatar{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,rgba(194,155,71,.2),rgba(19,78,74,.5));border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:13px;font-weight:800;flex-shrink:0}
-.quick-name{color:var(--cream);font-size:13px;font-weight:500}
-.quick-phone{color:var(--faint);font-size:11px;font-family:'DM Mono',monospace;margin-top:2px}
-.quick-btns{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.quick-btn{background:var(--teal);border:1px solid rgba(194,155,71,.15);color:var(--white);font-size:10px;padding:6px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.quick-row{padding:13px 18px;border-bottom:1px solid rgba(28,46,32,.7);transition:background .15s}
+.quick-row:hover{background:rgba(19,78,74,.05)}
+.quick-row:last-child{border-bottom:none}
+.quick-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.quick-av{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,rgba(194,155,71,.15),rgba(19,78,74,.4));border:1px solid rgba(194,155,71,.18);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:12px;font-weight:800;font-family:'Playfair Display',serif;flex-shrink:0}
+.quick-name{color:var(--cream);font-size:12.5px;font-weight:600}
+.quick-phone{color:var(--faint);font-size:10.5px;font-family:'Playfair Display',serif;margin-top:2px}
+.quick-btns{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.quick-btn{background:rgba(19,78,74,.45);border:1px solid rgba(19,78,74,.6);color:var(--cream);font-size:9.5px;padding:5px 9px;border-radius:7px;display:flex;align-items:center;gap:4px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;transition:background .2s}
+.quick-btn:hover{background:var(--teal)}
 
-/* ── MODAL ────────────────────────────────────────── */
-.modal-overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(10px)}
 .modal-overlay.open{display:flex}
-.modal{background:var(--charcoal);border:1px solid var(--border-gold);border-radius:16px;width:100%;max-width:440px;margin:0 16px;box-shadow:0 25px 60px rgba(0,0,0,.7)}
+.modal{background:var(--charcoal);border:1px solid rgba(194,155,71,.2);border-radius:18px;width:100%;max-width:440px;margin:0 16px;box-shadow:0 30px 80px rgba(0,0,0,.8);animation:slideUp .3s cubic-bezier(.4,0,.2,1)}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
-.modal-icon{width:36px;height:36px;border-radius:10px;background:var(--teal);display:flex;align-items:center;justify-content:center;color:var(--gold)}
-.modal-title{color:var(--white);font-weight:600;font-size:13px}
-.modal-sub{color:var(--gold);font-size:11px;margin-top:1px}
-.modal-close{background:none;border:none;cursor:pointer;color:var(--muted)}
+.modal-icon{width:36px;height:36px;border-radius:10px;background:var(--teal);display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0}
+.modal-title{color:var(--white);font-weight:700;font-size:13px}
+.modal-sub{color:var(--gold);font-size:10.5px;margin-top:1px}
+.modal-close{background:none;border:none;color:var(--muted);transition:color .2s}
+.modal-close:hover{color:var(--cream)}
 .modal-body{padding:20px;display:flex;flex-direction:column;gap:14px}
-.field-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:5px}
-.field-input{width:100%;background:var(--canvas);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);font-size:13px}
-.field-textarea{width:100%;background:var(--canvas);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);font-size:13px;resize:none}
+.field-label{color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.14em;font-weight:700;display:block;margin-bottom:5px}
+.field-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 13px;color:var(--cream);font-size:12.5px;transition:border-color .2s}
+.field-input:focus{border-color:rgba(194,155,71,.3)}
+.field-textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 13px;color:var(--cream);font-size:12.5px;resize:none;transition:border-color .2s}
+.field-textarea:focus{border-color:rgba(194,155,71,.3)}
 .phone-row{display:flex;gap:8px}
-.phone-prefix{background:var(--canvas);border:1px solid var(--border-gold);border-radius:8px;padding:8px 12px;color:var(--gold);font-size:12px;font-family:'DM Mono',monospace;min-width:72px;display:flex;align-items:center}
-.modal-submit{width:100%;background:var(--teal);border:1px solid var(--border-gold);color:var(--white);font-weight:700;padding:12px 0;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;margin-top:4px}
+.phone-prefix{background:var(--surface);border:1px solid rgba(194,155,71,.2);border-radius:9px;padding:9px 13px;color:var(--gold);font-size:11px;font-family:'Playfair Display',serif;min-width:68px;display:flex;align-items:center;font-weight:700}
+.modal-submit{width:100%;background:var(--teal);border:1px solid rgba(194,155,71,.25);color:var(--white);font-weight:700;padding:12px 0;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;margin-top:4px;transition:background .2s;box-shadow:0 4px 15px rgba(19,78,74,.3)}
+.modal-submit:hover{background:var(--teal-hover)}
 
-/* ── SVG ICONS ────────────────────────────────────── */
-svg.icon{display:inline-block;vertical-align:middle}
+/* ── PULSE ── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2s infinite}
 
-/* ── RESPONSIVE ───────────────────────────────────── */
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){
+  .metrics-grid{grid-template-columns:repeat(2,1fr)}
+}
 @media(max-width:900px){
   .two-col{grid-template-columns:1fr}
-  .table-head,.table-row{grid-template-columns:3fr 2fr 1fr 40px}
+  .table-head,.table-row{grid-template-columns:3fr 1.5fr 1fr 40px}
   .table-head .col-phone,.table-row .col-phone,
   .table-head .col-date,.table-row .col-date,
   .table-head .col-status,.table-row .col-status{display:none}
-  .date-chip{display:none}
+  .date-pill{display:none}
 }
-@media(max-width:700px){
-  :root{--sidebar-w:252px}
+@media(max-width:720px){
   #sidebar{transform:translateX(-100%)}
   #sidebar.open{transform:translateX(0)}
   #main{margin-left:0}
-  .hamburger{display:flex}
-  main{padding:16px}
-  .metrics-grid{grid-template-columns:1fr 1fr;gap:12px}
-  .metric-value{font-size:20px}
-  .apts-header{flex-direction:column;align-items:flex-start}
-  .header-right{gap:6px}
-  .market-btn span.market-label{display:none}
-  .two-col{gap:16px}
+  .hamburger{display:flex!important}
+  main{padding:14px}
+  .metrics-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .metric-value{font-size:22px}
 }
-@media(max-width:440px){
+@media(max-width:480px){
   .metrics-grid{grid-template-columns:1fr}
   .table-head,.table-row{grid-template-columns:3fr 1fr 40px}
   .table-head .col-visits,.table-row .col-visits{display:none}
-  header{padding:10px 14px}
-  main{padding:12px}
-  .market-btn{padding:7px 10px;font-size:11px;gap:5px}
+  header{padding:0 12px}
+  main{padding:10px}
+  .market-btn .market-lbl{display:none}
 }
-
-/* ── PULSE ANIMATION ──────────────────────────────── */
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.pulse{animation:pulse 2s infinite}
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- SIDEBAR OVERLAY -->
   <div id="sidebar-overlay" onclick="closeSidebar()"></div>
 
   <!-- SIDEBAR -->
   <aside id="sidebar">
-    <div class="sidebar-logo">
-      <p class="brand"><span class="w">Welcome to Aura</span><span class="g">Scale OS</span></p>
-      <p class="sub">Clinical Intelligence Platform</p>
+    <div class="sb-logo">
+      <div class="sb-logo-text">
+        <span class="aura">Aura</span><span class="scale">Scale</span><span class="tm">™</span>
+      </div>
+      <p class="sb-logo-sub">Clinical Intelligence Platform</p>
     </div>
-    <div class="doctor-card">
-      <div class="doctor-inner">
-        <div class="doctor-row">
-          <div class="doctor-avatar">M</div>
+
+    <div class="sb-doctor">
+      <div class="sb-doc-inner">
+        <div class="sb-doc-top">
+          <div class="sb-doc-av" id="doc-initial">M</div>
           <div>
-            <p class="doctor-name" id="doc-name">Dr. Mousham Laskar</p>
-            <p class="doctor-reg" id="doc-reg">NMC / WBMCO Registered</p>
+            <p class="sb-doc-name" id="doc-name">Dr. Mousham Laskar</p>
+            <span class="sb-doc-reg" id="doc-reg">NMC / WBMCO Registered</span>
           </div>
         </div>
-        <p class="doctor-spec" id="doc-spec">General Physician &amp; Internal Medicine</p>
-        <div class="doctor-status">
+        <p class="sb-doc-spec" id="doc-spec">General Physician &amp; Internal Medicine</p>
+        <div class="sb-doc-status">
           <span class="dot dot-emerald"></span>
           <p style="color:var(--muted);font-size:10px">Online · Clinic Active</p>
         </div>
       </div>
     </div>
 
-    <div class="role-toggle">
-      <p class="role-label">Active Role</p>
-      <div class="role-wrap">
-        <button class="role-btn active" onclick="setRole('doctor',this)">🩺 Doctor</button>
-        <button class="role-btn" onclick="setRole('staff',this)">👩‍⚕️ Staff</button>
+    <div class="sb-role">
+      <p class="sb-role-label">Active Role</p>
+      <div class="sb-role-wrap">
+        <button class="sb-role-btn active" onclick="setRole('doctor',this)">🩺 Doctor</button>
+        <button class="sb-role-btn" onclick="setRole('staff',this)">👩‍⚕️ Staff</button>
       </div>
     </div>
 
     <nav>
+      <p class="nav-label">Navigation</p>
       <button class="nav-btn active" onclick="setTab('dashboard',this)">
-        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+        <span class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </span>
         Dashboard
       </button>
       <button class="nav-btn" onclick="setTab('appointments',this)">
-        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+        <span class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </span>
         Appointments &amp; Patients
       </button>
       <button class="nav-btn" onclick="setTab('whatsapp',this)">
-        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        <span class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </span>
         WhatsApp Engine
       </button>
     </nav>
 
-    <div class="sidebar-footer">
-      <div class="compliance">
-        <svg class="icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div class="sb-foot">
+      <div class="sb-compliance">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         HIPAA · SOC 2 Type II · ISO 27001
       </div>
-      <div class="signout">
-        <svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      <div class="sb-signout">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Sign Out
       </div>
     </div>
@@ -339,40 +382,42 @@ svg.icon{display:inline-block;vertical-align:middle}
   <div id="main">
     <header>
       <div style="display:flex;align-items:center;gap:10px">
-        <button class="hamburger" onclick="toggleSidebar()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        <button class="hamburger" onclick="toggleSidebar()" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <div class="header-brand">
-          <p class="brand-name"><span style="color:var(--white)">Aura</span><span style="color:var(--gold)">Scale</span> <span style="color:var(--gold)">OS</span></p>
+        <div class="hdr-brand">
+          <div class="brand-name">
+            <span class="w">Aura</span><span class="g">Scale</span>&nbsp;<span class="g">OS</span>
+          </div>
           <p class="tab-title" id="tab-title">Clinic Dashboard</p>
         </div>
       </div>
-      <div class="header-right">
-        <div class="date-chip">
-          <svg class="icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"/><path d="M12 6v6l4 2"/></svg>
+      <div class="hdr-right">
+        <div class="date-pill">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Monday, 18 May 2026
         </div>
 
-        <div class="market-dropdown">
-          <button class="market-btn" onclick="toggleMarketMenu()">
-            <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            <span class="g market-label" id="market-label">🇮🇳 India Office</span>
-            <svg class="icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        <div class="market-dd">
+          <button class="market-btn" onclick="toggleMktMenu()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span class="lbl market-lbl" id="market-label">🇮🇳 India Office</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="market-menu" id="market-menu">
-            <button class="market-opt sel" data-market="india" onclick="setMarket('india',this)">
-              <div><p class="market-opt-label">🇮🇳 India Office</p><p class="market-opt-sub">NMC / WBMCO · INR (₹)</p></div>
-              <span id="check-india" style="color:var(--gold)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <button class="mkt-opt sel" data-market="india" onclick="setMarket('india',this)">
+              <div><p class="mkt-opt-name">🇮🇳 India Office</p><p class="mkt-opt-sub">NMC / WBMCO · INR (₹)</p></div>
+              <span id="chk-india" style="color:var(--gold)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
             </button>
-            <button class="market-opt" data-market="bangladesh" onclick="setMarket('bangladesh',this)">
-              <div><p class="market-opt-label">🇧🇩 Bangladesh Office</p><p class="market-opt-sub">BM&amp;DC · BDT (৳)</p></div>
-              <span id="check-bangladesh" style="color:var(--gold);display:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <button class="mkt-opt" data-market="bangladesh" onclick="setMarket('bangladesh',this)">
+              <div><p class="mkt-opt-name">🇧🇩 Bangladesh Office</p><p class="mkt-opt-sub">BM&amp;DC · BDT (৳)</p></div>
+              <span id="chk-bd" style="color:var(--gold);display:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
             </button>
           </div>
         </div>
 
         <button class="bell-btn">
-          <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span class="bell-dot"></span>
         </button>
       </div>
@@ -381,10 +426,10 @@ svg.icon{display:inline-block;vertical-align:middle}
     <main>
       <div class="market-banner">
         <span class="dot dot-gold pulse"></span>
-        <span style="color:rgba(194,155,71,.85)">Market: <span class="mkt-name" id="mkt-name">India (INR ₹ · +91)</span> · <span class="clinic" id="mkt-clinic">Laskar Health Clinic, Salt Lake, Kolkata</span></span>
+        <span style="color:rgba(194,155,71,.8)">Market: <span class="mkt-name" id="mkt-name">India (INR ₹ · +91)</span> · <span class="mkt-clinic" id="mkt-clinic">Laskar Health Clinic, Salt Lake, Kolkata</span></span>
       </div>
 
-      <!-- DASHBOARD VIEW -->
+      <!-- DASHBOARD -->
       <div id="view-dashboard" class="view active">
         <div class="metrics-grid" id="metrics-grid"></div>
         <div class="two-col">
@@ -405,7 +450,7 @@ svg.icon{display:inline-block;vertical-align:middle}
         </div>
       </div>
 
-      <!-- APPOINTMENTS VIEW -->
+      <!-- APPOINTMENTS -->
       <div id="view-appointments" class="view">
         <div class="apts-header">
           <div>
@@ -413,28 +458,28 @@ svg.icon{display:inline-block;vertical-align:middle}
             <p class="apts-sub" id="pat-count">7 registered patients</p>
           </div>
           <button class="add-btn" onclick="openModal('add-modal')">
-            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Appointment
           </button>
         </div>
         <div class="search-bar">
-          <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
-          <input type="text" id="search-input" placeholder="Search by name or phone..." oninput="renderPatients()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-input" placeholder="Search by name or phone number..." oninput="renderPatients()"/>
         </div>
         <div class="table-wrap">
           <div class="table-head">
             <span>Patient</span>
             <span class="col-phone">Phone</span>
             <span class="col-date">Last Visit</span>
-            <span class="col-visits" style="justify-content:center">Visits</span>
-            <span class="col-status" style="justify-content:center">Status</span>
+            <span class="col-visits center">Visits</span>
+            <span class="col-status center">Status</span>
             <span></span>
           </div>
           <div id="patients-table"></div>
         </div>
       </div>
 
-      <!-- WHATSAPP VIEW -->
+      <!-- WHATSAPP -->
       <div id="view-whatsapp" class="view">
         <div>
           <h2 class="wa-title">WhatsApp &amp; Retention Engine</h2>
@@ -443,6 +488,7 @@ svg.icon{display:inline-block;vertical-align:middle}
         <div class="panel">
           <div class="panel-head">
             <div class="panel-title"><span class="dot dot-gold"></span>Automation Control Panel</div>
+            <span class="badge badge-green">Live</span>
           </div>
           <div id="automation-list"></div>
         </div>
@@ -457,25 +503,29 @@ svg.icon{display:inline-block;vertical-align:middle}
   </div>
 </div>
 
-<!-- WHATSAPP MODAL -->
+<!-- WA MODAL -->
 <div class="modal-overlay" id="wa-modal">
   <div class="modal">
     <div class="modal-head">
       <div style="display:flex;align-items:center;gap:12px">
-        <div class="modal-icon"><svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="modal-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
         <div>
-          <p class="modal-title">Send WhatsApp</p>
+          <p class="modal-title">Send WhatsApp Message</p>
           <p class="modal-sub" id="wa-modal-sub">Patient · Dial</p>
         </div>
       </div>
-      <button class="modal-close" onclick="closeModal('wa-modal')"><svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      <button class="modal-close" onclick="closeModal('wa-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     <div class="modal-body">
       <div>
         <label class="field-label">Phone Number</label>
         <div class="phone-row">
-          <div class="phone-prefix" id="wa-dial"></div>
-          <div class="field-input" id="wa-phone-number" style="flex:1;display:flex;align-items:center;font-family:'DM Mono',monospace;font-size:12px"></div>
+          <div class="phone-prefix" id="wa-dial">+91</div>
+          <div class="field-input" id="wa-phone-display" style="flex:1;display:flex;align-items:center;font-size:12px;font-family:'Playfair Display',serif;color:var(--muted)"></div>
         </div>
       </div>
       <div>
@@ -483,7 +533,7 @@ svg.icon{display:inline-block;vertical-align:middle}
         <textarea class="field-textarea" id="wa-message" rows="5"></textarea>
       </div>
       <button class="modal-submit">
-        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Send via WhatsApp
       </button>
     </div>
@@ -495,19 +545,25 @@ svg.icon{display:inline-block;vertical-align:middle}
   <div class="modal">
     <div class="modal-head">
       <div style="display:flex;align-items:center;gap:12px">
-        <div class="modal-icon"><svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <div class="modal-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
         <p class="modal-title">New Appointment</p>
       </div>
-      <button class="modal-close" onclick="closeModal('add-modal')"><svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      <button class="modal-close" onclick="closeModal('add-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     <div class="modal-body">
-      <div><label class="field-label">Patient Name</label><input type="text" class="field-input" placeholder="Full name"></div>
-      <div><label class="field-label">Phone</label><input type="text" class="field-input" id="add-phone" placeholder="Number"></div>
-      <div><label class="field-label">Date</label><input type="date" class="field-input"></div>
-      <div><label class="field-label">Time</label><input type="time" class="field-input"></div>
-      <div><label class="field-label">Reason for Visit</label><input type="text" class="field-input" placeholder="Chief complaint"></div>
+      <div><label class="field-label">Patient Name</label><input type="text" class="field-input" placeholder="Full name"/></div>
+      <div><label class="field-label">Phone</label><input type="text" class="field-input" id="add-phone" placeholder="+91 number"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="field-label">Date</label><input type="date" class="field-input"/></div>
+        <div><label class="field-label">Time</label><input type="time" class="field-input"/></div>
+      </div>
+      <div><label class="field-label">Reason for Visit</label><input type="text" class="field-input" placeholder="Chief complaint"/></div>
       <button class="modal-submit" onclick="closeModal('add-modal')">
-        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Confirm Appointment
       </button>
     </div>
@@ -515,11 +571,10 @@ svg.icon{display:inline-block;vertical-align:middle}
 </div>
 
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────
-const MOCK = {
+const DATA = {
   india:{
-    doctor:{name:"Dr. Mousham Laskar",reg:"NMC / WBMCO Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Clinic, Salt Lake, Kolkata"},
-    currency:{symbol:"₹",code:"INR",dialCode:"+91"},
+    doctor:{name:"Dr. Mousham Laskar",initial:"M",reg:"NMC / WBMCO Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Clinic, Salt Lake, Kolkata"},
+    currency:{symbol:"₹",code:"INR",dial:"+91"},
     metrics:{patients:1248,appointments:18,missedRate:"9.4%",revenue:"₹2,84,500"},
     queue:[
       {id:1,name:"Farhana Rahman",time:"09:00 AM",status:"checked-in",token:"T-01"},
@@ -545,8 +600,8 @@ const MOCK = {
     ],
   },
   bangladesh:{
-    doctor:{name:"Dr. Mousham Laskar",reg:"BM&DC Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Centre, Gulshan, Dhaka"},
-    currency:{symbol:"৳",code:"BDT",dialCode:"+880"},
+    doctor:{name:"Dr. Mousham Laskar",initial:"M",reg:"BM&DC Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Centre, Gulshan, Dhaka"},
+    currency:{symbol:"৳",code:"BDT",dial:"+880"},
     metrics:{patients:934,appointments:14,missedRate:"11.2%",revenue:"৳1,92,000"},
     queue:[
       {id:1,name:"Tanzil Ahmed",time:"09:00 AM",status:"checked-in",token:"T-01"},
@@ -572,16 +627,28 @@ const MOCK = {
 };
 
 const AUTOMATIONS = [
-  {key:"reminder14day",label:"14-Day Return Reminder",desc:"Auto-send return reminder to patients 14 days post-visit",on:true},
-  {key:"confirmationMsg",label:"Appointment Confirmation",desc:"Send confirmation 24h before scheduled appointment",on:true},
-  {key:"reviewRequest",label:"Google Review Request",desc:"Request review 2h after a completed appointment",on:false},
-  {key:"followUp48h",label:"48-Hour Follow-Up",desc:"Check-in message 48 hours after appointment",on:true},
+  {key:"r14",label:"14-Day Return Reminder",desc:"Auto-send return reminder to patients 14 days post-visit",on:true},
+  {key:"conf",label:"Appointment Confirmation",desc:"Send confirmation 24h before scheduled appointment",on:true},
+  {key:"rev",label:"Google Review Request",desc:"Request review 2 hours after a completed appointment",on:false},
+  {key:"fu48",label:"48-Hour Follow-Up",desc:"Check-in message 48 hours after appointment",on:true},
 ];
 
-let currentMarket = "india";
-const tabTitles = {dashboard:"Clinic Dashboard",appointments:"Appointments & Patients",whatsapp:"WhatsApp Retention Engine"};
+let currentMarket="india";
+const tabTitles={dashboard:"Clinic Dashboard",appointments:"Appointments & Patients",whatsapp:"WhatsApp Retention Engine"};
 
-// ── STATUS BADGE HTML ─────────────────────────────────────────────────
+const ICONS={
+  users:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  calendar:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  activity:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+  zap:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  clock:`<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  wa:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  bell:`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+  star:`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  check:`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  reply:`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`,
+};
+
 function statusBadge(status){
   const map={
     "checked-in":["s-checkedin","Checked In"],
@@ -592,34 +659,20 @@ function statusBadge(status){
     "At Risk":["s-AtRisk","At Risk"],
     "Inactive":["s-Inactive","Inactive"],
   };
-  const [cls,label]=map[status]||map["waiting"];
-  return `<span class="status ${cls}">${label}</span>`;
+  const [cls,lbl]=map[status]||["s-waiting","Unknown"];
+  return `<span class="status ${cls}">${lbl}</span>`;
 }
 
-// ── ICON SVGs ─────────────────────────────────────────────────────────
-const SVG = {
-  users:`<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></svg>`,
-  calendar:`<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>`,
-  activity:`<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
-  zap:`<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
-  clock:`<svg class="icon" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
-  whatsapp:`<svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
-  bell:`<svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
-  star:`<svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-  check:`<svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
-};
-
-// ── RENDER METRICS ────────────────────────────────────────────────────
 function renderMetrics(){
-  const d = MOCK[currentMarket];
-  const m = d.metrics;
-  const items = [
-    {label:"Total Patients",value:m.patients.toLocaleString(),icon:SVG.users,sub:"All time registered"},
-    {label:"Today's Appointments",value:m.appointments,icon:SVG.calendar,sub:"Scheduled for today"},
-    {label:"Missed Rate",value:m.missedRate,icon:SVG.activity,sub:"Last 30 days"},
-    {label:"Monthly Revenue",value:m.revenue,icon:SVG.zap,sub:`${d.currency.code} · Current month`},
+  const d=DATA[currentMarket];
+  const m=d.metrics;
+  const items=[
+    {label:"Total Patients",value:m.patients.toLocaleString(),icon:ICONS.users,sub:"All time registered"},
+    {label:"Today's Appointments",value:m.appointments,icon:ICONS.calendar,sub:"Scheduled for today"},
+    {label:"Missed Rate",value:m.missedRate,icon:ICONS.activity,sub:"Last 30 days"},
+    {label:"Monthly Revenue",value:m.revenue,icon:ICONS.zap,sub:`${d.currency.code} · Current month`},
   ];
-  document.getElementById("metrics-grid").innerHTML = items.map(i=>`
+  document.getElementById("metrics-grid").innerHTML=items.map(i=>`
     <div class="metric-card">
       <div class="metric-top">
         <p class="metric-label">${i.label}</p>
@@ -631,17 +684,16 @@ function renderMetrics(){
   `).join("");
 }
 
-// ── RENDER QUEUE ──────────────────────────────────────────────────────
 function renderQueue(){
-  const q = MOCK[currentMarket].queue;
-  document.getElementById("queue-count").textContent = `${q.length} patients`;
-  document.getElementById("queue-list").innerHTML = q.map(p=>`
+  const q=DATA[currentMarket].queue;
+  document.getElementById("queue-count").textContent=`${q.length} patients`;
+  document.getElementById("queue-list").innerHTML=q.map(p=>`
     <div class="queue-row">
-      <div style="display:flex;align-items:center">
+      <div style="display:flex;align-items:center;gap:11px">
         <div class="token-box">${p.token}</div>
-        <div class="queue-info">
+        <div>
           <p class="queue-name">${p.name}</p>
-          <p class="queue-time">${SVG.clock} ${p.time}</p>
+          <p class="queue-time">${ICONS.clock} ${p.time}</p>
         </div>
       </div>
       ${statusBadge(p.status)}
@@ -649,11 +701,9 @@ function renderQueue(){
   `).join("");
 }
 
-// ── RENDER ALERTS ─────────────────────────────────────────────────────
 function renderAlerts(){
-  const a = MOCK[currentMarket].alerts;
-  const dial = MOCK[currentMarket].currency.dialCode;
-  document.getElementById("alerts-list").innerHTML = a.map(p=>`
+  const a=DATA[currentMarket].alerts;
+  document.getElementById("alerts-list").innerHTML=a.map(p=>`
     <div class="alert-row">
       <div class="alert-inner">
         <div>
@@ -662,24 +712,22 @@ function renderAlerts(){
           <p class="alert-due">Due: <span>${p.due}</span></p>
         </div>
         <button class="remind-btn" onclick='openWaModal(${JSON.stringify(p)})'>
-          ${SVG.whatsapp} Remind
+          ${ICONS.wa} Remind
         </button>
       </div>
     </div>
   `).join("");
 }
 
-// ── RENDER PATIENTS ───────────────────────────────────────────────────
 function renderPatients(){
-  const q = (document.getElementById("search-input")||{}).value||"";
-  const pats = MOCK[currentMarket].patients.filter(p=>
-    p.name.toLowerCase().includes(q.toLowerCase())||p.phone.includes(q)
-  );
-  document.getElementById("pat-count").textContent = `${MOCK[currentMarket].patients.length} registered patients`;
-  document.getElementById("patients-table").innerHTML = pats.map(p=>`
+  const q=(document.getElementById("search-input")||{}).value||"";
+  const all=DATA[currentMarket].patients;
+  const pats=all.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.phone.includes(q));
+  document.getElementById("pat-count").textContent=`${all.length} registered patients`;
+  document.getElementById("patients-table").innerHTML=pats.map(p=>`
     <div class="table-row">
       <div class="pat-cell">
-        <div class="pat-avatar">${p.name.charAt(0)}</div>
+        <div class="pat-av">${p.name.charAt(0)}</div>
         <span class="pat-name">${p.name}</span>
       </div>
       <p class="pat-phone col-phone">${p.phone}</p>
@@ -688,47 +736,42 @@ function renderPatients(){
       <div class="pat-status col-status">${statusBadge(p.status)}</div>
       <div class="pat-action">
         <button class="wa-icon-btn" onclick='openWaModal(${JSON.stringify(p)})' title="Send WhatsApp">
-          <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
         </button>
       </div>
     </div>
   `).join("");
 }
 
-// ── RENDER AUTOMATIONS ────────────────────────────────────────────────
 function renderAutomations(){
-  document.getElementById("automation-list").innerHTML = AUTOMATIONS.map((a,i)=>`
+  document.getElementById("automation-list").innerHTML=AUTOMATIONS.map((a,i)=>`
     <div class="automation-row">
       <div>
         <p class="auto-label">${a.label}</p>
         <p class="auto-desc">${a.desc}</p>
       </div>
-      <button class="toggle ${a.on?'on':'off'}" onclick="toggleAutomation(${i})" id="toggle-${i}">
+      <button class="toggle ${a.on?'on':'off'}" onclick="toggleAuto(${i})">
         <span class="toggle-knob"></span>
       </button>
     </div>
   `).join("");
 }
 
-function toggleAutomation(i){
-  AUTOMATIONS[i].on = !AUTOMATIONS[i].on;
-  renderAutomations();
-}
+function toggleAuto(i){AUTOMATIONS[i].on=!AUTOMATIONS[i].on;renderAutomations()}
 
-// ── RENDER QUICK ACTIONS ──────────────────────────────────────────────
 function renderQuickActions(){
-  const pats = MOCK[currentMarket].patients.slice(0,5);
-  const btns = [
-    {label:"Reminder",icon:SVG.bell},
-    {label:"Follow-up",icon:SVG.activity},
-    {label:"Review",icon:SVG.star},
-    {label:"Confirm",icon:SVG.check},
+  const pats=DATA[currentMarket].patients.slice(0,5);
+  const btns=[
+    {label:"Reminder",icon:ICONS.bell},
+    {label:"Follow-up",icon:ICONS.activity},
+    {label:"Review",icon:ICONS.star},
+    {label:"Confirm",icon:ICONS.check},
   ];
-  document.getElementById("quick-actions-list").innerHTML = pats.map(p=>`
+  document.getElementById("quick-actions-list").innerHTML=pats.map(p=>`
     <div class="quick-row">
       <div class="quick-inner">
-        <div class="quick-user">
-          <div class="quick-avatar">${p.name.charAt(0)}</div>
+        <div style="display:flex;align-items:center;gap:11px">
+          <div class="quick-av">${p.name.charAt(0)}</div>
           <div>
             <p class="quick-name">${p.name}</p>
             <p class="quick-phone">${p.phone}</p>
@@ -742,63 +785,47 @@ function renderQuickActions(){
   `).join("");
 }
 
-// ── RENDER ALL ────────────────────────────────────────────────────────
 function renderAll(){
-  const d = MOCK[currentMarket];
-  document.getElementById("doc-name").textContent = d.doctor.name;
-  document.getElementById("doc-reg").textContent = d.doctor.reg;
-  document.getElementById("doc-spec").textContent = d.doctor.spec;
-  document.getElementById("mkt-name").textContent =
-    currentMarket==="india" ? "India (INR ₹ · +91)" : "Bangladesh (BDT ৳ · +880)";
-  document.getElementById("mkt-clinic").textContent = d.doctor.clinic;
-  document.getElementById("add-phone").placeholder = `${d.currency.dialCode} number`;
-  renderMetrics();
-  renderQueue();
-  renderAlerts();
-  renderPatients();
-  renderAutomations();
-  renderQuickActions();
+  const d=DATA[currentMarket];
+  document.getElementById("doc-name").textContent=d.doctor.name;
+  document.getElementById("doc-initial").textContent=d.doctor.initial;
+  document.getElementById("doc-reg").textContent=d.doctor.reg;
+  document.getElementById("doc-spec").textContent=d.doctor.spec;
+  document.getElementById("mkt-name").textContent=currentMarket==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
+  document.getElementById("mkt-clinic").textContent=d.doctor.clinic;
+  document.getElementById("add-phone").placeholder=`${d.currency.dial} number`;
+  renderMetrics();renderQueue();renderAlerts();renderPatients();renderAutomations();renderQuickActions();
 }
 
-// ── TABS ──────────────────────────────────────────────────────────────
-function setTab(id, btn){
+function setTab(id,btn){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.getElementById("view-"+id).classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
-  document.getElementById("tab-title").textContent = tabTitles[id];
+  document.getElementById("tab-title").textContent=tabTitles[id];
   closeSidebar();
 }
 
-// ── ROLE ──────────────────────────────────────────────────────────────
-function setRole(r, btn){
-  document.querySelectorAll(".role-btn").forEach(b=>b.classList.remove("active"));
+function setRole(r,btn){
+  document.querySelectorAll(".sb-role-btn").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
 }
 
-// ── MARKET ───────────────────────────────────────────────────────────
-function setMarket(m, btn){
-  currentMarket = m;
-  document.getElementById("market-label").textContent =
-    m==="india" ? "🇮🇳 India Office" : "🇧🇩 Bangladesh Office";
-  document.querySelectorAll(".market-opt").forEach(b=>{
-    b.classList.toggle("sel", b.dataset.market===m);
-  });
-  document.getElementById("check-india").style.display = m==="india" ? "" : "none";
-  document.getElementById("check-bangladesh").style.display = m==="bangladesh" ? "" : "none";
+function setMarket(m,btn){
+  currentMarket=m;
+  document.getElementById("market-label").textContent=m==="india"?"🇮🇳 India Office":"🇧🇩 Bangladesh Office";
+  document.querySelectorAll(".mkt-opt").forEach(b=>b.classList.toggle("sel",b.dataset.market===m));
+  document.getElementById("chk-india").style.display=m==="india"?"":"none";
+  document.getElementById("chk-bd").style.display=m==="bangladesh"?"":"none";
   document.getElementById("market-menu").classList.remove("open");
   renderAll();
 }
 
-function toggleMarketMenu(){
-  document.getElementById("market-menu").classList.toggle("open");
-}
-document.addEventListener("click", e=>{
-  if(!e.target.closest(".market-dropdown"))
-    document.getElementById("market-menu").classList.remove("open");
+function toggleMktMenu(){document.getElementById("market-menu").classList.toggle("open")}
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".market-dd"))document.getElementById("market-menu").classList.remove("open");
 });
 
-// ── SIDEBAR MOBILE ────────────────────────────────────────────────────
 function toggleSidebar(){
   document.getElementById("sidebar").classList.toggle("open");
   document.getElementById("sidebar-overlay").classList.toggle("visible");
@@ -808,29 +835,23 @@ function closeSidebar(){
   document.getElementById("sidebar-overlay").classList.remove("visible");
 }
 
-// ── MODALS ────────────────────────────────────────────────────────────
-function openModal(id){ document.getElementById(id).classList.add("open") }
-function closeModal(id){ document.getElementById(id).classList.remove("open") }
+function openModal(id){document.getElementById(id).classList.add("open")}
+function closeModal(id){document.getElementById(id).classList.remove("open")}
 
 function openWaModal(patient){
-  const dial = MOCK[currentMarket].currency.dialCode;
-  document.getElementById("wa-modal-sub").textContent = `${patient.name} · ${dial}`;
-  document.getElementById("wa-dial").textContent = dial;
-  const numStr = (patient.phone||"").replace(/^\+\d+\s/,"");
-  document.getElementById("wa-phone-number").textContent = numStr;
-  document.getElementById("wa-message").value =
-    `Dear ${patient.name},\n\nThis is a gentle reminder from our clinic regarding your upcoming appointment. Please confirm your visit at your earliest convenience.\n\nThank you,\nAuraScale Clinic`;
+  const dial=DATA[currentMarket].currency.dial;
+  document.getElementById("wa-modal-sub").textContent=`${patient.name} · ${dial}`;
+  document.getElementById("wa-dial").textContent=dial;
+  const num=(patient.phone||"").replace(/^\+\d+\s/,"");
+  document.getElementById("wa-phone-display").textContent=num;
+  document.getElementById("wa-message").value=`Dear ${patient.name},\n\nThis is a gentle reminder from our clinic regarding your upcoming appointment or follow-up care. Please confirm your visit at your earliest convenience.\n\nThank you,\nAuraScale Clinic`;
   openModal("wa-modal");
 }
 
-// Click outside modal to close
-document.querySelectorAll(".modal-overlay").forEach(overlay=>{
-  overlay.addEventListener("click", e=>{
-    if(e.target===overlay) overlay.classList.remove("open");
-  });
+document.querySelectorAll(".modal-overlay").forEach(o=>{
+  o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("open")});
 });
 
-// ── INIT ──────────────────────────────────────────────────────────────
 renderAll();
 </script>
 </body>
