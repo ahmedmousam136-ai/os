@@ -2,552 +2,721 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>AuraScale OS — Clinical Intelligence Platform</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#ffffff"/>
+<title>AuraScale OS — Clinic Operating System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet"/>
 <style>
+/* ─── RESET & ROOT ─── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#F8F7F4;
+  --bg:#F7F6F3;
   --surface:#FFFFFF;
-  --surface2:#FAFAF9;
-  --border:#E8E6E1;
-  --border-mid:#D4D1CA;
-  --border-strong:#B8B3AA;
-  --text-primary:#1A1916;
-  --text-secondary:#6B6760;
-  --text-tertiary:#A39F99;
-  --text-inverse:#FFFFFF;
-  --blue:#3B6EE8;
-  --blue-bg:#EEF3FD;
-  --blue-border:#C2D3F5;
-  --blue-hover:#2E5DD4;
-  --emerald:#16A066;
-  --emerald-bg:#EDFAF3;
-  --emerald-border:#A7DFC5;
-  --amber:#C97B2A;
-  --amber-bg:#FDF5E8;
+  --surface2:#FAFAF8;
+  --border:#E8E5DF;
+  --border-mid:#D2CEC6;
+  --border-strong:#AEA9A0;
+  --text-primary:#18170F;
+  --text-secondary:#64605A;
+  --text-tertiary:#9E9A93;
+  --blue:#2E63D4;
+  --blue-light:#4475E0;
+  --blue-bg:#EDF2FC;
+  --blue-border:#BDD0F7;
+  --blue-hover:#2354C0;
+  --green:#12976A;
+  --green-bg:#EAFAF3;
+  --green-border:#9ADEC3;
+  --amber:#C27820;
+  --amber-bg:#FDF4E6;
   --amber-border:#F0CEAA;
-  --red:#C44040;
+  --red:#C23838;
   --red-bg:#FDF0F0;
   --red-border:#F2B8B8;
-  --slate:#445566;
   --sidebar-w:260px;
-  --header-h:56px;
-  --radius-sm:8px;
-  --radius-md:12px;
-  --radius-lg:16px;
-  --radius-xl:20px;
-  --shadow-xs:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
-  --shadow-sm:0 2px 8px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.05);
-  --shadow-md:0 4px 16px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.06);
-  --shadow-lg:0 12px 40px rgba(0,0,0,.12),0 4px 12px rgba(0,0,0,.08);
-  --transition:.18s cubic-bezier(.4,0,.2,1);
+  --header-h:54px;
+  --bnav-h:68px;
+  --r-sm:8px;
+  --r-md:12px;
+  --r-lg:16px;
+  --r-xl:20px;
+  --sh-xs:0 1px 3px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.04);
+  --sh-sm:0 2px 8px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.04);
+  --sh-md:0 4px 18px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.05);
+  --sh-lg:0 12px 42px rgba(0,0,0,.13),0 4px 14px rgba(0,0,0,.07);
+  --ease:.17s cubic-bezier(.4,0,.2,1);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-l:env(safe-area-inset-left,0px);
+  --safe-r:env(safe-area-inset-right,0px);
 }
 
-html{background:var(--bg);scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.5}
+html{background:var(--bg);-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text-primary);
+  font-family:'DM Sans',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;overflow-x:hidden;
+  font-size:14px;line-height:1.55;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
-::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
-button{font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;border:none;background:none}
-input,textarea,select{font-family:'DM Sans',sans-serif;outline:none}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;outline:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+input,textarea,select{font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;appearance:none}
 a{color:inherit;text-decoration:none}
 .serif{font-family:'Instrument Serif',Georgia,serif}
 
-/* ── LAYOUT ── */
-#app{display:flex;min-height:100vh}
+/* ─── LAYOUT ─── */
+#app{display:flex;min-height:100vh;position:relative}
 
-/* ── SIDEBAR ── */
+/* ─── OVERLAY ─── */
+#overlay{
+  display:none;position:fixed;inset:0;z-index:38;
+  background:rgba(15,14,10,.5);backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+#overlay.on{display:block}
+
+/* ─── SIDEBAR ─── */
 #sidebar{
-  width:var(--sidebar-w);min-height:100vh;
-  background:var(--surface);
-  border-right:1px solid var(--border);
+  width:var(--sidebar-w);
+  background:var(--surface);border-right:1px solid var(--border);
   display:flex;flex-direction:column;
   position:fixed;top:0;left:0;bottom:0;z-index:40;
-  transition:transform var(--transition);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+  overflow-y:auto;overflow-x:hidden;
+  padding-top:var(--safe-t);
+  -webkit-overflow-scrolling:touch;
 }
-#sidebar-overlay{
-  display:none;position:fixed;inset:0;z-index:39;
-  background:rgba(0,0,0,.25);backdrop-filter:blur(4px);
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-mark{display:flex;align-items:baseline;gap:0;line-height:1}
+.sb-mark .a{font-family:'Instrument Serif',serif;font-size:21px;color:var(--text-primary);letter-spacing:-.02em}
+.sb-mark .s{font-family:'Instrument Serif',serif;font-size:21px;color:var(--blue);letter-spacing:-.02em}
+.sb-mark .os{font-size:10px;font-weight:700;color:var(--text-tertiary);letter-spacing:.08em;margin-left:5px;align-self:center}
+.sb-tag{font-size:10px;color:var(--text-tertiary);letter-spacing:.05em;margin-top:3px}
+
+.sb-doc{padding:11px 13px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-doc-inner{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);padding:12px 13px}
+.sb-doc-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.sb-av{width:36px;height:36px;border-radius:9px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:15px;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(46,99,212,.28)}
+.sb-doc-name{color:var(--text-primary);font-size:12.5px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.sb-doc-reg{display:inline-block;margin-top:3px;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);background:var(--surface);border:1px solid var(--blue-border);padding:2px 6px;border-radius:4px;font-weight:700}
+.sb-doc-spec{color:var(--text-secondary);font-size:10.5px;line-height:1.5}
+.sb-online{display:flex;align-items:center;gap:5px;margin-top:7px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-g{background:var(--green)}.dot-b{background:var(--blue)}.dot-a{background:var(--amber)}.dot-r{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.blink{animation:pulse 1.8s ease-in-out infinite}
+
+nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-sec{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-tertiary);font-weight:700;padding:9px 9px 4px;margin-top:4px}
+.nb{
+  width:100%;display:flex;align-items:center;gap:9px;
+  padding:10px 9px;border-radius:var(--r-sm);
+  color:var(--text-secondary);font-size:12.5px;font-weight:500;
+  transition:all var(--ease);cursor:pointer;white-space:nowrap;
+  text-align:left;position:relative;min-height:42px;
 }
-#sidebar-overlay.visible{display:block}
+.nb:hover:not(.on){background:var(--bg);color:var(--text-primary)}
+.nb.on{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.nb.on::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--blue);border-radius:0 2px 2px 0}
+.nb-ic{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.65}
+.nb.on .nb-ic{opacity:1}
+.nb-badge{margin-left:auto;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
 
-/* Logo */
-.sb-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
-.sb-wordmark{display:flex;align-items:baseline;gap:0;line-height:1}
-.sb-wordmark .aura{font-family:'Instrument Serif',Georgia,serif;font-size:22px;font-weight:400;color:var(--text-primary);letter-spacing:-.02em}
-.sb-wordmark .scale{font-family:'Instrument Serif',Georgia,serif;font-size:22px;font-weight:400;color:var(--blue);letter-spacing:-.02em}
-.sb-wordmark .os{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:.06em;margin-left:5px;align-self:center}
-.sb-tagline{font-size:10.5px;color:var(--text-tertiary);letter-spacing:.04em;margin-top:4px}
+.sb-foot{padding:11px 13px;border-top:1px solid var(--border);flex-shrink:0;padding-bottom:calc(11px + var(--safe-b))}
+.sb-comp{display:flex;align-items:center;gap:5px;color:var(--text-tertiary);font-size:8.5px;letter-spacing:.05em;margin-bottom:8px}
+.sb-out{display:flex;align-items:center;gap:6px;color:var(--text-tertiary);font-size:11px;cursor:pointer;transition:color var(--ease);padding:6px 0;min-height:36px}
+.sb-out:hover{color:var(--red)}
 
-/* Doctor card */
-.sb-doctor{padding:12px 14px;border-bottom:1px solid var(--border)}
-.sb-doc-inner{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-md);padding:13px 14px}
-.sb-doc-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.sb-doc-av{width:38px;height:38px;border-radius:10px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:16px;color:var(--text-inverse);flex-shrink:0;box-shadow:0 2px 8px rgba(59,110,232,.3)}
-.sb-doc-name{color:var(--text-primary);font-size:13px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
-.sb-doc-reg{display:inline-block;margin-top:4px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);background:var(--surface);border:1px solid var(--blue-border);padding:2px 7px;border-radius:5px;font-weight:600}
-.sb-doc-spec{color:var(--text-secondary);font-size:11px;line-height:1.5}
-.sb-doc-status{display:flex;align-items:center;gap:5px;margin-top:8px}
-.status-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
-.dot-green{background:var(--emerald)}.dot-blue{background:var(--blue)}.dot-amber{background:var(--amber)}.dot-red{background:var(--red)}
+/* ─── MAIN ─── */
+#main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
 
-/* Role toggle */
-.sb-role{padding:10px 14px;border-bottom:1px solid var(--border)}
-.sb-role-label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);font-weight:600;margin-bottom:6px}
-.sb-role-wrap{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px;gap:2px}
-.sb-role-btn{flex:1;padding:5px 4px;border-radius:6px;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--text-tertiary);transition:all var(--transition);letter-spacing:.01em;cursor:pointer}
-.sb-role-btn.active{background:var(--surface);border:1px solid var(--border-mid);color:var(--blue);box-shadow:var(--shadow-xs)}
-
-/* Nav */
-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
-.nav-section-label{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-tertiary);font-weight:700;padding:8px 10px 4px;margin-top:6px}
-.nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);border:none;background:transparent;color:var(--text-secondary);text-align:left;font-size:13px;font-weight:500;transition:all var(--transition);cursor:pointer;white-space:nowrap}
-.nav-btn:hover:not(.active){background:var(--bg);color:var(--text-primary)}
-.nav-btn.active{background:var(--blue-bg);color:var(--blue);font-weight:600;border-left:2px solid var(--blue);padding-left:8px}
-.nav-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.7}
-.nav-btn.active .nav-icon{opacity:1}
-.nav-badge{margin-left:auto;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px}
-
-/* Sidebar footer */
-.sb-foot{padding:12px 14px;border-top:1px solid var(--border)}
-.sb-compliance{display:flex;align-items:center;gap:5px;color:var(--text-tertiary);font-size:9px;letter-spacing:.04em;margin-bottom:6px}
-.sb-signout{display:flex;align-items:center;gap:6px;color:var(--text-tertiary);font-size:11px;cursor:pointer;transition:color var(--transition);padding:4px 0}
-.sb-signout:hover{color:var(--red)}
-
-/* ── MAIN ── */
-#main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
-
-/* ── HEADER ── */
+/* ─── HEADER ─── */
 header{
   height:var(--header-h);
-  background:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.94);
   border-bottom:1px solid var(--border);
-  padding:0 22px;
+  padding:0 20px;
   display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:30;gap:12px;
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:30;gap:10px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  flex-shrink:0;
 }
-.hdr-left{display:flex;align-items:center;gap:10px}
-.breadcrumb{display:flex;align-items:center;gap:6px}
-.breadcrumb .bc-root{font-family:'Instrument Serif',serif;font-size:16px;color:var(--text-primary);letter-spacing:-.01em}
-.breadcrumb .bc-sep{color:var(--text-tertiary);font-size:13px}
-.breadcrumb .bc-page{color:var(--text-secondary);font-size:13px;font-weight:500;white-space:nowrap}
-.hdr-right{display:flex;align-items:center;gap:8px}
-.hdr-pill{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;font-size:11px;color:var(--text-secondary);white-space:nowrap;box-shadow:var(--shadow-xs)}
-.market-dd{position:relative}
-.market-btn{display:flex;align-items:center;gap:6px;background:var(--blue);color:var(--text-inverse);padding:7px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;transition:background var(--transition);white-space:nowrap;box-shadow:0 2px 8px rgba(59,110,232,.25);cursor:pointer}
-.market-btn:hover{background:var(--blue-hover)}
-.market-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-lg);z-index:60;min-width:215px;display:none}
-.market-menu.open{display:block}
-.mkt-opt{width:100%;display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:transparent;border:none;cursor:pointer;text-align:left;transition:background var(--transition)}
-.mkt-opt:hover{background:var(--bg)}
-.mkt-opt.sel{background:var(--blue-bg)}
-.mkt-opt-name{color:var(--text-primary);font-size:12.5px;font-weight:600}
-.mkt-opt-sub{color:var(--text-tertiary);font-size:10.5px;margin-top:1px}
-.icon-btn{width:34px;height:34px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);position:relative;transition:all var(--transition);cursor:pointer;box-shadow:var(--shadow-xs)}
+.hdr-l{display:flex;align-items:center;gap:9px;min-width:0;flex:1}
+.hamburger{
+  display:none;width:38px;height:38px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);align-items:center;justify-content:center;
+  color:var(--text-primary);cursor:pointer;flex-shrink:0;
+  box-shadow:var(--sh-xs);
+}
+.bc{display:flex;align-items:center;gap:5px;min-width:0}
+.bc-root{font-family:'Instrument Serif',serif;font-size:15px;color:var(--text-primary);white-space:nowrap}
+.bc-sep{color:var(--text-tertiary);font-size:12px}
+.bc-page{color:var(--text-secondary);font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.hdr-r{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.date-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--text-secondary);white-space:nowrap;box-shadow:var(--sh-xs)}
+.mkt-dd{position:relative}
+.mkt-btn{display:flex;align-items:center;gap:5px;background:var(--blue);color:#fff;padding:7px 11px;border-radius:var(--r-sm);font-size:11.5px;font-weight:600;transition:background var(--ease);white-space:nowrap;box-shadow:0 2px 8px rgba(46,99,212,.22);cursor:pointer;min-height:36px}
+.mkt-btn:hover{background:var(--blue-hover)}
+.mkt-btn .chevron{opacity:.75}
+.mkt-menu{position:absolute;right:0;top:calc(100% + 7px);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--sh-lg);z-index:60;min-width:210px;display:none}
+.mkt-menu.open{display:block}
+.mo{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;transition:background var(--ease);border:none;background:transparent;text-align:left;min-height:50px}
+.mo:hover{background:var(--bg)}
+.mo.sel{background:var(--blue-bg)}
+.mo-name{color:var(--text-primary);font-size:12px;font-weight:600}
+.mo-sub{color:var(--text-tertiary);font-size:10px;margin-top:1px}
+.icon-btn{width:36px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);position:relative;transition:all var(--ease);cursor:pointer;box-shadow:var(--sh-xs)}
 .icon-btn:hover{border-color:var(--border-mid);color:var(--text-primary)}
-.notif-dot{position:absolute;top:6px;right:6px;width:5px;height:5px;background:var(--red);border-radius:50%;border:1.5px solid var(--surface)}
-.hamburger{display:none;width:34px;height:34px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);align-items:center;justify-content:center;color:var(--text-primary);cursor:pointer;box-shadow:var(--shadow-xs)}
+.notif-pip{position:absolute;top:5px;right:5px;width:5px;height:5px;background:var(--red);border-radius:50%;border:1.5px solid #fff}
 
-/* ── CONTENT ── */
-main{flex:1;padding:22px;background:var(--bg);overflow-y:auto}
+/* ─── CONTENT ─── */
+main.content{
+  flex:1;
+  padding:20px;
+  background:var(--bg);
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
 
-/* ── CONTEXT STRIP ── */
-.context-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-.ctx-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;font-size:11px;color:var(--text-secondary);box-shadow:var(--shadow-xs)}
+/* Context strip */
+.ctx{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+.ctx-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--text-secondary);box-shadow:var(--sh-xs)}
 .ctx-chip .lbl{font-weight:600;color:var(--text-primary)}
-.live-badge{display:inline-flex;align-items:center;gap:4px;background:var(--emerald-bg);border:1px solid var(--emerald-border);border-radius:var(--radius-sm);padding:5px 10px;font-size:11px;color:var(--emerald);font-weight:600}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.blink{animation:blink 2s infinite}
+.live-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--green);font-weight:600}
 
-/* ── VIEWS ── */
-.view{display:none;flex-direction:column;gap:20px}
-.view.active{display:flex}
+/* Views */
+.view{display:none;flex-direction:column;gap:18px}
+.view.on{display:flex}
 
-/* ── SECTION HEADER ── */
-.section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.section-title{font-family:'Instrument Serif',serif;font-size:24px;font-weight:400;color:var(--text-primary);letter-spacing:-.02em;line-height:1.2}
-.section-sub{color:var(--text-tertiary);font-size:12px;margin-top:3px;line-height:1.5}
+/* Section head */
+.sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.st{font-family:'Instrument Serif',serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
+.ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
 
-/* ── METRICS ── */
-.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 18px 16px;transition:all var(--transition);cursor:default;box-shadow:var(--shadow-xs)}
-.metric-card:hover{box-shadow:var(--shadow-sm);border-color:var(--border-mid);transform:translateY(-1px)}
-.metric-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.metric-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--text-tertiary)}
-.metric-icon{width:28px;height:28px;border-radius:8px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
-.metric-value{font-family:'Instrument Serif',serif;font-size:30px;font-weight:400;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
-.metric-sub{font-size:10.5px;color:var(--text-tertiary);margin-top:5px;display:flex;align-items:center;gap:4px}
-.metric-sub .up{color:var(--emerald);font-weight:600}
-.metric-sub .down{color:var(--red);font-weight:600}
+/* ─── METRICS GRID ─── */
+.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 14px;transition:all var(--ease);box-shadow:var(--sh-xs)}
+.mc:hover{box-shadow:var(--sh-sm);border-color:var(--border-mid);transform:translateY(-1px)}
+.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
+.mc-icon{width:27px;height:27px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
+.mc-val{font-family:'Instrument Serif',serif;font-size:28px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.up{color:var(--green);font-weight:700}.dn{color:var(--red);font-weight:700}
 
-/* ── PANELS ── */
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-xs)}
-.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
-.panel-title{display:flex;align-items:center;gap:8px;color:var(--text-primary);font-weight:600;font-size:13px}
-.panel-badge{display:inline-flex;align-items:center;font-size:10px;padding:2px 8px;border-radius:5px;font-weight:700;letter-spacing:.04em}
-.pb-blue{color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-border)}
-.pb-red{color:var(--red);background:var(--red-bg);border:1px solid var(--red-border)}
-.pb-green{color:var(--emerald);background:var(--emerald-bg);border:1px solid var(--emerald-border)}
-.pb-amber{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
+/* ─── PANELS ─── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
+.pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
+.pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.pb-b{color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-border)}
+.pb-r{color:var(--red);background:var(--red-bg);border:1px solid var(--red-border)}
+.pb-g{color:var(--green);background:var(--green-bg);border:1px solid var(--green-border)}
+.pb-a{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
 
-/* ── STATUS CHIPS ── */
-.chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.chip-checkedin{background:var(--emerald-bg);color:var(--emerald);border:1px solid var(--emerald-border)}
-.chip-waiting{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
-.chip-inprogress{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
-.chip-missed{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
-.chip-active{background:var(--emerald-bg);color:var(--emerald);border:1px solid var(--emerald-border)}
-.chip-atrisk{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
-.chip-inactive{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+/* ─── CHIPS ─── */
+.chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.ch-in{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.ch-wait{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.ch-prog{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.ch-miss{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.ch-risk{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.ch-inact{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 
-/* ── QUEUE ── */
-.queue-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(228,224,217,.7);transition:background var(--transition)}
-.queue-row:hover{background:var(--bg)}
-.queue-row:last-child{border-bottom:none}
-.token{width:28px;height:28px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif;flex-shrink:0}
-.queue-name{color:var(--text-primary);font-size:12.5px;font-weight:500}
-.queue-time{color:var(--text-tertiary);font-size:10.5px;display:flex;align-items:center;gap:3px;margin-top:1px}
+/* ─── QUEUE ─── */
+.qrow{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease);gap:8px}
+.qrow:hover{background:var(--bg)}
+.qrow:last-child{border-bottom:none}
+.token{width:28px;height:28px;border-radius:6px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:var(--text-secondary);flex-shrink:0}
+.qname{color:var(--text-primary);font-size:12px;font-weight:500}
+.qtime{color:var(--text-tertiary);font-size:10px;display:flex;align-items:center;gap:3px;margin-top:1px}
 
-/* ── ALERTS ── */
-.alert-row{padding:12px 16px;border-bottom:1px solid rgba(228,224,217,.7);transition:background var(--transition)}
-.alert-row:hover{background:var(--bg)}
-.alert-row:last-child{border-bottom:none}
-.alert-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.alert-name{color:var(--text-primary);font-size:12.5px;font-weight:600}
-.alert-cond{color:var(--text-secondary);font-size:10.5px;margin-top:1px}
-.alert-due{color:var(--text-tertiary);font-size:10.5px;margin-top:3px}
-.alert-due .due-val{color:var(--amber);font-weight:600}
-.remind-btn{flex-shrink:0;background:var(--surface);border:1px solid var(--border);color:var(--text-primary);font-size:10.5px;padding:5px 10px;border-radius:7px;display:flex;align-items:center;gap:5px;font-weight:600;transition:all var(--transition);box-shadow:var(--shadow-xs);cursor:pointer;white-space:nowrap}
-.remind-btn:hover{background:var(--emerald-bg);border-color:var(--emerald-border);color:var(--emerald)}
+/* ─── ALERTS ─── */
+.arow{padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
+.arow:hover{background:var(--bg)}
+.arow:last-child{border-bottom:none}
+.ai{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.aname{color:var(--text-primary);font-size:12px;font-weight:600}
+.acond{color:var(--text-secondary);font-size:10.5px;margin-top:1px}
+.adue{color:var(--text-tertiary);font-size:10px;margin-top:3px}
+.adue .dv{color:var(--amber);font-weight:700}
+.remind{
+  flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  color:var(--text-primary);font-size:10px;padding:7px 10px;
+  border-radius:6px;display:flex;align-items:center;gap:4px;font-weight:600;
+  transition:all var(--ease);box-shadow:var(--sh-xs);cursor:pointer;
+  white-space:nowrap;min-height:34px;
+}
+.remind:hover{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
 
-/* ── APPOINTMENTS PAGE ── */
-.add-btn{background:var(--blue);border:none;color:var(--text-inverse);padding:9px 15px;border-radius:var(--radius-sm);display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;transition:background var(--transition);box-shadow:0 2px 8px rgba(59,110,232,.25);cursor:pointer;white-space:nowrap}
+/* ─── ACTION BUTTON ─── */
+.add-btn{
+  background:var(--blue);border:none;color:#fff;
+  padding:9px 14px;border-radius:var(--r-sm);
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;transition:background var(--ease);
+  box-shadow:0 2px 8px rgba(46,99,212,.22);cursor:pointer;
+  white-space:nowrap;min-height:38px;
+}
 .add-btn:hover{background:var(--blue-hover)}
-.search-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:9px 13px;display:flex;align-items:center;gap:9px;transition:border-color var(--transition);box-shadow:var(--shadow-xs)}
-.search-bar:focus-within{border-color:var(--border-mid)}
-.search-bar input{background:none;border:none;color:var(--text-primary);font-size:13px;flex:1}
-.search-bar input::placeholder{color:var(--text-tertiary)}
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-xs)}
-.table-head{display:grid;grid-template-columns:3fr 2.5fr 1.8fr 1fr 2fr 40px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg)}
-.table-head span{font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--text-tertiary);display:flex;align-items:center}
-.table-head .center{justify-content:center}
-.table-row{display:grid;grid-template-columns:3fr 2.5fr 1.8fr 1fr 2fr 40px;padding:11px 16px;align-items:center;border-bottom:1px solid rgba(228,224,217,.6);transition:background var(--transition)}
-.table-row:hover{background:var(--bg)}
-.table-row:last-child{border-bottom:none}
-.pat-av{width:28px;height:28px;border-radius:8px;background:var(--blue-bg);border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:11px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
-.pat-name{color:var(--text-primary);font-size:12.5px;font-weight:500}
-.pat-phone{color:var(--text-secondary);font-size:11px;font-family:'DM Sans',sans-serif;letter-spacing:.01em}
-.pat-visits{text-align:center;color:var(--text-primary);font-size:14px;font-weight:700;font-family:'Instrument Serif',serif}
-.wa-btn{background:none;border:none;color:var(--text-tertiary);padding:4px;transition:color var(--transition);cursor:pointer;border-radius:5px}
-.wa-btn:hover{color:var(--emerald)}
+.add-btn:active{transform:scale(.97)}
 
-/* ── WHATSAPP PAGE ── */
-.automation-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-xs)}
-.auto-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(228,224,217,.7);transition:background var(--transition)}
+/* ─── SEARCH ─── */
+.search{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;display:flex;align-items:center;gap:8px;transition:border-color var(--ease);box-shadow:var(--sh-xs)}
+.search:focus-within{border-color:var(--border-mid)}
+.search input{background:none;border:none;color:var(--text-primary);font-size:13px;flex:1;min-width:0;padding:0;min-height:22px}
+.search input::placeholder{color:var(--text-tertiary)}
+
+/* ─── TABLE ─── */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.thead{display:grid;grid-template-columns:3fr 2fr 1.4fr 1fr 1.6fr 38px;padding:8px 15px;border-bottom:1px solid var(--border);background:var(--bg)}
+.thead span{font-size:8.5px;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:var(--text-tertiary);display:flex;align-items:center}
+.cen{justify-content:center}
+.trow{display:grid;grid-template-columns:3fr 2fr 1.4fr 1fr 1.6fr 38px;padding:11px 15px;align-items:center;border-bottom:1px solid rgba(228,224,216,.55);transition:background var(--ease)}
+.trow:hover{background:var(--bg)}
+.trow:last-child{border-bottom:none}
+.pav{width:30px;height:30px;border-radius:7px;background:var(--blue-bg);border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:11px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
+.pname{color:var(--text-primary);font-size:12px;font-weight:500}
+.pphone{color:var(--text-secondary);font-size:10.5px}
+.pvisits{text-align:center;color:var(--text-primary);font-size:14px;font-weight:700;font-family:'Instrument Serif',serif}
+.wa-btn{background:none;border:none;color:var(--text-tertiary);padding:4px;transition:color var(--ease);cursor:pointer;border-radius:4px;min-width:30px;min-height:30px;display:flex;align-items:center;justify-content:center}
+.wa-btn:hover{color:var(--green)}
+
+/* ─── WHATSAPP PAGE ─── */
+.auto-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.auto-row{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease);gap:12px}
 .auto-row:hover{background:var(--bg)}
 .auto-row:last-child{border-bottom:none}
-.auto-icon{width:32px;height:32px;border-radius:8px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
-.auto-label{color:var(--text-primary);font-size:12.5px;font-weight:600}
-.auto-desc{color:var(--text-tertiary);font-size:11px;margin-top:1px;line-height:1.45}
-.toggle{position:relative;display:inline-flex;width:42px;height:23px;align-items:center;border-radius:12px;border:none;cursor:pointer;transition:background var(--transition);flex-shrink:0;padding:0}
-.toggle.on{background:var(--emerald)}.toggle.off{background:var(--border-mid)}
-.toggle-knob{position:absolute;width:17px;height:17px;border-radius:50%;background:white;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left var(--transition)}
-.toggle.on .toggle-knob{left:22px}.toggle.off .toggle-knob{left:3px}
+.auto-ic{width:30px;height:30px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
+.auto-lbl{color:var(--text-primary);font-size:12.5px;font-weight:600}
+.auto-desc{color:var(--text-tertiary);font-size:10.5px;margin-top:2px;line-height:1.45}
+
+/* Toggle */
+.toggle{position:relative;display:inline-flex;width:42px;height:24px;border-radius:12px;cursor:pointer;transition:background var(--ease);flex-shrink:0;padding:0;border:none;min-width:42px}
+.toggle.on{background:var(--green)}.toggle.off{background:var(--border-mid)}
+.tknob{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left var(--ease);top:3px}
+.toggle.on .tknob{left:21px}.toggle.off .tknob{left:3px}
 
 /* Quick actions */
-.quick-row{padding:12px 16px;border-bottom:1px solid rgba(228,224,217,.7);transition:background var(--transition)}
-.quick-row:hover{background:var(--bg)}
-.quick-row:last-child{border-bottom:none}
-.quick-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.quick-av{width:32px;height:32px;border-radius:9px;background:var(--blue-bg);border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:13px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
-.quick-name{color:var(--text-primary);font-size:12.5px;font-weight:600}
-.quick-phone{color:var(--text-tertiary);font-size:10.5px;margin-top:1px}
-.quick-btns{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.qbtn{background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-size:10px;padding:4px 9px;border-radius:6px;display:flex;align-items:center;gap:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;transition:all var(--transition);cursor:pointer;box-shadow:var(--shadow-xs)}
+.qr{padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
+.qr:hover{background:var(--bg)}
+.qr:last-child{border-bottom:none}
+.qr-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+.qav{width:30px;height:30px;border-radius:8px;background:var(--blue-bg);border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:12px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
+.qrname{color:var(--text-primary);font-size:12px;font-weight:600}
+.qrphone{color:var(--text-tertiary);font-size:10px;margin-top:1px}
+.qbtns{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.qbtn{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text-secondary);font-size:10px;
+  padding:6px 10px;border-radius:5px;
+  display:flex;align-items:center;gap:3px;
+  font-weight:600;letter-spacing:.04em;
+  transition:all var(--ease);cursor:pointer;
+  box-shadow:var(--sh-xs);min-height:32px;
+}
 .qbtn:hover{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
 
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);backdrop-filter:blur(8px)}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:440px;margin:0 16px;box-shadow:var(--shadow-lg);animation:slideUp .25s cubic-bezier(.4,0,.2,1)}
-@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
-.modal-icon{width:34px;height:34px;border-radius:9px;background:var(--emerald-bg);border:1px solid var(--emerald-border);display:flex;align-items:center;justify-content:center;color:var(--emerald);flex-shrink:0}
-.modal-title{color:var(--text-primary);font-weight:700;font-size:13.5px}
-.modal-close{color:var(--text-tertiary);transition:color var(--transition);padding:4px;cursor:pointer}
-.modal-close:hover{color:var(--text-primary)}
-.modal-body{padding:18px;display:flex;flex-direction:column;gap:13px}
-.field-label{color:var(--text-tertiary);font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;display:block;margin-bottom:5px}
-.field-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text-primary);font-size:13px;transition:border-color var(--transition)}
-.field-input:focus{border-color:var(--blue);background:var(--surface)}
-.field-textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text-primary);font-size:13px;resize:none;transition:border-color var(--transition);line-height:1.5}
-.field-textarea:focus{border-color:var(--blue);background:var(--surface)}
-.phone-row{display:flex;gap:8px}
-.phone-prefix{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--blue);font-size:12px;min-width:65px;display:flex;align-items:center;font-weight:700}
-.modal-submit{width:100%;background:var(--blue);border:none;color:var(--text-inverse);font-weight:700;padding:11px 0;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;margin-top:2px;transition:background var(--transition);box-shadow:0 2px 8px rgba(59,110,232,.25);cursor:pointer}
-.modal-submit:hover{background:var(--blue-hover)}
+/* ─── ANALYTICS BAR ─── */
+.abar-row{padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
+.abar-row:last-child{border-bottom:none}
+.abar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.abar-lbl{color:var(--text-primary);font-size:12px;font-weight:500}
+.abar-val{color:var(--text-primary);font-size:13px;font-weight:700;font-family:'Instrument Serif',serif}
+.abar-bg{background:var(--bg);border-radius:3px;height:5px;overflow:hidden}
+.abar-fill{background:var(--blue);height:100%;border-radius:3px;transition:width .5s ease}
 
-/* ── BOTTOM NAV (tablet & mobile) ── */
-.bottom-nav{
+/* Patient status bar */
+.pstat-row{padding:13px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
+.pstat-row:last-child{border-bottom:none}
+.pstat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.pstat-l{display:flex;align-items:center;gap:6px}
+.pstat-lbl{color:var(--text-primary);font-size:12px;font-weight:500}
+.pstat-count{font-size:13.5px;font-weight:700;font-family:'Instrument Serif',serif}
+.pstat-tot{color:var(--text-tertiary);font-size:10.5px;font-weight:400;font-family:'DM Sans',sans-serif}
+
+/* ─── MODAL ─── */
+.mod-ov{
+  position:fixed;inset:0;z-index:70;
+  display:none;align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  padding:0;
+}
+.mod-ov.open{display:flex}
+@media(min-width:600px){.mod-ov{align-items:center;padding:20px}}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  width:100%;max-width:440px;
+  box-shadow:var(--sh-lg);
+  animation:slideUp .22s cubic-bezier(.4,0,.2,1);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  max-height:94vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:max(16px, var(--safe-b));
+}
+@media(min-width:600px){
+  .modal{border-radius:var(--r-xl);max-height:90vh;padding-bottom:0}
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:16px 17px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1}
+.mic{width:32px;height:32px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);flex-shrink:0}
+.mtitle{color:var(--text-primary);font-weight:700;font-size:13px}
+.mclose{color:var(--text-tertiary);transition:color var(--ease);padding:4px;cursor:pointer;min-width:34px;min-height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.mclose:hover{color:var(--text-primary);background:var(--bg)}
+.mb{padding:16px 17px;display:flex;flex-direction:column;gap:13px}
+.flbl{color:var(--text-tertiary);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:block;margin-bottom:5px}
+.finput{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:11px 12px;
+  color:var(--text-primary);font-size:14px;
+  transition:border-color var(--ease);min-height:44px;
+}
+.finput:focus{border-color:var(--blue);background:var(--surface)}
+.ftextarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:11px 12px;
+  color:var(--text-primary);font-size:14px;
+  resize:none;transition:border-color var(--ease);
+  line-height:1.6;
+}
+.ftextarea:focus{border-color:var(--blue);background:var(--surface)}
+.prow{display:flex;gap:7px}
+.ppfx{
+  background:var(--blue-bg);border:1px solid var(--blue-border);
+  border-radius:var(--r-sm);padding:11px 12px;
+  color:var(--blue);font-size:12px;min-width:62px;
+  display:flex;align-items:center;font-weight:700;
+}
+.msub{
+  width:100%;background:var(--blue);border:none;color:#fff;
+  font-weight:700;padding:13px 0;border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;font-size:13px;margin-top:2px;
+  transition:background var(--ease);
+  box-shadow:0 2px 8px rgba(46,99,212,.2);
+  cursor:pointer;min-height:46px;
+}
+.msub:hover{background:var(--blue-hover)}
+.msub:active{transform:scale(.98)}
+
+/* ─── BOTTOM NAV ─── */
+.bnav{
   display:none;
   position:fixed;bottom:0;left:0;right:0;
-  height:68px;
-  background:rgba(255,255,255,.96);
+  background:rgba(255,255,255,.97);
   border-top:1px solid var(--border);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   z-index:35;
-  padding:0 4px env(safe-area-inset-bottom,8px);
   align-items:center;justify-content:space-around;
-  box-shadow:0 -1px 0 var(--border),0 -8px 24px rgba(0,0,0,.06);
+  box-shadow:0 -2px 20px rgba(0,0,0,.06);
+  padding:6px 4px;
+  padding-bottom:max(6px, var(--safe-b));
 }
-.bn-item{
+.bn{
   display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:8px 10px;border-radius:var(--radius-sm);
+  padding:4px 2px;border-radius:var(--r-sm);
   color:var(--text-tertiary);font-size:9px;font-weight:600;
-  cursor:pointer;transition:all var(--transition);
-  background:none;border:none;min-width:48px;flex:1;max-width:80px;
+  cursor:pointer;transition:all var(--ease);border:none;background:none;
+  flex:1;max-width:72px;min-width:44px;
+  min-height:52px;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
 }
-.bn-item.active{color:var(--blue)}
-.bn-item.active .bn-icon-wrap{background:var(--blue-bg)}
-.bn-icon-wrap{
-  width:36px;height:36px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  transition:background var(--transition);
-}
+.bn.on{color:var(--blue)}
+.bn.on .bn-ico{background:var(--blue-bg)}
+.bn-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:background var(--ease)}
 .bn-fab{
-  width:48px;height:48px;background:var(--blue);border-radius:50%;
-  border:none;display:flex;align-items:center;justify-content:center;
-  color:var(--text-inverse);cursor:pointer;
-  box-shadow:0 4px 16px rgba(59,110,232,.45);
-  transition:transform var(--transition),box-shadow var(--transition);
-  flex-shrink:0;
+  width:50px;height:50px;background:var(--blue);border-radius:50%;
+  border:none;display:flex;align-items:center;justify-content:center;color:#fff;
+  cursor:pointer;box-shadow:0 4px 16px rgba(46,99,212,.4);
+  transition:transform var(--ease),box-shadow var(--ease);flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
 }
-.bn-fab:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(59,110,232,.55)}
-.bn-fab:active{transform:scale(.96)}
+.bn-fab:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(46,99,212,.5)}
+.bn-fab:active{transform:scale(.92)}
 
-/* ═══════════════════════════════════════════════════
-   RESPONSIVE SYSTEM
-   ├── 1280px+  Full desktop (sidebar visible, 4-col metrics)
-   ├── 1024–1279 Small desktop / large laptop
-   ├── 768–1023  Tablet landscape / small laptop
-   ├── 640–767   Tablet portrait
-   └── <640      Mobile
-═══════════════════════════════════════════════════ */
+/* ─── EMPTY STATE ─── */
+.empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
+.empty-ic{font-size:32px;margin-bottom:10px;opacity:.45}
+.empty-t{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
+.empty-s{font-size:11.5px;line-height:1.5}
 
-/* ── 1280px+ : Full desktop ── */
+/* ─── TRUST BAR ─── */
+.trust-bar{display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 14px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--blue);font-weight:600;letter-spacing:.04em}
+
+/* ─── ONBOARDING BANNER ─── */
+.onboard{background:linear-gradient(135deg,var(--blue-bg) 0%,#f0f5ff 100%);border:1px solid var(--blue-border);border-radius:var(--r-lg);padding:16px 18px;display:flex;align-items:flex-start;gap:14px}
+.onboard-ic{width:38px;height:38px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.onboard-t{font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:3px}
+.onboard-s{font-size:11.5px;color:var(--text-secondary);line-height:1.5}
+.onboard-prog{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+.op-step{width:24px;height:4px;border-radius:2px;background:var(--border-mid)}
+.op-step.done{background:var(--blue)}
+.op-txt{font-size:10px;color:var(--text-tertiary);font-weight:600}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════════════ */
+
+/* 1280px+ — Large desktop */
 @media(min-width:1280px){
   :root{--sidebar-w:272px}
-  main{padding:26px 28px}
-  .metrics-grid{grid-template-columns:repeat(4,1fr);gap:14px}
-  .two-col{grid-template-columns:1fr 1fr;gap:18px}
-  .section-title{font-size:26px}
+  main.content{padding:24px 28px}
+  .mg{grid-template-columns:repeat(4,1fr);gap:14px}
+  .st{font-size:25px}
+  .two-col{gap:16px}
 }
 
-/* ── 1024–1279 : Small desktop / large laptop ── */
+/* 1024–1279 — Laptop */
 @media(max-width:1279px) and (min-width:1024px){
   :root{--sidebar-w:248px}
-  .metrics-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-  .two-col{grid-template-columns:1fr 1fr;gap:14px}
-  main{padding:20px 22px}
+  .mg{grid-template-columns:repeat(2,1fr);gap:11px}
+  main.content{padding:18px 20px}
 }
 
-/* ── 768–1023 : Tablet landscape ── */
+/* 768–1023 — Tablet landscape */
 @media(max-width:1023px) and (min-width:768px){
-  :root{--sidebar-w:230px}
-  main{padding:18px 18px 90px}
-  .metrics-grid{grid-template-columns:repeat(2,1fr);gap:11px}
-  .metric-value{font-size:26px}
-  .two-col{grid-template-columns:1fr;gap:14px}
-  .table-head,.table-row{grid-template-columns:2.5fr 2fr 1.5fr 1fr 40px}
-  .table-head .col-date,.table-row .col-date{display:none}
-  .hdr-pill{display:none}
-  .bottom-nav{display:flex}
-  #main{margin-left:var(--sidebar-w)}
+  :root{--sidebar-w:220px}
+  .bnav{display:flex}
+  main.content{padding:16px 16px calc(var(--bnav-h) + 20px + var(--safe-b))}
+  .mg{grid-template-columns:repeat(2,1fr);gap:10px}
+  .mc-val{font-size:24px}
+  .mc-icon{display:none}
+  .two-col{grid-template-columns:1fr;gap:13px}
+  .thead,.trow{grid-template-columns:3fr 1.8fr 1.2fr 1fr 38px}
+  .col-date{display:none}
+  .date-pill{display:none}
   .hamburger{display:none!important}
-  .context-strip{flex-wrap:wrap;gap:6px}
-  .quick-btns{gap:4px}
-  .qbtn{font-size:9.5px;padding:4px 7px}
 }
 
-/* ── 640–767 : Tablet portrait ── */
+/* 640–767 — Tablet portrait */
 @media(max-width:767px) and (min-width:640px){
   #sidebar{transform:translateX(-100%);width:280px}
   #sidebar.open{transform:translateX(0)}
   #main{margin-left:0}
   .hamburger{display:flex!important}
-  main{padding:14px 16px 90px}
-  .bottom-nav{display:flex}
-  .metrics-grid{grid-template-columns:repeat(2,1fr);gap:10px}
-  .metric-value{font-size:24px}
-  .metric-card{padding:15px 15px 13px}
+  .bnav{display:flex}
+  main.content{padding:14px 14px calc(var(--bnav-h) + 16px + var(--safe-b))}
+  .mg{grid-template-columns:repeat(2,1fr);gap:10px}
+  .mc-val{font-size:22px}
+  .mc-icon{display:none}
+  .mc{padding:14px 14px 12px}
   .two-col{grid-template-columns:1fr;gap:12px}
-  .table-head,.table-row{grid-template-columns:2.5fr 1.8fr 1fr 40px}
-  .table-head .col-date,.table-row .col-date,
-  .table-head .col-status,.table-row .col-status{display:none}
-  .hdr-pill{display:none}
-  .section-title{font-size:21px}
-  .context-strip{flex-wrap:wrap;gap:5px}
-  .auto-row{flex-wrap:nowrap}
-  .quick-inner{gap:8px}
-  .quick-btns{gap:4px}
-  .qbtn{font-size:9px;padding:3px 7px}
-  .apts-header{gap:8px}
+  .thead,.trow{grid-template-columns:3fr 1.6fr 1fr 38px}
+  .col-date,.col-status{display:none}
+  .date-pill{display:none}
+  .st{font-size:21px}
+  .onboard{flex-direction:column;gap:10px}
+  .onboard-ic{display:none}
 }
 
-/* ── <640px : Mobile ── */
+/* 480–639 — Large mobile */
 @media(max-width:639px){
-  :root{--header-h:52px}
-  #sidebar{transform:translateX(-100%);width:290px;max-width:85vw}
+  :root{
+    --header-h:52px;
+    --bnav-h:62px;
+    --sidebar-w:min(300px, 85vw);
+  }
+  #sidebar{
+    transform:translateX(-100%);
+    box-shadow:var(--sh-lg);
+  }
   #sidebar.open{transform:translateX(0)}
   #main{margin-left:0}
   .hamburger{display:flex!important}
-  main{padding:12px 12px 88px}
-  .bottom-nav{display:flex;height:64px}
-  .metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-  .metric-card{padding:14px 14px 12px;border-radius:var(--radius-md)}
-  .metric-value{font-size:22px}
-  .metric-label{font-size:10px}
-  .metric-top{margin-bottom:10px}
-  .metric-icon{display:none}
-  .two-col{grid-template-columns:1fr;gap:12px}
-  .table-wrap{border-radius:var(--radius-md)}
-  .table-head,.table-row{grid-template-columns:minmax(0,3fr) minmax(0,1fr) 38px}
-  .table-head .col-phone,.table-row .col-phone,
-  .table-head .col-date,.table-row .col-date,
-  .table-head .col-status,.table-row .col-status,
-  .table-head .col-visits,.table-row .col-visits{display:none}
-  .table-row{padding:10px 12px}
-  .pat-name{font-size:12px}
+  .bnav{display:flex}
+
+  main.content{
+    padding:12px 12px calc(var(--bnav-h) + 14px + var(--safe-b));
+  }
+
+  /* Metrics: 2-col */
+  .mg{grid-template-columns:repeat(2,1fr);gap:8px}
+  .mc{padding:13px 13px 11px;border-radius:var(--r-md)}
+  .mc-val{font-size:20px}
+  .mc-lbl{font-size:9.5px}
+  .mc-top{margin-bottom:8px}
+  .mc-icon{display:none}
+
+  /* Panels */
+  .two-col{grid-template-columns:1fr;gap:11px}
+  .panel{border-radius:var(--r-md)}
+
+  /* Table — compact: name + status + wa */
+  .tw{border-radius:var(--r-md)}
+  .thead,.trow{grid-template-columns:1fr auto 36px}
+  .col-phone,.col-date,.col-status,.col-visits{display:none}
+  .trow{padding:10px 12px;gap:6px}
+  .thead{padding:8px 12px}
+  .pname{font-size:12px}
+
+  /* Header */
   header{padding:0 12px}
-  .breadcrumb .bc-root{font-size:14px}
-  .breadcrumb .bc-page{font-size:12px}
-  .hdr-pill{display:none}
-  .market-btn .mkt-lbl{display:none}
-  .section-title{font-size:20px}
-  .section-sub{font-size:11px}
-  .section-head{gap:10px}
-  .add-btn{padding:8px 12px;font-size:11.5px}
-  .context-strip{flex-wrap:wrap;gap:5px}
-  .ctx-chip{font-size:10.5px;padding:4px 8px}
-  .panel-head{padding:12px 14px}
-  .panel-title{font-size:12px}
-  .queue-row{padding:9px 14px}
-  .alert-row{padding:10px 14px}
-  .auto-row{padding:12px 14px}
-  .auto-icon{width:28px;height:28px;border-radius:7px}
-  .auto-label{font-size:12px}
-  .auto-desc{font-size:10.5px}
-  .quick-row{padding:10px 14px}
-  .quick-inner{flex-direction:column;align-items:flex-start;gap:8px}
-  .quick-btns{width:100%}
-  .qbtn{flex:1;justify-content:center;font-size:10px;padding:5px 6px}
-  .modal{border-radius:var(--radius-lg)}
-  .modal-head{padding:14px 16px}
-  .modal-body{padding:14px 16px;gap:11px}
-  .remind-btn{padding:5px 8px;font-size:10px}
-  .search-bar{padding:8px 12px}
-  .analytics-grid .metric-card{padding:13px 12px 11px}
+  .bc-root,.bc-sep{display:none}
+  .bc-page{font-size:14px;font-weight:700;color:var(--text-primary);max-width:none}
+  .date-pill{display:none}
+  .mkt-btn .lbl{display:none}
+  .mkt-btn{padding:7px 9px}
+  .icon-btn{width:34px;height:34px}
+  .hdr-r{gap:5px}
+
+  /* Typography */
+  .st{font-size:19px}
+  .ss{font-size:11px}
+
+  /* Onboard */
+  .onboard{padding:13px 14px;gap:10px;flex-direction:column}
+  .onboard-ic{display:none}
+
+  /* Section head */
+  .sh{gap:9px}
+  .add-btn{font-size:11.5px;padding:8px 12px}
+
+  /* Context strip */
+  .ctx{gap:5px}
+  .ctx-chip{font-size:10px;padding:4px 8px}
+  .live-badge{font-size:10px;padding:4px 8px}
+
+  /* Panel rows */
+  .ph{padding:11px 13px}
+  .qrow{padding:10px 13px}
+  .arow{padding:10px 13px}
+  .auto-row{padding:11px 13px}
+  .qr{padding:10px 13px}
+
+  /* Alert remind button */
+  .ai{flex-wrap:wrap}
+
+  /* Auto row */
+  .auto-ic{width:27px;height:27px}
+  .auto-lbl{font-size:12px}
+  .auto-desc{font-size:10px}
+
+  /* Quick action buttons — full width row */
+  .qr-inner{flex-direction:column;align-items:flex-start;gap:8px}
+  .qbtns{width:100%;gap:4px}
+  .qbtn{flex:1;justify-content:center;font-size:9.5px;padding:7px 4px}
+
+  /* Trust bar */
+  .trust-bar{gap:8px;padding:9px 12px}
+  .trust-item{font-size:9.5px}
+  .trust-bar .trust-item:nth-child(n+4){display:none}
+
+  /* Analytics bars */
+  .abar-row{padding:10px 13px}
+  .pstat-row{padding:11px 13px}
 }
 
-/* ── 360–479 : Small mobile (extra refinements) ── */
+/* 360–479 — Small mobile */
 @media(max-width:479px){
-  .metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .metric-value{font-size:20px}
-  main{padding:10px 10px 84px}
-  .section-head{flex-direction:column;align-items:flex-start}
+  :root{--bnav-h:58px}
+  main.content{padding:10px 10px calc(var(--bnav-h) + 12px + var(--safe-b))}
+  .mg{gap:7px}
+  .mc-val{font-size:18px}
+  .mc{padding:12px 11px 10px}
+
+  /* Full-width add button */
+  .sh{flex-direction:column;align-items:stretch}
   .add-btn{width:100%;justify-content:center}
-  .hdr-right{gap:6px}
-  .icon-btn{width:32px;height:32px}
-  .market-btn{padding:6px 10px;font-size:11px}
-  .breadcrumb .bc-sep,.breadcrumb .bc-root{display:none}
-  .breadcrumb .bc-page{font-size:13px;font-weight:700;color:var(--text-primary)}
-  .panel-head{padding:10px 12px}
-  .queue-row,.alert-row,.auto-row,.quick-row{padding:9px 12px}
+
+  /* Onboard */
+  .onboard{padding:12px 13px}
+  .onboard-t{font-size:12.5px}
+  .onboard-s{font-size:11px}
+
+  /* Trust — show only 2 items */
+  .trust-bar .trust-item:nth-child(n+3){display:none}
+
+  /* Reduce modal padding */
+  .mb{padding:14px 15px;gap:11px}
+  .mh{padding:14px 15px}
+
+  /* Bottom nav labels on tiny screens */
+  .bn{font-size:8.5px}
+  .bn-ico{width:30px;height:30px}
+  .bn-fab{width:46px;height:46px}
 }
 
-/* ── Safe area inset for notched phones ── */
+/* Safe area support */
 @supports(padding-bottom:env(safe-area-inset-bottom)){
-  .bottom-nav{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
-  main{padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+  .bnav{padding-bottom:calc(6px + env(safe-area-inset-bottom));height:auto}
+  #sidebar{padding-top:env(safe-area-inset-top)}
 }
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <div id="overlay" onclick="closeSidebar()"></div>
 
   <!-- SIDEBAR -->
   <aside id="sidebar">
     <div class="sb-logo">
-      <div class="sb-wordmark">
-        <span class="aura">Aura</span><span class="scale">Scale</span><span class="os">OS</span>
+      <div class="sb-mark">
+        <span class="a">Aura</span><span class="s">Scale</span><span class="os">OS</span>
       </div>
-      <p class="sb-tagline">Clinical Intelligence Platform</p>
+      <p class="sb-tag">Clinic Operating System</p>
     </div>
 
-    <div class="sb-doctor">
+    <div class="sb-doc">
       <div class="sb-doc-inner">
         <div class="sb-doc-top">
-          <div class="sb-doc-av" id="doc-initial">M</div>
+          <div class="sb-av" id="doc-av">M</div>
           <div>
             <p class="sb-doc-name" id="doc-name">Dr. Mousham Laskar</p>
             <span class="sb-doc-reg" id="doc-reg">NMC / WBMCO Registered</span>
           </div>
         </div>
         <p class="sb-doc-spec" id="doc-spec">General Physician &amp; Internal Medicine</p>
-        <div class="sb-doc-status">
-          <span class="status-dot dot-green"></span>
+        <div class="sb-online">
+          <span class="dot dot-g blink"></span>
           <p style="color:var(--text-tertiary);font-size:10px">Online · Clinic Active</p>
         </div>
       </div>
     </div>
 
-    <div class="sb-role">
-      <p class="sb-role-label">Active Role</p>
-      <div class="sb-role-wrap">
-        <button class="sb-role-btn active" onclick="setRole('doctor',this)">🩺 Doctor</button>
-        <button class="sb-role-btn" onclick="setRole('staff',this)">👩‍⚕️ Staff</button>
-      </div>
-    </div>
-
-    <nav>
-      <p class="nav-section-label">Navigation</p>
-      <button class="nav-btn active" onclick="setTab('dashboard',this)">
-        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+    <nav class="sb-nav">
+      <p class="nav-sec">Main</p>
+      <button class="nb on" onclick="nav('dashboard',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         Dashboard
       </button>
-      <button class="nav-btn" onclick="setTab('appointments',this)">
-        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-        Appointments &amp; Patients
+      <button class="nb" onclick="nav('patients',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        Patients &amp; Appointments
       </button>
-      <button class="nav-btn" onclick="setTab('whatsapp',this)">
-        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+      <button class="nb" onclick="nav('whatsapp',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
         WhatsApp Engine
-        <span class="nav-badge">3</span>
+        <span class="nb-badge">3</span>
       </button>
-      <button class="nav-btn" onclick="setTab('analytics',this)">
-        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-        Analytics
+      <button class="nb" onclick="nav('analytics',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        Reports
       </button>
-      <p class="nav-section-label">Setup</p>
-      <button class="nav-btn" onclick="">
-        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
+      <p class="nav-sec">Setup</p>
+      <button class="nb">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
         Settings
       </button>
     </nav>
 
     <div class="sb-foot">
-      <div class="sb-compliance">
+      <div class="sb-comp">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         HIPAA · SOC 2 Type II · ISO 27001
       </div>
-      <div class="sb-signout">
+      <div class="sb-out">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Sign Out
       </div>
@@ -557,225 +726,276 @@ main{flex:1;padding:22px;background:var(--bg);overflow-y:auto}
   <!-- MAIN -->
   <div id="main">
     <header>
-      <div class="hdr-left">
-        <button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()">
+      <div class="hdr-l">
+        <button class="hamburger" id="hbtn" onclick="toggleSidebar()" aria-label="Open menu">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <div class="breadcrumb">
+        <div class="bc">
           <span class="bc-root">AuraScale</span>
           <span class="bc-sep">/</span>
-          <span class="bc-page" id="tab-title">Clinic Dashboard</span>
+          <span class="bc-page" id="tab-title">Dashboard</span>
         </div>
       </div>
-      <div class="hdr-right">
-        <div class="hdr-pill">
+      <div class="hdr-r">
+        <div class="date-pill">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Monday, 18 May 2026
+          Friday, 22 May 2026
         </div>
-        <div class="market-dd">
-          <button class="market-btn" onclick="toggleMktMenu()">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            <span class="mkt-lbl" id="market-label">🇮🇳 India Office</span>
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="mkt-dd">
+          <button class="mkt-btn" onclick="toggleMkt()">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span class="lbl" id="mkt-lbl">🇮🇳 India</span>
+            <svg class="chevron" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <div class="market-menu" id="market-menu">
-            <button class="mkt-opt sel" data-market="india" onclick="setMarket('india',this)">
-              <div><p class="mkt-opt-name">🇮🇳 India Office</p><p class="mkt-opt-sub">NMC / WBMCO · INR (₹)</p></div>
-              <svg id="chk-india" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="mkt-menu" id="mkt-menu">
+            <button class="mo sel" data-m="india" onclick="setMkt('india',this)">
+              <div><p class="mo-name">🇮🇳 India Office</p><p class="mo-sub">NMC/WBMCO · INR ₹</p></div>
+              <svg id="ck-in" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
-            <button class="mkt-opt" data-market="bangladesh" onclick="setMarket('bangladesh',this)">
-              <div><p class="mkt-opt-name">🇧🇩 Bangladesh Office</p><p class="mkt-opt-sub">BM&amp;DC · BDT (৳)</p></div>
-              <svg id="chk-bd" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="20 6 9 17 4 12"/></svg>
+            <button class="mo" data-m="bd" onclick="setMkt('bd',this)">
+              <div><p class="mo-name">🇧🇩 Bangladesh Office</p><p class="mo-sub">BM&amp;DC · BDT ৳</p></div>
+              <svg id="ck-bd" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
           </div>
         </div>
         <button class="icon-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span class="notif-dot"></span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-pip"></span>
         </button>
       </div>
     </header>
 
-    <main>
-      <div class="context-strip">
+    <main class="content">
+      <!-- Context strip -->
+      <div class="ctx">
         <div class="ctx-chip">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <span>Market: <span class="lbl" id="mkt-name">India (INR ₹ · +91)</span></span>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span>Market: <span class="lbl" id="ctx-mkt">India (INR ₹ · +91)</span></span>
         </div>
         <div class="ctx-chip">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-          <span class="lbl" id="mkt-clinic">Laskar Health Clinic, Salt Lake, Kolkata</span>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="lbl" id="ctx-clinic">Laskar Health Clinic, Salt Lake, Kolkata</span>
         </div>
         <div class="live-badge">
-          <span class="status-dot dot-green blink"></span>
+          <span class="dot dot-g blink"></span>
           Live
         </div>
       </div>
 
-      <!-- DASHBOARD -->
-      <div id="view-dashboard" class="view active">
-        <div class="section-head">
+      <!-- ── DASHBOARD ── -->
+      <div id="v-dashboard" class="view on">
+        <div class="sh">
           <div>
-            <h1 class="section-title">Good morning, Dr. Laskar</h1>
-            <p class="section-sub">Here's your clinic overview for today — Monday, 18 May 2026</p>
+            <h1 class="st">Good morning, Dr. Laskar</h1>
+            <p class="ss">Clinic overview · Friday, 22 May 2026</p>
           </div>
         </div>
-        <div class="metrics-grid" id="metrics-grid"></div>
+
+        <div class="onboard">
+          <div class="onboard-ic">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <p class="onboard-t">Complete your clinic setup (3 of 5)</p>
+            <p class="onboard-s">Connect WhatsApp, add your first patients, and enable automated reminders to get started.</p>
+            <div class="onboard-prog">
+              <div class="op-step done"></div>
+              <div class="op-step done"></div>
+              <div class="op-step done"></div>
+              <div class="op-step"></div>
+              <div class="op-step"></div>
+              <span class="op-txt">3 / 5 complete</span>
+            </div>
+          </div>
+          <button onclick="this.closest('.onboard').remove()" style="color:var(--text-tertiary);flex-shrink:0;align-self:flex-start;cursor:pointer;background:none;border:none;min-width:30px;min-height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;padding:4px" aria-label="Dismiss">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="mg" id="dash-metrics"></div>
+
         <div class="two-col">
           <div class="panel">
-            <div class="panel-head">
-              <div class="panel-title">
-                <span class="status-dot dot-green blink"></span>
+            <div class="ph">
+              <div class="pt">
+                <span class="dot dot-g blink"></span>
                 Today's Queue
               </div>
-              <span class="panel-badge pb-blue" id="queue-count">6 patients</span>
+              <span class="pb pb-b" id="q-count">6 patients</span>
             </div>
             <div id="queue-list"></div>
           </div>
           <div class="panel">
-            <div class="panel-head">
-              <div class="panel-title">
-                <span class="status-dot dot-amber"></span>
-                Critical Retention Alerts
+            <div class="ph">
+              <div class="pt">
+                <span class="dot dot-a"></span>
+                Follow-up Alerts
               </div>
-              <span class="panel-badge pb-red">14-day window</span>
+              <span class="pb pb-r">14-day window</span>
             </div>
             <div id="alerts-list"></div>
           </div>
         </div>
+
+        <div class="trust-bar">
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            HIPAA Compliant
+          </div>
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            End-to-End Encrypted
+          </div>
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            SOC 2 Type II
+          </div>
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            99.9% Uptime
+          </div>
+        </div>
       </div>
 
-      <!-- APPOINTMENTS -->
-      <div id="view-appointments" class="view">
-        <div class="section-head">
+      <!-- ── PATIENTS ── -->
+      <div id="v-patients" class="view">
+        <div class="sh">
           <div>
-            <h1 class="section-title">Patient Directory</h1>
-            <p class="section-sub" id="pat-count">7 registered patients</p>
+            <h1 class="st">Patient Directory</h1>
+            <p class="ss" id="pat-count">7 registered patients</p>
           </div>
           <button class="add-btn" onclick="openModal('add-modal')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Appointment
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Appointment
           </button>
         </div>
-        <div class="search-bar">
+        <div class="search">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="search-input" placeholder="Search by name or phone number…" oninput="renderPatients()"/>
+          <input type="text" id="search-inp" placeholder="Search by name or phone…" oninput="renderPats()"/>
         </div>
-        <div class="table-wrap">
-          <div class="table-head">
+        <div class="tw">
+          <div class="thead">
             <span>Patient</span>
             <span class="col-phone">Phone</span>
             <span class="col-date">Last Visit</span>
-            <span class="col-visits center">Visits</span>
-            <span class="col-status center">Status</span>
+            <span class="col-visits cen">Visits</span>
+            <span class="col-status cen">Status</span>
             <span></span>
           </div>
-          <div id="patients-table"></div>
+          <div id="pat-table"></div>
         </div>
       </div>
 
-      <!-- WHATSAPP -->
-      <div id="view-whatsapp" class="view">
-        <div class="section-head">
+      <!-- ── WHATSAPP ── -->
+      <div id="v-whatsapp" class="view">
+        <div class="sh">
           <div>
-            <h1 class="section-title">WhatsApp &amp; Retention Engine</h1>
-            <p class="section-sub">Manage patient communications and automation workflows</p>
+            <h1 class="st">WhatsApp &amp; Retention</h1>
+            <p class="ss">Automate patient communications and follow-ups</p>
           </div>
-          <span class="panel-badge pb-green" style="align-self:flex-start;padding:5px 11px;font-size:11px">● Live</span>
+          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px">● Engine Live</span>
         </div>
-        <div class="automation-card" id="automation-list"></div>
+        <div class="auto-card" id="auto-list"></div>
         <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">Recent Patients — Quick Actions</div>
+          <div class="ph">
+            <div class="pt">Quick Actions — Recent Patients</div>
           </div>
-          <div id="quick-actions-list"></div>
+          <div id="quick-list"></div>
         </div>
       </div>
 
-      <!-- ANALYTICS -->
-      <div id="view-analytics" class="view">
-        <div class="section-head">
+      <!-- ── ANALYTICS ── -->
+      <div id="v-analytics" class="view">
+        <div class="sh">
           <div>
-            <h1 class="section-title">Analytics &amp; Performance</h1>
-            <p class="section-sub">Last 30 days · Updated just now</p>
+            <h1 class="st">Reports &amp; Analytics</h1>
+            <p class="ss">Last 30 days · Updated just now</p>
           </div>
         </div>
-        <div class="metrics-grid" id="analytics-grid"></div>
+        <div class="mg" id="ana-metrics"></div>
         <div class="two-col">
           <div class="panel">
-            <div class="panel-head">
-              <div class="panel-title">Automation Breakdown</div>
-              <span class="panel-badge pb-blue">30 days</span>
+            <div class="ph">
+              <div class="pt">Automation Breakdown</div>
+              <span class="pb pb-b">30 days</span>
             </div>
-            <div id="automation-stats"></div>
+            <div id="auto-stats"></div>
           </div>
           <div class="panel">
-            <div class="panel-head">
-              <div class="panel-title">Patient Status Summary</div>
-              <span class="panel-badge pb-green">Current</span>
+            <div class="ph">
+              <div class="pt">Patient Health Summary</div>
+              <span class="pb pb-g">Current</span>
             </div>
-            <div id="patient-stats"></div>
+            <div id="pat-stats"></div>
           </div>
         </div>
       </div>
     </main>
-  </div>
+  </div><!-- /main -->
 
-  <!-- BOTTOM NAV (tablet & mobile) -->
-  <nav class="bottom-nav" id="bottom-nav">
-    <button class="bn-item active" onclick="setTabMobile('dashboard',this)" data-tab="dashboard">
-      <div class="bn-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+  <!-- BOTTOM NAV -->
+  <nav class="bnav" id="bnav">
+    <button class="bn on" onclick="navMob('dashboard',this)" data-t="dashboard">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
       Home
     </button>
-    <button class="bn-item" onclick="setTabMobile('appointments',this)" data-tab="appointments">
-      <div class="bn-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    <button class="bn" onclick="navMob('patients',this)" data-t="patients">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
       Patients
     </button>
     <button class="bn-fab" onclick="openModal('add-modal')" aria-label="New appointment">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
-    <button class="bn-item" onclick="setTabMobile('whatsapp',this)" data-tab="whatsapp">
-      <div class="bn-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+    <button class="bn" onclick="navMob('whatsapp',this)" data-t="whatsapp">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      </div>
       WhatsApp
     </button>
-    <button class="bn-item" onclick="setTabMobile('analytics',this)" data-tab="analytics">
-      <div class="bn-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+    <button class="bn" onclick="navMob('analytics',this)" data-t="analytics">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
       Reports
     </button>
   </nav>
 </div>
 
 <!-- WA MODAL -->
-<div class="modal-overlay" id="wa-modal">
+<div class="mod-ov" id="wa-modal">
   <div class="modal">
-    <div class="modal-head">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="modal-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
         </div>
         <div>
-          <p class="modal-title">Send WhatsApp Message</p>
-          <p style="color:var(--text-tertiary);font-size:10.5px;margin-top:1px" id="wa-modal-sub">Patient · Dial</p>
+          <p class="mtitle">Send WhatsApp Message</p>
+          <p style="color:var(--text-tertiary);font-size:10px;margin-top:1px" id="wa-sub">Patient</p>
         </div>
       </div>
-      <button class="modal-close" onclick="closeModal('wa-modal')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <button class="mclose" onclick="closeModal('wa-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="modal-body">
+    <div class="mb">
       <div>
-        <label class="field-label">Phone Number</label>
-        <div class="phone-row">
-          <div class="phone-prefix" id="wa-dial">+91</div>
-          <div class="field-input" id="wa-phone-display" style="flex:1;display:flex;align-items:center;font-size:12px;color:var(--text-secondary)"></div>
+        <label class="flbl">Phone Number</label>
+        <div class="prow">
+          <div class="ppfx" id="wa-dial">+91</div>
+          <div class="finput" id="wa-phone" style="flex:1;display:flex;align-items:center;font-size:13px;color:var(--text-secondary)"></div>
         </div>
       </div>
       <div>
-        <label class="field-label">Message</label>
-        <textarea class="field-textarea" id="wa-message" rows="5"></textarea>
+        <label class="flbl">Message</label>
+        <textarea class="ftextarea" id="wa-msg" rows="5"></textarea>
       </div>
-      <button class="modal-submit">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      <button class="msub">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Send via WhatsApp
       </button>
     </div>
@@ -783,29 +1003,29 @@ main{flex:1;padding:22px;background:var(--bg);overflow-y:auto}
 </div>
 
 <!-- ADD APPOINTMENT MODAL -->
-<div class="modal-overlay" id="add-modal">
+<div class="mod-ov" id="add-modal">
   <div class="modal">
-    <div class="modal-head">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="modal-icon" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </div>
-        <p class="modal-title">New Appointment</p>
+        <p class="mtitle">New Appointment</p>
       </div>
-      <button class="modal-close" onclick="closeModal('add-modal')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <button class="mclose" onclick="closeModal('add-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="modal-body">
-      <div><label class="field-label">Patient Name</label><input type="text" class="field-input" placeholder="Full name"/></div>
-      <div><label class="field-label">Phone</label><input type="text" class="field-input" id="add-phone" placeholder="+91 number"/></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="field-label">Date</label><input type="date" class="field-input"/></div>
-        <div><label class="field-label">Time</label><input type="time" class="field-input"/></div>
+    <div class="mb">
+      <div><label class="flbl">Patient Name</label><input type="text" class="finput" placeholder="Full name"/></div>
+      <div><label class="flbl">Phone Number</label><input type="tel" class="finput" id="add-phone" placeholder="+91 number"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div><label class="flbl">Date</label><input type="date" class="finput"/></div>
+        <div><label class="flbl">Time</label><input type="time" class="finput"/></div>
       </div>
-      <div><label class="field-label">Reason for Visit</label><input type="text" class="field-input" placeholder="Chief complaint"/></div>
-      <button class="modal-submit" onclick="closeModal('add-modal')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <div><label class="flbl">Reason for Visit</label><input type="text" class="finput" placeholder="Chief complaint or condition"/></div>
+      <button class="msub" onclick="closeModal('add-modal')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Confirm Appointment
       </button>
     </div>
@@ -813,12 +1033,12 @@ main{flex:1;padding:22px;background:var(--bg);overflow-y:auto}
 </div>
 
 <script>
-const DATA={
+const DB={
   india:{
-    doctor:{name:"Dr. Mousham Laskar",initial:"M",reg:"NMC / WBMCO Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Clinic, Salt Lake, Kolkata"},
-    currency:{symbol:"₹",code:"INR",dial:"+91"},
-    metrics:{patients:1248,appointments:18,missedRate:"9.4%",revenue:"₹2,84,500"},
-    analytics:{sent:342,returning:87,reviews:54,successRate:"94.2%",recovered:12},
+    doc:{name:"Dr. Mousham Laskar",av:"M",reg:"NMC / WBMCO Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Clinic, Salt Lake, Kolkata"},
+    cur:{sym:"₹",code:"INR",dial:"+91"},
+    metrics:{patients:1248,appts:18,missed:"9.4%",revenue:"₹2,84,500"},
+    ana:{sent:342,returning:87,reviews:54,success:"94.2%"},
     queue:[
       {id:1,name:"Farhana Rahman",time:"09:00 AM",status:"checked-in",token:"T-01"},
       {id:2,name:"Amit Chakraborti",time:"09:30 AM",status:"waiting",token:"T-02"},
@@ -828,9 +1048,9 @@ const DATA={
       {id:6,name:"Bikash Dey",time:"11:30 AM",status:"missed",token:"T-06"},
     ],
     alerts:[
-      {id:1,name:"Farhana Rahman",phone:"+91 98300 11223",lastVisit:"4 May 2025",due:"18 May 2025",condition:"Hypertension Follow-up"},
-      {id:2,name:"Amit Chakraborti",phone:"+91 99100 44556",lastVisit:"2 May 2025",due:"16 May 2025",condition:"Diabetes Review"},
-      {id:3,name:"Ruma Das",phone:"+91 70010 77889",lastVisit:"5 May 2025",due:"19 May 2025",condition:"Post-Op Check"},
+      {id:1,name:"Farhana Rahman",phone:"+91 98300 11223",lastVisit:"4 May 2025",due:"22 May 2025",condition:"Hypertension Follow-up"},
+      {id:2,name:"Amit Chakraborti",phone:"+91 99100 44556",lastVisit:"2 May 2025",due:"20 May 2025",condition:"Diabetes Review"},
+      {id:3,name:"Ruma Das",phone:"+91 70010 77889",lastVisit:"5 May 2025",due:"24 May 2025",condition:"Post-Op Check"},
     ],
     patients:[
       {id:1,name:"Farhana Rahman",phone:"+91 98300 11223",lastVisit:"04 May 2025",status:"Active",visits:7},
@@ -840,13 +1060,13 @@ const DATA={
       {id:5,name:"Sneha Mukherjee",phone:"+91 70010 12345",lastVisit:"15 Apr 2025",status:"Inactive",visits:1},
       {id:6,name:"Bikash Dey",phone:"+91 83400 67890",lastVisit:"10 Apr 2025",status:"Active",visits:9},
       {id:7,name:"Ruma Das",phone:"+91 70010 77889",lastVisit:"05 May 2025",status:"Active",visits:4},
-    ],
+    ]
   },
-  bangladesh:{
-    doctor:{name:"Dr. Mousham Laskar",initial:"M",reg:"BM&DC Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Centre, Gulshan, Dhaka"},
-    currency:{symbol:"৳",code:"BDT",dial:"+880"},
-    metrics:{patients:934,appointments:14,missedRate:"11.2%",revenue:"৳1,92,000"},
-    analytics:{sent:218,returning:61,reviews:39,successRate:"91.7%",recovered:9},
+  bd:{
+    doc:{name:"Dr. Mousham Laskar",av:"M",reg:"BM&DC Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Centre, Gulshan, Dhaka"},
+    cur:{sym:"৳",code:"BDT",dial:"+880"},
+    metrics:{patients:934,appts:14,missed:"11.2%",revenue:"৳1,92,000"},
+    ana:{sent:218,returning:61,reviews:39,success:"91.7%"},
     queue:[
       {id:1,name:"Tanzil Ahmed",time:"09:00 AM",status:"checked-in",token:"T-01"},
       {id:2,name:"Nasrin Akter",time:"09:30 AM",status:"waiting",token:"T-02"},
@@ -855,9 +1075,9 @@ const DATA={
       {id:5,name:"Rezaul Karim",time:"11:00 AM",status:"missed",token:"T-05"},
     ],
     alerts:[
-      {id:1,name:"Tanzil Ahmed",phone:"+880 1711 223344",lastVisit:"3 May 2025",due:"17 May 2025",condition:"Cardiac Follow-up"},
-      {id:2,name:"Nasrin Akter",phone:"+880 1812 556677",lastVisit:"4 May 2025",due:"18 May 2025",condition:"Thyroid Review"},
-      {id:3,name:"Kamal Hossain",phone:"+880 1913 889900",lastVisit:"6 May 2025",due:"20 May 2025",condition:"Diabetes Management"},
+      {id:1,name:"Tanzil Ahmed",phone:"+880 1711 223344",lastVisit:"3 May 2025",due:"22 May 2025",condition:"Cardiac Follow-up"},
+      {id:2,name:"Nasrin Akter",phone:"+880 1812 556677",lastVisit:"4 May 2025",due:"23 May 2025",condition:"Thyroid Review"},
+      {id:3,name:"Kamal Hossain",phone:"+880 1913 889900",lastVisit:"6 May 2025",due:"25 May 2025",condition:"Diabetes Management"},
     ],
     patients:[
       {id:1,name:"Tanzil Ahmed",phone:"+880 1711 223344",lastVisit:"03 May 2025",status:"Active",visits:8},
@@ -866,290 +1086,279 @@ const DATA={
       {id:4,name:"Shireen Begum",phone:"+880 1614 112233",lastVisit:"22 Apr 2025",status:"At Risk",visits:2},
       {id:5,name:"Rezaul Karim",phone:"+880 1515 445566",lastVisit:"18 Apr 2025",status:"Inactive",visits:1},
       {id:6,name:"Mitu Khanam",phone:"+880 1716 778899",lastVisit:"30 Apr 2025",status:"Active",visits:6},
-    ],
+    ]
   }
 };
 
-const AUTOMATIONS=[
-  {key:"conf",label:"Appointment Confirmation",desc:"Send confirmation 24h before scheduled appointment",icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,on:true},
-  {key:"r14",label:"14-Day Return Reminder",desc:"Auto-send return reminder to patients 14 days post-visit",icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
-  {key:"rev",label:"Google Review Request",desc:"Request review 2 hours after a completed appointment",icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,on:false},
-  {key:"fu48",label:"48-Hour Follow-Up",desc:"Check-in message 48 hours after appointment",icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,on:true},
-  {key:"bc",label:"WhatsApp Broadcast Campaigns",desc:"Send educational and promotional campaigns to patient groups",icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,on:false},
-  {key:"ai",label:"AI Reception Assistant",desc:"Automatically answer common patient questions via WhatsApp",icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
-  {key:"miss",label:"Missed Appointment Recovery",desc:"Recover missed patients using smart follow-up automation",icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.01"/></svg>`,on:true},
-  {key:"tags",label:"Smart Patient Tags",desc:"Categorize and segment patients automatically using AI",icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,on:false},
+const AUTOS=[
+  {label:"Appointment Confirmation",desc:"Sent 24h before scheduled visit",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,on:true},
+  {label:"14-Day Return Reminder",desc:"Auto-reminds patients 14 days post-visit",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
+  {label:"48-Hour Follow-Up",desc:"Check-in message 2 days after appointment",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,on:true},
+  {label:"Missed Appointment Recovery",desc:"Smart recovery flow for missed visits",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.01"/></svg>`,on:true},
+  {label:"Google Review Request",desc:"Asks for review 2h after completed appointment",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,on:false},
+  {label:"WhatsApp Broadcast",desc:"Send health campaigns to patient segments",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,on:false},
+  {label:"AI Reception Assistant",desc:"Answers common patient questions automatically",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
 ];
 
-let currentMarket="india";
-const tabTitles={dashboard:"Clinic Dashboard",appointments:"Appointments & Patients",whatsapp:"WhatsApp Retention Engine",analytics:"Analytics"};
+const TABS={dashboard:"Dashboard",patients:"Patients & Appointments",whatsapp:"WhatsApp Engine",analytics:"Reports"};
+let mkt="india";
 
-function chipHtml(status){
-  const map={
-    "checked-in":["chip-checkedin","Checked In"],
-    "waiting":["chip-waiting","Waiting"],
-    "in-progress":["chip-inprogress","In Progress"],
-    "missed":["chip-missed","Missed"],
-    "Active":["chip-active","Active"],
-    "At Risk":["chip-atrisk","At Risk"],
-    "Inactive":["chip-inactive","Inactive"],
-  };
-  const [cls,lbl]=map[status]||["chip-waiting","Unknown"];
-  return `<span class="chip ${cls}">${lbl}</span>`;
+function chipQ(s){
+  const m={"checked-in":["ch-in","Checked In"],"waiting":["ch-wait","Waiting"],"in-progress":["ch-prog","In Progress"],"missed":["ch-miss","Missed"]};
+  const[c,l]=m[s]||["ch-wait","Unknown"];
+  return`<span class="chip ${c}">${l}</span>`;
+}
+function chipP(s){
+  const m={"Active":["ch-act","Active"],"At Risk":["ch-risk","At Risk"],"Inactive":["ch-inact","Inactive"]};
+  const[c,l]=m[s]||["ch-wait","—"];
+  return`<span class="chip ${c}">${l}</span>`;
 }
 
-function renderMetrics(){
-  const d=DATA[currentMarket];
-  const m=d.metrics;
-  const items=[
-    {label:"Total Patients",value:Number(m.patients).toLocaleString(),icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,sub:"All time",trend:`<span class="up">↑ 3.2%</span>`},
-    {label:"Today's Appointments",value:m.appointments,icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,sub:"Scheduled",trend:`<span class="up">↑ 2</span>`},
-    {label:"Missed Rate",value:m.missedRate,icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,sub:"Last 30 days",trend:`<span class="down">↑ 0.6%</span>`},
-    {label:"Monthly Revenue",value:m.revenue,icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,sub:d.currency.code+" · Current month",trend:`<span class="up">↑ 8.4%</span>`},
+function renderDash(){
+  const d=DB[mkt];const m=d.metrics;
+  const cards=[
+    {lbl:"Total Patients",val:Number(m.patients).toLocaleString(),sub:"All time",trend:`<span class="up">↑ 3.2%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`},
+    {lbl:"Today's Appointments",val:m.appts,sub:"Scheduled",trend:`<span class="up">↑ 2</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`},
+    {lbl:"Missed Apt. Rate",val:m.missed,sub:"Last 30 days",trend:`<span class="dn">↑ 0.6%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`},
+    {lbl:"Monthly Revenue",val:m.revenue,sub:d.cur.code+" · This month",trend:`<span class="up">↑ 8.4%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`},
   ];
-  document.getElementById("metrics-grid").innerHTML=items.map(i=>`
-    <div class="metric-card">
-      <div class="metric-top"><p class="metric-label">${i.label}</p><div class="metric-icon">${i.icon}</div></div>
-      <p class="metric-value">${i.value}</p>
-      <p class="metric-sub">${i.sub} · ${i.trend}</p>
-    </div>
-  `).join("");
-}
+  document.getElementById("dash-metrics").innerHTML=cards.map(c=>`
+    <div class="mc">
+      <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
+      <p class="mc-val">${c.val}</p>
+      <p class="mc-sub">${c.sub} · ${c.trend}</p>
+    </div>`).join("");
 
-function renderQueue(){
-  const q=DATA[currentMarket].queue;
-  document.getElementById("queue-count").textContent=`${q.length} patients`;
+  const q=d.queue;
+  document.getElementById("q-count").textContent=`${q.length} patients`;
   document.getElementById("queue-list").innerHTML=q.map(p=>`
-    <div class="queue-row">
-      <div style="display:flex;align-items:center;gap:10px">
+    <div class="qrow">
+      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
         <div class="token">${p.token}</div>
-        <div><p class="queue-name">${p.name}</p><p class="queue-time"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${p.time}</p></div>
-      </div>
-      ${chipHtml(p.status)}
-    </div>
-  `).join("");
-}
-
-function renderAlerts(){
-  const a=DATA[currentMarket].alerts;
-  document.getElementById("alerts-list").innerHTML=a.map(p=>`
-    <div class="alert-row">
-      <div class="alert-inner">
-        <div>
-          <p class="alert-name">${p.name}</p>
-          <p class="alert-cond">${p.condition}</p>
-          <p class="alert-due">Due: <span class="due-val">${p.due}</span></p>
+        <div style="min-width:0">
+          <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
+          <p class="qtime">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${p.time}
+          </p>
         </div>
-        <button class="remind-btn" onclick='openWaModal(${JSON.stringify(p)})'>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-          Remind
+      </div>
+      ${chipQ(p.status)}
+    </div>`).join("");
+
+  const al=d.alerts;
+  document.getElementById("alerts-list").innerHTML=al.map(p=>`
+    <div class="arow">
+      <div class="ai">
+        <div style="min-width:0;flex:1">
+          <p class="aname">${p.name}</p>
+          <p class="acond">${p.condition}</p>
+          <p class="adue">Due <span class="dv">${p.due}</span></p>
+        </div>
+        <button class="remind" onclick='openWA(${JSON.stringify(p)})'>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          Send Reminder
         </button>
       </div>
-    </div>
-  `).join("");
+    </div>`).join("");
 }
 
-function renderPatients(){
-  const q=(document.getElementById("search-input")||{}).value||"";
-  const all=DATA[currentMarket].patients;
+function renderPats(){
+  const q=(document.getElementById("search-inp")||{}).value||"";
+  const all=DB[mkt].patients;
   const pats=all.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.phone.includes(q));
   document.getElementById("pat-count").textContent=`${all.length} registered patients`;
-  document.getElementById("patients-table").innerHTML=pats.map(p=>`
-    <div class="table-row">
-      <div style="display:flex;align-items:center;gap:9px">
-        <div class="pat-av">${p.name.charAt(0)}</div>
-        <span class="pat-name">${p.name}</span>
+  if(!pats.length){
+    document.getElementById("pat-table").innerHTML=`<div class="empty"><div class="empty-ic">🔍</div><p class="empty-t">No patients found</p><p class="empty-s">Try a different name or phone number.</p></div>`;
+    return;
+  }
+  document.getElementById("pat-table").innerHTML=pats.map(p=>`
+    <div class="trow">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <div class="pav">${p.name.charAt(0)}</div>
+        <div style="min-width:0">
+          <p class="pname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
+          <p class="pphone col-phone" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.phone}</p>
+        </div>
       </div>
-      <p class="pat-phone col-phone">${p.phone}</p>
-      <p style="color:var(--text-secondary);font-size:11px" class="col-date">${p.lastVisit}</p>
-      <p class="pat-visits col-visits">${p.visits}</p>
-      <div style="display:flex;justify-content:center" class="col-status">${chipHtml(p.status)}</div>
+      <p style="color:var(--text-secondary);font-size:10.5px;white-space:nowrap" class="col-date">${p.lastVisit}</p>
+      <p class="pvisits col-visits">${p.visits}</p>
+      <div style="display:flex;justify-content:center" class="col-status">${chipP(p.status)}</div>
       <div style="display:flex;justify-content:flex-end">
-        <button class="wa-btn" onclick='openWaModal(${JSON.stringify(p)})' title="Send WhatsApp">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        <button class="wa-btn" onclick='openWA(${JSON.stringify(p)})' title="Send WhatsApp">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
         </button>
       </div>
-    </div>
-  `).join("");
+    </div>`).join("");
 }
 
-function renderAutomations(){
-  document.getElementById("automation-list").innerHTML=AUTOMATIONS.map((a,i)=>`
+function renderWA(){
+  document.getElementById("auto-list").innerHTML=AUTOS.map((a,i)=>`
     <div class="auto-row">
-      <div style="display:flex;align-items:center;gap:12px;flex:1">
-        <div class="auto-icon">${a.icon}</div>
-        <div>
-          <p class="auto-label">${a.label}</p>
+      <div style="display:flex;align-items:center;gap:11px;flex:1;min-width:0">
+        <div class="auto-ic">${a.icon}</div>
+        <div style="min-width:0">
+          <p class="auto-lbl">${a.label}</p>
           <p class="auto-desc">${a.desc}</p>
         </div>
       </div>
-      <button class="toggle ${a.on?'on':'off'}" onclick="toggleAuto(${i})">
-        <span class="toggle-knob"></span>
+      <button class="toggle ${a.on?'on':'off'}" onclick="toggleAuto(${i})" aria-label="${a.on?'Disable':'Enable'} ${a.label}">
+        <span class="tknob"></span>
       </button>
-    </div>
-  `).join("");
-}
+    </div>`).join("");
 
-function toggleAuto(i){AUTOMATIONS[i].on=!AUTOMATIONS[i].on;renderAutomations()}
-
-function renderQuickActions(){
-  const pats=DATA[currentMarket].patients.slice(0,5);
-  const btns=["Reminder","Follow-up","Confirm","Review"];
-  document.getElementById("quick-actions-list").innerHTML=pats.map(p=>`
-    <div class="quick-row">
-      <div class="quick-inner">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="quick-av">${p.name.charAt(0)}</div>
-          <div><p class="quick-name">${p.name}</p><p class="quick-phone">${p.phone}</p></div>
+  const pats=DB[mkt].patients.slice(0,5);
+  const acts=["Send Reminder","Follow-Up","Confirm Appt","Ask Review"];
+  document.getElementById("quick-list").innerHTML=pats.map(p=>`
+    <div class="qr">
+      <div class="qr-inner">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="qav">${p.name.charAt(0)}</div>
+          <div><p class="qrname">${p.name}</p><p class="qrphone">${p.phone}</p></div>
         </div>
-        <div class="quick-btns">
-          ${btns.map(b=>`<button class="qbtn" onclick='openWaModal(${JSON.stringify(p)})'>${b}</button>`).join("")}
+        <div class="qbtns">
+          ${acts.map(b=>`<button class="qbtn" onclick='openWA(${JSON.stringify(p)})'>${b}</button>`).join("")}
         </div>
       </div>
-    </div>
-  `).join("");
+    </div>`).join("");
 }
 
-function renderAnalytics(){
-  const a=DATA[currentMarket].analytics;
-  const items=[
-    {label:"Messages Sent",value:a.sent,sub:"Last 30 days",trend:`<span class="up">↑ 12.4%</span>`},
-    {label:"Returning Patients",value:a.returning,sub:"Confirmed revisits",trend:`<span class="up">↑ 7.1%</span>`},
-    {label:"Reviews Generated",value:a.reviews,sub:"Google reviews",trend:`<span class="up">↑ 22.3%</span>`},
-    {label:"Automation Success",value:a.successRate,sub:"Delivery & response",trend:`<span class="up">↑ 1.8%</span>`},
+function renderAna(){
+  const a=DB[mkt].ana;
+  const cards=[
+    {lbl:"Messages Sent",val:a.sent,sub:"Last 30 days",trend:`<span class="up">↑ 12.4%</span>`},
+    {lbl:"Returning Patients",val:a.returning,sub:"Confirmed revisits",trend:`<span class="up">↑ 7.1%</span>`},
+    {lbl:"Google Reviews",val:a.reviews,sub:"Generated this month",trend:`<span class="up">↑ 22.3%</span>`},
+    {lbl:"Automation Success",val:a.success,sub:"Delivery rate",trend:`<span class="up">↑ 1.8%</span>`},
   ];
-  document.getElementById("analytics-grid").innerHTML=items.map(i=>`
-    <div class="metric-card">
-      <div class="metric-top"><p class="metric-label">${i.label}</p></div>
-      <p class="metric-value">${i.value}</p>
-      <p class="metric-sub">${i.sub} · ${i.trend}</p>
-    </div>
-  `).join("");
-  const automStats=[
-    {label:"Confirmations Sent",val:Math.round(a.sent*.38),pct:"38%"},
-    {label:"14-Day Reminders",val:Math.round(a.sent*.31),pct:"31%"},
-    {label:"Follow-Up Messages",val:Math.round(a.sent*.21),pct:"21%"},
-    {label:"Review Requests",val:Math.round(a.sent*.10),pct:"10%"},
+  document.getElementById("ana-metrics").innerHTML=cards.map(c=>`
+    <div class="mc">
+      <div class="mc-top"><p class="mc-lbl">${c.lbl}</p></div>
+      <p class="mc-val">${c.val}</p>
+      <p class="mc-sub">${c.sub} · ${c.trend}</p>
+    </div>`).join("");
+
+  const bars=[
+    {lbl:"Confirmations Sent",val:Math.round(a.sent*.38),pct:"38%"},
+    {lbl:"14-Day Reminders",val:Math.round(a.sent*.31),pct:"31%"},
+    {lbl:"Follow-Up Messages",val:Math.round(a.sent*.21),pct:"21%"},
+    {lbl:"Review Requests",val:Math.round(a.sent*.10),pct:"10%"},
   ];
-  document.getElementById("automation-stats").innerHTML=automStats.map(s=>`
-    <div style="padding:11px 16px;border-bottom:1px solid rgba(228,224,217,.7)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span style="color:var(--text-primary);font-size:12.5px;font-weight:500">${s.label}</span>
-        <span style="color:var(--text-primary);font-size:12.5px;font-weight:700;font-family:'Instrument Serif',serif">${s.val}</span>
-      </div>
-      <div style="background:var(--bg);border-radius:4px;height:4px;overflow:hidden">
-        <div style="background:var(--blue);height:100%;width:${s.pct};border-radius:4px;transition:width .4s ease"></div>
-      </div>
-    </div>
-  `).join("");
-  const pats=DATA[currentMarket].patients;
+  document.getElementById("auto-stats").innerHTML=bars.map(b=>`
+    <div class="abar-row">
+      <div class="abar-top"><span class="abar-lbl">${b.lbl}</span><span class="abar-val">${b.val}</span></div>
+      <div class="abar-bg"><div class="abar-fill" style="width:${b.pct}"></div></div>
+    </div>`).join("");
+
+  const pats=DB[mkt].patients;
   const active=pats.filter(p=>p.status==="Active").length;
   const atRisk=pats.filter(p=>p.status==="At Risk").length;
   const inactive=pats.filter(p=>p.status==="Inactive").length;
   const total=pats.length;
-  document.getElementById("patient-stats").innerHTML=[
-    {label:"Active",count:active,total,color:"var(--emerald)",bg:"var(--emerald-bg)"},
-    {label:"At Risk",count:atRisk,total,color:"var(--amber)",bg:"var(--amber-bg)"},
-    {label:"Inactive",count:inactive,total,color:"var(--red)",bg:"var(--red-bg)"},
+  document.getElementById("pat-stats").innerHTML=[
+    {lbl:"Active",count:active,color:"var(--green)",pct:Math.round((active/total)*100)},
+    {lbl:"At Risk",count:atRisk,color:"var(--amber)",pct:Math.round((atRisk/total)*100)},
+    {lbl:"Inactive",count:inactive,color:"var(--red)",pct:Math.round((inactive/total)*100)},
   ].map(s=>`
-    <div style="padding:14px 16px;border-bottom:1px solid rgba(228,224,217,.7)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <div style="display:flex;align-items:center;gap:7px">
-          <span style="width:8px;height:8px;border-radius:50%;background:${s.color};display:inline-block"></span>
-          <span style="color:var(--text-primary);font-size:12.5px;font-weight:500">${s.label}</span>
-        </div>
-        <span style="color:var(--text-primary);font-size:14px;font-weight:700;font-family:'Instrument Serif',serif">${s.count} <span style="color:var(--text-tertiary);font-size:11px;font-weight:400;font-family:'DM Sans',sans-serif">/ ${s.total}</span></span>
+    <div class="pstat-row">
+      <div class="pstat-top">
+        <div class="pstat-l"><span class="dot" style="background:${s.color}"></span><span class="pstat-lbl">${s.lbl}</span></div>
+        <span class="pstat-count">${s.count} <span class="pstat-tot">/ ${total}</span></span>
       </div>
-      <div style="background:var(--bg);border-radius:4px;height:4px;overflow:hidden">
-        <div style="background:${s.color};height:100%;width:${Math.round((s.count/s.total)*100)}%;border-radius:4px;transition:width .4s ease"></div>
-      </div>
-    </div>
-  `).join("");
+      <div class="abar-bg"><div class="abar-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+    </div>`).join("");
 }
 
 function renderAll(){
-  const d=DATA[currentMarket];
-  document.getElementById("doc-name").textContent=d.doctor.name;
-  document.getElementById("doc-initial").textContent=d.doctor.initial;
-  document.getElementById("doc-reg").textContent=d.doctor.reg;
-  document.getElementById("doc-spec").textContent=d.doctor.spec;
-  document.getElementById("mkt-name").textContent=currentMarket==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
-  document.getElementById("mkt-clinic").textContent=d.doctor.clinic;
-  document.getElementById("add-phone").placeholder=`${d.currency.dial} number`;
-  renderMetrics();renderQueue();renderAlerts();renderPatients();renderAutomations();renderQuickActions();renderAnalytics();
+  const d=DB[mkt];
+  document.getElementById("doc-av").textContent=d.doc.av;
+  document.getElementById("doc-name").textContent=d.doc.name;
+  document.getElementById("doc-reg").textContent=d.doc.reg;
+  document.getElementById("doc-spec").textContent=d.doc.spec;
+  document.getElementById("ctx-mkt").textContent=mkt==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
+  document.getElementById("ctx-clinic").textContent=d.doc.clinic;
+  document.getElementById("add-phone").placeholder=`${d.cur.dial} number`;
+  renderDash();renderPats();renderWA();renderAna();
 }
 
-function setTab(id,btn){
-  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  document.getElementById("view-"+id).classList.add("active");
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("tab-title").textContent=tabTitles[id];
-  document.querySelectorAll(".bn-item").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));
+function toggleAuto(i){AUTOS[i].on=!AUTOS[i].on;renderWA()}
+
+function nav(id,btn){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  document.getElementById("v-"+id).classList.add("on");
+  document.querySelectorAll(".nb").forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on");
+  document.getElementById("tab-title").textContent=TABS[id];
+  document.querySelectorAll(".bn").forEach(b=>b.classList.toggle("on",b.dataset.t===id));
   closeSidebar();
+  window.scrollTo(0,0);
 }
 
-function setTabMobile(id,btn){
-  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  document.getElementById("view-"+id).classList.add("active");
-  document.querySelectorAll(".bn-item").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("tab-title").textContent=tabTitles[id];
-  document.querySelectorAll(".nav-btn").forEach(b=>{
-    b.classList.remove("active");
-    if(b.getAttribute("onclick")&&b.getAttribute("onclick").includes("'"+id+"'")){b.classList.add("active")}
+function navMob(id,btn){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  document.getElementById("v-"+id).classList.add("on");
+  document.querySelectorAll(".bn").forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on");
+  document.getElementById("tab-title").textContent=TABS[id];
+  document.querySelectorAll(".nb").forEach(b=>{
+    b.classList.remove("on");
+    const oc=b.getAttribute("onclick")||"";
+    if(oc.includes("'"+id+"'"))b.classList.add("on");
   });
+  window.scrollTo(0,0);
 }
 
-function setRole(r,btn){
-  document.querySelectorAll(".sb-role-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-}
-
-function setMarket(m,btn){
-  currentMarket=m;
-  document.getElementById("market-label").textContent=m==="india"?"🇮🇳 India Office":"🇧🇩 Bangladesh Office";
-  document.querySelectorAll(".mkt-opt").forEach(b=>b.classList.toggle("sel",b.dataset.market===m));
-  document.getElementById("chk-india").style.display=m==="india"?"":"none";
-  document.getElementById("chk-bd").style.display=m==="bangladesh"?"":"none";
-  document.getElementById("market-menu").classList.remove("open");
+function toggleMkt(){document.getElementById("mkt-menu").classList.toggle("open")}
+function setMkt(m,btn){
+  mkt=m;
+  document.getElementById("mkt-lbl").textContent=m==="india"?"🇮🇳 India":"🇧🇩 Bangladesh";
+  document.querySelectorAll(".mo").forEach(b=>b.classList.toggle("sel",b.dataset.m===m));
+  document.getElementById("ck-in").style.display=m==="india"?"":"none";
+  document.getElementById("ck-bd").style.display=m==="bd"?"":"none";
+  document.getElementById("mkt-menu").classList.remove("open");
   renderAll();
 }
 
-function toggleMktMenu(){document.getElementById("market-menu").classList.toggle("open")}
 document.addEventListener("click",e=>{
-  if(!e.target.closest(".market-dd"))document.getElementById("market-menu").classList.remove("open");
+  if(!e.target.closest(".mkt-dd"))document.getElementById("mkt-menu").classList.remove("open");
 });
 
 function toggleSidebar(){
-  document.getElementById("sidebar").classList.toggle("open");
-  document.getElementById("sidebar-overlay").classList.toggle("visible");
+  const s=document.getElementById("sidebar");
+  const o=document.getElementById("overlay");
+  const isOpen=s.classList.toggle("open");
+  o.classList.toggle("on",isOpen);
 }
 function closeSidebar(){
   document.getElementById("sidebar").classList.remove("open");
-  document.getElementById("sidebar-overlay").classList.remove("visible");
+  document.getElementById("overlay").classList.remove("on");
 }
+
+// Close sidebar on resize to desktop
+window.addEventListener("resize",()=>{
+  if(window.innerWidth>=1024)closeSidebar();
+});
 
 function openModal(id){document.getElementById(id).classList.add("open")}
 function closeModal(id){document.getElementById(id).classList.remove("open")}
 
-function openWaModal(patient){
-  const dial=DATA[currentMarket].currency.dial;
-  document.getElementById("wa-modal-sub").textContent=`${patient.name} · ${dial}`;
-  document.getElementById("wa-dial").textContent=dial;
-  const num=(patient.phone||"").replace(/^\+\d+\s/,"");
-  document.getElementById("wa-phone-display").textContent=num;
-  document.getElementById("wa-message").value=`Dear ${patient.name},\n\nThis is a gentle reminder from our clinic regarding your upcoming appointment or follow-up care. Please confirm your visit at your earliest convenience.\n\nThank you,\nAuraScale Clinic`;
-  openModal("wa-modal");
-}
-
-document.querySelectorAll(".modal-overlay").forEach(o=>{
+// Close modal by clicking outside
+document.querySelectorAll(".mod-ov").forEach(o=>{
   o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("open")});
 });
 
-// Responsive visibility handled by CSS. Close sidebar on desktop resize.
-window.addEventListener("resize",()=>{
-  if(window.innerWidth>=1024)closeSidebar();
+// Close modal on back button (Android)
+window.addEventListener("popstate",()=>{
+  document.querySelectorAll(".mod-ov.open").forEach(m=>m.classList.remove("open"));
+});
+
+// Keyboard: Escape closes modals/sidebar
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    document.querySelectorAll(".mod-ov.open").forEach(m=>m.classList.remove("open"));
+    closeSidebar();
+    document.getElementById("mkt-menu").classList.remove("open");
+  }
 });
 
 renderAll();
