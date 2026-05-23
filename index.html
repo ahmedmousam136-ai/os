@@ -52,7 +52,6 @@
   --safe-t:env(safe-area-inset-top,0px);
   --safe-l:env(safe-area-inset-left,0px);
   --safe-r:env(safe-area-inset-right,0px);
-  /* Theme toggle specific */
   --toggle-track:#E8E5DF;
   --toggle-knob:#FFFFFF;
   --header-blur:rgba(255,255,255,.94);
@@ -126,7 +125,6 @@
   letter-spacing:0;
   line-height:1.7;
 }
-/* Serif headings in Bengali */
 [data-lang="bn"] .st,
 [data-lang="bn"] .bc-root,
 [data-lang="bn"] .sb-mark .a,
@@ -137,7 +135,13 @@
   font-weight:600;
 }
 
-html{background:var(--bg);-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html{
+  background:var(--bg);
+  -webkit-text-size-adjust:100%;
+  scroll-behavior:smooth;
+  /* Prevent zoom from breaking fixed elements */
+  touch-action:manipulation;
+}
 body{
   background:var(--bg);color:var(--text-primary);
   font-family:'DM Sans',system-ui,sans-serif;
@@ -278,7 +282,7 @@ header{
 .hdr-r{display:flex;align-items:center;gap:7px;flex-shrink:0}
 .date-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--text-secondary);white-space:nowrap;box-shadow:var(--sh-xs)}
 
-/* ── HEADER THEME BUTTON (compact, header-right) ── */
+/* ── HEADER THEME BUTTON ── */
 .hdr-theme-btn{
   width:36px;height:36px;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;
@@ -287,7 +291,7 @@ header{
 }
 .hdr-theme-btn:hover{border-color:var(--border-mid);color:var(--text-primary)}
 
-/* ── HEADER LANG BUTTON (compact, header-right) ── */
+/* ── HEADER LANG BUTTON ── */
 .hdr-lang-btn{
   display:flex;align-items:center;gap:4px;
   background:var(--surface);border:1px solid var(--border);
@@ -556,18 +560,41 @@ main.content{
 .msub:active{transform:scale(.98)}
 
 /* ─── BOTTOM NAV ─── */
+/*
+  MOBILE FIX: Use position:fixed with explicit bottom:0 and safe-area-inset support.
+  Do NOT use transform or will-change on the nav itself.
+  Use env(safe-area-inset-bottom) for notch devices.
+  The key fix is to NOT rely on min-height for the nav bar,
+  and to ensure content padding accounts for the actual rendered nav height.
+*/
 .bnav{
   display:none;
-  position:fixed;bottom:0;left:0;right:0;
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  /* Ensure it always sits above page content */
+  z-index:35;
   background:rgba(255,255,255,.97);
   border-top:1px solid var(--border);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  z-index:35;
-  align-items:center;justify-content:space-around;
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  align-items:center;
+  justify-content:space-around;
   box-shadow:0 -2px 20px rgba(0,0,0,.06);
-  padding:6px 4px;
-  padding-bottom:max(6px, var(--safe-b));
+  /* Use padding-bottom with safe-area for notch devices */
+  padding-top:6px;
+  padding-bottom:6px;
+  /* Safe area for iPhone X+ home indicator */
+  padding-bottom:max(6px, env(safe-area-inset-bottom));
+  padding-left:env(safe-area-inset-left,0px);
+  padding-right:env(safe-area-inset-right,0px);
   transition:background .22s ease,border-color .22s ease;
+  /* Prevent disappearing during pinch-zoom: use will-change only for transform */
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
+  /* Isolation creates a new stacking context so it stays on top */
+  isolation:isolate;
 }
 [data-theme="dark"] .bnav{background:rgba(23,27,36,.97)}
 .bn{
@@ -576,18 +603,25 @@ main.content{
   color:var(--text-tertiary);font-size:9px;font-weight:600;
   cursor:pointer;transition:all var(--ease);border:none;background:none;
   flex:1;max-width:72px;min-width:44px;
-  min-height:52px;justify-content:center;
+  /* Fixed height avoids layout shifts during zoom */
+  height:52px;
+  justify-content:center;
   -webkit-tap-highlight-color:transparent;
+  /* Prevent text selection on tap */
+  -webkit-user-select:none;
+  user-select:none;
 }
 .bn.on{color:var(--blue)}
 .bn.on .bn-ico{background:var(--blue-bg)}
-.bn-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:background var(--ease)}
+.bn-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:background var(--ease);flex-shrink:0}
 .bn-fab{
   width:50px;height:50px;background:var(--blue);border-radius:50%;
   border:none;display:flex;align-items:center;justify-content:center;color:#fff;
   cursor:pointer;box-shadow:0 4px 16px rgba(46,99,212,.4);
   transition:transform var(--ease),box-shadow var(--ease);flex-shrink:0;
   -webkit-tap-highlight-color:transparent;
+  /* Prevent the fab from shrinking on zoom */
+  min-width:50px;min-height:50px;
 }
 .bn-fab:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(46,99,212,.5)}
 .bn-fab:active{transform:scale(.92)}
@@ -665,10 +699,19 @@ main.content{
   .mg{grid-template-columns:repeat(2,1fr);gap:11px}
   main.content{padding:18px 20px}
 }
+
+/* ── TABLET: 768–1023px ── */
 @media(max-width:1023px) and (min-width:768px){
   :root{--sidebar-w:220px}
   .bnav{display:flex}
-  main.content{padding:16px 16px calc(var(--bnav-h) + 20px + var(--safe-b))}
+  /*
+    Content bottom padding = nav height + safe area + extra gap.
+    We use a calc with env() so it works on all devices.
+  */
+  main.content{
+    padding:16px 16px;
+    padding-bottom:calc(var(--bnav-h) + 20px + env(safe-area-inset-bottom, 0px));
+  }
   .mg{grid-template-columns:repeat(2,1fr);gap:10px}
   .mc-val{font-size:24px}
   .mc-icon{display:none}
@@ -677,16 +720,20 @@ main.content{
   .col-date{display:none}
   .date-pill{display:none}
   .hamburger{display:none!important}
-  /* hide lang label on tablet header, show icon only */
   .hdr-lang-btn .lang-label{display:none}
 }
+
+/* ── SMALL TABLET: 640–767px ── */
 @media(max-width:767px) and (min-width:640px){
   #sidebar{transform:translateX(-100%);width:280px}
   #sidebar.open{transform:translateX(0)}
   #main{margin-left:0}
   .hamburger{display:flex!important}
   .bnav{display:flex}
-  main.content{padding:14px 14px calc(var(--bnav-h) + 16px + var(--safe-b))}
+  main.content{
+    padding:14px 14px;
+    padding-bottom:calc(var(--bnav-h) + 16px + env(safe-area-inset-bottom, 0px));
+  }
   .mg{grid-template-columns:repeat(2,1fr);gap:10px}
   .mc-val{font-size:22px}
   .mc-icon{display:none}
@@ -700,10 +747,12 @@ main.content{
   .onboard-ic{display:none}
   .hdr-lang-btn .lang-label{display:none}
 }
+
+/* ── MOBILE: max 639px ── */
 @media(max-width:639px){
   :root{
     --header-h:52px;
-    --bnav-h:62px;
+    --bnav-h:56px;
     --sidebar-w:min(300px, 85vw);
   }
   #sidebar{transform:translateX(-100%);box-shadow:var(--sh-lg)}
@@ -711,7 +760,14 @@ main.content{
   #main{margin-left:0}
   .hamburger{display:flex!important}
   .bnav{display:flex}
-  main.content{padding:12px 12px calc(var(--bnav-h) + 14px + var(--safe-b))}
+  /*
+    CRITICAL: Content must not be hidden behind the fixed bottom nav.
+    We calculate bottom padding = nav height + safe area + a little extra.
+  */
+  main.content{
+    padding:12px 12px;
+    padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px) + 14px);
+  }
   .mg{grid-template-columns:repeat(2,1fr);gap:8px}
   .mc{padding:13px 13px 11px;border-radius:var(--r-md)}
   .mc-val{font-size:20px}
@@ -763,13 +819,21 @@ main.content{
   .trust-bar .trust-item:nth-child(n+4){display:none}
   .abar-row{padding:10px 13px}
   .pstat-row{padding:11px 13px}
-  /* sb-controls become row of 2 */
   .sb-controls{gap:5px}
   .theme-toggle,.lang-toggle{font-size:9.5px;padding:5px 7px}
+  /* Bottom nav items — fixed height prevents layout collapse on zoom */
+  .bn{height:48px;font-size:8.5px}
+  .bn-ico{width:30px;height:30px}
+  .bn-fab{width:46px;height:46px;min-width:46px;min-height:46px}
 }
+
+/* ── VERY SMALL: max 479px ── */
 @media(max-width:479px){
-  :root{--bnav-h:58px}
-  main.content{padding:10px 10px calc(var(--bnav-h) + 12px + var(--safe-b))}
+  :root{--bnav-h:54px}
+  main.content{
+    padding:10px 10px;
+    padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+  }
   .mg{gap:7px}
   .mc-val{font-size:18px}
   .mc{padding:12px 11px 10px}
@@ -781,13 +845,47 @@ main.content{
   .trust-bar .trust-item:nth-child(n+3){display:none}
   .mb{padding:14px 15px;gap:11px}
   .mh{padding:14px 15px}
-  .bn{font-size:8.5px}
-  .bn-ico{width:30px;height:30px}
-  .bn-fab{width:46px;height:46px}
+  .bn{font-size:8px;height:44px}
+  .bn-ico{width:28px;height:28px}
+  .bn-fab{width:44px;height:44px;min-width:44px;min-height:44px}
 }
+
+/*
+  SAFE AREA SUPPORT for notch / home-indicator devices (iPhone X+, Android cutouts).
+  These declarations explicitly handle the env() safe areas for the bottom nav
+  and sidebar top padding. Using @supports ensures they only apply where supported.
+*/
 @supports(padding-bottom:env(safe-area-inset-bottom)){
-  .bnav{padding-bottom:calc(6px + env(safe-area-inset-bottom));height:auto}
-  #sidebar{padding-top:env(safe-area-inset-top)}
+  .bnav{
+    /* Override the earlier padding-bottom with the safe-area version */
+    padding-bottom:calc(6px + env(safe-area-inset-bottom));
+    /* Do NOT set height:auto — it causes layout instability.
+       Instead let the padding expand the element naturally. */
+  }
+  #sidebar{
+    padding-top:env(safe-area-inset-top);
+  }
+  /* Recalculate content bottom padding with real safe-area values */
+  @media(max-width:1023px) and (min-width:768px){
+    main.content{
+      padding-bottom:calc(var(--bnav-h) + 20px + env(safe-area-inset-bottom));
+    }
+  }
+  @media(max-width:767px) and (min-width:640px){
+    main.content{
+      padding-bottom:calc(var(--bnav-h) + 16px + env(safe-area-inset-bottom));
+    }
+  }
+  @media(max-width:639px){
+    main.content{
+      padding-bottom:calc(var(--bnav-h) + 14px + env(safe-area-inset-bottom));
+    }
+  }
+  @media(max-width:479px){
+    main.content{
+      padding-bottom:calc(var(--bnav-h) + 12px + env(safe-area-inset-bottom));
+    }
+  }
 }
 </style>
 </head>
@@ -848,11 +946,9 @@ main.content{
     </nav>
 
     <div class="sb-foot">
-      <!-- Theme + Language controls -->
       <div class="sb-controls">
         <button class="theme-toggle" onclick="toggleTheme()" id="sb-theme-btn" aria-label="Toggle theme">
           <span class="theme-ic" id="sb-theme-ic">
-            <!-- moon icon (shown in light mode) -->
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           </span>
           <span id="sb-theme-lbl">Dark Mode</span>
@@ -1424,7 +1520,6 @@ function applyTranslations(){
     const txt=t(k);
     if(txt)el.placeholder=txt;
   });
-  // Update search placeholder
   const si=document.getElementById("search-inp");
   if(si)si.placeholder=currentLang==="bn"?"নাম বা ফোন নম্বর দিয়ে খুঁজুন…":"Search by name or phone…";
 }
@@ -1625,12 +1720,9 @@ const SUN_SVG=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" strok
 
 function updateThemeUI(){
   const isDark=currentTheme==="dark";
-  // sidebar button
   document.getElementById("sb-theme-ic").innerHTML=isDark?SUN_SVG:MOON_SVG;
   document.getElementById("sb-theme-lbl").textContent=isDark?t("theme_light"):t("theme_dark");
-  // header button
   document.getElementById("hdr-theme-ic").innerHTML=isDark?SUN_SVG:MOON_SVG;
-  // meta theme-color
   document.getElementById("meta-theme").content=isDark?"#171B24":"#ffffff";
 }
 
@@ -1646,18 +1738,13 @@ function updateLangUI(){
   const isBn=currentLang==="bn";
   const flag=isBn?"🇧🇩":"🇮🇳";
   const lbl=isBn?"BN":"EN";
-  // sidebar
   document.getElementById("sb-lang-flag").textContent=flag;
   document.getElementById("sb-lang-lbl").textContent=lbl;
-  // header
   document.getElementById("hdr-lang-flag").textContent=flag;
   document.getElementById("hdr-lang-lbl").textContent=lbl;
-  // language modal options
   document.getElementById("lang-opt-en").classList.toggle("active",!isBn);
   document.getElementById("lang-opt-bn").classList.toggle("active",isBn);
-  // html lang attr
   document.documentElement.lang=isBn?"bn":"en";
-  // data-lang attr for font switching
   document.documentElement.setAttribute("data-lang",currentLang);
 }
 
