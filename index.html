@@ -870,6 +870,158 @@ main.content{
     }
   }
 }
+
+/* ══════════════════════════════════════════
+   MSV FEATURE STYLES
+══════════════════════════════════════════ */
+
+/* ── QUICK ADD PATIENT BUTTON ── */
+.quick-add-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--green);border:none;color:#fff;
+  padding:9px 14px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;
+  box-shadow:0 3px 10px rgba(18,151,106,.3);
+  cursor:pointer;white-space:nowrap;min-height:40px;
+  transition:background var(--ease);
+}
+.quick-add-btn:hover{background:#0e7a57}
+.quick-add-btn:active{transform:scale(.97)}
+@media(max-width:479px){.quick-add-btn{width:100%;justify-content:center}}
+
+/* ── MISSED CALL RECOVERY ── */
+.mc-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:14px 16px;-webkit-overflow-scrolling:touch}
+.mc-flow-step{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px}
+.mc-flow-ic{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mc-flow-ic.red{background:var(--red-bg);border:1.5px solid var(--red-border);color:var(--red)}
+.mc-flow-ic.amber{background:var(--amber-bg);border:1.5px solid var(--amber-border);color:var(--amber)}
+.mc-flow-ic.green{background:var(--green-bg);border:1.5px solid var(--green-border);color:var(--green)}
+.mc-flow-lbl{font-size:10px;font-weight:600;color:var(--text-secondary);text-align:center;line-height:1.3}
+.mc-flow-arrow{color:var(--border-mid);font-size:18px;padding:0 6px;flex-shrink:0;margin-bottom:20px}
+.mcr-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px}
+.mcr-row:last-child{border-bottom:none}
+.mcr-name{font-size:12.5px;font-weight:600;color:var(--text-primary);margin-bottom:2px}
+.mcr-time{font-size:10.5px;color:var(--text-tertiary)}
+.mcr-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px}
+.mcr-sent{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.mcr-booked{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.mcr-pending{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+/* ── BOOKING PAGE ── */
+.book-page{
+  max-width:480px;margin:0 auto;
+  display:flex;flex-direction:column;gap:0;
+}
+.book-hero{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-hover) 100%);
+  border-radius:var(--r-lg);padding:24px 22px 20px;
+  color:#fff;margin-bottom:16px;
+  box-shadow:0 4px 18px rgba(46,99,212,.28);
+}
+.book-hero-title{font-family:'Instrument Serif',serif;font-size:22px;letter-spacing:-.02em;margin-bottom:4px}
+.book-hero-sub{font-size:12px;opacity:.82;line-height:1.5}
+.book-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.slot-btn{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 6px;
+  font-size:12px;font-weight:600;color:var(--text-secondary);
+  cursor:pointer;transition:all var(--ease);text-align:center;
+  min-height:42px;
+}
+.slot-btn:hover{border-color:var(--blue-border);background:var(--blue-bg);color:var(--blue)}
+.slot-btn.selected{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+.slot-btn.taken{opacity:.38;cursor:not-allowed;text-decoration:line-through}
+.book-confirm-bar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px;
+  display:flex;flex-direction:column;gap:12px;
+  box-shadow:var(--sh-sm);
+}
+.book-selected-slot{
+  background:var(--blue-bg);border:1.5px solid var(--blue-border);
+  border-radius:var(--r-sm);padding:10px 13px;
+  display:flex;align-items:center;gap:8px;
+  font-size:12.5px;font-weight:600;color:var(--blue);
+}
+.book-success{
+  text-align:center;padding:32px 20px;
+  display:none;flex-direction:column;align-items:center;gap:12px;
+}
+.book-success.on{display:flex}
+.book-success-ic{width:56px;height:56px;background:var(--green-bg);border:2px solid var(--green-border);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green)}
+.book-success-title{font-family:'Instrument Serif',serif;font-size:20px;color:var(--text-primary);letter-spacing:-.02em}
+.book-success-sub{font-size:12px;color:var(--text-secondary);line-height:1.5;max-width:280px}
+.book-form{display:flex;flex-direction:column;gap:10px}
+.book-form.hidden{display:none}
+.slot-section{display:none}
+.slot-section.on{display:block}
+
+/* ── FOLLOW-UP TEMPLATES ── */
+.tmpl-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);overflow:hidden;
+  box-shadow:var(--sh-xs);
+}
+.tmpl-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tmpl-title{font-size:12px;font-weight:700;color:var(--text-primary)}
+.tmpl-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid}
+.tmpl-badge.green{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.tmpl-badge.blue{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.tmpl-badge.amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.tmpl-body{padding:12px 14px}
+.tmpl-preview{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 12px;
+  font-size:11.5px;color:var(--text-secondary);
+  line-height:1.6;margin-bottom:10px;font-style:italic;
+}
+.tmpl-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tmpl-trigger{font-size:10px;color:var(--text-tertiary);display:flex;align-items:center;gap:4px}
+.tmpl-send-btn{
+  background:var(--green);color:#fff;border:none;
+  padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;gap:5px;
+  transition:background var(--ease);min-height:32px;
+}
+.tmpl-send-btn:hover{background:#0e7a57}
+
+/* ── QUICK PATIENT MODAL ── */
+.qp-hint{font-size:10.5px;color:var(--text-tertiary);margin-top:2px;line-height:1.4}
+.optional-fields{margin-top:6px}
+.optional-toggle{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--blue);font-weight:600;
+  cursor:pointer;padding:6px 0;background:none;border:none;
+}
+.opt-fields-wrap{display:none;flex-direction:column;gap:9px;margin-top:4px}
+.opt-fields-wrap.open{display:flex}
+
+/* ── MCR METRICS GRID ── */
+.mcr-mg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:639px){.mcr-mg{grid-template-columns:repeat(3,1fr);gap:7px}}
+@media(max-width:360px){.mcr-mg{grid-template-columns:1fr 1fr}}
+.mcr-mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;box-shadow:var(--sh-xs)}
+.mcr-mc-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary);margin-bottom:6px}
+.mcr-mc-val{font-family:'Instrument Serif',serif;font-size:26px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mcr-mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:3px}
+
+/* Book btn in header area */
+.book-link-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface);border:1.5px solid var(--blue-border);
+  color:var(--blue);padding:8px 13px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:all var(--ease);white-space:nowrap;min-height:38px;
+}
+.book-link-btn:hover{background:var(--blue-bg)}
+
+@media(max-width:479px){
+  .book-slots{grid-template-columns:repeat(3,1fr);gap:6px}
+  .slot-btn{font-size:11px;padding:9px 4px}
+  .mcr-mg{gap:6px}
+  .mcr-mc{padding:11px 10px}
+  .mcr-mc-val{font-size:22px}
+}
 </style>
 </head>
 <body>
@@ -929,6 +1081,15 @@ main.content{
       <button class="nb" onclick="nav('analytics',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
         <span data-i18n="nav_reports">Reports</span>
+      </button>
+      <button class="nb" onclick="nav('missed-calls',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23" stroke-width="1.8"/></svg></span>
+        <span>Missed Call Recovery</span>
+        <span class="nb-badge">5</span>
+      </button>
+      <button class="nb" onclick="nav('book',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg></span>
+        <span>Book Appointment</span>
       </button>
       <p class="nav-sec" data-i18n="nav_setup">Setup</p>
       <button class="nb">
@@ -1115,6 +1276,10 @@ main.content{
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span data-i18n="new_appointment">New Appointment</span>
           </button>
+          <button class="quick-add-btn" onclick="openModal('quick-patient-modal')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            Quick Add Patient
+          </button>
         </div>
         <div class="search">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1146,6 +1311,74 @@ main.content{
           <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px" data-i18n="engine_live">● Engine Live</span>
         </div>
         <div class="auto-card" id="auto-list"></div>
+
+        <!-- FOLLOW-UP TEMPLATES -->
+        <div class="sh" style="margin-top:4px">
+          <div>
+            <p class="st" style="font-size:17px">WhatsApp Reminder Templates</p>
+            <p class="ss">Ready-to-send templates · Click to send via WhatsApp</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="tmpl-card">
+            <div class="tmpl-head">
+              <p class="tmpl-title">14-Day Follow-Up Reminder</p>
+              <span class="tmpl-badge green">Auto-Active</span>
+            </div>
+            <div class="tmpl-body">
+              <div class="tmpl-preview">"Dear [Patient Name], it's been 14 days since your visit at Laskar Health Clinic. Time for your follow-up! Please call us or reply to book. — Dr. Laskar"</div>
+              <div class="tmpl-footer">
+                <p class="tmpl-trigger">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Triggers 14 days after last visit
+                </p>
+                <button class="tmpl-send-btn" onclick="sendTemplate('follow-up')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send to Due Patients
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="tmpl-card">
+            <div class="tmpl-head">
+              <p class="tmpl-title">Medication Reminder</p>
+              <span class="tmpl-badge blue">Manual</span>
+            </div>
+            <div class="tmpl-body">
+              <div class="tmpl-preview">"Hi [Patient Name], a gentle reminder to take your prescribed medication regularly. Consistency is key to your recovery! — Dr. Laskar, Laskar Health Clinic"</div>
+              <div class="tmpl-footer">
+                <p class="tmpl-trigger">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  Send manually to selected patients
+                </p>
+                <button class="tmpl-send-btn" onclick="sendTemplate('medication')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send Now
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="tmpl-card">
+            <div class="tmpl-head">
+              <p class="tmpl-title">Review Request</p>
+              <span class="tmpl-badge amber">Auto · 2h post-visit</span>
+            </div>
+            <div class="tmpl-body">
+              <div class="tmpl-preview">"Thank you for visiting Laskar Health Clinic, [Patient Name]! If you're happy with your care, we'd love a quick Google review. It helps other patients find us. [Link]"</div>
+              <div class="tmpl-footer">
+                <p class="tmpl-trigger">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Triggers 2 hours after completed visit
+                </p>
+                <button class="tmpl-send-btn" onclick="sendTemplate('review')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send to Today's Patients
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="panel">
           <div class="ph">
             <div class="pt" data-i18n="quick_actions">Quick Actions — Recent Patients</div>
@@ -1180,8 +1413,214 @@ main.content{
           </div>
         </div>
       </div>
+
+      <!-- ── MISSED CALL RECOVERY ── -->
+      <div id="v-missed-calls" class="view" style="display:none;flex-direction:column;gap:18px">
+        <div class="sh">
+          <div>
+            <h1 class="st">Missed Call Recovery</h1>
+            <p class="ss">Auto-send WhatsApp to missed callers · Convert calls to bookings</p>
+          </div>
+          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px">● Recovery Active</span>
+        </div>
+
+        <!-- Metrics -->
+        <div class="mcr-mg">
+          <div class="mcr-mc">
+            <p class="mcr-mc-lbl">Missed Calls</p>
+            <p class="mcr-mc-val">38</p>
+            <p class="mcr-mc-sub">This month</p>
+          </div>
+          <div class="mcr-mc">
+            <p class="mcr-mc-lbl">Recovered</p>
+            <p class="mcr-mc-val" style="color:var(--green)">24</p>
+            <p class="mcr-mc-sub">Bookings made</p>
+          </div>
+          <div class="mcr-mc">
+            <p class="mcr-mc-lbl">Recovery Rate</p>
+            <p class="mcr-mc-val" style="color:var(--blue)">63%</p>
+            <p class="mcr-mc-sub">↑ from 41%</p>
+          </div>
+        </div>
+
+        <!-- Flow diagram -->
+        <div class="panel">
+          <div class="ph">
+            <div class="pt">Recovery Workflow</div>
+          </div>
+          <div class="mc-flow">
+            <div class="mc-flow-step">
+              <div class="mc-flow-ic red">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23"/></svg>
+              </div>
+              <p class="mc-flow-lbl">Missed Call Detected</p>
+            </div>
+            <div class="mc-flow-arrow">→</div>
+            <div class="mc-flow-step">
+              <div class="mc-flow-ic amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </div>
+              <p class="mc-flow-lbl">WhatsApp Sent Instantly</p>
+            </div>
+            <div class="mc-flow-arrow">→</div>
+            <div class="mc-flow-step">
+              <div class="mc-flow-ic green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+              </div>
+              <p class="mc-flow-lbl">Appointment Booked</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent missed calls -->
+        <div class="panel">
+          <div class="ph">
+            <div class="pt">Recent Missed Calls</div>
+            <span class="pb pb-r">5 pending</span>
+          </div>
+          <div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">+91 98456 77890</p>
+                <p class="mcr-time">Today, 10:42 AM · 2 missed calls</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="mcr-status mcr-pending">WhatsApp Pending</span>
+                <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="alert('WhatsApp sent to +91 98456 77890')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send
+                </button>
+              </div>
+            </div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">Priya Sengupta</p>
+                <p class="mcr-time">Today, 09:15 AM · Known patient</p>
+              </div>
+              <span class="mcr-status mcr-sent">WA Sent</span>
+            </div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">+91 70015 33214</p>
+                <p class="mcr-time">Yesterday, 04:30 PM · 1 missed call</p>
+              </div>
+              <span class="mcr-status mcr-booked">✓ Booked</span>
+            </div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">Ruma Das</p>
+                <p class="mcr-time">Yesterday, 02:10 PM · Known patient</p>
+              </div>
+              <span class="mcr-status mcr-booked">✓ Booked</span>
+            </div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">+91 90023 11009</p>
+                <p class="mcr-time">Yesterday, 11:50 AM · 3 missed calls</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="mcr-status mcr-pending">Pending</span>
+                <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="alert('WhatsApp sent!')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BOOK APPOINTMENT (patient-facing) ── -->
+      <div id="v-book" class="view" style="display:none;flex-direction:column;gap:0">
+        <div class="sh" style="margin-bottom:14px">
+          <div>
+            <h1 class="st">Book Appointment</h1>
+            <p class="ss">Patient-facing booking page · Mobile-first · Under 30 seconds</p>
+          </div>
+          <button class="book-link-btn" onclick="copyBookingLink()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Copy Booking Link
+          </button>
+        </div>
+
+        <div class="book-page">
+          <!-- Hero -->
+          <div class="book-hero">
+            <p class="book-hero-title" id="book-doc-name">Dr. Mousham Laskar</p>
+            <p class="book-hero-sub">General Physician &amp; Internal Medicine<br>Laskar Health Clinic, Salt Lake, Kolkata</p>
+          </div>
+
+          <!-- Step 1: Pick slot -->
+          <div id="book-step1" class="slot-section on">
+            <div class="panel" style="margin-bottom:14px">
+              <div class="ph">
+                <div class="pt">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Today — Friday, 22 May 2026
+                </div>
+                <span class="pb pb-g">8 slots open</span>
+              </div>
+              <div style="padding:14px">
+                <div class="book-slots">
+                  <button class="slot-btn taken">09:00 AM</button>
+                  <button class="slot-btn taken">09:30 AM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'10:00 AM')">10:00 AM</button>
+                  <button class="slot-btn taken">10:30 AM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'11:00 AM')">11:00 AM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'11:30 AM')">11:30 AM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'12:00 PM')">12:00 PM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'02:00 PM')">02:00 PM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'02:30 PM')">02:30 PM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'03:00 PM')">03:00 PM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'04:00 PM')">04:00 PM</button>
+                  <button class="slot-btn taken">04:30 PM</button>
+                </div>
+                <p style="font-size:10.5px;color:var(--text-tertiary);margin-top:10px">
+                  <span style="text-decoration:line-through;opacity:.5">Strikethrough</span> = Fully Booked
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Enter details -->
+          <div id="book-step2" class="slot-section">
+            <div class="book-confirm-bar">
+              <div class="book-selected-slot">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span id="selected-slot-label">Selected: —</span>
+                <button onclick="goBackToSlots()" style="margin-left:auto;font-size:10px;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:600">Change</button>
+              </div>
+              <div class="book-form" id="book-form">
+                <div>
+                  <label class="flbl">Your Name <span style="color:var(--red)">*</span></label>
+                  <input type="text" class="finput" id="book-name" placeholder="Full name" autocomplete="name"/>
+                </div>
+                <div>
+                  <label class="flbl">Mobile Number <span style="color:var(--red)">*</span></label>
+                  <input type="tel" class="finput" id="book-phone" placeholder="+91 or +880 number" autocomplete="tel" inputmode="tel"/>
+                </div>
+                <button class="msub" onclick="confirmBooking()" style="margin-top:4px">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Confirm Appointment
+                </button>
+                <p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">You will receive a WhatsApp confirmation</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Success state -->
+          <div class="book-success" id="book-success">
+            <div class="book-success-ic">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="book-success-title">Appointment Confirmed!</p>
+            <p class="book-success-sub" id="book-success-msg">Your appointment has been booked. A WhatsApp confirmation will be sent shortly.</p>
+            <button class="add-btn" onclick="resetBooking()" style="margin-top:6px">Book Another</button>
+          </div>
+        </div>
+      </div>
     </main>
-  </div><!-- /main -->
+  </div><!-- /main (duplicate removed) -->
 
   <!-- BOTTOM NAV -->
   <nav class="bnav" id="bnav">
@@ -1278,6 +1717,61 @@ main.content{
       <button class="msub" onclick="closeModal('add-modal')" data-i18n="confirm_appointment">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Confirm Appointment
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ADD PATIENT MODAL -->
+<div class="mod-ov" id="quick-patient-modal">
+  <div class="modal">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        </div>
+        <div>
+          <p class="mtitle">Quick Add Patient</p>
+          <p style="color:var(--text-tertiary);font-size:10px;margin-top:1px">Takes less than 10 seconds</p>
+        </div>
+      </div>
+      <button class="mclose" onclick="closeModal('quick-patient-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div>
+        <label class="flbl">Patient Name <span style="color:var(--red)">*</span></label>
+        <input type="text" class="finput" id="qp-name" placeholder="Full name" autocomplete="name" autocapitalize="words"/>
+      </div>
+      <div>
+        <label class="flbl">Mobile Number <span style="color:var(--red)">*</span></label>
+        <div class="prow">
+          <div class="ppfx" id="qp-dial">+91</div>
+          <input type="tel" class="finput" id="qp-phone" placeholder="Mobile number" style="flex:1" inputmode="numeric" autocomplete="tel"/>
+        </div>
+        <p class="qp-hint">That's all you need to register a patient</p>
+      </div>
+      <!-- Optional fields -->
+      <div class="optional-fields">
+        <button class="optional-toggle" onclick="toggleOptional()" type="button" id="opt-toggle-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" id="opt-toggle-ic"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add optional details
+        </button>
+        <div class="opt-fields-wrap" id="opt-fields">
+          <div><label class="flbl">Age</label><input type="number" class="finput" placeholder="e.g. 42" inputmode="numeric" min="0" max="120"/></div>
+          <div><label class="flbl">Gender</label>
+            <select class="finput" style="color:var(--text-primary)">
+              <option value="">Select</option>
+              <option>Male</option><option>Female</option><option>Other</option>
+            </select>
+          </div>
+          <div><label class="flbl">Chief Complaint</label><input type="text" class="finput" placeholder="e.g. Fever, Cough…"/></div>
+        </div>
+      </div>
+      <button class="msub" onclick="quickAddPatient()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Add Patient
       </button>
     </div>
   </div>
@@ -1506,7 +2000,7 @@ const AUTOS=[
   {label_en:"AI Reception Assistant",label_bn:"এআই রিসেপশন সহকারী",desc_en:"Answers common patient questions automatically",desc_bn:"সাধারণ রোগীর প্রশ্নের স্বয়ংক্রিয় উত্তর দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
 ];
 
-const TABS_KEYS={dashboard:"nav_dashboard",patients:"nav_patients",whatsapp:"nav_whatsapp",analytics:"nav_reports"};
+const TABS_KEYS={dashboard:"nav_dashboard",patients:"nav_patients",whatsapp:"nav_whatsapp",analytics:"nav_reports","missed-calls":"nav_dashboard",book:"nav_dashboard"};
 let mkt="india";
 let currentLang="en";
 let currentTheme="light";
@@ -1752,6 +2246,10 @@ function renderAll(){
   document.getElementById("ctx-mkt").textContent=mkt==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
   document.getElementById("ctx-clinic").textContent=d.doc.clinic;
   document.getElementById("add-phone").placeholder=`${d.cur.dial} number`;
+  const bookDocEl=document.getElementById("book-doc-name");
+  if(bookDocEl)bookDocEl.textContent=d.doc.name;
+  const qpDialEl=document.getElementById("qp-dial");
+  if(qpDialEl)qpDialEl.textContent=d.cur.dial;
   applyTranslations();
   renderDash();renderPats();renderWA();renderAna();
 }
@@ -1917,6 +2415,113 @@ function openWA(p){
   updateLangUI();
   renderAll();
 })();
+
+/* ══ MSV FEATURE FUNCTIONS ══ */
+
+/* ── BOOKING PAGE ── */
+let selectedSlot=null;
+
+function selectSlot(btn,time){
+  document.querySelectorAll(".slot-btn").forEach(b=>b.classList.remove("selected"));
+  btn.classList.add("selected");
+  selectedSlot=time;
+  document.getElementById("selected-slot-label").textContent="Selected: "+time;
+  document.getElementById("book-step1").classList.remove("on");
+  document.getElementById("book-step2").classList.add("on");
+  // focus name field
+  setTimeout(()=>{const n=document.getElementById("book-name");if(n)n.focus();},120);
+}
+
+function goBackToSlots(){
+  document.getElementById("book-step2").classList.remove("on");
+  document.getElementById("book-step1").classList.add("on");
+  selectedSlot=null;
+}
+
+function confirmBooking(){
+  const name=(document.getElementById("book-name")||{}).value||"";
+  const phone=(document.getElementById("book-phone")||{}).value||"";
+  if(!name.trim()||!phone.trim()){
+    alert("Please enter your name and mobile number.");return;
+  }
+  document.getElementById("book-step2").classList.remove("on");
+  document.getElementById("book-step1").classList.remove("on");
+  const msgEl=document.getElementById("book-success-msg");
+  if(msgEl)msgEl.textContent=name+" — your appointment at "+selectedSlot+" is confirmed! You will receive a WhatsApp confirmation shortly.";
+  document.getElementById("book-success").classList.add("on");
+}
+
+function resetBooking(){
+  document.getElementById("book-success").classList.remove("on");
+  document.getElementById("book-step1").classList.add("on");
+  document.querySelectorAll(".slot-btn").forEach(b=>b.classList.remove("selected"));
+  const n=document.getElementById("book-name");const p=document.getElementById("book-phone");
+  if(n)n.value="";if(p)p.value="";
+  selectedSlot=null;
+}
+
+function copyBookingLink(){
+  const link="https://aura.clinic/book/"+DB[mkt].doc.clinic.toLowerCase().replace(/[^a-z0-9]/g,"-");
+  try{navigator.clipboard.writeText(link);alert("Booking link copied!\n"+link);}
+  catch(e){alert("Booking link:\n"+link);}
+}
+
+/* ── QUICK ADD PATIENT ── */
+function toggleOptional(){
+  const wrap=document.getElementById("opt-fields");
+  const ic=document.getElementById("opt-toggle-ic");
+  const btn=document.getElementById("opt-toggle-btn");
+  const open=wrap.classList.toggle("open");
+  if(ic)ic.innerHTML=open?'<line x1="5" y1="12" x2="19" y2="12"/>'
+    :'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+  if(btn)btn.querySelector("span")||null;
+}
+
+function quickAddPatient(){
+  const name=(document.getElementById("qp-name")||{}).value||"";
+  const phone=(document.getElementById("qp-phone")||{}).value||"";
+  if(!name.trim()||!phone.trim()){alert("Name and mobile number are required.");return;}
+  const dial=DB[mkt].cur.dial;
+  const fullPhone=phone.startsWith("+")?phone:dial+" "+phone;
+  const newPat={
+    id:Date.now(),name:name.trim(),
+    phone:fullPhone,lastVisit:"—",status:"Active",visits:0
+  };
+  DB[mkt].patients.unshift(newPat);
+  DB[mkt].metrics.patients+=1;
+  closeModal("quick-patient-modal");
+  const n=document.getElementById("qp-name");const p=document.getElementById("qp-phone");
+  if(n)n.value="";if(p)p.value="";
+  document.getElementById("opt-fields").classList.remove("open");
+  renderPats();
+  renderDash();
+  // show success toast
+  showToast("Patient added: "+name.trim());
+}
+
+/* ── TOAST NOTIFICATION ── */
+function showToast(msg){
+  let t=document.getElementById("aura-toast");
+  if(!t){
+    t=document.createElement("div");t.id="aura-toast";
+    t.style.cssText="position:fixed;bottom:calc(var(--bnav-h,68px) + 16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--text-primary);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:600;z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,.2);white-space:nowrap;transition:opacity .3s ease";
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;t.style.opacity="1";t.style.display="block";
+  clearTimeout(t._to);t._to=setTimeout(()=>{t.style.opacity="0";setTimeout(()=>{t.style.display="none"},300)},2400);
+}
+
+/* ── FOLLOW-UP TEMPLATES ── */
+function sendTemplate(type){
+  const msgs={
+    "follow-up":"14-day follow-up reminder sent to 3 patients due for a visit!",
+    "medication":"Medication reminder sent to selected patients.",
+    "review":"Review request sent to today's 6 completed patients!"
+  };
+  showToast(msgs[type]||"Message sent!");
+}
+
+/* Booking UI updates are handled inside renderAll above */
 </script>
 </body>
 </html>
