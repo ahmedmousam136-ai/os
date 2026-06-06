@@ -792,10 +792,26 @@ main.content{
 .settings-row-lbl{font-size:12.5px;font-weight:600;color:var(--text-primary)}
 .settings-row-sub{font-size:10.5px;color:var(--text-tertiary);margin-top:2px}
 
-/* ═══ AUTH VIEW ═══ */
+/* ═══ AUTH SCREEN — completely independent, full-viewport ═══ */
+#auth-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  min-height:100vh;min-width:100vw;
+  width:100%;height:100%;
+}
+#auth-screen.hidden{display:none !important}
+
+/* App shell hidden until authenticated */
+#app-shell{display:none;flex-direction:column;min-height:100vh}
+#app-shell.authenticated{display:flex}
+
+/* Legacy class kept for inner card layout */
 .auth-wrap{
-  min-height:100vh;display:flex;align-items:center;justify-content:center;
-  background:var(--bg);padding:20px;
+  width:100%;display:flex;align-items:center;justify-content:center;
 }
 .auth-card{
   width:100%;max-width:400px;
@@ -1005,6 +1021,106 @@ main.content{
 </style>
 </head>
 <body>
+<!-- ══ AUTH SCREEN — outside app shell, always on top ══ -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-brand-mark">
+          <span class="a">Aura</span><span class="s">Scale</span><span class="os">OS</span>
+        </div>
+        <p class="auth-brand-sub">Clinic Operating System</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+      </div>
+
+      <div class="auth-body">
+        <!-- LOGIN PANEL -->
+        <div class="auth-panel on" id="auth-panel-login">
+          <div id="auth-login-error" class="auth-error">Invalid email or password. Please try again.</div>
+          <div class="auth-field">
+            <label>Email Address</label>
+            <input type="email" class="finput" id="auth-login-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input type="password" class="finput" id="auth-login-pass" placeholder="Enter your password" autocomplete="current-password"/>
+          </div>
+          <button class="auth-forgot" onclick="handleForgotPassword()">Forgot password?</button>
+          <button class="msub" onclick="handleLogin()" style="margin-top:2px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Sign In
+          </button>
+          <p class="auth-footer-note">Don't have an account? <span onclick="switchAuthTab('signup')">Create one free</span></p>
+        </div>
+
+        <!-- SIGNUP PANEL -->
+        <div class="auth-panel" id="auth-panel-signup">
+          <div id="auth-signup-error" class="auth-error">Please fill in all required fields.</div>
+          <div>
+            <label class="flbl">Country <span style="color:var(--red)">*</span></label>
+            <div class="auth-country-row">
+              <button class="auth-country-btn selected" id="auth-country-india" onclick="selectAuthCountry('india')">
+                <span class="auth-country-flag">🇮🇳</span><span>India</span>
+              </button>
+              <button class="auth-country-btn" id="auth-country-bd" onclick="selectAuthCountry('bd')">
+                <span class="auth-country-flag">🇧🇩</span><span>Bangladesh</span>
+              </button>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label>Clinic Name <span style="color:var(--red)">*</span></label>
+            <input type="text" class="finput" id="auth-clinic-name" placeholder="e.g. Sunrise Health Clinic" autocapitalize="words"/>
+          </div>
+          <div class="auth-field">
+            <label>Doctor Name <span style="color:var(--red)">*</span></label>
+            <input type="text" class="finput" id="auth-doctor-name" placeholder="Dr. Full Name" autocapitalize="words"/>
+          </div>
+          <div class="auth-field">
+            <label>Mobile Number <span style="color:var(--red)">*</span></label>
+            <div class="prow">
+              <div class="ppfx" id="auth-dial">+91</div>
+              <input type="tel" class="finput" id="auth-mobile" placeholder="Mobile number" style="flex:1" inputmode="numeric" autocomplete="tel"/>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label>Email Address <span style="color:var(--red)">*</span></label>
+            <input type="email" class="finput" id="auth-signup-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
+          </div>
+          <div class="auth-field">
+            <label>Password <span style="color:var(--red)">*</span></label>
+            <input type="password" class="finput" id="auth-signup-pass" placeholder="Min. 6 characters" autocomplete="new-password"/>
+          </div>
+          <button class="msub" onclick="handleSignup()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2);margin-top:2px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Create Account
+          </button>
+          <p class="auth-footer-note">Already have an account? <span onclick="switchAuthTab('login')">Sign in here</span></p>
+        </div>
+      </div><!-- /auth-body -->
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg)">
+        <div class="trust-item" style="font-size:9px">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          HIPAA
+        </div>
+        <div class="trust-item" style="font-size:9px">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          End-to-End Encrypted
+        </div>
+        <div class="trust-item" style="font-size:9px">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          SOC 2 Type II
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ══ APP SHELL — hidden until authenticated ══ -->
+<div id="app-shell">
 <div id="app">
   <div id="overlay" onclick="closeSidebar()"></div>
 
@@ -1150,120 +1266,6 @@ main.content{
         </div>
       </div>
 
-      <!-- ── AUTH VIEW ── -->
-      <div id="v-auth" class="view" style="padding:0;margin:0;gap:0">
-        <div class="auth-wrap">
-          <div class="auth-card">
-            <div class="auth-brand">
-              <div class="auth-brand-mark">
-                <span class="a">Aura</span><span class="s">Scale</span><span class="os">OS</span>
-              </div>
-              <p class="auth-brand-sub">Clinic Operating System</p>
-            </div>
-
-            <div class="auth-tabs">
-              <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Sign In</button>
-              <button class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
-            </div>
-
-            <div class="auth-body">
-
-              <!-- LOGIN PANEL -->
-              <div class="auth-panel on" id="auth-panel-login">
-                <div id="auth-login-error" class="auth-error">Invalid email or password. Please try again.</div>
-
-                <div class="auth-field">
-                  <label>Email Address</label>
-                  <input type="email" class="finput" id="auth-login-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
-                </div>
-                <div class="auth-field">
-                  <label>Password</label>
-                  <input type="password" class="finput" id="auth-login-pass" placeholder="Enter your password" autocomplete="current-password"/>
-                </div>
-
-                <button class="auth-forgot" onclick="handleForgotPassword()">Forgot password?</button>
-
-                <button class="msub" onclick="handleLogin()" style="margin-top:2px">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                  Sign In
-                </button>
-
-                <p class="auth-footer-note">
-                  Don't have an account? <span onclick="switchAuthTab('signup')">Create one free</span>
-                </p>
-              </div>
-
-              <!-- SIGNUP PANEL -->
-              <div class="auth-panel" id="auth-panel-signup">
-                <div id="auth-signup-error" class="auth-error">Please fill in all required fields.</div>
-
-                <div>
-                  <label class="flbl">Country <span style="color:var(--red)">*</span></label>
-                  <div class="auth-country-row">
-                    <button class="auth-country-btn selected" id="auth-country-india" onclick="selectAuthCountry('india')">
-                      <span class="auth-country-flag">🇮🇳</span>
-                      <span>India</span>
-                    </button>
-                    <button class="auth-country-btn" id="auth-country-bd" onclick="selectAuthCountry('bd')">
-                      <span class="auth-country-flag">🇧🇩</span>
-                      <span>Bangladesh</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="auth-field">
-                  <label>Clinic Name <span style="color:var(--red)">*</span></label>
-                  <input type="text" class="finput" id="auth-clinic-name" placeholder="e.g. Sunrise Health Clinic" autocapitalize="words"/>
-                </div>
-                <div class="auth-field">
-                  <label>Doctor Name <span style="color:var(--red)">*</span></label>
-                  <input type="text" class="finput" id="auth-doctor-name" placeholder="Dr. Full Name" autocapitalize="words"/>
-                </div>
-                <div class="auth-field">
-                  <label>Mobile Number <span style="color:var(--red)">*</span></label>
-                  <div class="prow">
-                    <div class="ppfx" id="auth-dial">+91</div>
-                    <input type="tel" class="finput" id="auth-mobile" placeholder="Mobile number" style="flex:1" inputmode="numeric" autocomplete="tel"/>
-                  </div>
-                </div>
-                <div class="auth-field">
-                  <label>Email Address <span style="color:var(--red)">*</span></label>
-                  <input type="email" class="finput" id="auth-signup-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
-                </div>
-                <div class="auth-field">
-                  <label>Password <span style="color:var(--red)">*</span></label>
-                  <input type="password" class="finput" id="auth-signup-pass" placeholder="Min. 6 characters" autocomplete="new-password"/>
-                </div>
-
-                <button class="msub" onclick="handleSignup()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2);margin-top:2px">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Create Account
-                </button>
-
-                <p class="auth-footer-note">
-                  Already have an account? <span onclick="switchAuthTab('login')">Sign in here</span>
-                </p>
-              </div>
-
-            </div><!-- /auth-body -->
-
-            <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg)">
-              <div class="trust-item" style="font-size:9px">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                HIPAA
-              </div>
-              <div class="trust-item" style="font-size:9px">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                End-to-End Encrypted
-              </div>
-              <div class="trust-item" style="font-size:9px">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                SOC 2 Type II
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- ── DASHBOARD ── -->
       <div id="v-dashboard" class="view">
@@ -1849,7 +1851,8 @@ main.content{
       <span data-i18n="bn_reports">Reports</span>
     </button>
   </nav>
-</div>
+</div><!-- /#app -->
+</div><!-- /#app-shell -->
 
 <!-- WA MODAL -->
 <div class="mod-ov" id="wa-modal">
@@ -2579,10 +2582,14 @@ function selectAuthCountry(c){
 }
 
 function _goToDashboard(){
+  // Hide auth screen completely
+  document.getElementById('auth-screen').classList.add('hidden');
+  // Show app shell
+  document.getElementById('app-shell').classList.add('authenticated');
+  // Activate dashboard view
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   document.getElementById('v-dashboard').classList.add('on');
-  document.getElementById('sidebar').style.display='';
-  document.getElementById('bnav').style.display='';
+  // Sync nav states
   document.querySelectorAll('.nb').forEach(b=>{
     b.classList.toggle('on',(b.getAttribute('onclick')||'').includes("'dashboard'"));
   });
@@ -2630,12 +2637,9 @@ function handleForgotPassword(){
 
 /* ══ INIT ══ */
 (function init(){
-  // Hide chrome until authenticated
-  document.getElementById('sidebar').style.display='none';
-  document.getElementById('bnav').style.display='none';
-  // Show only auth view on load
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
-  document.getElementById('v-auth').classList.add('on');
+  // App shell is hidden by default via CSS (#app-shell { display:none })
+  // Auth screen is visible by default via CSS (#auth-screen { display:flex })
+  // Nothing else needed to block the app — architecture handles it.
 
   try{
     const savedTheme=localStorage.getItem("aura_theme");
