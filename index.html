@@ -2698,7 +2698,8 @@ function resetBooking(){
   selectedSlot=null;
 }
 function copyBookingLink(){
-  const link="https://aura.clinic/book/"+DB[mkt].doc.clinic.toLowerCase().replace(/[^a-z0-9]/g,"-");
+ const base=window.location.href.replace(/index\.html.*$/,"").replace(/\?.*$/,"");
+  const link=base+"book.html";
   try{navigator.clipboard.writeText(link);alert("Booking link copied!\n"+link);}
   catch(e){alert("Booking link:\n"+link);}
 }
