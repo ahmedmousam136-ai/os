@@ -2586,6 +2586,8 @@ function _goToDashboard(){
   document.getElementById('auth-screen').classList.add('hidden');
   // Show app shell
   document.getElementById('app-shell').classList.add('authenticated');
+  // Render all data now that user is authenticated
+  renderAll();
   // Activate dashboard view
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   document.getElementById('v-dashboard').classList.add('on');
