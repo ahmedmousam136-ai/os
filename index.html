@@ -4,14 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="theme-color" content="#ffffff" id="meta-theme"/>
-<title>AuraScale OS \u2014 Clinic Operating System</title>
+<title>AuraScale OS — Clinic Operating System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-/* \u2500\u2500\u2500 RESET & ROOT \u2500\u2500\u2500 */
+/* ─── RESET & ROOT ─── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-/* \u2550\u2550 LIGHT MODE (default) \u2550\u2550 */
+/* ══ LIGHT MODE (default) ══ */
 :root,[data-theme="light"]{
   --bg:#F7F6F3;
   --surface:#FFFFFF;
@@ -58,7 +58,7 @@
   --sidebar-bg:#FFFFFF;
 }
 
-/* \u2550\u2550 DARK MODE \u2550\u2550 */
+/* ══ DARK MODE ══ */
 [data-theme="dark"]{
   --bg:#0F1117;
   --surface:#171B24;
@@ -93,7 +93,7 @@
   --sidebar-bg:#171B24;
 }
 
-/* \u2550\u2550 BENGALI FONT SUPPORT \u2550\u2550 */
+/* ══ BENGALI FONT SUPPORT ══ */
 [data-lang="bn"] body,
 [data-lang="bn"] button,
 [data-lang="bn"] input,
@@ -133,7 +133,7 @@
   font-weight:600;
 }
 
-/* ── BRAND FONT LOCK — always Instrument Serif regardless of language ── */
+/* ── BRAND FONT LOCK ── */
 .sb-mark .a,
 .sb-mark .s,
 [data-lang="bn"] .sb-mark .a,
@@ -172,10 +172,10 @@ input,textarea,select{font-family:'DM Sans',sans-serif;outline:none;-webkit-appe
 a{color:inherit;text-decoration:none}
 .serif{font-family:'Instrument Serif',Georgia,serif}
 
-/* \u2500\u2500\u2500 LAYOUT \u2500\u2500\u2500 */
+/* ─── LAYOUT ─── */
 #app{display:flex;min-height:100vh;position:relative}
 
-/* \u2500\u2500\u2500 OVERLAY \u2500\u2500\u2500 */
+/* ─── OVERLAY ─── */
 #overlay{
   display:none;position:fixed;inset:0;z-index:38;
   background:rgba(15,14,10,.5);backdrop-filter:blur(2px);
@@ -183,7 +183,7 @@ a{color:inherit;text-decoration:none}
 }
 #overlay.on{display:block}
 
-/* \u2500\u2500\u2500 SIDEBAR \u2500\u2500\u2500 */
+/* ─── SIDEBAR ─── */
 #sidebar{
   width:var(--sidebar-w);
   background:var(--sidebar-bg);border-right:1px solid var(--border);
@@ -202,7 +202,7 @@ a{color:inherit;text-decoration:none}
 .sb-mark .os{font-size:10px;font-weight:700;color:var(--text-tertiary);letter-spacing:.08em;margin-left:5px;align-self:center;font-family:'DM Sans',sans-serif !important}
 .sb-tag{font-size:10px;color:var(--text-tertiary);letter-spacing:.05em;margin-top:3px}
 
-/* \u2500\u2500\u2500 SIDEBAR DOCTOR CARD \u2500\u2500\u2500 */
+/* ─── SIDEBAR DOCTOR CARD ─── */
 .sb-doc{padding:11px 13px;border-bottom:1px solid var(--border);flex-shrink:0}
 .sb-doc-inner{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);padding:12px 13px;transition:background .22s ease,border-color .22s ease}
 .sb-doc-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
@@ -216,7 +216,7 @@ a{color:inherit;text-decoration:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .blink{animation:pulse 1.8s ease-in-out infinite}
 
-/* \u2500\u2500\u2500 WORKSPACE TOGGLE \u2500\u2500\u2500 */
+/* ─── WORKSPACE TOGGLE ─── */
 .sb-workspace{margin-top:9px;padding-top:9px;border-top:1px solid var(--blue-border)}
 .sb-workspace-lbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);font-weight:700;margin-bottom:5px}
 .ws-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
@@ -239,7 +239,7 @@ nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px;ove
 .nb.on .nb-ic{opacity:1}
 .nb-badge{margin-left:auto;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
 
-/* \u2500\u2500 SIDEBAR FOOTER \u2500\u2500 */
+/* ── SIDEBAR FOOTER ── */
 .sb-foot{padding:11px 13px;border-top:1px solid var(--border);flex-shrink:0;padding-bottom:calc(11px + var(--safe-b))}
 .sb-controls{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 
@@ -269,10 +269,10 @@ nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px;ove
 .sb-out{display:flex;align-items:center;gap:6px;color:var(--text-tertiary);font-size:11px;cursor:pointer;transition:color var(--ease);padding:6px 0;min-height:36px}
 .sb-out:hover{color:var(--red)}
 
-/* \u2500\u2500\u2500 MAIN \u2500\u2500\u2500 */
+/* ─── MAIN ─── */
 #main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
 
-/* \u2500\u2500\u2500 HEADER \u2500\u2500\u2500 */
+/* ─── HEADER ─── */
 header{
   height:var(--header-h);
   background:var(--header-blur);
@@ -330,7 +330,7 @@ header{
 .add-btn:hover{background:var(--blue-hover);box-shadow:0 4px 16px rgba(46,99,212,.42)}
 .add-btn:active{transform:scale(.97)}
 
-/* \u2500\u2500\u2500 CONTENT \u2500\u2500\u2500 */
+/* ─── CONTENT ─── */
 main.content{
   flex:1;
   padding:20px;
@@ -345,7 +345,7 @@ main.content{
 .ctx-chip .lbl{font-weight:600;color:var(--text-primary)}
 .live-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--green);font-weight:600}
 
-/* \u2550\u2550 FIX 2: VIEWS \u2014 all views use class-based show/hide only \u2550\u2550 */
+/* ══ VIEWS ══ */
 .view{display:none;flex-direction:column;gap:18px}
 .view.on{display:flex}
 
@@ -353,7 +353,7 @@ main.content{
 .st{font-family:'Instrument Serif',serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
 .ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
 
-/* \u2500\u2500\u2500 METRICS GRID \u2500\u2500\u2500 */
+/* ─── METRICS GRID ─── */
 .mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
 .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 14px;transition:all var(--ease);box-shadow:var(--sh-xs)}
 .mc:hover{box-shadow:var(--sh-sm);border-color:var(--border-mid);transform:translateY(-1px)}
@@ -364,7 +364,7 @@ main.content{
 .mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .up{color:var(--green);font-weight:700}.dn{color:var(--red);font-weight:700}
 
-/* \u2500\u2500\u2500 PANELS \u2500\u2500\u2500 */
+/* ─── PANELS ─── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);transition:background .22s ease,border-color .22s ease}
 .ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
@@ -375,7 +375,7 @@ main.content{
 .pb-g{color:var(--green);background:var(--green-bg);border:1px solid var(--green-border)}
 .pb-a{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
 
-/* \u2500\u2500\u2500 CHIPS \u2500\u2500\u2500 */
+/* ─── CHIPS ─── */
 .chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .ch-in{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .ch-wait{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
@@ -385,7 +385,7 @@ main.content{
 .ch-risk{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .ch-inact{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 
-/* \u2500\u2500\u2500 QUEUE \u2500\u2500\u2500 */
+/* ─── QUEUE ─── */
 .qrow{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease);gap:8px}
 [data-theme="dark"] .qrow{border-bottom-color:rgba(37,42,56,.9)}
 .qrow:hover{background:var(--bg)}
@@ -404,7 +404,7 @@ main.content{
 }
 .wa-icon-btn:hover{color:var(--green);background:var(--green-bg)}
 
-/* \u2500\u2500\u2500 ALERTS \u2500\u2500\u2500 */
+/* ─── ALERTS ─── */
 .arow{padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
 [data-theme="dark"] .arow{border-bottom-color:rgba(37,42,56,.9)}
 .arow:hover{background:var(--bg)}
@@ -423,13 +423,13 @@ main.content{
 }
 .remind:hover{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
 
-/* \u2500\u2500\u2500 SEARCH \u2500\u2500\u2500 */
+/* ─── SEARCH ─── */
 .search{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;display:flex;align-items:center;gap:8px;transition:border-color var(--ease);box-shadow:var(--sh-xs)}
 .search:focus-within{border-color:var(--border-mid)}
 .search input{background:none;border:none;color:var(--text-primary);font-size:13px;flex:1;min-width:0;padding:0;min-height:22px}
 .search input::placeholder{color:var(--text-tertiary)}
 
-/* \u2500\u2500\u2500 TABLE \u2500\u2500\u2500 */
+/* ─── TABLE ─── */
 .tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
 .thead{display:grid;grid-template-columns:3fr 2fr 1.4fr 1fr 1.6fr 38px;padding:8px 15px;border-bottom:1px solid var(--border);background:var(--bg)}
 .thead span{font-size:8.5px;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:var(--text-tertiary);display:flex;align-items:center}
@@ -445,7 +445,7 @@ main.content{
 .wa-btn{background:none;border:none;color:var(--text-tertiary);padding:4px;transition:color var(--ease),background var(--ease);cursor:pointer;border-radius:4px;min-width:30px;min-height:30px;display:flex;align-items:center;justify-content:center}
 .wa-btn:hover{color:var(--green);background:var(--green-bg)}
 
-/* \u2500\u2500\u2500 WHATSAPP PAGE \u2500\u2500\u2500 */
+/* ─── WHATSAPP PAGE ─── */
 .auto-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
 .auto-row{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease);gap:12px}
 [data-theme="dark"] .auto-row{border-bottom-color:rgba(37,42,56,.9)}
@@ -480,7 +480,7 @@ main.content{
 }
 .qbtn:hover{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
 
-/* \u2500\u2500\u2500 ANALYTICS BAR \u2500\u2500\u2500 */
+/* ─── ANALYTICS BAR ─── */
 .abar-row{padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
 [data-theme="dark"] .abar-row{border-bottom-color:rgba(37,42,56,.9)}
 .abar-row:last-child{border-bottom:none}
@@ -499,7 +499,7 @@ main.content{
 .pstat-count{font-size:13.5px;font-weight:700;font-family:'Instrument Serif',serif}
 .pstat-tot{color:var(--text-tertiary);font-size:10.5px;font-weight:400;font-family:'DM Sans',sans-serif}
 
-/* \u2500\u2500\u2500 MODAL \u2500\u2500\u2500 */
+/* ─── MODAL ─── */
 .mod-ov{
   position:fixed;inset:0;z-index:70;
   display:none;align-items:flex-end;justify-content:center;
@@ -564,20 +564,15 @@ main.content{
 .msub:hover{background:var(--blue-hover)}
 .msub:active{transform:scale(.98)}
 
-/* \u2500\u2500\u2500 BOTTOM NAV \u2500\u2500\u2500 */
+/* ─── BOTTOM NAV ─── */
 .bnav{
   display:none;
   position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  z-index:35;
+  bottom:0;left:0;right:0;z-index:35;
   background:rgba(255,255,255,.97);
   border-top:1px solid var(--border);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  align-items:center;
-  justify-content:space-around;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  align-items:center;justify-content:space-around;
   box-shadow:0 -2px 20px rgba(0,0,0,.06);
   padding-top:6px;
   padding-bottom:6px;
@@ -585,8 +580,7 @@ main.content{
   padding-left:env(safe-area-inset-left,0px);
   padding-right:env(safe-area-inset-right,0px);
   transition:background .22s ease,border-color .22s ease;
-  -webkit-transform:translateZ(0);
-  transform:translateZ(0);
+  -webkit-transform:translateZ(0);transform:translateZ(0);
   isolation:isolate;
 }
 [data-theme="dark"] .bnav{background:rgba(23,27,36,.97)}
@@ -595,12 +589,8 @@ main.content{
   padding:4px 2px;border-radius:var(--r-sm);
   color:var(--text-tertiary);font-size:9px;font-weight:600;
   cursor:pointer;transition:all var(--ease);border:none;background:none;
-  flex:1;max-width:72px;min-width:44px;
-  height:52px;
-  justify-content:center;
-  -webkit-tap-highlight-color:transparent;
-  -webkit-user-select:none;
-  user-select:none;
+  flex:1;max-width:72px;min-width:44px;height:52px;justify-content:center;
+  -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;
 }
 .bn.on{color:var(--blue)}
 .bn.on .bn-ico{background:var(--blue-bg)}
@@ -610,23 +600,22 @@ main.content{
   border:none;display:flex;align-items:center;justify-content:center;color:#fff;
   cursor:pointer;box-shadow:0 4px 16px rgba(46,99,212,.4);
   transition:transform var(--ease),box-shadow var(--ease);flex-shrink:0;
-  -webkit-tap-highlight-color:transparent;
-  min-width:50px;min-height:50px;
+  -webkit-tap-highlight-color:transparent;min-width:50px;min-height:50px;
 }
 .bn-fab:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(46,99,212,.5)}
 .bn-fab:active{transform:scale(.92)}
 
-/* \u2500\u2500\u2500 EMPTY STATE \u2500\u2500\u2500 */
+/* ─── EMPTY STATE ─── */
 .empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
 .empty-ic{font-size:32px;margin-bottom:10px;opacity:.45}
 .empty-t{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
 .empty-s{font-size:11.5px;line-height:1.5}
 
-/* \u2500\u2500\u2500 TRUST BAR \u2500\u2500\u2500 */
+/* ─── TRUST BAR ─── */
 .trust-bar{display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 14px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);flex-wrap:wrap}
 .trust-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--blue);font-weight:600;letter-spacing:.04em}
 
-/* \u2500\u2500\u2500 ONBOARDING BANNER \u2500\u2500\u2500 */
+/* ─── ONBOARDING BANNER ─── */
 .onboard{background:linear-gradient(135deg,var(--blue-bg) 0%,var(--surface2) 100%);border:1px solid var(--blue-border);border-radius:var(--r-lg);padding:16px 18px;display:flex;align-items:flex-start;gap:14px}
 .onboard-ic{width:38px;height:38px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
 .onboard-t{font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:3px}
@@ -638,28 +627,23 @@ main.content{
 .onboard-dismiss{
   color:var(--text-tertiary);flex-shrink:0;align-self:flex-start;
   cursor:pointer;background:none;border:none;
-  min-width:30px;min-height:30px;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:6px;padding:4px;
-  transition:color var(--ease),background var(--ease);
+  min-width:30px;min-height:30px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;padding:4px;transition:color var(--ease),background var(--ease);
 }
 .onboard-dismiss:hover{color:var(--text-primary);background:var(--border)}
 
-/* \u2500\u2500 LANGUAGE MODAL \u2500\u2500 */
+/* ── LANGUAGE MODAL ── */
 .lang-modal-ov{
   position:fixed;inset:0;z-index:80;
   display:none;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   padding:20px;
 }
 .lang-modal-ov.open{display:flex}
 .lang-modal{
   background:var(--surface);border:1px solid var(--border);
   width:100%;max-width:360px;border-radius:var(--r-xl);
-  box-shadow:var(--sh-lg);
-  animation:slideUp .2s cubic-bezier(.4,0,.2,1);
-  overflow:hidden;
+  box-shadow:var(--sh-lg);animation:slideUp .2s cubic-bezier(.4,0,.2,1);overflow:hidden;
 }
 .lm-head{padding:18px 18px 14px;border-bottom:1px solid var(--border)}
 .lm-title{font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:2px}
@@ -669,8 +653,7 @@ main.content{
   width:100%;display:flex;align-items:center;gap:12px;
   padding:12px 13px;border-radius:var(--r-md);
   border:1.5px solid var(--border);background:var(--bg);
-  cursor:pointer;transition:all var(--ease);margin-bottom:8px;
-  text-align:left;
+  cursor:pointer;transition:all var(--ease);margin-bottom:8px;text-align:left;
 }
 .lang-opt:last-child{margin-bottom:0}
 .lang-opt:hover{border-color:var(--blue-border);background:var(--blue-bg)}
@@ -681,10 +664,9 @@ main.content{
 .lang-opt.active .lang-check{opacity:1}
 .lm-close{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;border-top:1px solid var(--border);color:var(--text-tertiary);font-size:11.5px;font-weight:600;cursor:pointer;transition:all var(--ease)}
 .lm-close:hover{color:var(--text-primary);background:var(--bg)}
-
 .lang-abbr{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--blue);}
 
-/* \u2550\u2550 MSV FEATURE STYLES \u2550\u2550 */
+/* ══ MSV FEATURE STYLES ══ */
 .quick-add-btn{
   display:inline-flex;align-items:center;gap:6px;
   background:var(--green);border:none;color:#fff;
@@ -718,8 +700,7 @@ main.content{
 .book-page{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:0;}
 .book-hero{
   background:linear-gradient(135deg,var(--blue) 0%,var(--blue-hover) 100%);
-  border-radius:var(--r-lg);padding:24px 22px 20px;
-  color:#fff;margin-bottom:16px;
+  border-radius:var(--r-lg);padding:24px 22px 20px;color:#fff;margin-bottom:16px;
   box-shadow:0 4px 18px rgba(46,99,212,.28);
 }
 .book-hero-title{font-family:'Instrument Serif',serif;font-size:22px;letter-spacing:-.02em;margin-bottom:4px}
@@ -729,28 +710,22 @@ main.content{
   background:var(--surface);border:1.5px solid var(--border);
   border-radius:var(--r-sm);padding:10px 6px;
   font-size:12px;font-weight:600;color:var(--text-secondary);
-  cursor:pointer;transition:all var(--ease);text-align:center;
-  min-height:42px;
+  cursor:pointer;transition:all var(--ease);text-align:center;min-height:42px;
 }
 .slot-btn:hover{border-color:var(--blue-border);background:var(--blue-bg);color:var(--blue)}
 .slot-btn.selected{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
 .slot-btn.taken{opacity:.38;cursor:not-allowed;text-decoration:line-through}
 .book-confirm-bar{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:16px;
-  display:flex;flex-direction:column;gap:12px;
+  border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px;
   box-shadow:var(--sh-sm);
 }
 .book-selected-slot{
   background:var(--blue-bg);border:1.5px solid var(--blue-border);
   border-radius:var(--r-sm);padding:10px 13px;
-  display:flex;align-items:center;gap:8px;
-  font-size:12.5px;font-weight:600;color:var(--blue);
+  display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--blue);
 }
-.book-success{
-  text-align:center;padding:32px 20px;
-  display:none;flex-direction:column;align-items:center;gap:12px;
-}
+.book-success{text-align:center;padding:32px 20px;display:none;flex-direction:column;align-items:center;gap:12px;}
 .book-success.on{display:flex}
 .book-success-ic{width:56px;height:56px;background:var(--green-bg);border:2px solid var(--green-border);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green)}
 .book-success-title{font-family:'Instrument Serif',serif;font-size:20px;color:var(--text-primary);letter-spacing:-.02em}
@@ -771,8 +746,7 @@ main.content{
 .tmpl-preview{
   background:var(--bg);border:1px solid var(--border);
   border-radius:var(--r-sm);padding:10px 12px;
-  font-size:11.5px;color:var(--text-secondary);
-  line-height:1.6;margin-bottom:10px;font-style:italic;
+  font-size:11.5px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px;font-style:italic;
 }
 .tmpl-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .tmpl-trigger{font-size:10px;color:var(--text-tertiary);display:flex;align-items:center;gap:4px}
@@ -811,16 +785,84 @@ main.content{
 }
 .book-link-btn:hover{background:var(--blue-bg)}
 
-/* \u2500\u2500\u2500 SETTINGS VIEW \u2500\u2500\u2500 */
+/* ─── SETTINGS VIEW ─── */
 .settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);gap:12px}
 .settings-row:last-child{border-bottom:none}
 .settings-row-lbl{font-size:12.5px;font-weight:600;color:var(--text-primary)}
 .settings-row-sub{font-size:10.5px;color:var(--text-tertiary);margin-top:2px}
 
-/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+/* ═══ AUTH VIEW ═══ */
+.auth-wrap{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);padding:20px;
+}
+.auth-card{
+  width:100%;max-width:400px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden;
+}
+.auth-brand{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-hover) 100%);
+  padding:24px 24px 20px;text-align:center;
+}
+.auth-brand-mark{display:flex;align-items:baseline;justify-content:center;gap:0;line-height:1}
+.auth-brand-mark .a{font-family:'Instrument Serif',Georgia,serif;font-size:26px;color:#fff;letter-spacing:-.02em}
+.auth-brand-mark .s{font-family:'Instrument Serif',Georgia,serif;font-size:26px;color:rgba(255,255,255,.75);letter-spacing:-.02em}
+.auth-brand-mark .os{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:.08em;margin-left:6px;align-self:center}
+.auth-brand-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:5px;letter-spacing:.03em}
+
+.auth-country-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.auth-country-btn{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r-md);padding:10px 13px;
+  cursor:pointer;transition:all var(--ease);
+  font-size:12.5px;font-weight:600;color:var(--text-secondary);min-height:44px;
+}
+.auth-country-btn:hover{border-color:var(--blue-border);background:var(--blue-bg);color:var(--blue)}
+.auth-country-btn.selected{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+.auth-country-flag{font-size:18px;line-height:1;flex-shrink:0}
+
+.auth-tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--border)}
+.auth-tab{
+  flex:1;padding:12px 0;font-size:12.5px;font-weight:700;
+  color:var(--text-tertiary);border:none;background:none;
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all var(--ease);letter-spacing:.02em;margin-bottom:-1px;
+}
+.auth-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+.auth-body{padding:20px 22px 22px}
+.auth-panel{display:none;flex-direction:column;gap:12px}
+.auth-panel.on{display:flex}
+
+.auth-field label{
+  display:block;font-size:9px;text-transform:uppercase;
+  letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);margin-bottom:5px;
+}
+.auth-field .finput{width:100%}
+
+.auth-forgot{
+  font-size:10.5px;color:var(--blue);font-weight:600;
+  background:none;border:none;cursor:pointer;padding:0;
+  align-self:flex-end;margin-top:-4px;transition:color var(--ease);
+}
+.auth-forgot:hover{color:var(--blue-hover)}
+
+.auth-footer-note{text-align:center;font-size:10.5px;color:var(--text-tertiary);line-height:1.6;margin-top:2px}
+.auth-footer-note span{color:var(--blue);font-weight:600;cursor:pointer}
+
+.auth-error{
+  background:var(--red-bg);border:1px solid var(--red-border);
+  color:var(--red);font-size:11px;font-weight:600;
+  border-radius:var(--r-sm);padding:9px 12px;display:none;
+}
+.auth-error.show{display:block}
+
+/* ═══════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
-\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+═══════════════════════════════════════════════ */
 @media(min-width:1280px){
   :root{--sidebar-w:272px}
   main.content{padding:24px 28px}
@@ -987,13 +1029,13 @@ main.content{
         <p class="sb-doc-spec" id="doc-spec">General Physician &amp; Internal Medicine</p>
         <div class="sb-online">
           <span class="dot dot-g blink"></span>
-          <p style="color:var(--text-tertiary);font-size:10px" data-i18n="online_status">Online \u00b7 Clinic Active</p>
+          <p style="color:var(--text-tertiary);font-size:10px" data-i18n="online_status">Online · Clinic Active</p>
         </div>
         <div class="sb-workspace">
           <p class="sb-workspace-lbl" data-i18n="workspace_lbl">Workspace</p>
           <div class="ws-toggle">
-            <button class="ws-btn active" id="ws-india" onclick="setMkt('india',this)" data-i18n="ws_india">\ud83c\uddee\ud83c\uddf3 India</button>
-            <button class="ws-btn" id="ws-bd" onclick="setMkt('bd',this)" data-i18n="ws_bd">\ud83c\udde7\ud83c\udde9 Bangladesh</button>
+            <button class="ws-btn active" id="ws-india" onclick="setMkt('india',this)" data-i18n="ws_india">🇮🇳 India</button>
+            <button class="ws-btn" id="ws-bd" onclick="setMkt('bd',this)" data-i18n="ws_bd">🇧🇩 Bangladesh</button>
           </div>
         </div>
       </div>
@@ -1049,7 +1091,7 @@ main.content{
       </div>
       <div class="sb-comp">
         <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        HIPAA \u00b7 SOC 2 Type II \u00b7 ISO 27001
+        HIPAA · SOC 2 Type II · ISO 27001
       </div>
       <div class="sb-out">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1096,7 +1138,7 @@ main.content{
       <div class="ctx">
         <div class="ctx-chip">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <span><span data-i18n="ctx_market">Market:</span> <span class="lbl" id="ctx-mkt">India (INR \u20b9 \u00b7 +91)</span></span>
+          <span><span data-i18n="ctx_market">Market:</span> <span class="lbl" id="ctx-mkt">India (INR ₹ · +91)</span></span>
         </div>
         <div class="ctx-chip">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -1108,12 +1150,127 @@ main.content{
         </div>
       </div>
 
-      <!-- \u2500\u2500 DASHBOARD \u2500\u2500 -->
-      <div id="v-dashboard" class="view on">
+      <!-- ── AUTH VIEW ── -->
+      <div id="v-auth" class="view" style="padding:0;margin:0;gap:0">
+        <div class="auth-wrap">
+          <div class="auth-card">
+            <div class="auth-brand">
+              <div class="auth-brand-mark">
+                <span class="a">Aura</span><span class="s">Scale</span><span class="os">OS</span>
+              </div>
+              <p class="auth-brand-sub">Clinic Operating System</p>
+            </div>
+
+            <div class="auth-tabs">
+              <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Sign In</button>
+              <button class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+            </div>
+
+            <div class="auth-body">
+
+              <!-- LOGIN PANEL -->
+              <div class="auth-panel on" id="auth-panel-login">
+                <div id="auth-login-error" class="auth-error">Invalid email or password. Please try again.</div>
+
+                <div class="auth-field">
+                  <label>Email Address</label>
+                  <input type="email" class="finput" id="auth-login-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
+                </div>
+                <div class="auth-field">
+                  <label>Password</label>
+                  <input type="password" class="finput" id="auth-login-pass" placeholder="Enter your password" autocomplete="current-password"/>
+                </div>
+
+                <button class="auth-forgot" onclick="handleForgotPassword()">Forgot password?</button>
+
+                <button class="msub" onclick="handleLogin()" style="margin-top:2px">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                  Sign In
+                </button>
+
+                <p class="auth-footer-note">
+                  Don't have an account? <span onclick="switchAuthTab('signup')">Create one free</span>
+                </p>
+              </div>
+
+              <!-- SIGNUP PANEL -->
+              <div class="auth-panel" id="auth-panel-signup">
+                <div id="auth-signup-error" class="auth-error">Please fill in all required fields.</div>
+
+                <div>
+                  <label class="flbl">Country <span style="color:var(--red)">*</span></label>
+                  <div class="auth-country-row">
+                    <button class="auth-country-btn selected" id="auth-country-india" onclick="selectAuthCountry('india')">
+                      <span class="auth-country-flag">🇮🇳</span>
+                      <span>India</span>
+                    </button>
+                    <button class="auth-country-btn" id="auth-country-bd" onclick="selectAuthCountry('bd')">
+                      <span class="auth-country-flag">🇧🇩</span>
+                      <span>Bangladesh</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="auth-field">
+                  <label>Clinic Name <span style="color:var(--red)">*</span></label>
+                  <input type="text" class="finput" id="auth-clinic-name" placeholder="e.g. Sunrise Health Clinic" autocapitalize="words"/>
+                </div>
+                <div class="auth-field">
+                  <label>Doctor Name <span style="color:var(--red)">*</span></label>
+                  <input type="text" class="finput" id="auth-doctor-name" placeholder="Dr. Full Name" autocapitalize="words"/>
+                </div>
+                <div class="auth-field">
+                  <label>Mobile Number <span style="color:var(--red)">*</span></label>
+                  <div class="prow">
+                    <div class="ppfx" id="auth-dial">+91</div>
+                    <input type="tel" class="finput" id="auth-mobile" placeholder="Mobile number" style="flex:1" inputmode="numeric" autocomplete="tel"/>
+                  </div>
+                </div>
+                <div class="auth-field">
+                  <label>Email Address <span style="color:var(--red)">*</span></label>
+                  <input type="email" class="finput" id="auth-signup-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
+                </div>
+                <div class="auth-field">
+                  <label>Password <span style="color:var(--red)">*</span></label>
+                  <input type="password" class="finput" id="auth-signup-pass" placeholder="Min. 6 characters" autocomplete="new-password"/>
+                </div>
+
+                <button class="msub" onclick="handleSignup()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2);margin-top:2px">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Create Account
+                </button>
+
+                <p class="auth-footer-note">
+                  Already have an account? <span onclick="switchAuthTab('login')">Sign in here</span>
+                </p>
+              </div>
+
+            </div><!-- /auth-body -->
+
+            <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg)">
+              <div class="trust-item" style="font-size:9px">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                HIPAA
+              </div>
+              <div class="trust-item" style="font-size:9px">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                End-to-End Encrypted
+              </div>
+              <div class="trust-item" style="font-size:9px">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                SOC 2 Type II
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DASHBOARD ── -->
+      <div id="v-dashboard" class="view">
         <div class="sh">
           <div>
             <h1 class="st" data-i18n="dash_greeting">Good morning, Dr. Laskar</h1>
-            <p class="ss" data-i18n="dash_subtitle">Clinic overview \u00b7 Friday, 22 May 2026</p>
+            <p class="ss" data-i18n="dash_subtitle">Clinic overview · Friday, 22 May 2026</p>
           </div>
           <button class="add-btn" onclick="openModal('add-modal')">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1187,7 +1344,7 @@ main.content{
         </div>
       </div>
 
-      <!-- \u2500\u2500 PATIENTS \u2500\u2500 -->
+      <!-- ── PATIENTS ── -->
       <div id="v-patients" class="view">
         <div class="sh">
           <div>
@@ -1205,7 +1362,7 @@ main.content{
         </div>
         <div class="search">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="search-inp" placeholder="Search by name or phone\u2026" oninput="renderPats()"/>
+          <input type="text" id="search-inp" placeholder="Search by name or phone…" oninput="renderPats()"/>
         </div>
         <div class="tw">
           <div class="thead">
@@ -1222,21 +1379,21 @@ main.content{
         </div>
       </div>
 
-      <!-- \u2500\u2500 WHATSAPP \u2500\u2500 -->
+      <!-- ── WHATSAPP ── -->
       <div id="v-whatsapp" class="view">
         <div class="sh">
           <div>
             <h1 class="st" data-i18n="wa_title">WhatsApp &amp; Retention</h1>
             <p class="ss" data-i18n="wa_sub">Automate patient communications and follow-ups</p>
           </div>
-          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px" data-i18n="engine_live">\u25cf Engine Live</span>
+          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px" data-i18n="engine_live">◉ Engine Live</span>
         </div>
         <div class="auto-card" id="auto-list"></div>
 
         <div class="sh" style="margin-top:4px">
           <div>
             <p class="st" style="font-size:17px">WhatsApp Reminder Templates</p>
-            <p class="ss">Ready-to-send templates \u00b7 Click to send via WhatsApp</p>
+            <p class="ss">Ready-to-send templates · Click to send via WhatsApp</p>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
@@ -1246,7 +1403,7 @@ main.content{
               <span class="tmpl-badge green">Auto-Active</span>
             </div>
             <div class="tmpl-body">
-              <div class="tmpl-preview">"Dear [Patient Name], it's been 14 days since your visit at Laskar Health Clinic. Time for your follow-up! Please call us or reply to book. \u2014 Dr. Laskar"</div>
+              <div class="tmpl-preview">"Dear [Patient Name], it's been 14 days since your visit at Laskar Health Clinic. Time for your follow-up! Please call us or reply to book. — Dr. Laskar"</div>
               <div class="tmpl-footer">
                 <p class="tmpl-trigger">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1265,7 +1422,7 @@ main.content{
               <span class="tmpl-badge blue">Manual</span>
             </div>
             <div class="tmpl-body">
-              <div class="tmpl-preview">"Hi [Patient Name], a gentle reminder to take your prescribed medication regularly. Consistency is key to your recovery! \u2014 Dr. Laskar, Laskar Health Clinic"</div>
+              <div class="tmpl-preview">"Hi [Patient Name], a gentle reminder to take your prescribed medication regularly. Consistency is key to your recovery! — Dr. Laskar, Laskar Health Clinic"</div>
               <div class="tmpl-footer">
                 <p class="tmpl-trigger">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -1281,7 +1438,7 @@ main.content{
           <div class="tmpl-card">
             <div class="tmpl-head">
               <p class="tmpl-title">Review Request</p>
-              <span class="tmpl-badge amber">Auto \u00b7 2h post-visit</span>
+              <span class="tmpl-badge amber">Auto · 2h post-visit</span>
             </div>
             <div class="tmpl-body">
               <div class="tmpl-preview">"Thank you for visiting Laskar Health Clinic, [Patient Name]! If you're happy with your care, we'd love a quick Google review. It helps other patients find us. [Link]"</div>
@@ -1301,18 +1458,18 @@ main.content{
 
         <div class="panel">
           <div class="ph">
-            <div class="pt" data-i18n="quick_actions">Quick Actions \u2014 Recent Patients</div>
+            <div class="pt" data-i18n="quick_actions">Quick Actions — Recent Patients</div>
           </div>
           <div id="quick-list"></div>
         </div>
       </div>
 
-      <!-- \u2500\u2500 ANALYTICS \u2500\u2500 -->
+      <!-- ── ANALYTICS ── -->
       <div id="v-analytics" class="view">
         <div class="sh">
           <div>
             <h1 class="st" data-i18n="ana_title">Reports &amp; Analytics</h1>
-            <p class="ss" data-i18n="ana_sub">Last 30 days \u00b7 Updated just now</p>
+            <p class="ss" data-i18n="ana_sub">Last 30 days · Updated just now</p>
           </div>
         </div>
         <div class="mg" id="ana-metrics"></div>
@@ -1334,14 +1491,14 @@ main.content{
         </div>
       </div>
 
-      <!-- \u2500\u2500 MISSED CALL RECOVERY \u2014 FIX: removed inline style, uses .view class only \u2500\u2500 -->
+      <!-- ── MISSED CALL RECOVERY ── -->
       <div id="v-missed-calls" class="view">
         <div class="sh">
           <div>
             <h1 class="st">Missed Call Recovery</h1>
-            <p class="ss">Auto-send WhatsApp to missed callers \u00b7 Convert calls to bookings</p>
+            <p class="ss">Auto-send WhatsApp to missed callers · Convert calls to bookings</p>
           </div>
-          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px">\u25cf Recovery Active</span>
+          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px">◉ Recovery Active</span>
         </div>
 
         <div class="mcr-mg">
@@ -1358,7 +1515,7 @@ main.content{
           <div class="mcr-mc">
             <p class="mcr-mc-lbl">Recovery Rate</p>
             <p class="mcr-mc-val" style="color:var(--blue)">63%</p>
-            <p class="mcr-mc-sub">\u2191 from 41%</p>
+            <p class="mcr-mc-sub">↑ from 41%</p>
           </div>
         </div>
 
@@ -1373,14 +1530,14 @@ main.content{
               </div>
               <p class="mc-flow-lbl">Missed Call Detected</p>
             </div>
-            <div class="mc-flow-arrow">\u2192</div>
+            <div class="mc-flow-arrow">→</div>
             <div class="mc-flow-step">
               <div class="mc-flow-ic amber">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
               </div>
               <p class="mc-flow-lbl">WhatsApp Sent Instantly</p>
             </div>
-            <div class="mc-flow-arrow">\u2192</div>
+            <div class="mc-flow-arrow">→</div>
             <div class="mc-flow-step">
               <div class="mc-flow-ic green">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
@@ -1399,7 +1556,7 @@ main.content{
             <div class="mcr-row">
               <div>
                 <p class="mcr-name">+91 98456 77890</p>
-                <p class="mcr-time">Today, 10:42 AM \u00b7 2 missed calls</p>
+                <p class="mcr-time">Today, 10:42 AM · 2 missed calls</p>
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <span class="mcr-status mcr-pending">WhatsApp Pending</span>
@@ -1412,28 +1569,28 @@ main.content{
             <div class="mcr-row">
               <div>
                 <p class="mcr-name">Priya Sengupta</p>
-                <p class="mcr-time">Today, 09:15 AM \u00b7 Known patient</p>
+                <p class="mcr-time">Today, 09:15 AM · Known patient</p>
               </div>
               <span class="mcr-status mcr-sent">WA Sent</span>
             </div>
             <div class="mcr-row">
               <div>
                 <p class="mcr-name">+91 70015 33214</p>
-                <p class="mcr-time">Yesterday, 04:30 PM \u00b7 1 missed call</p>
+                <p class="mcr-time">Yesterday, 04:30 PM · 1 missed call</p>
               </div>
-              <span class="mcr-status mcr-booked">\u2713 Booked</span>
+              <span class="mcr-status mcr-booked">✓ Booked</span>
             </div>
             <div class="mcr-row">
               <div>
                 <p class="mcr-name">Ruma Das</p>
-                <p class="mcr-time">Yesterday, 02:10 PM \u00b7 Known patient</p>
+                <p class="mcr-time">Yesterday, 02:10 PM · Known patient</p>
               </div>
-              <span class="mcr-status mcr-booked">\u2713 Booked</span>
+              <span class="mcr-status mcr-booked">✓ Booked</span>
             </div>
             <div class="mcr-row">
               <div>
                 <p class="mcr-name">+91 90023 11009</p>
-                <p class="mcr-time">Yesterday, 11:50 AM \u00b7 3 missed calls</p>
+                <p class="mcr-time">Yesterday, 11:50 AM · 3 missed calls</p>
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <span class="mcr-status mcr-pending">Pending</span>
@@ -1447,12 +1604,12 @@ main.content{
         </div>
       </div>
 
-      <!-- \u2500\u2500 BOOK APPOINTMENT \u2014 FIX: removed inline style, uses .view class only \u2500\u2500 -->
+      <!-- ── BOOK APPOINTMENT ── -->
       <div id="v-book" class="view">
         <div class="sh" style="margin-bottom:14px">
           <div>
             <h1 class="st">Book Appointment</h1>
-            <p class="ss">Patient-facing booking page \u00b7 Mobile-first \u00b7 Under 30 seconds</p>
+            <p class="ss">Patient-facing booking page · Mobile-first · Under 30 seconds</p>
           </div>
           <button class="book-link-btn" onclick="copyBookingLink()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -1471,7 +1628,7 @@ main.content{
               <div class="ph">
                 <div class="pt">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Today \u2014 Friday, 22 May 2026
+                  Today — Friday, 22 May 2026
                 </div>
                 <span class="pb pb-g">8 slots open</span>
               </div>
@@ -1501,7 +1658,7 @@ main.content{
             <div class="book-confirm-bar">
               <div class="book-selected-slot">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span id="selected-slot-label">Selected: \u2014</span>
+                <span id="selected-slot-label">Selected: —</span>
                 <button onclick="goBackToSlots()" style="margin-left:auto;font-size:10px;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:600">Change</button>
               </div>
               <div class="book-form" id="book-form">
@@ -1533,7 +1690,7 @@ main.content{
         </div>
       </div>
 
-      <!-- \u2500\u2500 SETTINGS \u2014 FIX: added this view so Settings nav button works \u2500\u2500 -->
+      <!-- ── SETTINGS ── -->
       <div id="v-settings" class="view">
         <div class="sh">
           <div>
@@ -1615,14 +1772,14 @@ main.content{
           <div class="settings-row">
             <div>
               <p class="settings-row-lbl">Language</p>
-              <p class="settings-row-sub">English / \u09ac\u09be\u0982\u09b2\u09be</p>
+              <p class="settings-row-sub">English / বাংলা</p>
             </div>
             <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="openLangModal()">Change</button>
           </div>
           <div class="settings-row">
             <div>
               <p class="settings-row-lbl">Workspace</p>
-              <p class="settings-row-sub" id="stg-workspace">India (INR \u20b9 \u00b7 +91)</p>
+              <p class="settings-row-sub" id="stg-workspace">India (INR ₹ · +91)</p>
             </div>
           </div>
         </div>
@@ -1645,7 +1802,7 @@ main.content{
           <div class="settings-row">
             <div>
               <p class="settings-row-lbl">SOC 2 Type II</p>
-              <p class="settings-row-sub">Security audit certified \u00b7 Last reviewed Jan 2026</p>
+              <p class="settings-row-sub">Security audit certified · Last reviewed Jan 2026</p>
             </div>
             <span class="pb pb-g">Certified</span>
           </div>
@@ -1804,7 +1961,7 @@ main.content{
               <option>Male</option><option>Female</option><option>Other</option>
             </select>
           </div>
-          <div><label class="flbl">Chief Complaint</label><input type="text" class="finput" placeholder="e.g. Fever, Cough\u2026"/></div>
+          <div><label class="flbl">Chief Complaint</label><input type="text" class="finput" placeholder="e.g. Fever, Cough…"/></div>
         </div>
       </div>
       <button class="msub" onclick="quickAddPatient()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2)">
@@ -1832,8 +1989,8 @@ main.content{
       </button>
       <button class="lang-opt" id="lang-opt-bn" onclick="setLang('bn')">
         <div>
-          <p class="lang-info-name">\u09ac\u09be\u0982\u09b2\u09be</p>
-          <p class="lang-info-native">Bengali / \u09ac\u09be\u0982\u09b2\u09be</p>
+          <p class="lang-info-name">বাংলা</p>
+          <p class="lang-info-native">Bengali / বাংলা</p>
         </div>
         <svg class="lang-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </button>
@@ -1846,28 +2003,28 @@ main.content{
 </div>
 
 <script>
-/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+/* ══════════════════════════════════════════════
    TRANSLATIONS
-\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+══════════════════════════════════════════════ */
 const T={
   en:{
     tagline:"Clinic Operating System",
-    online_status:"Online \u00b7 Clinic Active",
+    online_status:"Online · Clinic Active",
     nav_main:"Main",nav_dashboard:"Dashboard",nav_patients:"Patients & Appointments",
     nav_whatsapp:"WhatsApp Engine",nav_reports:"Reports",nav_setup:"Setup",
     nav_settings:"Settings",sign_out:"Sign Out",
     date_label:"Friday, 22 May 2026",
     ctx_market:"Market:",live:"Live",
     dash_greeting:"Good morning, Dr. Laskar",
-    dash_subtitle:"Clinic overview \u00b7 Friday, 22 May 2026",
+    dash_subtitle:"Clinic overview · Friday, 22 May 2026",
     onboard_title:"Complete your clinic setup (3 of 5)",
     onboard_sub:"Connect WhatsApp, add your first patients, and enable automated reminders to get started.",
     onboard_steps:"3 / 5 complete",
     queue_title:"Today's Queue",alerts_title:"Follow-up Alerts",alerts_window:"14-day window",
     patients_title:"Patient Directory",new_appointment:"New Appointment",
     wa_title:"WhatsApp & Retention",wa_sub:"Automate patient communications and follow-ups",
-    engine_live:"\u25cf Engine Live",quick_actions:"Quick Actions \u2014 Recent Patients",
-    ana_title:"Reports & Analytics",ana_sub:"Last 30 days \u00b7 Updated just now",
+    engine_live:"◉ Engine Live",quick_actions:"Quick Actions — Recent Patients",
+    ana_title:"Reports & Analytics",ana_sub:"Last 30 days · Updated just now",
     auto_breakdown:"Automation Breakdown",thirty_days:"30 days",
     health_summary:"Patient Health Summary",current:"Current",
     wa_modal_title:"Send WhatsApp Message",phone_number:"Phone Number",
@@ -1904,73 +2061,73 @@ const T={
     theme_dark:"Dark Mode",theme_light:"Light Mode",
     status_checked_in:"Checked In",status_waiting:"Waiting",
     status_in_progress:"In Progress",status_missed:"Missed",
-    workspace_lbl:"Workspace",ws_india:"\ud83c\uddee\ud83c\uddf3 India",ws_bd:"\ud83c\udde7\ud83c\udde9 Bangladesh",
+    workspace_lbl:"Workspace",ws_india:"🇮🇳 India",ws_bd:"🇧🇩 Bangladesh",
   },
   bn:{
-    tagline:"\u0995\u09cd\u09b2\u09bf\u09a8\u09bf\u0995 \u0985\u09aa\u09be\u09b0\u09c7\u099f\u09bf\u0982 \u09b8\u09bf\u09b8\u09cd\u099f\u09c7\u09ae",
-    online_status:"\u0985\u09a8\u09b2\u09be\u0987\u09a8 \u00b7 \u0995\u09cd\u09b2\u09bf\u09a8\u09bf\u0995 \u099a\u09be\u09b2\u09c1",
-    nav_main:"\u09aa\u09cd\u09b0\u09a7\u09be\u09a8",nav_dashboard:"\u09a1\u09cd\u09af\u09be\u09b6\u09ac\u09cb\u09b0\u09cd\u09a1",nav_patients:"\u09b0\u09cb\u0997\u09c0 \u0993 \u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f",
-    nav_whatsapp:"\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u0987\u099e\u09cd\u099c\u09bf\u09a8",nav_reports:"\u09b0\u09bf\u09aa\u09cb\u09b0\u09cd\u099f",nav_setup:"\u09b8\u09c7\u099f\u0986\u09aa",
-    nav_settings:"\u09b8\u09c7\u099f\u09bf\u0982\u09b8",sign_out:"\u09b8\u09be\u0987\u09a8 \u0986\u0989\u099f",
-    date_label:"\u09b6\u09c1\u0995\u09cd\u09b0\u09ac\u09be\u09b0, \u09e8\u09e8 \u09ae\u09c7 \u09e8\u09e6\u09e8\u09ec",
-    ctx_market:"\u09ac\u09be\u099c\u09be\u09b0:",live:"\u09b2\u09be\u0987\u09ad",
-    dash_greeting:"\u09b6\u09c1\u09ad \u09b8\u0995\u09be\u09b2, \u09a1\u09be. \u09b2\u09b8\u09cd\u0995\u09b0",
-    dash_subtitle:"\u0995\u09cd\u09b2\u09bf\u09a8\u09bf\u0995 \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa \u00b7 \u09b6\u09c1\u0995\u09cd\u09b0\u09ac\u09be\u09b0, \u09e8\u09e8 \u09ae\u09c7 \u09e8\u09e6\u09e8\u09ec",
-    onboard_title:"\u0995\u09cd\u09b2\u09bf\u09a8\u09bf\u0995 \u09b8\u09c7\u099f\u0986\u09aa \u09b8\u09ae\u09cd\u09aa\u09a8\u09cd\u09a8 \u0995\u09b0\u09c1\u09a8 (\u09eb\u099f\u09bf\u09b0 \u09ae\u09a7\u09cd\u09af\u09c7 \u09e9\u099f\u09bf)",
-    onboard_sub:"\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u09b8\u0982\u09af\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09c1\u09a8, \u09aa\u09cd\u09b0\u09a5\u09ae \u09b0\u09cb\u0997\u09c0 \u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8 \u098f\u09ac\u0982 \u09b8\u09cd\u09ac\u09af\u09bc\u0982\u0995\u09cd\u09b0\u09bf\u09af\u09bc \u09b0\u09bf\u09ae\u09be\u0987\u09a8\u09cd\u09a1\u09be\u09b0 \u099a\u09be\u09b2\u09c1 \u0995\u09b0\u09c1\u09a8\u0964",
-    onboard_steps:"\u09eb \u098f\u09b0 \u09ae\u09a7\u09cd\u09af\u09c7 \u09e9 \u09b8\u09ae\u09cd\u09aa\u09a8\u09cd\u09a8",
-    queue_title:"\u0986\u099c\u0995\u09c7\u09b0 \u09b8\u09be\u09b0\u09bf",alerts_title:"\u09ab\u09b2\u09cb-\u0986\u09aa \u09b8\u09a4\u09b0\u09cd\u0995\u09a4\u09be",alerts_window:"\u09e7\u09ea \u09a6\u09bf\u09a8\u09c7\u09b0 \u0989\u0987\u09a8\u09cd\u09a1\u09cb",
-    patients_title:"\u09b0\u09cb\u0997\u09c0\u09b0 \u09a4\u09be\u09b2\u09bf\u0995\u09be",new_appointment:"\u09a8\u09a4\u09c1\u09a8 \u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f",
-    wa_title:"\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u0993 \u09b0\u09bf\u099f\u09c7\u09a8\u09b6\u09a8",wa_sub:"\u09b0\u09cb\u0997\u09c0\u09a6\u09c7\u09b0 \u09af\u09cb\u0997\u09be\u09af\u09cb\u0997 \u0993 \u09ab\u09b2\u09cb-\u0986\u09aa \u09b8\u09cd\u09ac\u09af\u09bc\u0982\u0995\u09cd\u09b0\u09bf\u09af\u09bc \u0995\u09b0\u09c1\u09a8",
-    engine_live:"\u25cf \u0987\u099e\u09cd\u099c\u09bf\u09a8 \u099a\u09be\u09b2\u09c1",quick_actions:"\u09a6\u09cd\u09b0\u09c1\u09a4 \u09aa\u09a6\u0995\u09cd\u09b7\u09c7\u09aa \u2014 \u09b8\u09be\u09ae\u09cd\u09aa\u09cd\u09b0\u09a4\u09bf\u0995 \u09b0\u09cb\u0997\u09c0",
-    ana_title:"\u09b0\u09bf\u09aa\u09cb\u09b0\u09cd\u099f \u0993 \u09ac\u09bf\u09b6\u09cd\u09b2\u09c7\u09b7\u09a3",ana_sub:"\u09b6\u09c7\u09b7 \u09e9\u09e6 \u09a6\u09bf\u09a8 \u00b7 \u098f\u0987\u09ae\u09be\u09a4\u09cd\u09b0 \u0986\u09aa\u09a1\u09c7\u099f \u09b9\u09af\u09bc\u09c7\u099b\u09c7",
-    auto_breakdown:"\u0985\u099f\u09cb\u09ae\u09c7\u09b6\u09a8 \u09ac\u09bf\u09ad\u09be\u099c\u09a8",thirty_days:"\u09e9\u09e6 \u09a6\u09bf\u09a8",
-    health_summary:"\u09b0\u09cb\u0997\u09c0\u09b0 \u09b8\u09cd\u09ac\u09be\u09b8\u09cd\u09a5\u09cd\u09af \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa",current:"\u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8",
-    wa_modal_title:"\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u09ac\u09be\u09b0\u09cd\u09a4\u09be \u09aa\u09be\u09a0\u09be\u09a8",phone_number:"\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0",
-    message:"\u09ac\u09be\u09b0\u09cd\u09a4\u09be",send_wa:"\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa\u09c7 \u09aa\u09be\u09a0\u09be\u09a8",
-    patient_name:"\u09b0\u09cb\u0997\u09c0\u09b0 \u09a8\u09be\u09ae",full_name:"\u09aa\u09c1\u09b0\u09cb \u09a8\u09be\u09ae",
-    date:"\u09a4\u09be\u09b0\u09bf\u0996",time:"\u09b8\u09ae\u09af\u09bc",reason_for_visit:"\u09ad\u09bf\u099c\u09bf\u099f\u09c7\u09b0 \u0995\u09be\u09b0\u09a3",
-    chief_complaint:"\u09aa\u09cd\u09b0\u09a7\u09be\u09a8 \u0985\u09ad\u09bf\u09af\u09cb\u0997 \u09ac\u09be \u0985\u09ac\u09b8\u09cd\u09a5\u09be",
-    confirm_appointment:"\u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09bf\u09b6\u09cd\u099a\u09bf\u09a4 \u0995\u09b0\u09c1\u09a8",
-    th_patient:"\u09b0\u09cb\u0997\u09c0",th_phone:"\u09ab\u09cb\u09a8",th_last_visit:"\u09b6\u09c7\u09b7 \u09ad\u09bf\u099c\u09bf\u099f",
-    th_visits:"\u09ad\u09bf\u099c\u09bf\u099f",th_status:"\u0985\u09ac\u09b8\u09cd\u09a5\u09be",
-    bn_home:"\u09b9\u09cb\u09ae",bn_patients:"\u09b0\u09cb\u0997\u09c0",bn_whatsapp:"\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa",bn_reports:"\u09b0\u09bf\u09aa\u09cb\u09b0\u09cd\u099f",
-    lang_modal_title:"\u09ad\u09be\u09b7\u09be \u09a8\u09bf\u09b0\u09cd\u09ac\u09be\u099a\u09a8 \u0995\u09b0\u09c1\u09a8",lang_modal_sub:"\u0986\u09aa\u09a8\u09be\u09b0 \u09aa\u099b\u09a8\u09cd\u09a6\u09c7\u09b0 \u09ad\u09be\u09b7\u09be \u09ac\u09c7\u099b\u09c7 \u09a8\u09bf\u09a8",
-    close:"\u09ac\u09a8\u09cd\u09a7 \u0995\u09b0\u09c1\u09a8",
-    send_reminder:"\u09b0\u09bf\u09ae\u09be\u0987\u09a8\u09cd\u09a1\u09be\u09b0 \u09aa\u09be\u09a0\u09be\u09a8",
-    metric_total_patients:"\u09ae\u09cb\u099f \u09b0\u09cb\u0997\u09c0",
-    metric_appts:"\u0986\u099c\u0995\u09c7\u09b0 \u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f",
-    metric_daily_progress:"\u09a6\u09c8\u09a8\u09bf\u0995 \u0985\u0997\u09cd\u09b0\u0997\u09a4\u09bf",
-    metric_waiting:"\u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8\u09c7 \u0985\u09aa\u09c7\u0995\u09cd\u09b7\u09be\u09af\u09bc",
-    metric_wa_reminders:"WA \u09b0\u09bf\u09ae\u09be\u0987\u09a8\u09cd\u09a1\u09be\u09b0 \u09aa\u09be\u09a0\u09be\u09a8\u09cb",
-    metric_unconfirmed:"\u0985\u09a8\u09bf\u09b6\u09cd\u099a\u09bf\u09a4 \u0985\u09cd\u09af\u09be\u09aa\u099f.",
-    metric_all_time:"\u09b8\u09b0\u09cd\u09ac\u0995\u09be\u09b2\u09c0\u09a8",metric_scheduled:"\u09a8\u09bf\u09b0\u09cd\u09a7\u09be\u09b0\u09bf\u09a4",
-    metric_last30:"\u09b6\u09c7\u09b7 \u09e9\u09e6 \u09a6\u09bf\u09a8",metric_this_month:"\u098f\u0987 \u09ae\u09be\u09b8",
-    metric_seen_of:"\u0986\u099c \u09a6\u09c7\u0996\u09be \u09b9\u09af\u09bc\u09c7\u099b\u09c7",metric_in_queue:"\u09b8\u09be\u09b0\u09bf\u09a4\u09c7 \u09b8\u0995\u09cd\u09b0\u09bf\u09af\u09bc",
-    metric_sent_today:"\u0986\u099c \u09aa\u09be\u09a0\u09be\u09a8\u09cb",metric_pending_followup:"\u09ae\u09c1\u09b2\u09a4\u09c1\u09ac\u09bf \u09ab\u09b2\u09cb-\u0986\u09aa",
-    metric_sent:"\u09ac\u09be\u09b0\u09cd\u09a4\u09be \u09aa\u09be\u09a0\u09be\u09a8\u09cb \u09b9\u09af\u09bc\u09c7\u099b\u09c7",metric_returning:"\u09ab\u09bf\u09b0\u09c7 \u0986\u09b8\u09be \u09b0\u09cb\u0997\u09c0",
-    metric_reviews:"\u0997\u09c1\u0997\u09b2 \u09b0\u09bf\u09ad\u09bf\u0989",metric_success:"\u0985\u099f\u09cb\u09ae\u09c7\u09b6\u09a8 \u09b8\u09be\u09ab\u09b2\u09cd\u09af",
-    metric_sent_sub:"\u09b6\u09c7\u09b7 \u09e9\u09e6 \u09a6\u09bf\u09a8",metric_revisits:"\u09a8\u09bf\u09b6\u09cd\u099a\u09bf\u09a4 \u09aa\u09c1\u09a8\u09b0\u09cd\u09ad\u09bf\u099c\u09bf\u099f",
-    metric_generated:"\u098f\u0987 \u09ae\u09be\u09b8\u09c7 \u09a4\u09c8\u09b0\u09bf",metric_delivery:"\u09a1\u09c7\u09b2\u09bf\u09ad\u09be\u09b0\u09bf \u09b9\u09be\u09b0",
-    auto_confirmations:"\u09a8\u09bf\u09b6\u09cd\u099a\u09bf\u09a4\u0995\u09b0\u09a3 \u09aa\u09be\u09a0\u09be\u09a8\u09cb",auto_reminders:"\u09e7\u09ea \u09a6\u09bf\u09a8\u09c7\u09b0 \u09b0\u09bf\u09ae\u09be\u0987\u09a8\u09cd\u09a1\u09be\u09b0",
-    auto_followup:"\u09ab\u09b2\u09cb-\u0986\u09aa \u09ac\u09be\u09b0\u09cd\u09a4\u09be",auto_review_req:"\u09b0\u09bf\u09ad\u09bf\u0989 \u0985\u09a8\u09c1\u09b0\u09cb\u09a7",
-    pat_active:"\u09b8\u0995\u09cd\u09b0\u09bf\u09af\u09bc",pat_atrisk:"\u099d\u09c1\u0981\u0995\u09bf\u09a4\u09c7",pat_inactive:"\u09a8\u09bf\u09b7\u09cd\u0995\u09cd\u09b0\u09bf\u09af\u09bc",
-    quick_send_reminder:"\u09b0\u09bf\u09ae\u09be\u0987\u09a8\u09cd\u09a1\u09be\u09b0 \u09aa\u09be\u09a0\u09be\u09a8",quick_followup:"\u09ab\u09b2\u09cb-\u0986\u09aa",
-    quick_confirm:"\u0985\u09cd\u09af\u09be\u09aa\u099f. \u09a8\u09bf\u09b6\u09cd\u099a\u09bf\u09a4",quick_review:"\u09b0\u09bf\u09ad\u09bf\u0989 \u099a\u09be\u0987",
-    theme_dark:"\u09a1\u09be\u09b0\u09cd\u0995 \u09ae\u09cb\u09a1",theme_light:"\u09b2\u09be\u0987\u099f \u09ae\u09cb\u09a1",
-    status_checked_in:"\u099a\u09c7\u0995-\u0987\u09a8",status_waiting:"\u0985\u09aa\u09c7\u0995\u09cd\u09b7\u09be\u09af\u09bc",
-    status_in_progress:"\u099a\u09b2\u099b\u09c7",status_missed:"\u09ae\u09bf\u09b8 \u09b9\u09af\u09bc\u09c7\u099b\u09c7",
-    workspace_lbl:"\u0993\u09af\u09bc\u09be\u09b0\u09cd\u0995\u09b8\u09cd\u09aa\u09c7\u09b8",ws_india:"\ud83c\uddee\ud83c\uddf3 \u09ad\u09be\u09b0\u09a4",ws_bd:"\ud83c\udde7\ud83c\udde9 \u09ac\u09be\u0982\u09b2\u09be\u09a6\u09c7\u09b6",
+    tagline:"ক্লিনিক অপারেটিং সিস্টেম",
+    online_status:"অনলাইন · ক্লিনিক চালু",
+    nav_main:"প্রধান",nav_dashboard:"ড্যাশবোর্ড",nav_patients:"রোগী ও অ্যাপয়েন্টমেন্ট",
+    nav_whatsapp:"হোয়াটসঅ্যাপ ইঞ্জিন",nav_reports:"রিপোর্ট",nav_setup:"সেটআপ",
+    nav_settings:"সেটিংস",sign_out:"সাইন আউট",
+    date_label:"শুক্রবার, ২২ মে ২০২৬",
+    ctx_market:"বাজার:",live:"লাইভ",
+    dash_greeting:"শুভ সকাল, ডা. লস্কর",
+    dash_subtitle:"ক্লিনিক সারসংক্ষেপ · শুক্রবার, ২২ মে ২০২৬",
+    onboard_title:"ক্লিনিক সেটআপ সম্পন্ন করুন (৫টির মধ্যে ৩টি)",
+    onboard_sub:"হোয়াটসঅ্যাপ সংযুক্ত করুন, প্রথম রোগী যোগ করুন এবং স্বয়ংক্রিয় রিমাইন্ডার চালু করুন।",
+    onboard_steps:"৫ এর মধ্যে ৩ সম্পন্ন",
+    queue_title:"আজকের সারি",alerts_title:"ফলো-আপ সতর্কতা",alerts_window:"১৪ দিনের উইন্ডো",
+    patients_title:"রোগীর তালিকা",new_appointment:"নতুন অ্যাপয়েন্টমেন্ট",
+    wa_title:"হোয়াটসঅ্যাপ ও রিটেনশন",wa_sub:"রোগীদের যোগাযোগ ও ফলো-আপ স্বয়ংক্রিয় করুন",
+    engine_live:"◉ ইঞ্জিন চালু",quick_actions:"দ্রুত পদক্ষেপ — সাম্প্রতিক রোগী",
+    ana_title:"রিপোর্ট ও বিশ্লেষণ",ana_sub:"শেষ ৩০ দিন · এইমাত্র আপডেট হয়েছে",
+    auto_breakdown:"অটোমেশন বিভাজন",thirty_days:"৩০ দিন",
+    health_summary:"রোগীর স্বাস্থ্য সারসংক্ষেপ",current:"বর্তমান",
+    wa_modal_title:"হোয়াটসঅ্যাপ বার্তা পাঠান",phone_number:"ফোন নম্বর",
+    message:"বার্তা",send_wa:"হোয়াটসঅ্যাপে পাঠান",
+    patient_name:"রোগীর নাম",full_name:"পুরো নাম",
+    date:"তারিখ",time:"সময়",reason_for_visit:"ভিজিটের কারণ",
+    chief_complaint:"প্রধান অভিযোগ বা অবস্থা",
+    confirm_appointment:"অ্যাপয়েন্টমেন্ট নিশ্চিত করুন",
+    th_patient:"রোগী",th_phone:"ফোন",th_last_visit:"শেষ ভিজিট",
+    th_visits:"ভিজিট",th_status:"অবস্থা",
+    bn_home:"হোম",bn_patients:"রোগী",bn_whatsapp:"হোয়াটসঅ্যাপ",bn_reports:"রিপোর্ট",
+    lang_modal_title:"ভাষা নির্বাচন করুন",lang_modal_sub:"আপনার পছন্দের ভাষা বেছে নিন",
+    close:"বন্ধ করুন",
+    send_reminder:"রিমাইন্ডার পাঠান",
+    metric_total_patients:"মোট রোগী",
+    metric_appts:"আজকের অ্যাপয়েন্টমেন্ট",
+    metric_daily_progress:"দৈনিক অগ্রগতি",
+    metric_waiting:"বর্তমানে অপেক্ষায়",
+    metric_wa_reminders:"WA রিমাইন্ডার পাঠানো",
+    metric_unconfirmed:"অনিশ্চিত অ্যাপট.",
+    metric_all_time:"সর্বকালীন",metric_scheduled:"নির্ধারিত",
+    metric_last30:"শেষ ৩০ দিন",metric_this_month:"এই মাস",
+    metric_seen_of:"আজ দেখা হয়েছে",metric_in_queue:"সারিতে সক্রিয়",
+    metric_sent_today:"আজ পাঠানো",metric_pending_followup:"মুলতুবি ফলো-আপ",
+    metric_sent:"বার্তা পাঠানো হয়েছে",metric_returning:"ফিরে আসা রোগী",
+    metric_reviews:"গুগল রিভিউ",metric_success:"অটোমেশন সাফল্য",
+    metric_sent_sub:"শেষ ৩০ দিন",metric_revisits:"নিশ্চিত পুনর্ভিজিট",
+    metric_generated:"এই মাসে তৈরি",metric_delivery:"ডেলিভারি হার",
+    auto_confirmations:"নিশ্চিতকরণ পাঠানো",auto_reminders:"১৪ দিনের রিমাইন্ডার",
+    auto_followup:"ফলো-আপ বার্তা",auto_review_req:"রিভিউ অনুরোধ",
+    pat_active:"সক্রিয়",pat_atrisk:"ঝুঁকিতে",pat_inactive:"নিষ্ক্রিয়",
+    quick_send_reminder:"রিমাইন্ডার পাঠান",quick_followup:"ফলো-আপ",
+    quick_confirm:"অ্যাপট. নিশ্চিত",quick_review:"রিভিউ চাই",
+    theme_dark:"ডার্ক মোড",theme_light:"লাইট মোড",
+    status_checked_in:"চেক-ইন",status_waiting:"অপেক্ষায়",
+    status_in_progress:"চলছে",status_missed:"মিস হয়েছে",
+    workspace_lbl:"ওয়ার্কস্পেস",ws_india:"🇮🇳 ভারত",ws_bd:"🇧🇩 বাংলাদেশ",
   }
 };
 
-/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+/* ══════════════════════════════════════════════
    DATA
-\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+══════════════════════════════════════════════ */
 const DB={
   india:{
     doc:{name:"Dr. Mousham Laskar",av:"M",reg:"NMC / WBMCO Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Clinic, Salt Lake, Kolkata"},
-    cur:{sym:"\u20b9",code:"INR",dial:"+91"},
+    cur:{sym:"₹",code:"INR",dial:"+91"},
     metrics:{patients:1248,appts:18,missed:"9.4%"},
     actionMetrics:{seen:12,totalAppts:18,waiting:3,waSentToday:24,pendingFollowups:5,unconfirmed:4},
     ana:{sent:342,returning:87,reviews:54,success:"94.2%"},
@@ -1999,7 +2156,7 @@ const DB={
   },
   bd:{
     doc:{name:"Dr. Mousham Laskar",av:"M",reg:"BM&DC Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Centre, Gulshan, Dhaka"},
-    cur:{sym:"\u09f3",code:"BDT",dial:"+880"},
+    cur:{sym:"৳",code:"BDT",dial:"+880"},
     metrics:{patients:934,appts:14,missed:"11.2%"},
     actionMetrics:{seen:8,totalAppts:14,waiting:2,waSentToday:17,pendingFollowups:3,unconfirmed:3},
     ana:{sent:218,returning:61,reviews:39,success:"91.7%"},
@@ -2027,13 +2184,13 @@ const DB={
 };
 
 const AUTOS=[
-  {label_en:"Appointment Confirmation",label_bn:"\u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09bf\u09b6\u09cd\u099a\u09bf\u09a4\u0995\u09b0\u09a3",desc_en:"Sent 24h before scheduled visit",desc_bn:"\u09a8\u09bf\u09b0\u09cd\u09a7\u09be\u09b0\u09bf\u09a4 \u09ad\u09bf\u099c\u09bf\u099f\u09c7\u09b0 \u09e8\u09ea \u0998\u09a3\u09cd\u099f\u09be \u0986\u0997\u09c7 \u09aa\u09be\u09a0\u09be\u09a8\u09cb \u09b9\u09af\u09bc",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,on:true},
-  {label_en:"14-Day Return Reminder",label_bn:"\u09e7\u09ea \u09a6\u09bf\u09a8\u09c7\u09b0 \u09b0\u09bf\u099f\u09be\u09b0\u09cd\u09a8 \u09b0\u09bf\u09ae\u09be\u0987\u09a8\u09cd\u09a1\u09be\u09b0",desc_en:"Auto-reminds patients 14 days post-visit",desc_bn:"\u09ad\u09bf\u099c\u09bf\u099f\u09c7\u09b0 \u09e7\u09ea \u09a6\u09bf\u09a8 \u09aa\u09b0 \u09b0\u09cb\u0997\u09c0\u09a6\u09c7\u09b0 \u09b8\u09cd\u09ac\u09af\u09bc\u0982\u0995\u09cd\u09b0\u09bf\u09af\u09bc\u09ad\u09be\u09ac\u09c7 \u09ae\u09a8\u09c7 \u0995\u09b0\u09bf\u09af\u09bc\u09c7 \u09a6\u09c7\u09af\u09bc",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
-  {label_en:"48-Hour Follow-Up",label_bn:"\u09ea\u09ee \u0998\u09a3\u09cd\u099f\u09be\u09b0 \u09ab\u09b2\u09cb-\u0986\u09aa",desc_en:"Check-in message 2 days after appointment",desc_bn:"\u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u09e8 \u09a6\u09bf\u09a8 \u09aa\u09b0 \u099a\u09c7\u0995-\u0987\u09a8 \u09ac\u09be\u09b0\u09cd\u09a4\u09be",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,on:true},
-  {label_en:"Missed Appointment Recovery",label_bn:"\u09ae\u09bf\u09b8 \u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f \u09aa\u09c1\u09a8\u09b0\u09c1\u09a6\u09cd\u09a7\u09be\u09b0",desc_en:"Smart recovery flow for missed visits",desc_bn:"\u09ae\u09bf\u09b8 \u09b9\u0993\u09af\u09bc\u09be \u09ad\u09bf\u099c\u09bf\u099f\u09c7\u09b0 \u099c\u09a8\u09cd\u09af \u09b8\u09cd\u09ae\u09be\u09b0\u09cd\u099f \u09b0\u09bf\u0995\u09ad\u09be\u09b0\u09bf \u09aa\u09cd\u09b0\u09ac\u09be\u09b9",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.01"/></svg>`,on:true},
-  {label_en:"Google Review Request",label_bn:"\u0997\u09c1\u0997\u09b2 \u09b0\u09bf\u09ad\u09bf\u0989 \u0985\u09a8\u09c1\u09b0\u09cb\u09a7",desc_en:"Asks for review 2h after completed appointment",desc_bn:"\u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u09e8 \u0998\u09a3\u09cd\u099f\u09be \u09aa\u09b0 \u09b0\u09bf\u09ad\u09bf\u0989 \u099a\u09be\u09af\u09bc",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,on:false},
-  {label_en:"WhatsApp Broadcast",label_bn:"\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u09ac\u09cd\u09b0\u09a1\u0995\u09be\u09b8\u09cd\u099f",desc_en:"Send health campaigns to patient segments",desc_bn:"\u09b0\u09cb\u0997\u09c0\u09a6\u09c7\u09b0 \u09ac\u09bf\u09ad\u09be\u0997\u09c7 \u09b8\u09cd\u09ac\u09be\u09b8\u09cd\u09a5\u09cd\u09af \u09aa\u09cd\u09b0\u099a\u09be\u09b0\u09a3\u09be \u09aa\u09be\u09a0\u09be\u09a8",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,on:false},
-  {label_en:"AI Reception Assistant",label_bn:"\u098f\u0986\u0987 \u09b0\u09bf\u09b8\u09c7\u09aa\u09b6\u09a8 \u09b8\u09b9\u0995\u09be\u09b0\u09c0",desc_en:"Answers common patient questions automatically",desc_bn:"\u09b8\u09be\u09a7\u09be\u09b0\u09a3 \u09b0\u09cb\u0997\u09c0\u09b0 \u09aa\u09cd\u09b0\u09b6\u09cd\u09a8\u09c7\u09b0 \u09b8\u09cd\u09ac\u09af\u09bc\u0982\u0995\u09cd\u09b0\u09bf\u09af\u09bc \u0989\u09a4\u09cd\u09a4\u09b0 \u09a6\u09c7\u09af\u09bc",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
+  {label_en:"Appointment Confirmation",label_bn:"অ্যাপয়েন্টমেন্ট নিশ্চিতকরণ",desc_en:"Sent 24h before scheduled visit",desc_bn:"নির্ধারিত ভিজিটের ২৪ ঘণ্টা আগে পাঠানো হয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,on:true},
+  {label_en:"14-Day Return Reminder",label_bn:"১৪ দিনের রিটার্ন রিমাইন্ডার",desc_en:"Auto-reminds patients 14 days post-visit",desc_bn:"ভিজিটের ১৪ দিন পর রোগীদের স্বয়ংক্রিয়ভাবে মনে করিয়ে দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
+  {label_en:"48-Hour Follow-Up",label_bn:"৪৮ ঘণ্টার ফলো-আপ",desc_en:"Check-in message 2 days after appointment",desc_bn:"অ্যাপয়েন্টমেন্টের ২ দিন পর চেক-ইন বার্তা",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,on:true},
+  {label_en:"Missed Appointment Recovery",label_bn:"মিস অ্যাপয়েন্টমেন্ট পুনরুদ্ধার",desc_en:"Smart recovery flow for missed visits",desc_bn:"মিস হওয়া ভিজিটের জন্য স্মার্ট রিকভারি প্রবাহ",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.01"/></svg>`,on:true},
+  {label_en:"Google Review Request",label_bn:"গুগল রিভিউ অনুরোধ",desc_en:"Asks for review 2h after completed appointment",desc_bn:"অ্যাপয়েন্টমেন্টের ২ ঘণ্টা পর রিভিউ চায়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,on:false},
+  {label_en:"WhatsApp Broadcast",label_bn:"হোয়াটসঅ্যাপ ব্রডকাস্ট",desc_en:"Send health campaigns to patient segments",desc_bn:"রোগীদের বিভাগে স্বাস্থ্য প্রচারণা পাঠান",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,on:false},
+  {label_en:"AI Reception Assistant",label_bn:"এআই রিসেপশন সহকারী",desc_en:"Answers common patient questions automatically",desc_bn:"সাধারণ রোগীর প্রশ্নের স্বয়ংক্রিয় উত্তর দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
 ];
 
 const TABS_KEYS={dashboard:"nav_dashboard",patients:"nav_patients",whatsapp:"nav_whatsapp",analytics:"nav_reports","missed-calls":"nav_dashboard",book:"nav_dashboard",settings:"nav_settings"};
@@ -2055,8 +2212,7 @@ function applyTranslations(){
     if(txt)el.placeholder=txt;
   });
   const si=document.getElementById("search-inp");
-  if(si)si.placeholder=currentLang==="bn"?"\u09a8\u09be\u09ae \u09ac\u09be \u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09bf\u09af\u09bc\u09c7 \u0996\u09c1\u0981\u099c\u09c1\u09a8\u2026":"Search by name or phone\u2026";
-  // Update settings view dynamic text
+  if(si)si.placeholder=currentLang==="bn"?"নাম বা ফোন নম্বর দিয়ে খুঁজুন…":"Search by name or phone…";
   const stgClinic=document.getElementById("stg-clinic-name");
   if(stgClinic)stgClinic.textContent=DB[mkt].doc.clinic;
   const stgDoc=document.getElementById("stg-doc-name");
@@ -2064,7 +2220,7 @@ function applyTranslations(){
   const stgReg=document.getElementById("stg-doc-reg");
   if(stgReg)stgReg.textContent=DB[mkt].doc.reg;
   const stgWs=document.getElementById("stg-workspace");
-  if(stgWs)stgWs.textContent=mkt==="india"?"India (INR \u20b9 \u00b7 +91)":"Bangladesh (BDT \u09f3 \u00b7 +880)";
+  if(stgWs)stgWs.textContent=mkt==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
   const stgTheme=document.getElementById("stg-theme-lbl");
   if(stgTheme)stgTheme.textContent=currentTheme==="dark"?t("theme_light"):t("theme_dark");
 }
@@ -2086,20 +2242,20 @@ function renderDash(){
   const d=DB[mkt];
   const am=d.actionMetrics;
   const cards=[
-    {lbl:t("metric_total_patients"),val:Number(d.metrics.patients).toLocaleString(),sub:t("metric_all_time"),trend:`<span class="up">\u2191 3.2%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`},
-    {lbl:t("metric_daily_progress"),val:`${am.seen}<span style="font-size:16px;color:var(--text-tertiary);font-family:'DM Sans',sans-serif;font-weight:500"> / ${am.totalAppts}</span>`,sub:t("metric_seen_of"),trend:`<span class="up">\u2191 on track</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="20 6 9 17 4 12"/></svg>`,raw:true},
-    {lbl:t("metric_waiting"),val:am.waiting,sub:t("metric_in_queue"),trend:am.waiting>3?`<span class="dn">\u2191 busy</span>`:`<span class="up">\u25cf normal</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`},
-    {lbl:t("metric_wa_reminders"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">\u2191 auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
+    {lbl:t("metric_total_patients"),val:Number(d.metrics.patients).toLocaleString(),sub:t("metric_all_time"),trend:`<span class="up">↑ 3.2%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`},
+    {lbl:t("metric_daily_progress"),val:`${am.seen}<span style="font-size:16px;color:var(--text-tertiary);font-family:'DM Sans',sans-serif;font-weight:500"> / ${am.totalAppts}</span>`,sub:t("metric_seen_of"),trend:`<span class="up">↑ on track</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="20 6 9 17 4 12"/></svg>`,raw:true},
+    {lbl:t("metric_waiting"),val:am.waiting,sub:t("metric_in_queue"),trend:am.waiting>3?`<span class="dn">↑ busy</span>`:`<span class="up">◉ normal</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`},
+    {lbl:t("metric_wa_reminders"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">↑ auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
   ];
   document.getElementById("dash-metrics").innerHTML=cards.map(c=>`
     <div class="mc">
       <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
       <p class="mc-val">${c.val}</p>
-      <p class="mc-sub">${c.sub} \u00b7 ${c.trend}</p>
+      <p class="mc-sub">${c.sub} · ${c.trend}</p>
     </div>`).join("");
 
   const q=d.queue;
-  document.getElementById("q-count").textContent=`${q.length} ${currentLang==="bn"?"\u09b0\u09cb\u0997\u09c0":"patients"}`;
+  document.getElementById("q-count").textContent=`${q.length} ${currentLang==="bn"?"রোগী":"patients"}`;
   document.getElementById("queue-list").innerHTML=q.map(p=>`
     <div class="qrow">
       <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
@@ -2125,7 +2281,7 @@ function renderDash(){
         <div style="min-width:0;flex:1">
           <p class="aname">${p.name}</p>
           <p class="acond">${p.condition}</p>
-          <p class="adue">${currentLang==="bn"?"\u09a8\u09bf\u09b0\u09cd\u09a7\u09be\u09b0\u09bf\u09a4":"Due"} <span class="dv">${p.due}</span></p>
+          <p class="adue">${currentLang==="bn"?"নির্ধারিত":"Due"} <span class="dv">${p.due}</span></p>
         </div>
         <button class="remind" onclick='openWA(${JSON.stringify(p)})'>${WA_SVG} ${t("send_reminder")}</button>
       </div>
@@ -2136,12 +2292,12 @@ function renderPats(){
   const q=(document.getElementById("search-inp")||{}).value||"";
   const all=DB[mkt].patients;
   const pats=all.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.phone.includes(q));
-  const countTxt=currentLang==="bn"?`${all.length} \u099c\u09a8 \u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09bf\u09a4 \u09b0\u09cb\u0997\u09c0`:`${all.length} registered patients`;
+  const countTxt=currentLang==="bn"?`${all.length} জন নিবন্ধিত রোগী`:`${all.length} registered patients`;
   document.getElementById("pat-count").textContent=countTxt;
   if(!pats.length){
-    const emptyTxt=currentLang==="bn"?"\u0995\u09cb\u09a8\u09cb \u09b0\u09cb\u0997\u09c0 \u09aa\u09be\u0993\u09af\u09bc\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf":"No patients found";
-    const emptySub=currentLang==="bn"?"\u09ad\u09bf\u09a8\u09cd\u09a8 \u09a8\u09be\u09ae \u09ac\u09be \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09bf\u09af\u09bc\u09c7 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964":"Try a different name or phone number.";
-    document.getElementById("pat-table").innerHTML=`<div class="empty"><div class="empty-ic">\ud83d\udd0d</div><p class="empty-t">${emptyTxt}</p><p class="empty-s">${emptySub}</p></div>`;
+    const emptyTxt=currentLang==="bn"?"কোনো রোগী পাওয়া যায়নি":"No patients found";
+    const emptySub=currentLang==="bn"?"ভিন্ন নাম বা নম্বর দিয়ে চেষ্টা করুন।":"Try a different name or phone number.";
+    document.getElementById("pat-table").innerHTML=`<div class="empty"><div class="empty-ic">🔍</div><p class="empty-t">${emptyTxt}</p><p class="empty-s">${emptySub}</p></div>`;
     return;
   }
   document.getElementById("pat-table").innerHTML=pats.map(p=>`
@@ -2157,7 +2313,7 @@ function renderPats(){
       <p class="pvisits col-visits">${p.visits}</p>
       <div style="display:flex;justify-content:center" class="col-status">${chipP(p.status)}</div>
       <div style="display:flex;justify-content:flex-end">
-        <button class="wa-btn" onclick='openWA(${JSON.stringify(p)})' title="${t('send_reminder')} \u2014 WhatsApp">${WA_SVG}</button>
+        <button class="wa-btn" onclick='openWA(${JSON.stringify(p)})' title="${t('send_reminder')} — WhatsApp">${WA_SVG}</button>
       </div>
     </div>`).join("");
 }
@@ -2197,16 +2353,16 @@ function renderWA(){
 function renderAna(){
   const a=DB[mkt].ana;
   const cards=[
-    {lbl:t("metric_sent"),val:a.sent,sub:t("metric_sent_sub"),trend:`<span class="up">\u2191 12.4%</span>`},
-    {lbl:t("metric_returning"),val:a.returning,sub:t("metric_revisits"),trend:`<span class="up">\u2191 7.1%</span>`},
-    {lbl:t("metric_reviews"),val:a.reviews,sub:t("metric_generated"),trend:`<span class="up">\u2191 22.3%</span>`},
-    {lbl:t("metric_success"),val:a.success,sub:t("metric_delivery"),trend:`<span class="up">\u2191 1.8%</span>`},
+    {lbl:t("metric_sent"),val:a.sent,sub:t("metric_sent_sub"),trend:`<span class="up">↑ 12.4%</span>`},
+    {lbl:t("metric_returning"),val:a.returning,sub:t("metric_revisits"),trend:`<span class="up">↑ 7.1%</span>`},
+    {lbl:t("metric_reviews"),val:a.reviews,sub:t("metric_generated"),trend:`<span class="up">↑ 22.3%</span>`},
+    {lbl:t("metric_success"),val:a.success,sub:t("metric_delivery"),trend:`<span class="up">↑ 1.8%</span>`},
   ];
   document.getElementById("ana-metrics").innerHTML=cards.map(c=>`
     <div class="mc">
       <div class="mc-top"><p class="mc-lbl">${c.lbl}</p></div>
       <p class="mc-val">${c.val}</p>
-      <p class="mc-sub">${c.sub} \u00b7 ${c.trend}</p>
+      <p class="mc-sub">${c.sub} · ${c.trend}</p>
     </div>`).join("");
 
   const bars=[
@@ -2246,7 +2402,7 @@ function renderAll(){
   document.getElementById("doc-name").textContent=d.doc.name;
   document.getElementById("doc-reg").textContent=d.doc.reg;
   document.getElementById("doc-spec").textContent=d.doc.spec;
-  document.getElementById("ctx-mkt").textContent=mkt==="india"?"India (INR \u20b9 \u00b7 +91)":"Bangladesh (BDT \u09f3 \u00b7 +880)";
+  document.getElementById("ctx-mkt").textContent=mkt==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
   document.getElementById("ctx-clinic").textContent=d.doc.clinic;
   document.getElementById("add-phone").placeholder=`${d.cur.dial} number`;
   const bookDocEl=document.getElementById("book-doc-name");
@@ -2321,7 +2477,7 @@ function openLangModal(){document.getElementById("lang-modal").classList.add("op
 function closeLangModal(){document.getElementById("lang-modal").classList.remove("open")}
 function handleLangOverlayClick(e){if(e.target===document.getElementById("lang-modal"))closeLangModal()}
 
-/* \u2500\u2500 NAV \u2014 FIX: unified nav works for all view IDs including missed-calls, book, settings \u2500\u2500 */
+/* ── NAV ── */
 function nav(id,btn){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
   const target=document.getElementById("v-"+id);
@@ -2398,13 +2554,89 @@ function openWA(p){
   const d=DB[mkt];
   const isBn=currentLang==="bn";
   document.getElementById("wa-msg").value=isBn
-    ?`\u09aa\u09cd\u09b0\u09bf\u09af\u09bc ${p.name},\n\n\u0986\u09aa\u09a8\u09be\u09b0 \u09ab\u09b2\u09cb-\u0986\u09aa \u0985\u09cd\u09af\u09be\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u09ae\u09c7\u09a8\u09cd\u099f\u09c7\u09b0 \u09b8\u09ae\u09af\u09bc \u09b9\u09af\u09bc\u09c7\u099b\u09c7\u0964 \u0985\u09a8\u09c1\u0997\u09cd\u09b0\u09b9 \u0995\u09b0\u09c7 \u09af\u09cb\u0997\u09be\u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8\u0964\n\n\u09a7\u09a8\u09cd\u09af\u09ac\u09be\u09a6,\n${d.doc.name}`
+    ?`প্রিয় ${p.name},\n\nআপনার ফলো-আপ অ্যাপয়েন্টমেন্টের সময় হয়েছে। অনুগ্রহ করে যোগাযোগ করুন।\n\nধন্যবাদ,\n${d.doc.name}`
     :`Dear ${p.name},\n\nThis is a friendly reminder from ${d.doc.clinic}. It's time for your follow-up appointment. Please contact us to schedule.\n\nBest regards,\n${d.doc.name}`;
   openModal("wa-modal");
 }
 
-/* \u2500\u2500 INIT \u2500\u2500 */
+/* ══ AUTH ══ */
+let authSelectedCountry='india';
+
+function switchAuthTab(tab){
+  document.getElementById('auth-tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('auth-tab-signup').classList.toggle('active',tab==='signup');
+  document.getElementById('auth-panel-login').classList.toggle('on',tab==='login');
+  document.getElementById('auth-panel-signup').classList.toggle('on',tab==='signup');
+  document.getElementById('auth-login-error').classList.remove('show');
+  document.getElementById('auth-signup-error').classList.remove('show');
+}
+
+function selectAuthCountry(c){
+  authSelectedCountry=c;
+  document.getElementById('auth-country-india').classList.toggle('selected',c==='india');
+  document.getElementById('auth-country-bd').classList.toggle('selected',c==='bd');
+  document.getElementById('auth-dial').textContent=c==='india'?'+91':'+880';
+}
+
+function _goToDashboard(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-dashboard').classList.add('on');
+  document.getElementById('sidebar').style.display='';
+  document.getElementById('bnav').style.display='';
+  document.querySelectorAll('.nb').forEach(b=>{
+    b.classList.toggle('on',(b.getAttribute('onclick')||'').includes("'dashboard'"));
+  });
+  document.querySelectorAll('.bn').forEach(b=>b.classList.toggle('on',b.dataset.t==='dashboard'));
+  document.getElementById('tab-title').textContent=t('nav_dashboard');
+  window.scrollTo(0,0);
+}
+
+function handleLogin(){
+  const email=(document.getElementById('auth-login-email').value||'').trim();
+  const pass=(document.getElementById('auth-login-pass').value||'').trim();
+  const err=document.getElementById('auth-login-error');
+  if(!email||!pass){err.classList.add('show');return;}
+  err.classList.remove('show');
+  _goToDashboard();
+}
+
+function handleSignup(){
+  const clinic=(document.getElementById('auth-clinic-name').value||'').trim();
+  const doctor=(document.getElementById('auth-doctor-name').value||'').trim();
+  const mobile=(document.getElementById('auth-mobile').value||'').trim();
+  const email=(document.getElementById('auth-signup-email').value||'').trim();
+  const pass=(document.getElementById('auth-signup-pass').value||'').trim();
+  const err=document.getElementById('auth-signup-error');
+  if(!clinic||!doctor||!mobile||!email||!pass||pass.length<6){
+    err.textContent=pass.length>0&&pass.length<6
+      ?'Password must be at least 6 characters.'
+      :'Please fill in all required fields.';
+    err.classList.add('show');
+    return;
+  }
+  err.classList.remove('show');
+  setMkt(authSelectedCountry,null);
+  DB[authSelectedCountry].doc.name=doctor;
+  DB[authSelectedCountry].doc.clinic=clinic;
+  renderAll();
+  _goToDashboard();
+}
+
+function handleForgotPassword(){
+  const email=(document.getElementById('auth-login-email').value||'').trim();
+  if(!email){alert('Please enter your email address first, then click Forgot Password.');return;}
+  showToast('Password reset link sent to '+email);
+}
+
+/* ══ INIT ══ */
 (function init(){
+  // Hide chrome until authenticated
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('bnav').style.display='none';
+  // Show only auth view on load
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-auth').classList.add('on');
+
   try{
     const savedTheme=localStorage.getItem("aura_theme");
     if(savedTheme==="dark"||savedTheme==="light"){
@@ -2427,7 +2659,7 @@ function openWA(p){
   renderAll();
 })();
 
-/* \u2550\u2550 BOOKING PAGE \u2550\u2550 */
+/* ══ BOOKING PAGE ══ */
 let selectedSlot=null;
 function selectSlot(btn,time){
   document.querySelectorAll(".slot-btn").forEach(b=>b.classList.remove("selected"));
@@ -2450,7 +2682,7 @@ function confirmBooking(){
   document.getElementById("book-step2").classList.remove("on");
   document.getElementById("book-step1").classList.remove("on");
   const msgEl=document.getElementById("book-success-msg");
-  if(msgEl)msgEl.textContent=name+" \u2014 your appointment at "+selectedSlot+" is confirmed! You will receive a WhatsApp confirmation shortly.";
+  if(msgEl)msgEl.textContent=name+" — your appointment at "+selectedSlot+" is confirmed! You will receive a WhatsApp confirmation shortly.";
   document.getElementById("book-success").classList.add("on");
 }
 function resetBooking(){
@@ -2467,7 +2699,7 @@ function copyBookingLink(){
   catch(e){alert("Booking link:\n"+link);}
 }
 
-/* \u2550\u2550 QUICK ADD PATIENT \u2550\u2550 */
+/* ══ QUICK ADD PATIENT ══ */
 function toggleOptional(){
   const wrap=document.getElementById("opt-fields");
   const ic=document.getElementById("opt-toggle-ic");
@@ -2481,7 +2713,7 @@ function quickAddPatient(){
   if(!name.trim()||!phone.trim()){alert("Name and mobile number are required.");return;}
   const dial=DB[mkt].cur.dial;
   const fullPhone=phone.startsWith("+")?phone:dial+" "+phone;
-  const newPat={id:Date.now(),name:name.trim(),phone:fullPhone,lastVisit:"\u2014",status:"Active",visits:0};
+  const newPat={id:Date.now(),name:name.trim(),phone:fullPhone,lastVisit:"—",status:"Active",visits:0};
   DB[mkt].patients.unshift(newPat);
   DB[mkt].metrics.patients+=1;
   closeModal("quick-patient-modal");
@@ -2492,7 +2724,7 @@ function quickAddPatient(){
   showToast("Patient added: "+name.trim());
 }
 
-/* \u2550\u2550 TOAST \u2550\u2550 */
+/* ══ TOAST ══ */
 function showToast(msg){
   let t=document.getElementById("aura-toast");
   if(!t){
@@ -2504,7 +2736,7 @@ function showToast(msg){
   clearTimeout(t._to);t._to=setTimeout(()=>{t.style.opacity="0";setTimeout(()=>{t.style.display="none"},300)},2400);
 }
 
-/* \u2550\u2550 FOLLOW-UP TEMPLATES \u2550\u2550 */
+/* ══ FOLLOW-UP TEMPLATES ══ */
 function sendTemplate(type){
   const msgs={"follow-up":"14-day follow-up reminder sent to 3 patients due for a visit!","medication":"Medication reminder sent to selected patients.","review":"Review request sent to today's 6 completed patients!"};
   showToast(msgs[type]||"Message sent!");
