@@ -1019,6 +1019,7 @@ main.content{
   .mcr-mc-val{font-size:22px}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <!-- ══ AUTH SCREEN — outside app shell, always on top ══ -->
@@ -1064,10 +1065,10 @@ main.content{
             <label class="flbl">Country <span style="color:var(--red)">*</span></label>
             <div class="auth-country-row">
               <button class="auth-country-btn selected" id="auth-country-india" onclick="selectAuthCountry('india')">
-                <span class="auth-country-flag">🇮🇳</span><span>India</span>
+                <span class="auth-country-flag">&#x1F1EE;&#x1F1F3;</span><span>India</span>
               </button>
               <button class="auth-country-btn" id="auth-country-bd" onclick="selectAuthCountry('bd')">
-                <span class="auth-country-flag">🇧🇩</span><span>Bangladesh</span>
+                <span class="auth-country-flag">&#x1F1E7;&#x1F1E9;</span><span>Bangladesh</span>
               </button>
             </div>
           </div>
@@ -1150,8 +1151,8 @@ main.content{
         <div class="sb-workspace">
           <p class="sb-workspace-lbl" data-i18n="workspace_lbl">Workspace</p>
           <div class="ws-toggle">
-            <button class="ws-btn active" id="ws-india" onclick="setMkt('india',this)" data-i18n="ws_india">🇮🇳 India</button>
-            <button class="ws-btn" id="ws-bd" onclick="setMkt('bd',this)" data-i18n="ws_bd">🇧🇩 Bangladesh</button>
+            <button class="ws-btn active" id="ws-india" onclick="setMkt('india',this)" data-i18n="ws_india">&#x1F1EE;&#x1F1F3; India</button>
+            <button class="ws-btn" id="ws-bd" onclick="setMkt('bd',this)" data-i18n="ws_bd">&#x1F1E7;&#x1F1E9; Bangladesh</button>
           </div>
         </div>
       </div>
@@ -1209,7 +1210,7 @@ main.content{
         <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         HIPAA · SOC 2 Type II · ISO 27001
       </div>
-      <div class="sb-out">
+      <div class="sb-out" onclick="handleLogout()">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         <span data-i18n="sign_out">Sign Out</span>
       </div>
@@ -1254,7 +1255,7 @@ main.content{
       <div class="ctx">
         <div class="ctx-chip">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <span><span data-i18n="ctx_market">Market:</span> <span class="lbl" id="ctx-mkt">India (INR ₹ · +91)</span></span>
+          <span><span data-i18n="ctx_market">Market:</span> <span class="lbl" id="ctx-mkt">India (INR &#x20B9; · +91)</span></span>
         </div>
         <div class="ctx-chip">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -1364,7 +1365,7 @@ main.content{
         </div>
         <div class="search">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="search-inp" placeholder="Search by name or phone…" oninput="renderPats()"/>
+          <input type="text" id="search-inp" placeholder="Search by name or phone..." oninput="renderPats()"/>
         </div>
         <div class="tw">
           <div class="thead">
@@ -1388,7 +1389,7 @@ main.content{
             <h1 class="st" data-i18n="wa_title">WhatsApp &amp; Retention</h1>
             <p class="ss" data-i18n="wa_sub">Automate patient communications and follow-ups</p>
           </div>
-          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px" data-i18n="engine_live">◉ Engine Live</span>
+          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px" data-i18n="engine_live">&#9679; Engine Live</span>
         </div>
         <div class="auto-card" id="auto-list"></div>
 
@@ -1500,7 +1501,7 @@ main.content{
             <h1 class="st">Missed Call Recovery</h1>
             <p class="ss">Auto-send WhatsApp to missed callers · Convert calls to bookings</p>
           </div>
-          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px">◉ Recovery Active</span>
+          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px">&#9679; Recovery Active</span>
         </div>
 
         <div class="mcr-mg">
@@ -1517,7 +1518,7 @@ main.content{
           <div class="mcr-mc">
             <p class="mcr-mc-lbl">Recovery Rate</p>
             <p class="mcr-mc-val" style="color:var(--blue)">63%</p>
-            <p class="mcr-mc-sub">↑ from 41%</p>
+            <p class="mcr-mc-sub">&#x2191; from 41%</p>
           </div>
         </div>
 
@@ -1532,14 +1533,14 @@ main.content{
               </div>
               <p class="mc-flow-lbl">Missed Call Detected</p>
             </div>
-            <div class="mc-flow-arrow">→</div>
+            <div class="mc-flow-arrow">&#x2192;</div>
             <div class="mc-flow-step">
               <div class="mc-flow-ic amber">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
               </div>
               <p class="mc-flow-lbl">WhatsApp Sent Instantly</p>
             </div>
-            <div class="mc-flow-arrow">→</div>
+            <div class="mc-flow-arrow">&#x2192;</div>
             <div class="mc-flow-step">
               <div class="mc-flow-ic green">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
@@ -1580,14 +1581,14 @@ main.content{
                 <p class="mcr-name">+91 70015 33214</p>
                 <p class="mcr-time">Yesterday, 04:30 PM · 1 missed call</p>
               </div>
-              <span class="mcr-status mcr-booked">✓ Booked</span>
+              <span class="mcr-status mcr-booked">&#x2713; Booked</span>
             </div>
             <div class="mcr-row">
               <div>
                 <p class="mcr-name">Ruma Das</p>
                 <p class="mcr-time">Yesterday, 02:10 PM · Known patient</p>
               </div>
-              <span class="mcr-status mcr-booked">✓ Booked</span>
+              <span class="mcr-status mcr-booked">&#x2713; Booked</span>
             </div>
             <div class="mcr-row">
               <div>
@@ -1774,14 +1775,14 @@ main.content{
           <div class="settings-row">
             <div>
               <p class="settings-row-lbl">Language</p>
-              <p class="settings-row-sub">English / বাংলা</p>
+              <p class="settings-row-sub">English / &#x09AC;&#x09BE;&#x0982;&#x09B2;&#x09BE;</p>
             </div>
             <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="openLangModal()">Change</button>
           </div>
           <div class="settings-row">
             <div>
               <p class="settings-row-lbl">Workspace</p>
-              <p class="settings-row-sub" id="stg-workspace">India (INR ₹ · +91)</p>
+              <p class="settings-row-sub" id="stg-workspace">India (INR &#x20B9; · +91)</p>
             </div>
           </div>
         </div>
@@ -1964,7 +1965,7 @@ main.content{
               <option>Male</option><option>Female</option><option>Other</option>
             </select>
           </div>
-          <div><label class="flbl">Chief Complaint</label><input type="text" class="finput" placeholder="e.g. Fever, Cough…"/></div>
+          <div><label class="flbl">Chief Complaint</label><input type="text" class="finput" placeholder="e.g. Fever, Cough..."/></div>
         </div>
       </div>
       <button class="msub" onclick="quickAddPatient()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2)">
@@ -1992,8 +1993,8 @@ main.content{
       </button>
       <button class="lang-opt" id="lang-opt-bn" onclick="setLang('bn')">
         <div>
-          <p class="lang-info-name">বাংলা</p>
-          <p class="lang-info-native">Bengali / বাংলা</p>
+          <p class="lang-info-name">&#x09AC;&#x09BE;&#x0982;&#x09B2;&#x09BE;</p>
+          <p class="lang-info-native">Bengali / &#x09AC;&#x09BE;&#x0982;&#x09B2;&#x09BE;</p>
         </div>
         <svg class="lang-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </button>
@@ -2006,6 +2007,12 @@ main.content{
 </div>
 
 <script>
+/* ══ SUPABASE CLIENT ══ */
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _clinicId = null;
+
 /* ══════════════════════════════════════════════
    TRANSLATIONS
 ══════════════════════════════════════════════ */
@@ -2582,16 +2589,11 @@ function selectAuthCountry(c){
 }
 
 function _goToDashboard(){
-  // Hide auth screen completely
   document.getElementById('auth-screen').classList.add('hidden');
-  // Show app shell
   document.getElementById('app-shell').classList.add('authenticated');
-  // Render all data now that user is authenticated
   renderAll();
-  // Activate dashboard view
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   document.getElementById('v-dashboard').classList.add('on');
-  // Sync nav states
   document.querySelectorAll('.nb').forEach(b=>{
     b.classList.toggle('on',(b.getAttribute('onclick')||'').includes("'dashboard'"));
   });
@@ -2600,16 +2602,22 @@ function _goToDashboard(){
   window.scrollTo(0,0);
 }
 
-function handleLogin(){
+async function handleLogin(){
   const email=(document.getElementById('auth-login-email').value||'').trim();
   const pass=(document.getElementById('auth-login-pass').value||'').trim();
   const err=document.getElementById('auth-login-error');
-  if(!email||!pass){err.classList.add('show');return;}
+  if(!email||!pass){err.textContent='Please enter your email and password.';err.classList.add('show');return;}
   err.classList.remove('show');
-  _goToDashboard();
+  const btn=document.querySelector('#auth-panel-login .msub');
+  if(btn){btn.textContent='Signing in…';btn.disabled=true;}
+  try{
+    const {data,error}=await _supa.auth.signInWithPassword({email,password:pass});
+    if(error){err.textContent=error.message||'Invalid email or password.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}return;}
+    await _loadClinicAndGo(data.user);
+  }catch(e){err.textContent='Network error. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}}
 }
 
-function handleSignup(){
+async function handleSignup(){
   const clinic=(document.getElementById('auth-clinic-name').value||'').trim();
   const doctor=(document.getElementById('auth-doctor-name').value||'').trim();
   const mobile=(document.getElementById('auth-mobile').value||'').trim();
@@ -2617,18 +2625,30 @@ function handleSignup(){
   const pass=(document.getElementById('auth-signup-pass').value||'').trim();
   const err=document.getElementById('auth-signup-error');
   if(!clinic||!doctor||!mobile||!email||!pass||pass.length<6){
-    err.textContent=pass.length>0&&pass.length<6
-      ?'Password must be at least 6 characters.'
-      :'Please fill in all required fields.';
-    err.classList.add('show');
-    return;
+    err.textContent=pass.length>0&&pass.length<6?'Password must be at least 6 characters.':'Please fill in all required fields.';
+    err.classList.add('show');return;
   }
   err.classList.remove('show');
-  setMkt(authSelectedCountry,null);
-  DB[authSelectedCountry].doc.name=doctor;
-  DB[authSelectedCountry].doc.clinic=clinic;
-  renderAll();
-  _goToDashboard();
+  const btn=document.querySelector('#auth-panel-signup .msub');
+  if(btn){btn.textContent='Creating account…';btn.disabled=true;}
+  try{
+    const {data,error}=await _supa.auth.signUp({email,password:pass});
+    if(error){err.textContent=error.message||'Signup failed. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}return;}
+    if(!data.user){err.textContent='Check your email to confirm your account, then sign in.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}switchAuthTab('login');return;}
+    const {data:clinicRow,error:clinicErr}=await _supa.from('clinics').insert({
+      owner_id:data.user.id,name:clinic,doctor_name:doctor,
+      registration:'',specialty:'General Physician',country:authSelectedCountry,
+      whatsapp_number:authSelectedCountry==='india'?'+91'+mobile:'+880'+mobile
+    }).select().single();
+    if(!clinicErr&&clinicRow){
+      _clinicId=clinicRow.id;
+      await _supa.from('profiles').upsert({id:data.user.id,full_name:doctor,email,mobile,clinic_id:clinicRow.id});
+    }
+    setMkt(authSelectedCountry,null);
+    DB[authSelectedCountry].doc.name=doctor;
+    DB[authSelectedCountry].doc.clinic=clinic;
+    _goToDashboard();
+  }catch(e){err.textContent='Network error. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}}
 }
 
 function handleForgotPassword(){
@@ -2637,12 +2657,35 @@ function handleForgotPassword(){
   showToast('Password reset link sent to '+email);
 }
 
+async function _loadClinicAndGo(user){
+  try{
+    const {data:profile}=await _supa.from('profiles').select('clinic_id,full_name').eq('id',user.id).single();
+    if(profile&&profile.clinic_id){
+      _clinicId=profile.clinic_id;
+      const {data:clinic}=await _supa.from('clinics').select('*').eq('id',_clinicId).single();
+      if(clinic){
+        const m=clinic.country==='bd'?'bd':'india';
+        setMkt(m,null);
+        DB[m].doc.name=clinic.doctor_name||DB[m].doc.name;
+        DB[m].doc.clinic=clinic.name||DB[m].doc.clinic;
+      }
+    }
+  }catch(e){}
+  _goToDashboard();
+}
+async function handleLogout(){
+  try{await _supa.auth.signOut();}catch(e){}
+  _clinicId=null;
+  document.getElementById('app-shell').classList.remove('authenticated');
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('auth-login-email').value='';
+  document.getElementById('auth-login-pass').value='';
+  document.getElementById('auth-login-error').classList.remove('show');
+  switchAuthTab('login');
+}
+
 /* ══ INIT ══ */
 (function init(){
-  // App shell is hidden by default via CSS (#app-shell { display:none })
-  // Auth screen is visible by default via CSS (#auth-screen { display:flex })
-  // Nothing else needed to block the app — architecture handles it.
-
   try{
     const savedTheme=localStorage.getItem("aura_theme");
     if(savedTheme==="dark"||savedTheme==="light"){
@@ -2662,6 +2705,15 @@ function handleForgotPassword(){
   }catch(e){}
    updateThemeUI();
   updateLangUI();
+  _supa.auth.getSession().then(({data:{session}})=>{
+    if(session&&session.user)_loadClinicAndGo(session.user);
+  }).catch(()=>{});
+  _supa.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'){
+      document.getElementById('app-shell').classList.remove('authenticated');
+      document.getElementById('auth-screen').classList.remove('hidden');
+    }
+  });
 })();
 
 /* ══ BOOKING PAGE ══ */
@@ -2680,7 +2732,7 @@ function goBackToSlots(){
   document.getElementById("book-step1").classList.add("on");
   selectedSlot=null;
 }
-function confirmBooking(){
+async function confirmBooking(){
   const name=(document.getElementById("book-name")||{}).value||"";
   const phone=(document.getElementById("book-phone")||{}).value||"";
   if(!name.trim()||!phone.trim()){alert("Please enter your name and mobile number.");return;}
@@ -2689,6 +2741,16 @@ function confirmBooking(){
   const msgEl=document.getElementById("book-success-msg");
   if(msgEl)msgEl.textContent=name+" — your appointment at "+selectedSlot+" is confirmed! You will receive a WhatsApp confirmation shortly.";
   document.getElementById("book-success").classList.add("on");
+  if(_clinicId&&selectedSlot){
+    try{
+      const today=new Date().toISOString().split('T')[0];
+      await _supa.from('appointments').insert({
+        clinic_id:_clinicId,patient_name:name.trim(),patient_phone:phone.trim(),
+        appointment_date:today,appointment_time:selectedSlot,
+        status:'Waiting',source:'dashboard'
+      });
+    }catch(e){}
+  }
 }
 function resetBooking(){
   document.getElementById("book-success").classList.remove("on");
@@ -2713,7 +2775,7 @@ function toggleOptional(){
   if(ic)ic.innerHTML=open?'<line x1="5" y1="12" x2="19" y2="12"/>'
     :'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
 }
-function quickAddPatient(){
+async function quickAddPatient(){
   const name=(document.getElementById("qp-name")||{}).value||"";
   const phone=(document.getElementById("qp-phone")||{}).value||"";
   if(!name.trim()||!phone.trim()){alert("Name and mobile number are required.");return;}
@@ -2728,6 +2790,11 @@ function quickAddPatient(){
   document.getElementById("opt-fields").classList.remove("open");
   renderPats();renderDash();
   showToast("Patient added: "+name.trim());
+  if(_clinicId){
+    try{
+      await _supa.from('patients').insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0});
+    }catch(e){}
+  }
 }
 
 /* ══ TOAST ══ */
