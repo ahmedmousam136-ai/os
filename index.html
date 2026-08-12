@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AuraScale — Choose Your System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0b0d12;
+    --card:#12151c;
+    --border:#232733;
+    --text:#f3f4f6;
+    --muted:#8b93a3;
+    --accent:#5b8cff;
+    --accent2:#7ee0c3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'DM Sans',sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(91,140,255,0.12), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(126,224,195,0.10), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{
+    width:100%;
+    max-width:440px;
+    text-align:center;
+  }
+  .brand{
+    font-family:'Instrument Serif',serif;
+    font-size:2.6rem;
+    letter-spacing:0.5px;
+    line-height:1.1;
+    margin-bottom:8px;
+  }
+  .brand span{color:var(--accent);}
+  .subtitle{
+    color:var(--muted);
+    font-size:0.98rem;
+    margin-bottom:40px;
+    font-weight:400;
+  }
+  .choices{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .choice{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px 22px;
+    text-decoration:none;
+    color:var(--text);
+    text-align:left;
+    transition:border-color .15s ease, transform .15s ease, background .15s ease;
+  }
+  .choice:hover, .choice:focus-visible{
+    border-color:var(--accent);
+    background:#151924;
+    transform:translateY(-1px);
+  }
+  .choice:active{transform:translateY(0);}
+  .icon{
+    flex:0 0 auto;
+    width:44px;height:44px;
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(91,140,255,0.12);
+    color:var(--accent);
+  }
+  .choice.nh .icon{
+    background:rgba(126,224,195,0.12);
+    color:var(--accent2);
+  }
+  .choice-text{flex:1;}
+  .choice-title{
+    font-size:1.05rem;
+    font-weight:600;
+    margin-bottom:2px;
+  }
+  .choice-desc{
+    font-size:0.85rem;
+    color:var(--muted);
+  }
+  .arrow{
+    flex:0 0 auto;
+    color:var(--muted);
+    font-size:1.1rem;
+  }
+  footer{
+    margin-top:40px;
+    font-size:0.78rem;
+    color:var(--muted);
+    opacity:0.7;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">Aura<span>Scale</span></div>
+    <div class="subtitle">Choose your system</div>
+
+    <div class="choices">
+      <a class="choice clinic" href="clinic.html">
+        <span class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </span>
+        <span class="choice-text">
+          <div class="choice-title">Clinic</div>
+          <div class="choice-desc">Clinic Operating System</div>
+        </span>
+        <span class="arrow">›</span>
+      </a>
+
+      <a class="choice nh" href="nh.html">
+        <span class="icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </span>
+        <span class="choice-text">
+          <div class="choice-title">Nursing Home</div>
+          <div class="choice-desc">Nursing Home Operating System</div>
+        </span>
+        <span class="arrow">›</span>
+      </a>
+    </div>
+
+    <footer>AuraScale</footer>
+  </div>
+</body>
+</html>
