@@ -390,7 +390,7 @@ main.content{
 .qrow:hover{background:var(--bg)}
 .qrow:last-child{border-bottom:none}
 .token{width:28px;height:28px;border-radius:6px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:var(--text-secondary);flex-shrink:0}
-.qname{color:var(--text-primary);font-size:12px;font-weight:500}
+.qname{color:var(--text-primary);font-size:12px;font-weight:500;overflow-wrap:anywhere}
 .qtime{color:var(--text-tertiary);font-size:10px;display:flex;align-items:center;gap:3px;margin-top:1px}
 
 .wa-icon-btn{
@@ -546,6 +546,21 @@ main.content{
 }
 .ftextarea:focus{border-color:var(--blue);background:var(--surface)}
 .prow{display:flex;gap:7px}
+.rx-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rx-med-row{display:grid;grid-template-columns:1.7fr 0.9fr 0.6fr 1.3fr 30px;gap:6px;margin-bottom:7px;align-items:center}
+@media(max-width:560px){
+  .rx-2col{grid-template-columns:1fr}
+  .rx-med-row{
+    grid-template-columns:1fr auto;
+    grid-template-areas:"name close" "dose dur" "timing timing";
+    row-gap:6px;
+  }
+  .rx-med-row .rx-m-name{grid-area:name;min-width:0}
+  .rx-med-row .mclose{grid-area:close;align-self:center}
+  .rx-med-row .rx-m-dose{grid-area:dose;min-width:0}
+  .rx-med-row .rx-m-dur{grid-area:dur;min-width:0}
+  .rx-med-row .rx-m-timing{grid-area:timing;min-width:0}
+}
 .ppfx{
   background:var(--blue-bg);border:1px solid var(--blue-border);
   border-radius:var(--r-sm);padding:11px 12px;
@@ -572,7 +587,7 @@ main.content{
   background:rgba(255,255,255,.97);
   border-top:1px solid var(--border);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;
+  grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;justify-items:center;
   box-shadow:0 -2px 20px rgba(0,0,0,.06);
   padding-top:6px;
   padding-bottom:6px;
@@ -604,6 +619,8 @@ main.content{
 }
 .bn-fab:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(46,99,212,.5)}
 .bn-fab:active{transform:scale(.92)}
+.bn-fab-green{background:var(--green);box-shadow:0 4px 16px rgba(18,151,106,.4)}
+.bn-fab-green:hover{box-shadow:0 6px 20px rgba(18,151,106,.5)}
 
 /* ─── EMPTY STATE ─── */
 .empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
@@ -986,6 +1003,8 @@ main.content{
   .live-badge{font-size:10px;padding:4px 8px}
   .ph{padding:11px 13px}
   .qrow{padding:10px 13px}
+  .qrow{align-items:flex-start}
+  .qrow>div{flex:1 1 100% !important}
   .arow{padding:10px 13px}
   .auto-row{padding:11px 13px}
   .qr{padding:10px 13px}
@@ -1121,8 +1140,16 @@ main.content{
   border-radius:var(--r-sm);box-shadow:var(--sh-md);max-height:220px;overflow-y:auto;
   -webkit-overflow-scrolling:touch}
 .aura-dd-opt{padding:8px 12px;font-size:12.5px;color:var(--text-primary);cursor:pointer;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border)}
+.aura-dd-opt:last-child{border-bottom:none}
 .aura-dd-opt:hover,.aura-dd-opt.hi{background:var(--blue-bg);color:var(--blue)}
+/* On phones, ditch the cramped input-width popover for a roomy,
+   full-width list — same big, easy-to-tap row style as the native
+   Food Timing picker — so medicine names are never cut off. */
+@media(max-width:560px){
+  .aura-dd-menu{border-radius:var(--r-md);max-height:46vh}
+  .aura-dd-opt{padding:14px 16px;font-size:14px;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.35}
+}
 
 /* ══ FOLLOW-UP MANAGEMENT SYSTEM ══ */
 .fu-row{padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
@@ -1319,14 +1346,10 @@ main.content{
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         <span data-i18n="nav_dashboard">Dashboard</span>
       </button>
-      <button class="nb" onclick="nav('analytics',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-        <span data-i18n="nav_reports">Reports</span>
-      </button>
       <button class="nb" onclick="nav('missed-calls',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23" stroke-width="1.8"/></svg></span>
         <span>Missed Call Recovery</span>
-        <span class="nb-badge">5</span>
+        <span class="nb-badge" id="mcr-nav-badge" style="display:none">0</span>
       </button>
     <button class="nb" onclick="nav('prescriptions',this)">
   <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
@@ -1383,7 +1406,7 @@ main.content{
       <div class="hdr-r">
         <div class="date-pill">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span data-i18n="date_label">Friday, 22 May 2026</span>
+          <span id="live-date-time">—</span>
         </div>
         <button class="hdr-lang-btn" onclick="openLangModal()" id="hdr-lang-btn" aria-label="Change language">
           <span class="lang-dot"></span>
@@ -1423,7 +1446,7 @@ main.content{
         <div class="sh">
           <div>
             <h1 class="st" data-i18n="dash_greeting">Good morning, Dr. Laskar</h1>
-            <p class="ss" data-i18n="dash_subtitle">Clinic overview · Friday, 22 May 2026</p>
+            <p class="ss" id="dash-live-subtitle">Clinic overview · —</p>
             <span style="display:inline-block;margin-top:4px;padding:2px 8px;background:#e53935;color:#fff;font-size:10px;font-weight:700;border-radius:4px;letter-spacing:.5px">BUILD 8</span>
           </div>
           <button class="add-btn" onclick="openAddAppointmentModal()">
@@ -1607,15 +1630,15 @@ main.content{
         <div style="display:flex;flex-direction:column;gap:10px">
           <div class="tmpl-card">
             <div class="tmpl-head">
-              <p class="tmpl-title">14-Day Follow-Up Reminder</p>
+              <p class="tmpl-title">Follow-Up Reminder</p>
               <span class="tmpl-badge green">Auto-Active</span>
             </div>
             <div class="tmpl-body">
-              <div class="tmpl-preview">"Dear [Patient Name], it's been 14 days since your visit at Laskar Health Clinic. Time for your follow-up! Please call us or reply to book. — Dr. Laskar"</div>
+              <div class="tmpl-preview">"Dear [Patient Name], it's time for your follow-up visit at Laskar Health Clinic. Please call us or reply to book. — Dr. Laskar"</div>
               <div class="tmpl-footer">
                 <p class="tmpl-trigger">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Triggers 14 days after last visit
+                  Triggers when a patient is due for follow-up
                 </p>
                 <button class="tmpl-send-btn" onclick="sendTemplate('follow-up')">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
@@ -1664,12 +1687,6 @@ main.content{
           </div>
         </div>
 
-        <div class="panel">
-          <div class="ph">
-            <div class="pt" data-i18n="quick_actions">Quick Actions — Recent Patients</div>
-          </div>
-          <div id="quick-list"></div>
-        </div>
       </div>
 
       <!-- ── ANALYTICS ── -->
@@ -1681,21 +1698,12 @@ main.content{
           </div>
         </div>
         <div class="mg" id="ana-metrics"></div>
-        <div class="two-col">
-          <div class="panel">
-            <div class="ph">
-              <div class="pt" data-i18n="auto_breakdown">Automation Breakdown</div>
-              <span class="pb pb-b" data-i18n="thirty_days">30 days</span>
-            </div>
-            <div id="auto-stats"></div>
+        <div class="panel">
+          <div class="ph">
+            <div class="pt" data-i18n="auto_breakdown">Automation Breakdown</div>
+            <span class="pb pb-b" data-i18n="thirty_days">30 days</span>
           </div>
-          <div class="panel">
-            <div class="ph">
-              <div class="pt" data-i18n="health_summary">Patient Health Summary</div>
-              <span class="pb pb-g" data-i18n="current">Current</span>
-            </div>
-            <div id="pat-stats"></div>
-          </div>
+          <div id="auto-stats"></div>
         </div>
       </div>
 
@@ -1712,18 +1720,18 @@ main.content{
         <div class="mcr-mg">
           <div class="mcr-mc">
             <p class="mcr-mc-lbl">Missed Calls</p>
-            <p class="mcr-mc-val">38</p>
+            <p class="mcr-mc-val">0</p>
             <p class="mcr-mc-sub">This month</p>
           </div>
           <div class="mcr-mc">
             <p class="mcr-mc-lbl">Recovered</p>
-            <p class="mcr-mc-val" style="color:var(--green)">24</p>
+            <p class="mcr-mc-val" style="color:var(--green)">0</p>
             <p class="mcr-mc-sub">Bookings made</p>
           </div>
           <div class="mcr-mc">
             <p class="mcr-mc-lbl">Recovery Rate</p>
-            <p class="mcr-mc-val" style="color:var(--blue)">63%</p>
-            <p class="mcr-mc-sub">&#x2191; from 41%</p>
+            <p class="mcr-mc-val" style="color:var(--blue)">—</p>
+            <p class="mcr-mc-sub">No data yet</p>
           </div>
         </div>
 
@@ -1758,55 +1766,11 @@ main.content{
         <div class="panel">
           <div class="ph">
             <div class="pt">Recent Missed Calls</div>
-            <span class="pb pb-r">5 pending</span>
+            <span class="pb pb-g" id="mcr-pending-badge">0 pending</span>
           </div>
-          <div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">+91 98456 77890</p>
-                <p class="mcr-time">Today, 10:42 AM · 2 missed calls</p>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span class="mcr-status mcr-pending">WhatsApp Pending</span>
-                <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="alert('WhatsApp sent to +91 98456 77890')">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  Send
-                </button>
-              </div>
-            </div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">Priya Sengupta</p>
-                <p class="mcr-time">Today, 09:15 AM · Known patient</p>
-              </div>
-              <span class="mcr-status mcr-sent">WA Sent</span>
-            </div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">+91 70015 33214</p>
-                <p class="mcr-time">Yesterday, 04:30 PM · 1 missed call</p>
-              </div>
-              <span class="mcr-status mcr-booked">&#x2713; Booked</span>
-            </div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">Ruma Das</p>
-                <p class="mcr-time">Yesterday, 02:10 PM · Known patient</p>
-              </div>
-              <span class="mcr-status mcr-booked">&#x2713; Booked</span>
-            </div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">+91 90023 11009</p>
-                <p class="mcr-time">Yesterday, 11:50 AM · 3 missed calls</p>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span class="mcr-status mcr-pending">Pending</span>
-                <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="alert('WhatsApp sent!')">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  Send
-                </button>
-              </div>
+          <div id="mcr-recent-list">
+            <div style="padding:28px 16px;text-align:center;color:var(--text-tertiary);font-size:12.5px">
+              No missed calls yet. As calls come in, they'll show up here for WhatsApp recovery.
             </div>
           </div>
         </div>
@@ -1826,9 +1790,29 @@ main.content{
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span data-i18n="rx_new">New Prescription</span>
       </div>
-      <span class="pb pb-g">1-Click · Auto WhatsApp</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="qbtn" style="padding:5px 10px;font-size:10px;gap:4px" onclick="openVoiceModal('prescription')" title="Dictate this prescription">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+          Voice Entry
+        </button>
+        <span class="pb pb-g">1-Click · Auto WhatsApp</span>
+      </div>
     </div>
     <div class="mb" style="padding:16px 17px">
+      <!-- Compact patient badge — shown instead of the editable fields
+           below whenever a patient has already been resolved (e.g. by
+           the voice appointment flow). The doctor only sees the
+           prescription creation area; "Change Patient" reveals the
+           full fields as a manual fallback. -->
+      <div id="rx-patient-badge" style="display:none;align-items:center;gap:10px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);padding:11px 13px">
+        <div style="width:34px;height:34px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:15px;flex-shrink:0" id="rx-patient-badge-av">P</div>
+        <div style="flex:1;min-width:0">
+          <p style="font-size:13px;font-weight:700;color:var(--text-primary)" id="rx-patient-badge-name">Patient</p>
+          <p style="font-size:10.5px;color:var(--text-secondary)" id="rx-patient-badge-phone">—</p>
+        </div>
+        <button class="qbtn" style="padding:6px 10px;font-size:10.5px" onclick="rxShowPatientFields()">Change Patient</button>
+      </div>
+      <div id="rx-patient-fields-wrap">
       <div>
   <label class="flbl">Select Patient (auto-fills name, number, gender, age, weight &amp; ID)</label>
   <select class="finput" id="rx-patient" onchange="rxPickPatient()" style="color:var(--text-primary)">
@@ -1836,7 +1820,7 @@ main.content{
   </select>
   <p class="qp-hint" id="rx-patient-id-hint">Patient ID: —</p>
 </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="rx-2col">
         <div>
           <label class="flbl">Patient Name <span style="color:var(--red)">*</span></label>
           <input type="text" class="finput" id="rx-name" placeholder="Full name" autocapitalize="words"/>
@@ -1851,7 +1835,7 @@ main.content{
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="rx-2col">
         <div>
           <label class="flbl">Gender / Age</label>
           <div class="finput" id="rx-gender-age" style="display:flex;align-items:center;color:var(--text-tertiary)">—</div>
@@ -1863,6 +1847,7 @@ main.content{
           <p class="qp-hint">Auto-filled from patient record · editable for this visit</p>
         </div>
       </div>
+      </div><!-- /rx-patient-fields-wrap -->
 
       <div>
         <label class="flbl">Medicines <span style="color:var(--red)">*</span></label>
@@ -2359,20 +2344,29 @@ main.content{
 
   <!-- BOTTOM NAV -->
   <nav class="bnav" id="bnav">
+    <button class="bn" onclick="navMob('missed-calls',this)" data-t="missed-calls">
+      <div class="bn-ico">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23" stroke-width="1.8"/></svg>
+      </div>
+      <span>Calls</span>
+    </button>
+    <button class="bn-fab" onclick="openAppointmentChoiceModal()" aria-label="New appointment — manual or voice">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
     <button class="bn on" onclick="navMob('dashboard',this)" data-t="dashboard">
       <div class="bn-ico">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       </div>
       <span data-i18n="bn_home">Home</span>
     </button>
-    <button class="bn-fab" onclick="openAddAppointmentModal()" aria-label="New appointment">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <button class="bn-fab bn-fab-green" onclick="openPrescriptionChoiceModal()" aria-label="New prescription — manual or voice">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     </button>
-    <button class="bn" onclick="navMob('analytics',this)" data-t="analytics">
+    <button class="bn" onclick="navMob('settings',this)" data-t="settings">
       <div class="bn-ico">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
       </div>
-      <span data-i18n="bn_reports">Reports</span>
+      <span data-i18n="nav_settings">Settings</span>
     </button>
   </nav>
 </div><!-- /#app -->
@@ -2600,6 +2594,71 @@ main.content{
   </div>
 </div>
 
+<!-- MANUAL / VOICE CHOICE MODAL — shown when tapping either bottom-nav FAB -->
+<div class="mod-ov" id="choice-modal">
+  <div class="modal" style="max-width:340px">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <p class="mtitle" id="choice-modal-title">New Appointment</p>
+      </div>
+      <button class="mclose" onclick="closeModal('choice-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb" style="gap:10px">
+      <button class="qbtn" style="justify-content:center;min-height:52px;font-size:13px;gap:8px" id="choice-manual-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        Manual Entry
+      </button>
+      <button class="qbtn" style="justify-content:center;min-height:52px;font-size:13px;gap:8px;background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" id="choice-voice-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        Voice Entry
+      </button>
+      <p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Tap Voice → speak naturally → tap Send. Everything else happens automatically.</p>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE INPUT MODAL — shared by Voice Appointment and Voice Prescription -->
+<div class="mod-ov" id="voice-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" id="voice-modal-icon" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <p class="mtitle" id="voice-modal-title">Voice Appointment</p>
+      </div>
+      <button class="mclose" onclick="closeVoiceModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div id="voice-guide-box" style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-sm);padding:11px 13px">
+        <p id="voice-guide-title" style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:5px">Please say:</p>
+        <ol id="voice-guide-list" style="margin:0 0 0 16px;padding:0;font-size:11.5px;color:var(--text-secondary);line-height:1.75"></ol>
+      </div>
+      <div style="text-align:center;padding:6px 0 2px">
+        <div id="voice-pulse" style="width:60px;height:60px;border-radius:50%;background:var(--blue-bg);border:2px solid var(--blue-border);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--blue)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <p id="voice-status-text" style="font-size:12px;color:var(--text-secondary)">Starting microphone…</p>
+      </div>
+      <div id="voice-transcript" style="min-height:80px;max-height:150px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;font-size:12.5px;color:var(--text-primary);line-height:1.6"></div>
+      <div style="display:flex;gap:8px">
+        <button class="msub" id="voice-finish-btn" style="flex:1;background:var(--red);box-shadow:0 2px 8px rgba(194,56,56,.25)" onclick="voiceManualFinish()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          <span id="voice-finish-lbl">Stop / Finish</span>
+        </button>
+      </div>
+      <p id="voice-hint-text" style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Listening starts automatically. Everything else happens on its own — no extra clicks needed.</p>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ══ SUPABASE CLIENT ══ */
 const SUPABASE_URL = 'https://qquyqejqrxfhtmidmgkb.supabase.co';
@@ -2635,7 +2694,7 @@ const T={
     q_date_no_appts:"No appointments on this date",q_date_no_appts_sub:"Try picking a different date, or clear it to return to filters.",
     start_consult:"Start Consultation",gen_rx_short:"Prescription",complete_visit:"Complete Visit",
     wa_title:"WhatsApp Activity",wa_sub:"Automate patient communications and follow-ups",
-    engine_live:"◉ Engine Live",quick_actions:"Quick Actions — Recent Patients",
+    engine_live:"◉ Engine Live",
     ana_title:"Reports & Analytics",ana_sub:"Last 30 days · Updated just now",
     auto_breakdown:"Automation Breakdown",thirty_days:"30 days",
     health_summary:"Patient Health Summary",current:"Current",
@@ -2666,7 +2725,7 @@ const T={
     metric_reviews:"Google Reviews",metric_success:"Automation Success",
     metric_sent_sub:"Last 30 days",metric_revisits:"Confirmed revisits",
     metric_generated:"Generated this month",metric_delivery:"Delivery rate",
-    auto_confirmations:"Confirmations Sent",auto_reminders:"14-Day Reminders",
+    auto_confirmations:"Confirmations Sent",auto_reminders:"Follow-up Reminder",
     auto_followup:"Follow-Up Messages",auto_review_req:"Review Requests",
     pat_active:"Active",pat_atrisk:"At Risk",pat_inactive:"Inactive",
     quick_send_reminder:"Send Reminder",quick_followup:"Follow-Up",
@@ -2704,7 +2763,7 @@ const T={
     q_date_no_appts:"এই তারিখে কোনো অ্যাপয়েন্টমেন্ট নেই",q_date_no_appts_sub:"অন্য একটি তারিখ বেছে নিন, বা ফিল্টারে ফিরে যেতে এটি সাফ করুন।",
     start_consult:"পরামর্শ শুরু করুন",gen_rx_short:"প্রেসক্রিপশন",complete_visit:"ভিজিট সম্পন্ন করুন",
     wa_title:"হোয়াটসঅ্যাপ কার্যক্রম",wa_sub:"রোগীদের যোগাযোগ ও ফলো-আপ স্বয়ংক্রিয় করুন",
-    engine_live:"◉ ইঞ্জিন চালু",quick_actions:"দ্রুত পদক্ষেপ — সাম্প্রতিক রোগী",
+    engine_live:"◉ ইঞ্জিন চালু",
     ana_title:"রিপোর্ট ও বিশ্লেষণ",ana_sub:"শেষ ৩০ দিন · এইমাত্র আপডেট হয়েছে",
     auto_breakdown:"অটোমেশন বিভাজন",thirty_days:"৩০ দিন",
     health_summary:"রোগীর স্বাস্থ্য সারসংক্ষেপ",current:"বর্তমান",
@@ -2735,7 +2794,7 @@ const T={
     metric_reviews:"গুগল রিভিউ",metric_success:"অটোমেশন সাফল্য",
     metric_sent_sub:"শেষ ৩০ দিন",metric_revisits:"নিশ্চিত পুনর্ভিজিট",
     metric_generated:"এই মাসে তৈরি",metric_delivery:"ডেলিভারি হার",
-    auto_confirmations:"নিশ্চিতকরণ পাঠানো",auto_reminders:"১৪ দিনের রিমাইন্ডার",
+    auto_confirmations:"নিশ্চিতকরণ পাঠানো",auto_reminders:"ফলো-আপ রিমাইন্ডার",
     auto_followup:"ফলো-আপ বার্তা",auto_review_req:"রিভিউ অনুরোধ",
     pat_active:"সক্রিয়",pat_atrisk:"ঝুঁকিতে",pat_inactive:"নিষ্ক্রিয়",
     quick_send_reminder:"রিমাইন্ডার পাঠান",quick_followup:"ফলো-আপ",
@@ -2782,13 +2841,60 @@ const DB={
 
 const AUTOS=[
   {label_en:"Appointment Confirmation",label_bn:"অ্যাপয়েন্টমেন্ট নিশ্চিতকরণ",desc_en:"Sent 24h before scheduled visit",desc_bn:"নির্ধারিত ভিজিটের ২৪ ঘণ্টা আগে পাঠানো হয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,on:true},
-  {label_en:"14-Day Return Reminder",label_bn:"১৪ দিনের রিটার্ন রিমাইন্ডার",desc_en:"Auto-reminds patients 14 days post-visit",desc_bn:"ভিজিটের ১৪ দিন পর রোগীদের স্বয়ংক্রিয়ভাবে মনে করিয়ে দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
-  {label_en:"48-Hour Follow-Up",label_bn:"৪৮ ঘণ্টার ফলো-আপ",desc_en:"Check-in message 2 days after appointment",desc_bn:"অ্যাপয়েন্টমেন্টের ২ দিন পর চেক-ইন বার্তা",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,on:true},
+  {label_en:"Follow-Up Reminder",label_bn:"ফলো-আপ রিমাইন্ডার",desc_en:"Auto-reminds patients to book their follow-up visit",desc_bn:"রোগীদের ফলো-আপ ভিজিট বুক করতে স্বয়ংক্রিয়ভাবে মনে করিয়ে দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
   {label_en:"Missed Appointment Recovery",label_bn:"মিস অ্যাপয়েন্টমেন্ট পুনরুদ্ধার",desc_en:"Smart recovery flow for missed visits",desc_bn:"মিস হওয়া ভিজিটের জন্য স্মার্ট রিকভারি প্রবাহ",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.01"/></svg>`,on:true},
   {label_en:"Google Review Request",label_bn:"গুগল রিভিউ অনুরোধ",desc_en:"Asks for review 2h after completed appointment",desc_bn:"অ্যাপয়েন্টমেন্টের ২ ঘণ্টা পর রিভিউ চায়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,on:false},
   {label_en:"WhatsApp Broadcast",label_bn:"হোয়াটসঅ্যাপ ব্রডকাস্ট",desc_en:"Send health campaigns to patient segments",desc_bn:"রোগীদের বিভাগে স্বাস্থ্য প্রচারণা পাঠান",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,on:false},
   {label_en:"AI Reception Assistant",label_bn:"এআই রিসেপশন সহকারী",desc_en:"Answers common patient questions automatically",desc_bn:"সাধারণ রোগীর প্রশ্নের স্বয়ংক্রিয় উত্তর দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
 ];
+
+/* Missed Call Recovery — starts empty. The sidebar/mobile badge and
+   the "X pending" badge only appear once a real missed call actually
+   comes in and is awaiting a WhatsApp recovery message; nothing here
+   is placeholder/demo data. */
+let MISSED_CALLS=[];
+function renderMcr(){
+  const pending=MISSED_CALLS.filter(c=>c.status==='pending').length;
+  const navBadge=document.getElementById('mcr-nav-badge');
+  if(navBadge){
+    if(pending>0){ navBadge.textContent=String(pending); navBadge.style.display=''; }
+    else navBadge.style.display='none';
+  }
+  const pendBadge=document.getElementById('mcr-pending-badge');
+  if(pendBadge){
+    pendBadge.textContent=pending+' pending';
+    pendBadge.className='pb '+(pending>0?'pb-r':'pb-g');
+  }
+  const list=document.getElementById('mcr-recent-list');
+  if(list){
+    if(!MISSED_CALLS.length){
+      list.innerHTML='<div style="padding:28px 16px;text-align:center;color:var(--text-tertiary);font-size:12.5px">No missed calls yet. As calls come in, they\'ll show up here for WhatsApp recovery.</div>';
+    }else{
+      list.innerHTML=MISSED_CALLS.map(c=>`
+        <div class="mcr-row">
+          <div>
+            <p class="mcr-name">${c.name}</p>
+            <p class="mcr-time">${c.time}</p>
+          </div>
+          ${c.status==='pending'?`
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="mcr-status mcr-pending">WhatsApp Pending</span>
+            <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="mcrSendRecovery('${c.id}')">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              Send
+            </button>
+          </div>`:c.status==='sent'?`<span class="mcr-status mcr-sent">WA Sent</span>`:`<span class="mcr-status mcr-booked">&#x2713; Booked</span>`}
+        </div>`).join('');
+    }
+  }
+}
+function mcrSendRecovery(id){
+  const c=MISSED_CALLS.find(x=>x.id===id);
+  if(!c)return;
+  c.status='sent';
+  renderMcr();
+  showToast('WhatsApp sent to '+c.name);
+}
 
 const TABS_KEYS={prescriptions:"nav_rx",dashboard:"nav_dashboard",patients:"nav_patients",whatsapp:"nav_whatsapp",analytics:"nav_reports","missed-calls":"nav_dashboard",book:"nav_dashboard",settings:"nav_settings",audit:"nav_audit"};
 let mkt="india";
@@ -2822,6 +2928,30 @@ function applyTranslations(){
   if(stgTheme)stgTheme.textContent=currentTheme==="dark"?t("theme_light"):t("theme_dark");
 }
 
+/* ══ LIVE DATE & TIME — always reflects the user's actual device
+   clock (never a hard-coded date), updates every few seconds so the
+   header pill and dashboard subtitle never go stale. ══ */
+function _auraFormatDateTime(){
+  var now=new Date();
+  var locale=currentLang==="bn"?"bn-BD":"en-GB";
+  var dateStr=now.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  var timeStr=now.toLocaleTimeString(locale,{hour:"numeric",minute:"2-digit",hour12:true});
+  return {dateStr:dateStr,timeStr:timeStr};
+}
+function updateLiveClock(){
+  var dt=_auraFormatDateTime();
+  var pill=document.getElementById("live-date-time");
+  if(pill)pill.textContent=dt.dateStr+" · "+dt.timeStr+(currentLang==="bn"?"":" (live)");
+  var sub=document.getElementById("dash-live-subtitle");
+  if(sub){
+    var base=currentLang==="bn"?"ক্লিনিক সারসংক্ষেপ":"Clinic overview";
+    sub.textContent=base+" · "+dt.dateStr;
+  }
+}
+setInterval(updateLiveClock,15000);
+document.addEventListener("DOMContentLoaded",updateLiveClock);
+updateLiveClock();
+
 function chipQ(s){
   const cls={"Waiting":"ch-wait","Checked In":"ch-in","In Consultation":"ch-prog","Completed":"ch-done","Cancelled":"ch-miss"};
   return`<span class="chip ${cls[s]||'ch-wait'}" style="font-size:9.5px">${s||'Waiting'}</span>`;
@@ -2850,19 +2980,20 @@ function chipP(s){
 
 const WA_SVG=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
 
+const WA_BRAND_ICON_LG=`<svg width="30" height="30" viewBox="0 0 24 24" fill="var(--green)" stroke="none"><path d="M12.04 2.003c-5.46 0-9.9 4.43-9.9 9.9 0 1.746.458 3.45 1.328 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.004c5.46 0 9.9-4.43 9.9-9.9 0-2.645-1.03-5.13-2.902-6.998a9.83 9.83 0 0 0-6.998-2.9zm5.8 14.16c-.245.688-1.415 1.32-1.93 1.4-.494.078-1.12.11-1.804-.113-.416-.137-.95-.31-1.64-.605-2.887-1.247-4.774-4.15-4.917-4.343-.144-.194-1.174-1.564-1.174-2.983 0-1.42.744-2.117 1.008-2.407.264-.29.577-.363.77-.363l.55.01c.176.008.412-.067.645.492.244.577.83 1.994.902 2.14.072.144.12.313.024.507-.096.194-.144.313-.288.482-.144.17-.303.38-.433.51-.144.145-.295.303-.127.594.168.29.744 1.23 1.598 1.993 1.098.98 2.024 1.283 2.312 1.428.288.145.457.12.626-.073.168-.194.72-.84.912-1.128.192-.288.384-.24.647-.145.264.096 1.674.79 1.962.933.288.145.48.216.55.336.072.12.072.694-.17 1.38z"/></svg>`;
 function renderDash(skipQueue){
   const d=DB[mkt];
   const am=d.actionMetrics;
   const cards=[
     {lbl:t("metric_total_patients"),val:Number(d.metrics.patients).toLocaleString(),sub:t("metric_all_time"),trend:`<span class="up">↑ 3.2%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`},
-    {lbl:t("metric_reports"),sub:t("metric_reports_sub"),noVal:true,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="20 6 9 17 4 12"/></svg>`},
-    {lbl:t("metric_wa_activity"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">↑ auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
+    {lbl:t("metric_reports"),sub:t("metric_reports_sub"),noVal:true,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>`},
+    {lbl:t("metric_wa_activity"),sub:t("metric_sent_today"),waIcon:true,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
   ];
   document.getElementById("dash-metrics").innerHTML=cards.map((c,i)=>`
     <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===1?' id="mc-reports" style="cursor:pointer" onclick="goToReports()" title="Open Reports & Analytics"':''}${i===2?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
       <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
-      ${c.noVal?'':'<p class="mc-val">'+c.val+'</p>'}
-      <p class="mc-sub"${c.noVal?' style="margin-top:0"':''}>${c.sub}${c.trend?(' · '+c.trend):''}</p>
+      ${c.waIcon?'<div style="display:flex;align-items:center;justify-content:center;padding:2px 0 4px">'+WA_BRAND_ICON_LG+'</div>':(c.noVal?'':'<p class="mc-val">'+c.val+'</p>')}
+      <p class="mc-sub"${(c.noVal||c.waIcon)?' style="margin-top:0;text-align:center"':''}>${c.sub}${c.trend?(' · '+c.trend):''}</p>
     </div>`).join("");
 
   if(!skipQueue)renderQueue();
@@ -3248,21 +3379,6 @@ function renderWA(){
         <span class="tknob"></span>
       </button>
     </div>`).join("");
-
-  const pats=DB[mkt].patients.slice(0,5);
-  const acts=[t("quick_send_reminder"),t("quick_followup"),t("quick_confirm"),t("quick_review")];
-  document.getElementById("quick-list").innerHTML=pats.map(p=>`
-    <div class="qr">
-      <div class="qr-inner">
-        <div style="display:flex;align-items:center;gap:9px">
-          <div class="qav">${p.name.charAt(0)}</div>
-          <div><p class="qrname">${p.name}</p><p class="qrphone">${p.phone}</p></div>
-        </div>
-        <div class="qbtns">
-          ${acts.map(b=>`<button class="qbtn" onclick='openWA(${JSON.stringify(p)})'>${b}</button>`).join("")}
-        </div>
-      </div>
-    </div>`).join("");
 }
 
 function renderAna(){
@@ -3270,7 +3386,6 @@ function renderAna(){
   const cards=[
     {lbl:t("metric_sent"),val:a.sent,sub:t("metric_sent_sub"),trend:`<span class="up">↑ 12.4%</span>`},
     {lbl:t("metric_returning"),val:a.returning,sub:t("metric_revisits"),trend:`<span class="up">↑ 7.1%</span>`},
-    {lbl:t("metric_reviews"),val:a.reviews,sub:t("metric_generated"),trend:`<span class="up">↑ 22.3%</span>`},
     {lbl:t("metric_success"),val:a.success,sub:t("metric_delivery"),trend:`<span class="up">↑ 1.8%</span>`},
   ];
   document.getElementById("ana-metrics").innerHTML=cards.map(c=>`
@@ -3281,33 +3396,12 @@ function renderAna(){
     </div>`).join("");
 
   const bars=[
-    {lbl:t("auto_confirmations"),val:Math.round(a.sent*.38),pct:"38%"},
     {lbl:t("auto_reminders"),val:Math.round(a.sent*.31),pct:"31%"},
-    {lbl:t("auto_followup"),val:Math.round(a.sent*.21),pct:"21%"},
-    {lbl:t("auto_review_req"),val:Math.round(a.sent*.10),pct:"10%"},
   ];
   document.getElementById("auto-stats").innerHTML=bars.map(b=>`
     <div class="abar-row">
       <div class="abar-top"><span class="abar-lbl">${b.lbl}</span><span class="abar-val">${b.val}</span></div>
       <div class="abar-bg"><div class="abar-fill" style="width:${b.pct}"></div></div>
-    </div>`).join("");
-
-  const pats=DB[mkt].patients;
-  const active=pats.filter(p=>p.status==="Active").length;
-  const atRisk=pats.filter(p=>p.status==="At Risk").length;
-  const inactive=pats.filter(p=>p.status==="Inactive").length;
-  const total=pats.length;
-  document.getElementById("pat-stats").innerHTML=[
-    {lbl:t("pat_active"),count:active,color:"var(--green)",pct:Math.round((active/total)*100)},
-    {lbl:t("pat_atrisk"),count:atRisk,color:"var(--amber)",pct:Math.round((atRisk/total)*100)},
-    {lbl:t("pat_inactive"),count:inactive,color:"var(--red)",pct:Math.round((inactive/total)*100)},
-  ].map(s=>`
-    <div class="pstat-row">
-      <div class="pstat-top">
-        <div class="pstat-l"><span class="dot" style="background:${s.color}"></span><span class="pstat-lbl">${s.lbl}</span></div>
-        <span class="pstat-count">${s.count} <span class="pstat-tot">/ ${total}</span></span>
-      </div>
-      <div class="abar-bg"><div class="abar-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
     </div>`).join("");
 }
 
@@ -3323,7 +3417,7 @@ function renderAll(){
   const bookDocEl=document.getElementById("book-doc-name");
   if(bookDocEl)bookDocEl.textContent=d.doc.name;
   applyTranslations();
-  renderDash();renderPats();renderWA();renderAna();renderSettings();
+  renderDash();renderPats();renderWA();renderAna();renderSettings();renderMcr();
 }
 
 function renderSettings(){
@@ -3382,6 +3476,7 @@ function setLang(lang){
   currentLang=lang;
   updateLangUI();
   renderAll();
+  updateLiveClock();
   closeLangModal();
   try{localStorage.setItem("aura_lang",lang)}catch(e){}
 }
@@ -3811,7 +3906,7 @@ function resetBooking(){
   selectedSlot=null;
 }
 function copyBookingLink(){
- const base=window.location.href.replace(/index\.html.*$/,"").replace(/\?.*$/,"");
+ const base=window.location.href.replace(/[^/]*\.html.*$/,"").replace(/\?.*$/,"");
   const link=base+"book.html";
   try{navigator.clipboard.writeText(link);alert("Booking link copied!\n"+link);}
   catch(e){alert("Booking link:\n"+link);}
@@ -4005,21 +4100,21 @@ function renderQueue(){
     return;
   }
   el.innerHTML=q.map(function(p){
-    var dateLbl=((_dashQueueFilter!=='today')||_dashQueueDate)?('<span style="color:var(--text-tertiary);margin-left:5px">· '+p.date+'</span>'):'';
+    var dateLbl=((_dashQueueFilter!=='today')||_dashQueueDate)?('<span style="color:var(--text-tertiary);margin-left:5px;white-space:nowrap">· '+_fuPrettyDate(p.date)+'</span>'):'';
     return `
     <div class="qrow" style="flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
-        <div class="token">${p.serial}</div>
+      <div style="display:flex;align-items:flex-start;gap:9px;min-width:0;flex:1 1 180px${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
+        <div class="token" style="flex-shrink:0">${p.serial}</div>
         <div style="min-width:0">
-          <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
-          <p class="qtime">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            ${p.time}${dateLbl}
+          <p class="qname">${p.name}</p>
+          <p class="qtime" style="flex-wrap:wrap">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span style="white-space:nowrap">${p.time}</span>${dateLbl}
           </p>
           ${p.reason?('<p class="qtime" style="margin-top:2px;color:var(--text-secondary)">'+p.reason+'</p>'):''}
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0">
         <span style="margin-right:2px">${chipQ(p.status)}</span>
         ${_queueActionButtons(p)}
       </div>
@@ -4088,18 +4183,18 @@ function renderFollowupQueue(){
       status:st.label,type:'followup',followupId:r.id,serial:i+1};
     return `
     <div class="qrow" style="flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
-        <div class="token">${p.serial}</div>
+      <div style="display:flex;align-items:flex-start;gap:9px;min-width:0;flex:1 1 180px${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
+        <div class="token" style="flex-shrink:0">${p.serial}</div>
         <div style="min-width:0">
-          <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
+          <p class="qname">${p.name}</p>
           <p class="qtime">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             ${p.time}
           </p>
           <p class="qtime" style="margin-top:2px;color:var(--text-secondary)">${p.reason}</p>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0">
         <span class="fu-badge ${st.cls}" style="margin-right:2px">${st.label}</span>
         ${_queueActionButtons(p)}
       </div>
@@ -4524,6 +4619,7 @@ async function addAppointment(){
   await fetchAppointments();
   await fetchPatients();
   showToast('Appointment saved for '+name.trim());
+  return {patientId:patientId, appointmentId:(ins.data&&ins.data.id)||null};
 }
 
 /* ══ TOAST ══ */
@@ -4540,7 +4636,7 @@ function showToast(msg){
 
 /* ══ FOLLOW-UP TEMPLATES ══ */
 function sendTemplate(type){
-  const msgs={"follow-up":"14-day follow-up reminder sent to 3 patients due for a visit!","medication":"Medication reminder sent to selected patients.","review":"Review request sent to today's 6 completed patients!"};
+  const msgs={"follow-up":"Follow-up reminder sent to 3 patients due for a visit!","medication":"Medication reminder sent to selected patients.","review":"Review request sent to today's 6 completed patients!"};
   showToast(msgs[type]||"Message sent!");
   if(type==='medication')_auraLogAudit('Medicine Reminder Scheduled', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
   else if(type==='follow-up')_auraLogAudit('Follow-up Reminder Scheduled', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
@@ -4565,9 +4661,29 @@ function _auraDD_closeActive(){
 }
 function _auraDD_position(menu,input){
   var r=input.getBoundingClientRect();
-  menu.style.left=r.left+"px";
-  menu.style.top=(r.bottom+2)+"px";
-  menu.style.width=r.width+"px";
+  if(window.innerWidth<=560){
+    /* Full-width panel, same idea as the native select's own
+       full-width picker — never as narrow as the medicine/dose
+       input itself, so option text is never squeezed or truncated. */
+    var margin=16;
+    menu.style.left=margin+"px";
+    menu.style.width=(window.innerWidth-margin*2)+"px";
+    var spaceBelow=window.innerHeight-r.bottom;
+    if(spaceBelow<160 && r.top>160){
+      /* not enough room below the field (keyboard is covering it) —
+         show the list above the field instead of off-screen */
+      menu.style.top="";
+      menu.style.bottom=(window.innerHeight-r.top+6)+"px";
+    }else{
+      menu.style.bottom="";
+      menu.style.top=(r.bottom+6)+"px";
+    }
+  }else{
+    menu.style.bottom="";
+    menu.style.left=r.left+"px";
+    menu.style.top=(r.bottom+2)+"px";
+    menu.style.width=r.width+"px";
+  }
 }
 function _auraDD_options(input,datalistId){
   var q=(input.value||"").trim().toLowerCase();
@@ -4589,7 +4705,7 @@ function _auraDD_open(input,datalistId){
   _auraDD_active={input:input,menu:menu};
 
   Array.prototype.forEach.call(menu.querySelectorAll(".aura-dd-opt"),function(opt){
-    opt.addEventListener("mousedown",function(e){
+    opt.addEventListener("pointerdown",function(e){
       e.preventDefault();
       input.value=opt.textContent;
       input.dispatchEvent(new Event("input",{bubbles:true}));
@@ -4608,7 +4724,7 @@ function attachAuraDropdown(input,datalistId){
     if(e.key==="Enter"||e.key==="Tab"){_auraDD_closeActive();}
   });
 }
-document.addEventListener("mousedown",function(e){
+document.addEventListener("pointerdown",function(e){
   if(!_auraDD_active)return;
   var m=_auraDD_active.menu,inp=_auraDD_active.input;
   if(e.target===inp||(m&&m.contains(e.target)))return;
@@ -4617,8 +4733,17 @@ document.addEventListener("mousedown",function(e){
 document.addEventListener("keydown",function(e){
   if(e.key==="Escape")_auraDD_closeActive();
 });
-window.addEventListener("scroll",function(){if(_auraDD_active)_auraDD_closeActive();},true);
-window.addEventListener("resize",function(){if(_auraDD_active)_auraDD_closeActive();});
+/* On mobile, focusing an input opens the on-screen keyboard, which
+   fires resize/scroll events as the viewport shrinks and the page
+   scrolls the field into view. That used to be treated as "the user
+   clicked away" and closed the menu the instant it opened. Now these
+   events just reposition the already-open dropdown instead. */
+window.addEventListener("resize",function(){if(_auraDD_active)_auraDD_position(_auraDD_active.menu,_auraDD_active.input);});
+window.addEventListener("scroll",function(){if(_auraDD_active)_auraDD_position(_auraDD_active.menu,_auraDD_active.input);},true);
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",function(){if(_auraDD_active)_auraDD_position(_auraDD_active.menu,_auraDD_active.input);});
+  window.visualViewport.addEventListener("scroll",function(){if(_auraDD_active)_auraDD_position(_auraDD_active.menu,_auraDD_active.input);});
+}
 
 /* ══════════════════════════════════════════════════════════════
    PRESCRIPTION MODULE — PDF · Storage · Signed URL · Auto WhatsApp
@@ -4661,7 +4786,6 @@ function addMedRow(name,dose,dur,timing){
   if(!wrap)return;
   var row=document.createElement("div");
   row.className="rx-med-row";
-  row.style.cssText="display:grid;grid-template-columns:1.7fr 0.9fr 0.6fr 1.3fr 30px;gap:6px;margin-bottom:7px;align-items:center";
   var timingOpts=RX_TIMING_OPTIONS.map(function(o){return '<option value="'+o+'"'+(o===(timing||"After Food")?' selected':'')+'>'+o+'</option>';}).join("");
   row.innerHTML=
     '<input type="text" class="finput rx-m-name" placeholder="Medicine (e.g. Paracetamol 500mg)" value="'+(name||"")+'"/>'+
@@ -4937,6 +5061,7 @@ if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; b
   }
   document.getElementById("rx-instr").value="";
   document.getElementById("rx-meds").innerHTML=""; addMedRow();
+  rxHidePatientBadge(); window._rxVoicePatientPreset=false;
   btn.disabled=false;
   btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Generate Prescription';
   fetchPrescriptions();
@@ -4952,6 +5077,7 @@ if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; b
       nav('dashboard', document.querySelector('.nb[onclick*="\'dashboard\'"]'));
     }, 600);
   }
+  return {prescriptionId:rxId, patientId:(document.getElementById("rx-patient")||{}).value||null};
 }
 
 /* ── RETRY: resend only, no new PDF ───────────────────────── */
@@ -5031,6 +5157,39 @@ function populateRxPatients(){
   sel.value=cur;
   if(sel.value!==cur){sel.value="";}
 }
+/* Compact patient badge helpers — used after a voice-created
+   appointment auto-selects a patient, so the doctor only sees the
+   prescription creation area instead of editable name/phone fields.
+   "Change Patient" is the manual fallback that reveals the full
+   Select-Patient dropdown + fields again. */
+function rxShowPatientBadge(p){
+  if(!p)return;
+  var badge=document.getElementById('rx-patient-badge');
+  var wrap=document.getElementById('rx-patient-fields-wrap');
+  if(!badge||!wrap)return;
+  var av=document.getElementById('rx-patient-badge-av');
+  var nm=document.getElementById('rx-patient-badge-name');
+  var ph=document.getElementById('rx-patient-badge-phone');
+  if(av)av.textContent=(p.name||'?').charAt(0);
+  if(nm)nm.textContent=p.name||'Patient';
+  if(ph)ph.textContent=p.phone||'';
+  badge.style.display='flex';
+  wrap.style.display='none';
+}
+function rxShowPatientFields(){
+  var badge=document.getElementById('rx-patient-badge');
+  var wrap=document.getElementById('rx-patient-fields-wrap');
+  if(badge)badge.style.display='none';
+  if(wrap)wrap.style.display='';
+  window._rxVoicePatientPreset=false;
+}
+function rxHidePatientBadge(){
+  var badge=document.getElementById('rx-patient-badge');
+  var wrap=document.getElementById('rx-patient-fields-wrap');
+  if(badge)badge.style.display='none';
+  if(wrap)wrap.style.display='';
+}
+
 function rxPickPatient(){
   var sel=document.getElementById("rx-patient");
   var nameEl=document.getElementById("rx-name");
@@ -5637,7 +5796,7 @@ async function stgMergeGroup(gi){
                                        buttons across Dashboard/Patients/WhatsApp)
      • Medicine Reminder Scheduled  — "Send Now" on the Medication template
      • Follow-up Reminder Scheduled — "Send to Due Patients" on the
-                                       14-Day Follow-Up template
+                                       Follow-Up Reminder template
      • Review Request Sent          — "Send to Today's Patients" on the
                                        Review Request template
 
@@ -7118,6 +7277,443 @@ _auditFriendlyMap['Reminder Resent']={icon:'🔁',en:'Follow-up reminder resent'
 AUDIT_VISIBLE_EVENTS.push('Reminder Sent','Reminder Failed','Reminder Delivered','Reminder Resent');
 if(AUDIT_FILTER_GROUPS['reminders']){
   AUDIT_FILTER_GROUPS['reminders']=AUDIT_FILTER_GROUPS['reminders'].concat(['Reminder Sent','Reminder Failed','Reminder Delivered','Reminder Resent']);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VOICE-FIRST WORKFLOW — Appointment & Prescription
+   Tap the FAB → choose Manual or Voice → (if Voice) speak → tap
+   Send once → everything else happens automatically. Manual entry
+   remains fully available and completely unchanged.
+
+   Uses the browser's built-in Web Speech API (SpeechRecognition) for
+   speech-to-text, then a lightweight keyword/pattern parser to pull
+   out the relevant fields. This is a best-effort, on-device parser —
+   it favours clear, explicit phrasing (e.g. "patient name is Ravi
+   Das, phone number is 98765 43210, age 42, gender male, reason
+   fever, symptoms cough and body ache"). It can always be swapped
+   for a stronger NLU/AI backend later without changing anything
+   else in this workflow, since every call funnels through
+   voiceProcessAppointment()/voiceProcessPrescription() below.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Manual vs Voice choice sheet, opened from the bottom-nav FABs ── */
+function openAppointmentChoiceModal(){
+  document.getElementById('choice-modal-title').textContent='New Appointment';
+  document.getElementById('choice-manual-btn').onclick=function(){closeModal('choice-modal');openAddAppointmentModal();};
+  document.getElementById('choice-voice-btn').onclick=function(){closeModal('choice-modal');openVoiceModal('appointment');};
+  openModal('choice-modal');
+}
+function openPrescriptionChoiceModal(){
+  document.getElementById('choice-modal-title').textContent='New Prescription';
+  document.getElementById('choice-manual-btn').onclick=function(){
+    closeModal('choice-modal');
+    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
+  };
+  document.getElementById('choice-voice-btn').onclick=function(){closeModal('choice-modal');openVoiceModal('prescription');};
+  openModal('choice-modal');
+}
+
+/* ── Shared voice modal state & controls ─────────────────────────
+   One tap → mic starts automatically → doctor/patient speaks
+   naturally → session ends on its own (or on the Stop/Finish
+   button) → the whole workflow runs with no further clicks. ── */
+var _voiceMode=null;          /* 'appointment' | 'prescription' */
+var _voiceRecognition=null;
+var _voiceListening=false;
+var _voiceTranscript='';
+var _voiceLastSpeechAt=0;
+var _voiceSilenceTimer=null;
+var _voiceFinished=false;     /* guards against double-finish (command + timer + button) */
+var _voiceRecordStartedAt=0;  /* session start time — used only to estimate duration for voice_logs */
+
+var VOICE_GUIDES={
+  appointment:[
+    'Full Name','Mobile Number','Gender','Age or Date of Birth','Reason for Visit'
+  ],
+  prescription:[
+    'Medicine Name, Dose &amp; Duration',
+    'Food Timing — Before / After / With Food, Empty Stomach, Bedtime, or As Needed',
+    'Instructions / Advice',
+    'Next Follow-up Date',
+    'Say "Done" or "Finish Prescription" when you\'re finished'
+  ]
+};
+
+/* Appointment sessions end automatically after a short natural pause
+   once something has been said (patients don't need to know a
+   command). Prescription sessions never auto-end on a pause — a
+   doctor thinking or checking a chart is normal — they only end on
+   the "finish"/"done" voice command or the Stop/Finish button. */
+var VOICE_APPT_SILENCE_MS=3500;
+
+/* ══════════════════════════════════════════════════════════════
+   VOICE SESSION LOGGING (transcript + audio recording)
+
+   Requires the `voice_logs` table and a private `voice-recordings`
+   storage bucket (see supabase/2026_07_18_voice_logs.sql). Columns
+   used: id, clinic_id, patient_id, appointment_id, prescription_id,
+   session_type ('appointment'|'prescription'), transcript,
+   audio_path, duration_seconds, doctor_name, created_at.
+
+   Every read/write is defensively wrapped exactly like the rest of
+   this file's background layers (ABDM foundation, audit trail,
+   follow-up management) — a missing table or bucket never blocks
+   the actual appointment/prescription voice workflow, it only means
+   that particular session doesn't get logged. This module is purely
+   additive.
+   ══════════════════════════════════════════════════════════════ */
+
+function _voiceSupported(){
+  return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
+}
+
+function openVoiceModal(mode){
+  _voiceMode=mode;
+  _voiceTranscript='';
+  _voiceFinished=false;
+  var supported=_voiceSupported();
+  document.getElementById('voice-transcript').textContent='';
+  document.getElementById('voice-modal-title').textContent=mode==='appointment'?'Voice Appointment':'Voice Prescription';
+  document.getElementById('voice-guide-title').textContent=mode==='appointment'?'Please say:':'Please dictate:';
+  var list=document.getElementById('voice-guide-list');
+  if(list)list.innerHTML=(VOICE_GUIDES[mode]||[]).map(function(s){return '<li>'+s+'</li>';}).join('');
+  var hint=document.getElementById('voice-hint-text');
+  if(hint)hint.textContent=mode==='appointment'
+    ?'Listening starts automatically and stops on its own once you finish speaking.'
+    :'Take your time — pauses are fine. Say "Done" or "Finish Prescription", or tap Stop/Finish, when you\'re done.';
+  var finBtn=document.getElementById('voice-finish-btn');
+  if(finBtn)finBtn.style.display=supported?'flex':'none';
+  document.getElementById('voice-status-text').textContent=supported?'Starting microphone…':"Voice input isn't supported in this browser — please use manual entry instead.";
+  if(mode==='prescription' && (!document.getElementById('rx-patient')||!document.getElementById('rx-patient').value) && !window._rxVoicePatientPreset){
+    showToast('Tip: select a patient in Prescriptions first for best results.');
+  }
+  openModal('voice-modal');
+  if(supported){
+    /* mic starts on its own — no separate "Start Speaking" action */
+    setTimeout(voiceStartListening,250);
+  }
+}
+function closeVoiceModal(){
+  voiceStopListening();
+  _voiceRecordStartedAt=0; /* reset — an aborted session is never logged */
+  closeModal('voice-modal');
+}
+function voiceStartListening(){
+  if(!_voiceSupported())return;
+  try{
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    _voiceRecognition=new SR();
+    _voiceRecognition.continuous=true;
+    _voiceRecognition.interimResults=true;
+    _voiceRecognition.lang=currentLang==='bn'?'bn-BD':'en-IN';
+    _voiceRecognition.onresult=function(e){
+      var interim='', finalChunk='';
+      for(var i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal)finalChunk+=e.results[i][0].transcript+' ';
+        else interim+=e.results[i][0].transcript;
+      }
+      if(finalChunk)_voiceTranscript+=finalChunk;
+      _voiceLastSpeechAt=Date.now();
+      var box=document.getElementById('voice-transcript');
+      if(box)box.textContent=(_voiceTranscript+' '+interim).trim();
+
+      /* Prescription: a spoken "finish"/"done" command ends the
+         session immediately — checked on every final chunk. */
+      if(_voiceMode==='prescription' && finalChunk && _voiceIsFinishCommand(finalChunk)){
+        _voiceTranscript=_voiceStripFinishCommand(_voiceTranscript);
+        voiceFinish();
+        return;
+      }
+      if(_voiceMode==='appointment')_voiceArmSilenceCheck();
+    };
+    _voiceRecognition.onerror=function(e){
+      if(e.error==='no-speech'||e.error==='aborted')return;
+      showToast('Voice input error: '+e.error);
+    };
+    _voiceRecognition.onend=function(){
+      /* keep listening continuously until the session explicitly ends */
+      if(_voiceListening && !_voiceFinished){ try{_voiceRecognition.start();}catch(e){} }
+    };
+    _voiceRecognition.start();
+    _voiceListening=true;
+    _voiceLastSpeechAt=Date.now();
+    _voiceRecordStartedAt=Date.now(); /* timestamp only — no separate mic stream, so nothing competes with SpeechRecognition */
+    var st=document.getElementById('voice-status-text'); if(st)st.textContent='Listening… speak naturally.';
+    var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.add('blink');
+    if(_voiceMode==='appointment')_voiceArmSilenceCheck();
+  }catch(e){ showToast('Could not start voice input.'); }
+}
+function voiceStopListening(){
+  _voiceListening=false;
+  clearTimeout(_voiceSilenceTimer);
+  if(_voiceRecognition){ try{_voiceRecognition.onend=null;_voiceRecognition.stop();}catch(e){} }
+  var st=document.getElementById('voice-status-text'); if(st)st.textContent='Starting microphone…';
+  var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.remove('blink');
+}
+
+/* ── Parallel mic recording, purely for the Supabase voice log ──
+   SpeechRecognition never exposes the underlying audio, so logging
+   the actual recording (not just the transcript) needs its own,
+   independent getUserMedia + MediaRecorder capture running
+   alongside it. Entirely best-effort: if the browser/device doesn't
+   support it, or the extra mic grant is denied, voice-to-text keeps
+   working exactly as before — only the audio log is skipped. */
+/* NOTE: this used to also open a second, parallel getUserMedia/MediaRecorder
+   stream so the raw audio could be uploaded alongside the transcript. That
+   competed with SpeechRecognition for the microphone and caused transcripts
+   to silently come back empty ("No speech captured"). Removed — we now only
+   log the transcript + duration to voice_logs, not a raw audio file. */
+function _voiceSessionDurationSec(){
+  return _voiceRecordStartedAt?Math.max(1,Math.round((Date.now()-_voiceRecordStartedAt)/1000)):null;
+}
+
+/* Appointment-only: after each chunk of speech, wait
+   VOICE_APPT_SILENCE_MS of true silence before treating the patient
+   as finished — a natural pause-to-end, no button required. */
+function _voiceArmSilenceCheck(){
+  clearTimeout(_voiceSilenceTimer);
+  _voiceSilenceTimer=setTimeout(function(){
+    if(_voiceMode!=='appointment'||_voiceFinished)return;
+    if(!_voiceTranscript.trim())return; /* nothing said yet — keep waiting */
+    if(Date.now()-_voiceLastSpeechAt>=VOICE_APPT_SILENCE_MS-200)voiceFinish();
+  },VOICE_APPT_SILENCE_MS);
+}
+
+var VOICE_FINISH_PATTERN=/\b(finish(?:ed)? prescription|that'?s (?:all|it|done)|i'?m done|i am done|^done$|\bdone\b\.?$)/i;
+function _voiceIsFinishCommand(chunk){
+  return VOICE_FINISH_PATTERN.test(chunk.trim());
+}
+function _voiceStripFinishCommand(text){
+  return text.replace(/\b(finish(?:ed)? prescription|that'?s (?:all|it|done)|i'?m done|i am done|done)\b\.?\s*$/i,'').trim();
+}
+
+/* Manual override — the Stop/Finish button, always available as a
+   fallback for both flows even though neither strictly requires it. */
+function voiceManualFinish(){ voiceFinish(); }
+
+/* ── Ends the session (auto or manual), closes the modal, and runs
+   the whole workflow automatically — no further clicks needed. ── */
+async function voiceFinish(){
+  if(_voiceFinished)return;
+  _voiceFinished=true;
+  clearTimeout(_voiceSilenceTimer);
+  voiceStopListening();
+  var durationSec=_voiceSessionDurationSec();
+  var text=_voiceTranscript.trim();
+  var mode=_voiceMode;
+  closeModal('voice-modal');
+  if(!text){showToast('No speech captured — please try again.');return;}
+  showToast('Processing your voice input…');
+  var linked={};
+  if(mode==='appointment')linked=await voiceProcessAppointment(text,linked);
+  else if(mode==='prescription')linked=await voiceProcessPrescription(text,linked);
+  _voiceSaveLog(mode,text,durationSec,linked||{});
+}
+
+/* ── Persists the transcript + (if captured) the actual audio
+   recording to Supabase, linked to whichever patient/appointment/
+   prescription the session produced. Wrapped defensively like every
+   other background layer in this file: a missing `voice_logs` table
+   or `voice-recordings` storage bucket never blocks the appointment
+   or prescription that was just created — it only skips the log. ── */
+async function _voiceSaveLog(mode,transcript,durationSec,linked){
+  try{
+    var cid=_clinicId||(await _ensureClinicId());
+    if(!cid)return;
+    var ins=await _supa.from('voice_logs').insert({
+      clinic_id:cid,
+      session_type:mode,
+      transcript:transcript,
+      audio_path:null, /* raw audio capture removed — it competed with SpeechRecognition for the mic and broke transcripts */
+      duration_in_seconds:durationSec||null, /* matches the actual voice_logs column name */
+      patient_id:linked.patientId||null,
+      appointment_id:linked.appointmentId||null,
+      prescription_id:linked.prescriptionId||null,
+      doctor_name:(DB[mkt]&&DB[mkt].doc&&DB[mkt].doc.name)||null
+    });
+    if(ins.error){
+      console.warn('[AuraVoiceLogs] Could not save voice log:',ins.error.message);
+    }
+  }catch(e){
+    /* logging is best-effort and must never interrupt the appointment/
+       prescription that voice entry just successfully created */
+  }
+}
+
+/* ── Lightweight pattern-based field extraction ──────────────── */
+function _voiceExtract(text, patterns){
+  for(var i=0;i<patterns.length;i++){
+    var m=text.match(patterns[i]);
+    if(m&&m[1])return m[1].trim().replace(/[.,;]+$/,'');
+  }
+  return '';
+}
+
+/* ── Appointment voice parser: name, phone, DOB/age, gender, reason,
+   symptoms ── */
+function voiceParseAppointment(text){
+  var t=' '+text+' ';
+  var name=_voiceExtract(t,[
+    /patient(?:'s)? name is\s+([a-zA-Z][a-zA-Z\s.]*?)(?:,|\.| phone| number| age| gender| reason| symptom|$)/i,
+    /\bname is\s+([a-zA-Z][a-zA-Z\s.]*?)(?:,|\.| phone| number| age| gender| reason| symptom|$)/i
+  ]);
+  var phone=_voiceExtract(t,[
+    /(?:phone number is|phone is|mobile number is|mobile is|contact number is|number is)\s*([\d][\d\s]{6,14}\d)/i
+  ]);
+  var dob=_voiceExtract(t,[/(?:date of birth is|dob is|born on)\s*([\d]{1,2}[\/\-][\d]{1,2}[\/\-][\d]{2,4})/i]);
+  var age=_voiceExtract(t,[/age(?: is)?\s*(\d{1,3})\s*(?:years?|yrs?)?/i]);
+  var gender=_voiceExtract(t,[/gender(?: is)?\s*(male|female|other)/i]);
+  if(!gender){
+    if(/\bfemale\b/i.test(t))gender='Female';
+    else if(/\bmale\b/i.test(t))gender='Male';
+  }
+  var reason=_voiceExtract(t,[/reason (?:for visit )?is\s+([^,.]+?)(?:,|\.| symptom|$)/i,/visiting for\s+([^,.]+?)(?:,|\.| symptom|$)/i]);
+  var symptoms=_voiceExtract(t,[/symptoms? (?:are|is)\s+([^.]+)$/i,/complaining of\s+([^.]+)$/i]);
+  return {name:name,phone:phone,dob:dob,age:age,gender:gender,reason:reason,symptoms:symptoms};
+}
+
+/* ── Appointment finishes speaking → the appointment is created
+   fully automatically (date = today, time = next available slot —
+   the patient never has to say either) → the doctor's screen jumps
+   straight to Prescriptions with the patient already selected and
+   shown as a compact badge, not editable fields. ── */
+async function voiceProcessAppointment(text, linked){
+  linked=linked||{};
+  var data=voiceParseAppointment(text);
+  if(!data.name){
+    showToast("Couldn't clearly hear the patient's name — opening manual entry so you can finish this appointment.");
+    openAddAppointmentModal();
+    return linked;
+  }
+  if(!data.phone){
+    showToast("Couldn't clearly hear a phone number — opening manual entry so you can finish this appointment.");
+    openAddAppointmentModal();
+    var ne=document.getElementById('add-name'); if(ne)ne.value=data.name;
+    return linked;
+  }
+  add_resetModal();
+  document.getElementById('add-name').value=data.name;
+  document.getElementById('add-phone').value=data.phone.replace(/\D/g,'');
+  document.getElementById('add-gender').value=data.gender||'Other';
+  if(data.dob)document.getElementById('add-dob').value=_voiceIsoDob(data.dob);
+  document.getElementById('add-age').value=data.dob?'':(data.age||'30');
+  add_onDobChange();
+  var reasonCombined=[data.reason,data.symptoms].filter(Boolean).join(' — ');
+  document.getElementById('add-reason').value=reasonCombined||'General Consultation';
+  /* Appointment date/time are always generated by the system — the
+     current date and the next available slot — never spoken. */
+  document.getElementById('add-date').value=new Date().toISOString().split('T')[0];
+  populateAddSlots();
+  var slotSel=document.getElementById('add-slot');
+  if(slotSel&&slotSel.options.length>1)slotSel.selectedIndex=1;
+
+  add_onPhoneInput();
+  await new Promise(function(r){setTimeout(r,600);}); /* let the phone lookup resolve so we don't create a duplicate patient */
+
+  showToast('Creating appointment for '+data.name+' from voice…');
+  var created=await addAppointment();
+  if(created){ linked.patientId=created.patientId; linked.appointmentId=created.appointmentId; }
+
+  setTimeout(function(){
+    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
+    var sel=document.getElementById('rx-patient');
+    var pats=DB[mkt].patients||[];
+    var match=pats.filter(function(p){return p.name.toLowerCase()===data.name.toLowerCase();})[0];
+    if(sel&&match){
+      sel.value=match.id; rxPickPatient();
+      rxShowPatientBadge(match); /* doctor only sees the prescription area, not editable name/phone fields */
+      window._rxVoicePatientPreset=true;
+    }
+    showToast('Ready for prescription — tap Voice Entry to dictate, or fill it in manually.');
+  },900);
+  return linked;
+}
+function _voiceIsoDob(raw){
+  var m=raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(!m)return '';
+  var d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0'), y=m[3].length===2?('20'+m[3]):m[3];
+  return y+'-'+mo+'-'+d;
+}
+
+/* ── Prescription voice parser: diagnosis, medicines (dose/duration/
+   timing), follow-up, instructions ── */
+function _voiceTimingMap(raw){
+  if(!raw)return'';
+  raw=raw.toLowerCase();
+  if(raw.indexOf('before')>-1)return'Before Food';
+  if(raw.indexOf('after')>-1)return'After Food';
+  if(raw.indexOf('with')>-1)return'With Food';
+  if(raw.indexOf('empty')>-1)return'Empty Stomach';
+  if(raw.indexOf('bed')>-1)return'Bedtime';
+  return'';
+}
+function voiceParsePrescription(text){
+  var t=' '+text+' ';
+  var diagnosis=_voiceExtract(t,[/diagnos(?:is|ed with) is?\s+([^,.]+?)(?:,|\.| medicine| prescribe|$)/i,/diagnosed with\s+([^,.]+?)(?:,|\.| medicine| prescribe|$)/i]);
+  var followupNo=/(no follow[\s-]?up|follow[\s-]?up (?:is )?not required|does not need a? follow[\s-]?up)/i.test(t);
+  var followupDaysRaw=_voiceExtract(t,[/follow[\s-]?up(?: date)?(?: is| in| after)?\s*(\d{1,3})\s*days?/i]);
+  var followupYes=followupDaysRaw||/(follow[\s-]?up (?:is )?required|needs? a? follow[\s-]?up|schedule a? follow[\s-]?up)/i.test(t);
+  var instructions=_voiceExtract(t,[/instructions? (?:are|is)\s+([^.]+)$/i,/advice is\s+([^.]+)$/i]);
+
+  var meds=[];
+  var medRegex=/(?:medicine|prescribe|give)\s+([a-zA-Z][a-zA-Z0-9\s]*?)(?:\s+(\d+\s?mg))?(?:[, ]+(?:dose|dosage)\s+([\d](?:[\-\d])*))?(?:[, ]+(?:for|duration)\s+(\d+)\s*days?)?(?:[, ]+(before food|after food|with food|empty stomach|bedtime))?(?=[,.]|\s+(?:medicine|prescribe|give)|$)/gi;
+  var m;
+  while((m=medRegex.exec(t))!==null){
+    var mname=(m[1]||'').trim();
+    if(!mname||mname.length<2)continue;
+    meds.push({
+      name:(mname+(m[2]?(' '+m[2]):'')).trim(),
+      dose:m[3]||'1-0-1',
+      duration:m[4]||'5',
+      timing:_voiceTimingMap(m[5])||'After Food'
+    });
+  }
+  return {diagnosis:diagnosis,meds:meds,followup:followupYes&&!followupNo,followupDays:followupDaysRaw?parseInt(followupDaysRaw,10):null,noFollowup:followupNo,instructions:instructions};
+}
+function _voiceNearestFollowupOption(days){
+  if(!days)return '14';
+  var best=RX_FOLLOWUP_DAY_OPTIONS[0], bestDiff=Infinity;
+  RX_FOLLOWUP_DAY_OPTIONS.forEach(function(d){
+    var diff=Math.abs(d-days);
+    if(diff<bestDiff){bestDiff=diff;best=d;}
+  });
+  return String(best);
+}
+
+/* ── Doctor finishes speaking (voice command or Stop/Finish) → the
+   whole prescription — medicines, dose, timing, advice, follow-up —
+   is built, the PDF is generated with the consultation summary
+   included in that same PDF, and it is sent to the patient's
+   WhatsApp automatically. No "Generate Prescription" click needed. ── */
+async function voiceProcessPrescription(text, linked){
+  linked=linked||{};
+  var sel=document.getElementById('rx-patient');
+  if(!sel||!sel.value){
+    showToast('Please select a patient on the Prescriptions screen first, then use Voice again.');
+    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
+    return linked;
+  }
+  linked.patientId=sel.value;
+  var data=voiceParsePrescription(text);
+  document.getElementById('rx-meds').innerHTML='';
+  if(data.meds.length){
+    data.meds.forEach(function(m){ addMedRow(m.name,m.dose,m.duration,m.timing); });
+  }else{
+    addMedRow();
+    showToast("Couldn't clearly detect medicines from your voice — please review the prescription before it sends.");
+  }
+  var instrParts=[];
+  if(data.diagnosis)instrParts.push('Diagnosis: '+data.diagnosis);
+  if(data.instructions)instrParts.push(data.instructions);
+  document.getElementById('rx-instr').value=instrParts.join('\n');
+  var fuSel=document.getElementById('rx-followup');
+  if(fuSel)fuSel.value=data.followup?_voiceNearestFollowupOption(data.followupDays):'';
+  rxOnFollowupChange();
+
+  showToast('Generating prescription from voice and sending to WhatsApp…');
+  var created=await generatePrescription();
+  if(created){ linked.prescriptionId=created.prescriptionId; linked.patientId=created.patientId||linked.patientId; }
+  return linked;
 }
 </script>
 </body>
