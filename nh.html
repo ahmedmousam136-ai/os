@@ -666,9 +666,25 @@ async function handleSignup(){
   if(!nhname||!name||!email||!pass){err.textContent='Please fill all required fields.';err.style.display='block';return;}
   if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
   var r=await _supa.auth.signUp({email,password:pass});
-  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+  if(r.error){
+    /* Same email may already have an account under Clinic OS (or a
+       previous NH signup) — that's allowed as long as it's a
+       different facility. Try signing in with the same credentials
+       instead of failing outright. */
+    if(/already registered/i.test(r.error.message||'')){
+      var signInRes=await _supa.auth.signInWithPassword({email,password:pass});
+      if(signInRes.error||!signInRes.data||!signInRes.data.user){
+        err.textContent='An account with this email already exists. Please sign in with its password, or use Forgot Password to reset it, before registering a new facility.';
+        err.style.display='block';
+        return;
+      }
+      r={data:signInRes.data,error:null};
+    }else{
+      err.textContent=r.error.message;err.style.display='block';return;
+    }
+  }
   if(r.data&&r.data.user){
-    await _supa.from('clinics').insert({
+    var ins=await _supa.from('clinics').insert({
       owner_id:r.data.user.id,
       name:nhname,
       doctor_name:name,
@@ -676,7 +692,13 @@ async function handleSignup(){
       facility_type:'nursing_home',
       is_approved:false,
       plan:'pending'
-    });
+    }).select().single();
+    if(ins.error||!ins.data){
+      err.textContent='Could not create nursing home record: '+(ins.error?ins.error.message:'unknown error');
+      err.style.display='block';
+      return;
+    }
+    await _supa.from('facility_members').upsert({user_id:r.data.user.id,clinic_id:ins.data.id,role:'owner'});
   }
   document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Registration Submitted</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your nursing home account is under review.<br>We will activate it within 24 hours.<br><br>WhatsApp us to expedite activation.</p><a href="https://wa.me/919330660325?text=Hi, I registered '+nhname+' on AuraScale NH. Please activate." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us to Activate</a></div></div>';
 }
@@ -693,7 +715,7 @@ async function _initApp(){
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app-shell').classList.add('authenticated');
   var uid=(await _supa.auth.getUser()).data.user.id;
-  var cl=await _supa.from('clinics').select('id,name,facility_type,is_approved').eq('owner_id',uid).single();
+  var cl=await _supa.from('clinics').select('id,name,facility_type,is_approved').eq('owner_id',uid).eq('facility_type','nursing_home').single();
   if(!cl.data){showToast('Clinic record not found.');return;}
   if(!cl.data.is_approved){
     document.getElementById('app-shell').classList.remove('authenticated');
