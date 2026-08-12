@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#ffffff" id="meta-theme"/>
+<title>AuraScale NH — Nursing Home OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root,[data-theme="light"]{
+  --bg:#F7F6F3;--surface:#FFFFFF;--surface2:#FAFAF8;
+  --border:#E8E5DF;--border-mid:#D2CEC6;--border-strong:#AEA9A0;
+  --text-primary:#18170F;--text-secondary:#64605A;--text-tertiary:#9E9A93;
+  --blue:#2E63D4;--blue-light:#4475E0;--blue-bg:#EDF2FC;--blue-border:#BDD0F7;--blue-hover:#2354C0;
+  --green:#12976A;--green-bg:#EAFAF3;--green-border:#9ADEC3;
+  --amber:#C27820;--amber-bg:#FDF4E6;--amber-border:#F0CEAA;
+  --red:#C23838;--red-bg:#FDF0F0;--red-border:#F2B8B8;
+  --purple:#6B3FA0;--purple-bg:#F3EDFB;--purple-border:#D4B8F0;
+  --sidebar-w:260px;--header-h:54px;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
+  --sh-xs:0 1px 3px rgba(0,0,0,.05);--sh-sm:0 2px 8px rgba(0,0,0,.07);
+  --sh-md:0 4px 18px rgba(0,0,0,.09);--sh-lg:0 12px 42px rgba(0,0,0,.13);
+  --ease:.17s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#0F1117;--surface:#171B24;--surface2:#1C2130;
+  --border:#252A38;--border-mid:#2E3448;--border-strong:#3A4160;
+  --text-primary:#E8E9EF;--text-secondary:#8E96B0;--text-tertiary:#525A72;
+  --blue:#4D85F0;--blue-bg:#1A243D;--blue-border:#2A3A5C;--blue-hover:#5C91F5;
+  --green:#1BB880;--green-bg:#0E2A1F;--green-border:#1A4A35;
+  --amber:#E09940;--amber-bg:#271E0E;--amber-border:#3D2E10;
+  --red:#E05050;--red-bg:#250F0F;--red-border:#3D1A1A;
+  --purple:#A07BDB;--purple-bg:#1E1530;--purple-border:#3D2560;
+  --sidebar-bg:#171B24;
+}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;outline:none}
+input,textarea,select{font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;appearance:none}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
+
+/* ── AUTH ── */
+#auth-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+#auth-screen.hidden{display:none}
+.auth-wrap{width:100%;max-width:400px}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px 24px;box-shadow:var(--sh-lg)}
+.auth-logo{text-align:center;margin-bottom:20px}
+.auth-title{font-family:'Instrument Serif',serif;font-size:22px;color:var(--text-primary);letter-spacing:-.02em}
+.auth-sub{font-size:11.5px;color:var(--text-tertiary);margin-top:4px}
+.auth-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:20px}
+.auth-tab{flex:1;padding:8px;text-align:center;border-radius:6px;font-size:12px;font-weight:600;color:var(--text-tertiary);cursor:pointer;transition:all var(--ease)}
+.auth-tab.active{background:var(--surface);color:var(--text-primary);box-shadow:var(--sh-xs)}
+.auth-panel{display:none}.auth-panel.active{display:flex;flex-direction:column;gap:12px}
+.auth-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);display:block;margin-bottom:5px}
+.auth-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;min-height:44px;transition:border-color var(--ease)}
+.auth-input:focus{border-color:var(--blue);background:var(--surface)}
+.auth-btn{width:100%;background:var(--green);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease);box-shadow:0 2px 8px rgba(18,151,106,.2)}
+.auth-btn:hover{background:#0f8059}
+.auth-error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;display:none}
+
+/* ── APP SHELL ── */
+#app-shell{display:none;min-height:100vh}
+#app-shell.authenticated{display:flex}
+
+/* ── SIDEBAR ── */
+#sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;overflow-y:auto;overflow-x:hidden}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.sb-mark{display:flex;align-items:baseline;gap:0;line-height:1}
+.sb-mark .a{font-family:'Instrument Serif',serif;font-size:21px;color:var(--text-primary)}
+.sb-mark .s{font-family:'Instrument Serif',serif;font-size:21px;color:var(--green)}
+.sb-mark .os{font-size:10px;font-weight:700;color:var(--text-tertiary);letter-spacing:.08em;margin-left:5px}
+.sb-tag{font-size:10px;color:var(--text-tertiary);letter-spacing:.05em;margin-top:3px}
+.sb-facility{padding:11px 13px;border-bottom:1px solid var(--border)}
+.sb-facility-inner{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);padding:12px 13px}
+.sb-fac-name{font-size:12.5px;font-weight:700;color:var(--text-primary)}
+.sb-fac-type{font-size:10px;color:var(--green);font-weight:600;margin-top:2px}
+.sb-online{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:10.5px;color:var(--text-secondary)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--green)}
+nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px}
+.nav-sec{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-tertiary);font-weight:700;padding:9px 9px 4px;margin-top:4px}
+.nb{width:100%;display:flex;align-items:center;gap:9px;padding:10px 9px;border-radius:var(--r-sm);color:var(--text-secondary);font-size:12.5px;font-weight:500;transition:all var(--ease);cursor:pointer;white-space:nowrap;text-align:left;position:relative;min-height:42px}
+.nb:hover:not(.on){background:var(--bg);color:var(--text-primary)}
+.nb.on{background:var(--green-bg);color:var(--green);font-weight:600}
+.nb.on::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--green);border-radius:0 2px 2px 0}
+.nb-ic{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.65}
+.nb.on .nb-ic{opacity:1}
+.nb-badge{margin-left:auto;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:4px}
+.sb-foot{padding:11px 13px;border-top:1px solid var(--border);flex-shrink:0}
+.sb-controls{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.theme-toggle{display:flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;transition:all var(--ease);min-height:32px;flex:1;color:var(--text-secondary);font-size:10px;font-weight:600}
+.sb-out{display:flex;align-items:center;gap:6px;color:var(--text-tertiary);font-size:11px;cursor:pointer;transition:color var(--ease);padding:6px 0}
+.sb-out:hover{color:var(--red)}
+
+/* ── MAIN ── */
+#main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+header{height:var(--header-h);background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(16px)}
+[data-theme="dark"] header{background:rgba(23,27,36,.94)}
+.hdr-l{display:flex;align-items:center;gap:9px;flex:1}
+.bc-root{font-family:'Instrument Serif',serif;font-size:15px;color:var(--text-primary)}
+.bc-sep{color:var(--text-tertiary);font-size:12px}
+.bc-page{color:var(--text-secondary);font-size:12.5px;font-weight:500}
+.hdr-r{display:flex;align-items:center;gap:7px}
+.date-pill{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--text-secondary)}
+.add-btn{background:var(--green);border:none;color:#fff;padding:9px 16px;border-radius:var(--r-sm);display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;box-shadow:0 3px 12px rgba(18,151,106,.32);cursor:pointer;white-space:nowrap;min-height:40px}
+.add-btn:hover{background:#0f8059}
+main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
+
+/* ── VIEWS ── */
+.view{display:none;flex-direction:column;gap:18px}.view.on{display:flex}
+.sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.st{font-family:'Instrument Serif',serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
+.ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
+
+/* ── METRICS ── */
+.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 14px;box-shadow:var(--sh-xs);transition:all var(--ease)}
+.mc:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
+.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
+.mc-icon{width:27px;height:27px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
+.mc-val{font-family:'Instrument Serif',serif;font-size:28px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:5px}
+
+/* ── PANELS ── */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
+.pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
+.pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em}
+.pb-b{color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-border)}
+.pb-g{color:var(--green);background:var(--green-bg);border:1px solid var(--green-border)}
+.pb-r{color:var(--red);background:var(--red-bg);border:1px solid var(--red-border)}
+.pb-a{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.ch-dis{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.ch-vac{background:var(--bg);color:var(--text-secondary);border:1px solid var(--border)}
+.ch-crit{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.ch-clean{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.ch-wait{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+
+/* ── BED GRID ── */
+.bed-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:16px}
+.bed-card{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 10px;text-align:center;cursor:pointer;transition:all var(--ease)}
+.bed-card:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
+.bed-card.occupied{border-color:var(--green-border);background:var(--green-bg)}
+.bed-card.critical{border-color:var(--red-border);background:var(--red-bg)}
+.bed-card.cleaning{border-color:var(--amber-border);background:var(--amber-bg)}
+.bed-num{font-family:'Instrument Serif',serif;font-size:22px;font-weight:700;color:var(--text-primary);line-height:1}
+.bed-ward{font-size:9px;color:var(--text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.bed-patient{font-size:10px;font-weight:600;color:var(--text-primary);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bed-days{font-size:9px;color:var(--text-tertiary);margin-top:2px}
+.bed-status-dot{width:8px;height:8px;border-radius:50%;margin:6px auto 0;background:var(--border-mid)}
+.bed-card.occupied .bed-status-dot{background:var(--green)}
+.bed-card.critical .bed-status-dot{background:var(--red)}
+.bed-card.cleaning .bed-status-dot{background:var(--amber)}
+
+/* ── ADMISSION ROW ── */
+.adm-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
+.adm-row:hover{background:var(--bg)}
+.adm-row:last-child{border-bottom:none}
+.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
+.adm-name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
+.adm-meta{font-size:10.5px;color:var(--text-secondary);margin-top:1px}
+.adm-actions{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
+
+/* ── CHARGE ROW ── */
+.chg-row{display:flex;align-items:center;justify-content:space-between;padding:10px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
+.chg-row:last-child{border-bottom:none}
+.chg-name{font-size:12px;font-weight:500;color:var(--text-primary)}
+.chg-type{font-size:10px;color:var(--text-tertiary);margin-top:1px}
+.chg-amt{font-size:13px;font-weight:700;color:var(--text-primary);font-family:'Instrument Serif',serif}
+
+/* ── NOTE ROW ── */
+.note-row{padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
+.note-row:last-child{border-bottom:none}
+.note-doc{font-size:11px;font-weight:700;color:var(--blue)}
+.note-time{font-size:10px;color:var(--text-tertiary)}
+.note-text{font-size:12px;color:var(--text-primary);margin-top:5px;line-height:1.6}
+.note-vitals{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.vital-pill{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:10px;font-weight:600;color:var(--text-secondary)}
+
+/* ── FORMS & MODALS ── */
+.mod-ov{position:fixed;inset:0;z-index:70;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);padding:0}
+.mod-ov.open{display:flex}
+@media(min-width:600px){.mod-ov{align-items:center;padding:20px}}
+.modal{background:var(--surface);border:1px solid var(--border);width:100%;max-width:480px;box-shadow:var(--sh-lg);animation:slideUp .22s ease;border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:94vh;overflow-y:auto;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+@media(min-width:600px){.modal{border-radius:var(--r-xl);max-height:90vh;padding-bottom:0}}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:16px 17px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1}
+.mtitle{color:var(--text-primary);font-weight:700;font-size:13px}
+.mclose{color:var(--text-tertiary);transition:color var(--ease);padding:4px;cursor:pointer;min-width:34px;min-height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.mclose:hover{color:var(--text-primary);background:var(--bg)}
+.mb{padding:16px 17px;display:flex;flex-direction:column;gap:13px}
+.flbl{color:var(--text-tertiary);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:block;margin-bottom:5px}
+.finput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;transition:border-color var(--ease);min-height:44px}
+.finput:focus{border-color:var(--green);background:var(--surface)}
+.ftextarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;resize:none;line-height:1.6}
+.ftextarea:focus{border-color:var(--green);background:var(--surface)}
+.rx-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rx-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.msub{width:100%;background:var(--green);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease)}
+.msub:hover{background:#0f8059}
+.qbtn{background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-size:10px;padding:6px 10px;border-radius:5px;display:flex;align-items:center;gap:3px;font-weight:600;transition:all var(--ease);cursor:pointer;box-shadow:var(--sh-xs);min-height:32px}
+.qbtn:hover{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+.empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
+.empty-ic{font-size:32px;margin-bottom:10px;opacity:.45}
+.empty-t{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
+.empty-s{font-size:11.5px;line-height:1.5}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text-primary);color:var(--surface);padding:10px 18px;border-radius:var(--r-md);font-size:12.5px;font-weight:600;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.mg{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}}
+@media(max-width:600px){.mg{grid-template-columns:1fr 1fr}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:none}#main{margin-left:0}.bed-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="sb-mark" style="justify-content:center;margin-bottom:6px">
+          <span class="a">Aura</span><span class="s">Scale</span>
+          <span class="os">NH</span>
+        </div>
+        <p class="auth-sub">Nursing Home Operating System</p>
+      </div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('login',this)">Sign In</div>
+        <div class="auth-tab" onclick="switchAuthTab('signup',this)">Register NH</div>
+      </div>
+      <!-- LOGIN -->
+      <div id="auth-panel-login" class="auth-panel active">
+        <div><label class="auth-label">Email</label><input class="auth-input" id="login-email" type="email" placeholder="admin@yournursinghome.com"/></div>
+        <div><label class="auth-label">Password</label><input class="auth-input" id="login-pass" type="password" placeholder="••••••••"/></div>
+        <div id="login-error" class="auth-error"></div>
+        <button class="auth-btn" onclick="handleLogin()">Sign In →</button>
+      </div>
+      <!-- SIGNUP -->
+      <div id="auth-panel-signup" class="auth-panel">
+        <div><label class="auth-label">Nursing Home Name</label><input class="auth-input" id="su-nhname" placeholder="e.g. Diamond Harbour Nursing Home"/></div>
+        <div><label class="auth-label">Owner / Administrator Name</label><input class="auth-input" id="su-name" placeholder="Full name"/></div>
+        <div><label class="auth-label">Email</label><input class="auth-input" id="su-email" type="email" placeholder="admin@yournursinghome.com"/></div>
+        <div><label class="auth-label">Mobile</label><input class="auth-input" id="su-mobile" type="tel" placeholder="WhatsApp number"/></div>
+        <div><label class="auth-label">Password</label><input class="auth-input" id="su-pass" type="password" placeholder="Min 6 characters"/></div>
+        <div id="signup-error" class="auth-error"></div>
+        <button class="auth-btn" onclick="handleSignup()">Register Nursing Home →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app-shell">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark"><span class="a">Aura</span><span class="s">Scale</span><span class="os">NH</span></div>
+      <div class="sb-tag">Nursing Home OS</div>
+    </div>
+    <div class="sb-facility">
+      <div class="sb-facility-inner">
+        <div class="sb-fac-name" id="sb-nh-name">Loading...</div>
+        <div class="sb-fac-type">🏥 Private Nursing Home</div>
+        <div class="sb-online"><span class="dot"></span><span id="sb-occupancy">Loading...</span></div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <p class="nav-sec">Overview</p>
+      <button class="nb on" onclick="nav('dashboard',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+        Dashboard
+      </button>
+      <p class="nav-sec">Inpatient</p>
+      <button class="nb" onclick="nav('beds',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/><path d="M12 14v-3"/></svg></span>
+        Bed Management
+        <span class="nb-badge" id="nav-occupied-count">0</span>
+      </button>
+      <button class="nb" onclick="nav('admissions',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
+        Admissions
+      </button>
+      <button class="nb" onclick="nav('rounds',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+        Progress Notes
+      </button>
+      <button class="nb" onclick="nav('billing',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+        Billing
+      </button>
+      <button class="nb" onclick="nav('discharge',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
+        Discharge
+      </button>
+      <p class="nav-sec">Clinic</p>
+      <button class="nb" onclick="window.open('clinic.html','_blank')">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span>
+        Open Clinic App ↗
+      </button>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-controls">
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          Theme
+        </button>
+      </div>
+      <div class="sb-out" onclick="handleLogout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <header>
+      <div class="hdr-l">
+        <span class="bc-root">AuraScale NH</span>
+        <span class="bc-sep">/</span>
+        <span class="bc-page" id="tab-title">Dashboard</span>
+      </div>
+      <div class="hdr-r">
+        <span class="date-pill" id="hdr-date"></span>
+        <button class="add-btn" id="hdr-add-btn" onclick="openAdmitModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Admit Patient
+        </button>
+      </div>
+    </header>
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <div id="v-dashboard" class="view on">
+        <div class="sh">
+          <div>
+            <h1 class="st">Good morning 🏥</h1>
+            <p class="ss">Nursing Home overview · <span id="dash-date2"></span></p>
+          </div>
+        </div>
+        <div class="mg" id="dash-metrics">
+          <div class="mc"><div class="mc-top"><span class="mc-lbl">Occupied Beds</span><div class="mc-icon">🛏️</div></div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">of <span id="dm-total-beds">—</span> total beds</div></div>
+          <div class="mc"><div class="mc-top"><span class="mc-lbl">Today Admissions</span><div class="mc-icon">📋</div></div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new patients today</div></div>
+          <div class="mc"><div class="mc-top"><span class="mc-lbl">Today Discharges</span><div class="mc-icon">✅</div></div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
+          <div class="mc"><div class="mc-top"><span class="mc-lbl">Today Revenue</span><div class="mc-icon">💰</div></div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">billing today</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><div class="pt">Active Patients</div><span class="pb pb-g" id="active-count">0</span></div>
+            <div id="dash-active-list"></div>
+          </div>
+          <div class="panel">
+            <div class="ph"><div class="pt">Bed Occupancy</div></div>
+            <div id="dash-bed-mini" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BED MANAGEMENT -->
+      <div id="v-beds" class="view">
+        <div class="sh">
+          <div><h1 class="st">Bed Management</h1><p class="ss">Real-time occupancy · Click a bed to view patient</p></div>
+          <button class="add-btn" onclick="openAddBedModal()">+ Add Bed</button>
+        </div>
+        <div class="panel">
+          <div class="ph">
+            <div class="pt">All Beds</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span class="pb pb-g">🟢 Occupied</span>
+              <span style="display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;background:var(--bg);border:1px solid var(--border);color:var(--text-secondary)">⬜ Vacant</span>
+              <span class="pb pb-a">🟡 Cleaning</span>
+              <span class="pb pb-r">🔴 Critical</span>
+            </div>
+          </div>
+          <div class="bed-grid" id="bed-grid"></div>
+        </div>
+      </div>
+
+      <!-- ADMISSIONS -->
+      <div id="v-admissions" class="view">
+        <div class="sh">
+          <div><h1 class="st">Admissions</h1><p class="ss">All active inpatients · Admit new patients from header</p></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Active Admissions</div><span class="pb pb-g" id="adm-count">0</span></div>
+          <div id="adm-list"></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Recent Discharges</div></div>
+          <div id="dis-list"></div>
+        </div>
+      </div>
+
+      <!-- PROGRESS NOTES -->
+      <div id="v-rounds" class="view">
+        <div class="sh">
+          <div><h1 class="st">Progress Notes</h1><p class="ss">Select a patient to add or view today's notes</p></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><div class="pt">Active Patients</div></div>
+            <div id="rounds-patient-list"></div>
+          </div>
+          <div class="panel" id="rounds-notes-panel">
+            <div class="ph"><div class="pt" id="rounds-patient-name">Select a patient</div><button class="add-btn" style="padding:6px 12px;font-size:11px" onclick="openAddNoteModal()">+ Add Note</button></div>
+            <div id="rounds-notes-list"><div class="empty"><div class="empty-ic">📋</div><p class="empty-t">Select a patient</p><p class="empty-s">Click a patient on the left to view their progress notes</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BILLING -->
+      <div id="v-billing" class="view">
+        <div class="sh">
+          <div><h1 class="st">Billing</h1><p class="ss">Track charges · Generate bills · No leakage</p></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><div class="pt">Select Patient</div></div>
+            <div id="billing-patient-list"></div>
+          </div>
+          <div class="panel">
+            <div class="ph">
+              <div class="pt" id="billing-patient-name">Select a patient</div>
+              <button class="add-btn" style="padding:6px 12px;font-size:11px" onclick="openAddChargeModal()">+ Add Charge</button>
+            </div>
+            <div id="billing-charges-list"></div>
+            <div id="billing-total-bar" style="display:none;padding:13px 15px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;font-weight:700;color:var(--text-primary)">Total Due</span>
+              <span style="font-family:'Instrument Serif',serif;font-size:20px;font-weight:700;color:var(--green)" id="billing-total">₹0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DISCHARGE -->
+      <div id="v-discharge" class="view">
+        <div class="sh">
+          <div><h1 class="st">Discharge</h1><p class="ss">Generate summary · Final bill · WhatsApp to family</p></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Ready for Discharge</div><span class="pb pb-g" id="discharge-count">0</span></div>
+          <div id="discharge-list"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- ADMIT PATIENT MODAL -->
+<div class="mod-ov" id="mod-admit">
+  <div class="modal">
+    <div class="mh">
+      <div class="mtitle">🏥 Admit New Patient</div>
+      <button class="mclose" onclick="closeModal('mod-admit')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="rx-2col">
+        <div><label class="flbl">Patient Name *</label><input class="finput" id="adm-name" placeholder="Full name" autocapitalize="words"/></div>
+        <div><label class="flbl">Mobile</label><input class="finput" id="adm-phone" type="tel" placeholder="WhatsApp number"/></div>
+      </div>
+      <div class="rx-3col">
+        <div><label class="flbl">Age</label><input class="finput" id="adm-age" type="number" placeholder="Years"/></div>
+        <div><label class="flbl">Gender</label>
+          <select class="finput" id="adm-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
+        </div>
+        <div><label class="flbl">Bed Number *</label>
+          <select class="finput" id="adm-bed"></select>
+        </div>
+      </div>
+      <div><label class="flbl">Admitting Doctor *</label><input class="finput" id="adm-doctor" placeholder="Dr. name"/></div>
+      <div><label class="flbl">Admission Diagnosis</label><input class="finput" id="adm-diagnosis" placeholder="e.g. Pneumonia, Fracture, Post-op"/></div>
+      <div class="rx-2col">
+        <div><label class="flbl">Daily Bed Rate (₹)</label><input class="finput" id="adm-rate" type="number" placeholder="500"/></div>
+        <div><label class="flbl">Emergency Contact</label><input class="finput" id="adm-emergency" placeholder="Phone"/></div>
+      </div>
+      <div id="adm-error" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;display:none"></div>
+      <button class="msub" onclick="admitPatient()">✓ Admit Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BED MODAL -->
+<div class="mod-ov" id="mod-add-bed">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">🛏️ Add New Bed</div><button class="mclose" onclick="closeModal('mod-add-bed')">✕</button></div>
+    <div class="mb">
+      <div class="rx-2col">
+        <div><label class="flbl">Bed Number *</label><input class="finput" id="bed-num" placeholder="e.g. 1, 2A, ICU-1"/></div>
+        <div><label class="flbl">Ward</label>
+          <select class="finput" id="bed-ward"><option>General</option><option>Semi-Private</option><option>Private</option><option>ICU</option><option>Maternity</option><option>Paediatric</option></select>
+        </div>
+      </div>
+      <button class="msub" onclick="addBed()">+ Add Bed</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS NOTE MODAL -->
+<div class="mod-ov" id="mod-note">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">📋 Add Progress Note</div><button class="mclose" onclick="closeModal('mod-note')">✕</button></div>
+    <div class="mb">
+      <div><label class="flbl">Doctor Name</label><input class="finput" id="note-doc" placeholder="Dr. name"/></div>
+      <div class="rx-3col">
+        <div><label class="flbl">BP</label><input class="finput" id="note-bp" placeholder="120/80"/></div>
+        <div><label class="flbl">Temp (°F)</label><input class="finput" id="note-temp" placeholder="98.6"/></div>
+        <div><label class="flbl">SPO2 (%)</label><input class="finput" id="note-spo2" placeholder="98"/></div>
+      </div>
+      <div class="rx-2col">
+        <div><label class="flbl">Pulse</label><input class="finput" id="note-pulse" placeholder="72 bpm"/></div>
+        <div><label class="flbl">Weight (kg)</label><input class="finput" id="note-weight" placeholder="65"/></div>
+      </div>
+      <div><label class="flbl">Subjective (Patient complaints)</label><textarea class="finput ftextarea" id="note-subj" rows="2" placeholder="Patient says..."></textarea></div>
+      <div><label class="flbl">Assessment & Plan</label><textarea class="finput ftextarea" id="note-plan" rows="3" placeholder="Impression and treatment plan..."></textarea></div>
+      <button class="msub" onclick="saveProgressNote()">✓ Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CHARGE MODAL -->
+<div class="mod-ov" id="mod-charge">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">💳 Add Charge</div><button class="mclose" onclick="closeModal('mod-charge')">✕</button></div>
+    <div class="mb">
+      <div><label class="flbl">Charge Type</label>
+        <select class="finput" id="chg-type"><option>Bed Charge</option><option>Doctor Visit</option><option>Medicine</option><option>Procedure</option><option>Lab Test</option><option>Consumable</option><option>Nursing</option><option>Other</option></select>
+      </div>
+      <div><label class="flbl">Description *</label><input class="finput" id="chg-desc" placeholder="e.g. IV Drip, Paracetamol 500mg, Dressing"/></div>
+      <div class="rx-3col">
+        <div><label class="flbl">Qty</label><input class="finput" id="chg-qty" type="number" value="1" min="1"/></div>
+        <div><label class="flbl">Unit Price (₹)</label><input class="finput" id="chg-price" type="number" placeholder="0" oninput="updateChargeTotal()"/></div>
+        <div><label class="flbl">Total</label><input class="finput" id="chg-total" readonly style="background:var(--green-bg);border-color:var(--green-border);color:var(--green);font-weight:700"/></div>
+      </div>
+      <button class="msub" onclick="saveCharge()">+ Add to Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISCHARGE MODAL -->
+<div class="mod-ov" id="mod-discharge">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">📄 Generate Discharge Summary</div><button class="mclose" onclick="closeModal('mod-discharge')">✕</button></div>
+    <div class="mb">
+      <div><label class="flbl">Final Diagnosis</label><input class="finput" id="dis-diag" placeholder="Final confirmed diagnosis"/></div>
+      <div><label class="flbl">Treatment Summary</label><textarea class="finput ftextarea" id="dis-summary" rows="3" placeholder="Brief summary of treatment given..."></textarea></div>
+      <div><label class="flbl">Discharge Medicines</label><textarea class="finput ftextarea" id="dis-meds" rows="2" placeholder="Medicines to continue at home..."></textarea></div>
+      <div class="rx-2col">
+        <div><label class="flbl">Follow-up Date</label><input class="finput" id="dis-followup" type="date"/></div>
+        <div><label class="flbl">Follow-up Instructions</label><input class="finput" id="dis-instr" placeholder="e.g. Suture removal in 7 days"/></div>
+      </div>
+      <div id="dis-bill-summary" style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:12px 14px">
+        <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:4px">TOTAL BILL</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:24px;color:var(--green)" id="dis-total-amount">₹0</div>
+      </div>
+      <button class="msub" onclick="generateDischarge()">📄 Generate & Send to WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="nh-toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   AuraScale NH — Nursing Home Operating System
+   Same Supabase project as clinic app
+══════════════════════════════════════════════════════ */
+const SUPABASE_URL='https://qquyqejqrxfhtmidmgkb.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdXlxZWpxcnhmaHRtaWRtZ2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzA1MTIsImV4cCI6MjA5NjM0NjUxMn0.b7TgPU6ZzhC3-ahx-j0BRiRpJ9geyEMkePpV7KFyoZI';
+const _supa=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+
+var _clinicId=null;
+var _currentAdmissionId=null;
+var _currentRoundsPatient=null;
+var _currentBillingPatient=null;
+var _currentDischargeId=null;
+
+/* ── DATE ── */
+function setDate(){
+  var d=new Date();
+  var s=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var el=document.getElementById('hdr-date');if(el)el.textContent=s;
+  var el2=document.getElementById('dash-date2');if(el2)el2.textContent=s;
+}
+setDate();
+
+/* ── TOAST ── */
+function showToast(msg){
+  var t=document.getElementById('nh-toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+/* ── THEME ── */
+function toggleTheme(){
+  var th=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',th);
+  localStorage.setItem('nh-theme',th);
+}
+(function(){var th=localStorage.getItem('nh-theme')||'light';document.documentElement.setAttribute('data-theme',th);})();
+
+/* ── NAVIGATION ── */
+function nav(id,btn){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')});
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
+  var v=document.getElementById('v-'+id);
+  if(v)v.classList.add('on');
+  if(btn)btn.classList.add('on');
+  var titles={dashboard:'Dashboard',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge'};
+  var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
+  if(id==='beds')loadBeds();
+  if(id==='admissions'){loadAdmissions();loadDischarges();}
+  if(id==='rounds')loadRoundsPatients();
+  if(id==='billing')loadBillingPatients();
+  if(id==='discharge')loadDischargeList();
+}
+
+/* ── MODAL ── */
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function openAdmitModal(){loadVacantBeds();openModal('mod-admit')}
+function openAddBedModal(){openModal('mod-add-bed')}
+function openAddNoteModal(){if(!_currentRoundsPatient){showToast('Select a patient first');return;}openModal('mod-note')}
+function openAddChargeModal(){if(!_currentBillingPatient){showToast('Select a patient first');return;}openModal('mod-charge')}
+
+/* ── AUTH ── */
+function switchAuthTab(tab,el){
+  document.querySelectorAll('.auth-tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.auth-panel').forEach(function(p){p.classList.remove('active')});
+  el.classList.add('active');
+  document.getElementById('auth-panel-'+tab).classList.add('active');
+}
+
+async function handleLogin(){
+  var email=(document.getElementById('login-email').value||'').trim();
+  var pass=document.getElementById('login-pass').value||'';
+  var err=document.getElementById('login-error');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Email and password required.';err.style.display='block';return;}
+  var r=await _supa.auth.signInWithPassword({email,password:pass});
+  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+  await _initApp();
+}
+
+async function handleSignup(){
+  var nhname=(document.getElementById('su-nhname').value||'').trim();
+  var name=(document.getElementById('su-name').value||'').trim();
+  var email=(document.getElementById('su-email').value||'').trim();
+  var mobile=(document.getElementById('su-mobile').value||'').trim();
+  var pass=document.getElementById('su-pass').value||'';
+  var err=document.getElementById('signup-error');
+  err.style.display='none';
+  if(!nhname||!name||!email||!pass){err.textContent='Please fill all required fields.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  var r=await _supa.auth.signUp({email,password:pass});
+  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+  if(r.data&&r.data.user){
+    await _supa.from('clinics').insert({
+      owner_id:r.data.user.id,
+      name:nhname,
+      doctor_name:name,
+      phone:mobile,
+      facility_type:'nursing_home',
+      is_approved:false,
+      plan:'pending'
+    });
+  }
+  document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Registration Submitted</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your nursing home account is under review.<br>We will activate it within 24 hours.<br><br>WhatsApp us to expedite activation.</p><a href="https://wa.me/919330660325?text=Hi, I registered '+nhname+' on AuraScale NH. Please activate." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us to Activate</a></div></div>';
+}
+
+async function handleLogout(){
+  await _supa.auth.signOut();
+  document.getElementById('app-shell').classList.remove('authenticated');
+  document.getElementById('auth-screen').classList.remove('hidden');
+  location.reload();
+}
+
+/* ── INIT ── */
+async function _initApp(){
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app-shell').classList.add('authenticated');
+  var uid=(await _supa.auth.getUser()).data.user.id;
+  var cl=await _supa.from('clinics').select('id,name,facility_type,is_approved').eq('owner_id',uid).single();
+  if(!cl.data){showToast('Clinic record not found.');return;}
+  if(!cl.data.is_approved){
+    document.getElementById('app-shell').classList.remove('authenticated');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/919330660325?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a></div></div>';
+    return;
+  }
+  _clinicId=cl.data.id;
+  document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
+  loadDashboard();
+}
+
+/* ── DASHBOARD ── */
+async function loadDashboard(){
+  if(!_clinicId)return;
+  var today=new Date().toISOString().slice(0,10);
+  var adm=await _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admitting_doctor,admission_diagnosis,status').eq('clinic_id',_clinicId).eq('status','Active');
+  var beds=await _supa.from('beds').select('id,bed_number,status').eq('clinic_id',_clinicId);
+  var todayAdm=await _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00').lte('admission_date',today+'T23:59:59');
+  var todayDis=await _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',today+'T00:00:00');
+  var charges=await _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',today+'T00:00:00');
+  var active=adm.data||[];
+  var allBeds=beds.data||[];
+  var occupied=allBeds.filter(function(b){return b.status==='Occupied'}).length;
+  var todayRev=(charges.data||[]).reduce(function(s,c){return s+(c.total_price||0)},0);
+  document.getElementById('dm-occupied').textContent=occupied;
+  document.getElementById('dm-total-beds').textContent=allBeds.length;
+  document.getElementById('dm-today-adm').textContent=(todayAdm.data||[]).length;
+  document.getElementById('dm-today-dis').textContent=(todayDis.data||[]).length;
+  document.getElementById('dm-revenue').textContent='₹'+todayRev.toLocaleString('en-IN');
+  document.getElementById('active-count').textContent=active.length;
+  document.getElementById('nav-occupied-count').textContent=occupied;
+  document.getElementById('sb-occupancy').textContent=occupied+'/'+allBeds.length+' beds occupied';
+  var list=document.getElementById('dash-active-list');
+  if(!active.length){list.innerHTML='<div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No active admissions</p></div>';return;}
+  list.innerHTML=active.slice(0,5).map(function(a){
+    var days=Math.floor((Date.now()-new Date(a.admission_date))/(1000*60*60*24));
+    return '<div class="adm-row"><div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div><div style="flex:1"><div class="adm-name">'+a.patient_name+'</div><div class="adm-meta">'+a.admitting_doctor+' · '+days+' day(s) · '+(a.admission_diagnosis||'')+'</div></div><span class="chip ch-act">Active</span></div>';
+  }).join('');
+  var mini=document.getElementById('dash-bed-mini');
+  mini.innerHTML=allBeds.map(function(b){
+    var col=b.status==='Occupied'?'var(--green)':b.status==='Cleaning'?'var(--amber)':b.status==='Reserved'?'var(--blue)':'var(--border)';
+    return '<div title="Bed '+b.bed_number+' — '+b.status+'" style="width:100%;aspect-ratio:1;background:'+col+';border-radius:6px;opacity:0.7;cursor:default"></div>';
+  }).join('');
+}
+
+/* ── BEDS ── */
+async function loadBeds(){
+  if(!_clinicId)return;
+  var r=await _supa.from('beds').select('*').eq('clinic_id',_clinicId).order('bed_number');
+  var adm=await _supa.from('admissions').select('bed_id,patient_name,admission_date').eq('clinic_id',_clinicId).eq('status','Active');
+  var admMap={};
+  (adm.data||[]).forEach(function(a){admMap[a.bed_id]=a;});
+  var beds=r.data||[];
+  var grid=document.getElementById('bed-grid');
+  if(!beds.length){grid.innerHTML='<div style="grid-column:1/-1"><div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No beds added yet</p><p class="empty-s">Click "Add Bed" to set up your bed management</p></div></div>';return;}
+  grid.innerHTML=beds.map(function(b){
+    var a=admMap[b.id];
+    var cls=b.status==='Occupied'?'occupied':b.status==='Cleaning'?'cleaning':b.status==='Reserved'?'occupied':'';
+    if(a&&a.patient_name){cls='occupied';}
+    var days=a?Math.floor((Date.now()-new Date(a.admission_date))/(1000*60*60*24)):0;
+    return '<div class="bed-card '+cls+'" onclick="bedClick(\''+b.id+'\',\''+b.status+'\')">'
+      +'<div class="bed-num">'+b.bed_number+'</div>'
+      +'<div class="bed-ward">'+b.ward+'</div>'
+      +(a?'<div class="bed-patient">'+a.patient_name+'</div><div class="bed-days">Day '+days+'</div>':'')
+      +'<div class="bed-status-dot"></div>'
+      +'</div>';
+  }).join('');
+}
+function bedClick(bedId,status){
+  if(status==='Vacant')showToast('Bed is vacant — admit a patient from the header button');
+  else showToast('Click Admissions to view patient details');
+}
+async function addBed(){
+  var num=(document.getElementById('bed-num').value||'').trim();
+  var ward=document.getElementById('bed-ward').value;
+  if(!num){showToast('Bed number is required');return;}
+  var r=await _supa.from('beds').insert({clinic_id:_clinicId,bed_number:num,ward:ward,status:'Vacant'});
+  if(r.error){showToast('Error: '+r.error.message);return;}
+  closeModal('mod-add-bed');
+  document.getElementById('bed-num').value='';
+  showToast('Bed '+num+' added');
+  loadBeds();loadDashboard();
+}
+async function loadVacantBeds(){
+  var r=await _supa.from('beds').select('id,bed_number,ward').eq('clinic_id',_clinicId).eq('status','Vacant');
+  var sel=document.getElementById('adm-bed');
+  sel.innerHTML='<option value="">Select vacant bed</option>'+((r.data||[]).map(function(b){return '<option value="'+b.id+'">Bed '+b.bed_number+' ('+b.ward+')</option>';})).join('');
+}
+
+/* ── ADMISSIONS ── */
+async function admitPatient(){
+  var name=(document.getElementById('adm-name').value||'').trim();
+  var phone=(document.getElementById('adm-phone').value||'').trim();
+  var age=(document.getElementById('adm-age').value||'').trim();
+  var gender=document.getElementById('adm-gender').value;
+  var bedId=document.getElementById('adm-bed').value;
+  var doctor=(document.getElementById('adm-doctor').value||'').trim();
+  var diag=(document.getElementById('adm-diagnosis').value||'').trim();
+  var rate=parseFloat(document.getElementById('adm-rate').value)||0;
+  var err=document.getElementById('adm-error');
+  err.style.display='none';
+  if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
+  if(!bedId){err.textContent='Please select a bed';err.style.display='block';return;}
+  if(!doctor){err.textContent='Admitting doctor is required';err.style.display='block';return;}
+  var r=await _supa.from('admissions').insert({clinic_id:_clinicId,patient_name:name,patient_phone:phone,patient_age:age,patient_gender:gender,bed_id:bedId,admitting_doctor:doctor,admission_diagnosis:diag,daily_rate:rate,status:'Active'}).select('id').single();
+  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+  await _supa.from('beds').update({status:'Occupied',current_admission_id:r.data.id}).eq('id',bedId);
+  if(rate>0){
+    await _supa.from('admission_charges').insert({clinic_id:_clinicId,admission_id:r.data.id,charge_type:'Bed Charge',description:'Bed charge (Day 1)',quantity:1,unit_price:rate,total_price:rate,added_by:doctor});
+  }
+  closeModal('mod-admit');
+  ['adm-name','adm-phone','adm-age','adm-doctor','adm-diagnosis','adm-rate'].forEach(function(id){document.getElementById(id).value='';});
+  showToast(name+' admitted successfully');
+  loadDashboard();loadBeds();loadAdmissions();
+}
+async function loadAdmissions(){
+  if(!_clinicId)return;
+  var r=await _supa.from('admissions').select('*').eq('clinic_id',_clinicId).eq('status','Active').order('admission_date',{ascending:false});
+  var list=document.getElementById('adm-list');
+  document.getElementById('adm-count').textContent=(r.data||[]).length;
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No active admissions</p></div>';return;}
+  list.innerHTML=(r.data||[]).map(function(a){
+    var days=Math.floor((Date.now()-new Date(a.admission_date))/(1000*60*60*24));
+    return '<div class="adm-row">'
+      +'<div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div class="adm-name">'+a.patient_name+'</div>'
+        +'<div class="adm-meta">'+a.admitting_doctor+' · Day '+(days+1)+' · '+(a.admission_diagnosis||'No diagnosis entered')+'</div>'
+        +'<div class="adm-meta">'+(a.patient_age?a.patient_age+'y':'')+' '+(a.patient_gender||'')+(a.patient_phone?' · '+a.patient_phone:'')+'</div>'
+      +'</div>'
+      +'<div class="adm-actions">'
+        +'<button class="qbtn" onclick="openDischargeModal(\''+a.id+'\')">Discharge</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+async function loadDischarges(){
+  var r=await _supa.from('admissions').select('*').eq('clinic_id',_clinicId).eq('status','Discharged').order('discharge_date',{ascending:false}).limit(10);
+  var list=document.getElementById('dis-list');
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">✅</div><p class="empty-t">No recent discharges</p></div>';return;}
+  list.innerHTML=(r.data||[]).map(function(a){
+    return '<div class="adm-row">'
+      +'<div class="adm-av" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">'+(a.patient_name||'?').charAt(0)+'</div>'
+      +'<div style="flex:1"><div class="adm-name">'+a.patient_name+'</div>'
+      +'<div class="adm-meta">Discharged · '+(a.admitting_doctor||'')+'</div></div>'
+      +'<span class="chip ch-dis">Discharged</span>'
+      +'</div>';
+  }).join('');
+}
+
+/* ── PROGRESS NOTES ── */
+async function loadRoundsPatients(){
+  if(!_clinicId)return;
+  var r=await _supa.from('admissions').select('id,patient_name,admitting_doctor,admission_diagnosis').eq('clinic_id',_clinicId).eq('status','Active');
+  var list=document.getElementById('rounds-patient-list');
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No active patients</p></div>';return;}
+  list.innerHTML=(r.data||[]).map(function(a){
+    return '<div class="adm-row" style="cursor:pointer" onclick="selectRoundsPatient(\''+a.id+'\',\''+a.patient_name+'\')">'
+      +'<div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div>'
+      +'<div><div class="adm-name">'+a.patient_name+'</div>'
+      +'<div class="adm-meta">'+(a.admitting_doctor||'')+'</div></div>'
+      +'</div>';
+  }).join('');
+}
+function selectRoundsPatient(id,name){
+  _currentRoundsPatient=id;
+  document.getElementById('rounds-patient-name').textContent=name;
+  document.getElementById('note-doc').value='';
+  loadProgressNotes(id);
+}
+async function loadProgressNotes(admId){
+  var r=await _supa.from('progress_notes').select('*').eq('admission_id',admId).order('created_at',{ascending:false});
+  var list=document.getElementById('rounds-notes-list');
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">📋</div><p class="empty-t">No notes yet today</p><p class="empty-s">Add the first progress note</p></div>';return;}
+  list.innerHTML=(r.data||[]).map(function(n){
+    var t=new Date(n.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    var vitals=[];
+    if(n.bp)vitals.push('BP: '+n.bp);if(n.temperature)vitals.push('T: '+n.temperature+'°F');
+    if(n.pulse)vitals.push('P: '+n.pulse);if(n.spo2)vitals.push('SpO2: '+n.spo2+'%');
+    if(n.weight)vitals.push('Wt: '+n.weight+'kg');
+    return '<div class="note-row">'
+      +'<div style="display:flex;justify-content:space-between"><span class="note-doc">'+(n.doctor_name||'Unknown')+'</span><span class="note-time">'+t+'</span></div>'
+      +(vitals.length?'<div class="note-vitals">'+vitals.map(function(v){return '<span class="vital-pill">'+v+'</span>'}).join('')+'</div>':'')
+      +(n.subjective?'<div class="note-text"><b>S:</b> '+n.subjective+'</div>':'')
+      +(n.plan?'<div class="note-text"><b>A/P:</b> '+n.plan+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+async function saveProgressNote(){
+  if(!_currentRoundsPatient){showToast('No patient selected');return;}
+  var doc=(document.getElementById('note-doc').value||'').trim();
+  var bp=(document.getElementById('note-bp').value||'').trim();
+  var temp=(document.getElementById('note-temp').value||'').trim();
+  var spo2=(document.getElementById('note-spo2').value||'').trim();
+  var pulse=(document.getElementById('note-pulse').value||'').trim();
+  var weight=(document.getElementById('note-weight').value||'').trim();
+  var subj=(document.getElementById('note-subj').value||'').trim();
+  var plan=(document.getElementById('note-plan').value||'').trim();
+  if(!subj&&!plan){showToast('Add at least one note');return;}
+  var r=await _supa.from('progress_notes').insert({clinic_id:_clinicId,admission_id:_currentRoundsPatient,doctor_name:doc,bp:bp,temperature:temp,spo2:spo2,pulse:pulse,weight:weight,subjective:subj,plan:plan,note_date:new Date().toISOString().slice(0,10)});
+  if(r.error){showToast('Error: '+r.error.message);return;}
+  closeModal('mod-note');
+  ['note-doc','note-bp','note-temp','note-spo2','note-pulse','note-weight','note-subj','note-plan'].forEach(function(id){document.getElementById(id).value='';});
+  showToast('Note saved');
+  loadProgressNotes(_currentRoundsPatient);
+}
+
+/* ── BILLING ── */
+async function loadBillingPatients(){
+  if(!_clinicId)return;
+  var r=await _supa.from('admissions').select('id,patient_name,admitting_doctor').eq('clinic_id',_clinicId).eq('status','Active');
+  var list=document.getElementById('billing-patient-list');
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No active patients</p></div>';return;}
+  list.innerHTML=(r.data||[]).map(function(a){
+    return '<div class="adm-row" style="cursor:pointer" onclick="selectBillingPatient(\''+a.id+'\',\''+a.patient_name+'\')">'
+      +'<div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div>'
+      +'<div><div class="adm-name">'+a.patient_name+'</div><div class="adm-meta">'+(a.admitting_doctor||'')+'</div></div>'
+      +'</div>';
+  }).join('');
+}
+function selectBillingPatient(id,name){
+  _currentBillingPatient=id;
+  document.getElementById('billing-patient-name').textContent=name;
+  loadCharges(id);
+}
+async function loadCharges(admId){
+  var r=await _supa.from('admission_charges').select('*').eq('admission_id',admId).order('created_at',{ascending:false});
+  var list=document.getElementById('billing-charges-list');
+  var total=0;
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No charges yet</p><p class="empty-s">Add charges to build the bill</p></div>';document.getElementById('billing-total').textContent='₹0';return;}
+  (r.data||[]).forEach(function(c){total+=c.total_price||0;});
+  list.innerHTML=(r.data||[]).map(function(c){
+    var t=new Date(c.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="chg-row">'
+      +'<div><div class="chg-name">'+c.description+'</div><div class="chg-type">'+c.charge_type+' · '+t+(c.added_by?' · '+c.added_by:'')+'</div></div>'
+      +'<div class="chg-amt">₹'+Number(c.total_price).toLocaleString('en-IN')+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('billing-total').textContent='₹'+total.toLocaleString('en-IN');
+  document.getElementById('billing-total-bar').style.display='flex';
+}
+function updateChargeTotal(){
+  var qty=parseFloat(document.getElementById('chg-qty').value)||1;
+  var price=parseFloat(document.getElementById('chg-price').value)||0;
+  document.getElementById('chg-total').value='₹'+(qty*price).toLocaleString('en-IN');
+}
+async function saveCharge(){
+  if(!_currentBillingPatient){showToast('No patient selected');return;}
+  var type=document.getElementById('chg-type').value;
+  var desc=(document.getElementById('chg-desc').value||'').trim();
+  var qty=parseFloat(document.getElementById('chg-qty').value)||1;
+  var price=parseFloat(document.getElementById('chg-price').value)||0;
+  if(!desc||!price){showToast('Description and price required');return;}
+  var r=await _supa.from('admission_charges').insert({clinic_id:_clinicId,admission_id:_currentBillingPatient,charge_type:type,description:desc,quantity:qty,unit_price:price,total_price:qty*price});
+  if(r.error){showToast('Error: '+r.error.message);return;}
+  closeModal('mod-charge');
+  document.getElementById('chg-desc').value='';document.getElementById('chg-price').value='';document.getElementById('chg-qty').value='1';document.getElementById('chg-total').value='';
+  showToast('Charge added: ₹'+(qty*price).toLocaleString('en-IN'));
+  loadCharges(_currentBillingPatient);
+}
+
+/* ── DISCHARGE ── */
+async function loadDischargeList(){
+  if(!_clinicId)return;
+  var r=await _supa.from('admissions').select('*').eq('clinic_id',_clinicId).eq('status','Active').order('admission_date');
+  var list=document.getElementById('discharge-list');
+  document.getElementById('discharge-count').textContent=(r.data||[]).length;
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">✅</div><p class="empty-t">No active admissions</p></div>';return;}
+  list.innerHTML=(r.data||[]).map(function(a){
+    var days=Math.floor((Date.now()-new Date(a.admission_date))/(1000*60*60*24));
+    return '<div class="adm-row">'
+      +'<div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div>'
+      +'<div style="flex:1"><div class="adm-name">'+a.patient_name+'</div>'
+      +'<div class="adm-meta">'+a.admitting_doctor+' · Day '+(days+1)+'</div></div>'
+      +'<button class="add-btn" style="font-size:11px;padding:7px 12px" onclick="openDischargeModal(\''+a.id+'\')">📄 Discharge</button>'
+      +'</div>';
+  }).join('');
+}
+async function openDischargeModal(admId){
+  _currentDischargeId=admId;
+  var charges=await _supa.from('admission_charges').select('total_price').eq('admission_id',admId);
+  var total=(charges.data||[]).reduce(function(s,c){return s+(c.total_price||0)},0);
+  document.getElementById('dis-total-amount').textContent='₹'+total.toLocaleString('en-IN');
+  document.getElementById('dis-followup').value='';
+  document.getElementById('dis-diag').value='';
+  document.getElementById('dis-summary').value='';
+  document.getElementById('dis-meds').value='';
+  document.getElementById('dis-instr').value='';
+  openModal('mod-discharge');
+}
+async function generateDischarge(){
+  if(!_currentDischargeId)return;
+  var diag=(document.getElementById('dis-diag').value||'').trim();
+  var summary=(document.getElementById('dis-summary').value||'').trim();
+  var meds=(document.getElementById('dis-meds').value||'').trim();
+  var followup=document.getElementById('dis-followup').value;
+  var instr=(document.getElementById('dis-instr').value||'').trim();
+  var adm=await _supa.from('admissions').select('*').eq('id',_currentDischargeId).single();
+  var charges=await _supa.from('admission_charges').select('*').eq('admission_id',_currentDischargeId);
+  var total=(charges.data||[]).reduce(function(s,c){return s+(c.total_price||0)},0);
+  var days=Math.floor((Date.now()-new Date(adm.data.admission_date))/(1000*60*60*24));
+  /* Generate PDF */
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({unit:'mm',format:'a4'});
+  var W=210,x=16,y=18;
+  doc.setFillColor(18,151,106);doc.rect(0,0,W,30,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('DISCHARGE SUMMARY',x,12);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);
+  var nhName=document.getElementById('sb-nh-name').textContent;
+  doc.text(nhName,x,19);doc.text('AuraScale NH · Nursing Home Management System',x,25);
+  y=38;doc.setTextColor(24,23,15);
+  doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text('Patient: ',x,y);doc.setFont('helvetica','normal');doc.text((adm.data.patient_name||'')+'   '+((adm.data.patient_age||'')+' yrs')+'   '+(adm.data.patient_gender||''),x+18,y);
+  y+=6;doc.setFont('helvetica','bold');doc.text('Admitted:',x,y);doc.setFont('helvetica','normal');doc.text(new Date(adm.data.admission_date).toLocaleDateString('en-GB')+' · Duration: '+(days+1)+' days',x+18,y);
+  y+=6;doc.setFont('helvetica','bold');doc.text('Doctor:',x,y);doc.setFont('helvetica','normal');doc.text(adm.data.admitting_doctor||'',x+18,y);
+  y+=4;doc.setDrawColor(200,200,200);doc.line(x,y,W-16,y);y+=8;
+  if(diag){doc.setFont('helvetica','bold');doc.text('Final Diagnosis:',x,y);y+=6;doc.setFont('helvetica','normal');doc.splitTextToSize(diag,W-2*x).forEach(function(l){doc.text(l,x,y);y+=5;});}
+  if(summary){y+=4;doc.setFont('helvetica','bold');doc.text('Treatment Summary:',x,y);y+=6;doc.setFont('helvetica','normal');doc.splitTextToSize(summary,W-2*x).forEach(function(l){doc.text(l,x,y);y+=5;});}
+  if(meds){y+=4;doc.setFont('helvetica','bold');doc.text('Discharge Medicines:',x,y);y+=6;doc.setFont('helvetica','normal');doc.splitTextToSize(meds,W-2*x).forEach(function(l){doc.text(l,x,y);y+=5;});}
+  if(followup){y+=4;doc.setFont('helvetica','bold');doc.text('Follow-up: ',x,y);doc.setFont('helvetica','normal');doc.text(new Date(followup).toLocaleDateString('en-GB')+(instr?' — '+instr:''),x+20,y);y+=6;}
+  y+=4;doc.line(x,y,W-16,y);y+=6;
+  doc.setFont('helvetica','bold');doc.text('BILL SUMMARY',x,y);y+=6;
+  var chargeList=charges.data||[];
+  chargeList.forEach(function(c){
+    doc.setFont('helvetica','normal');doc.setFontSize(9);
+    doc.text(c.description+'  (×'+c.quantity+')',x,y);
+    doc.text('₹'+Number(c.total_price).toLocaleString('en-IN'),W-30,y);y+=5;
+  });
+  y+=2;doc.line(x,y,W-16,y);y+=5;
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('Total Amount:',x,y);doc.text('₹'+total.toLocaleString('en-IN'),W-30,y);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(158,154,147);doc.text('Generated by AuraScale NH · '+new Date().toLocaleDateString('en-GB'),x,285);
+  var blob=doc.output('blob');
+  var url=URL.createObjectURL(blob);window.open(url,'_blank');
+  /* Update admission status */
+  await _supa.from('admissions').update({status:'Discharged',discharge_date:new Date().toISOString()}).eq('id',_currentDischargeId);
+  await _supa.from('beds').update({status:'Cleaning',current_admission_id:null}).eq('current_admission_id',_currentDischargeId);
+  /* Send WhatsApp if phone exists */
+  if(adm.data.patient_phone){
+    var phone=(adm.data.patient_phone||'').replace(/[^\d]/g,'');
+    var msg='Dear '+adm.data.patient_name+', you have been discharged from '+nhName+'. Total bill: ₹'+total.toLocaleString('en-IN')+(followup?'. Follow-up: '+new Date(followup).toLocaleDateString('en-GB'):'')+(instr?'. '+instr:'')+'. Thank you for choosing us. — AuraScale NH';
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+  }
+  closeModal('mod-discharge');
+  showToast('Discharge complete · PDF generated · WhatsApp sent');
+  loadDashboard();loadAdmissions();loadDischarges();loadDischargeList();loadBeds();
+}
+
+/* ── SESSION RESTORE ── */
+_supa.auth.onAuthStateChange(async function(event,session){
+  if(session&&session.user){await _initApp();}
+});
+
+</script>
+</body>
+</html>
