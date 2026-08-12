@@ -3670,9 +3670,27 @@ async function handleSignup(){
   const btn=document.querySelector('#auth-panel-signup .msub');
   if(btn){btn.textContent='Creating account…';btn.disabled=true;}
   try{
-    const {data,error}=await _supa.auth.signUp({email,password:pass});
-    if(error){err.textContent=error.message||'Signup failed. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}return;}
-    if(!data.user||!data.session){err.textContent='Check your email to confirm your account, then sign in.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}switchAuthTab('login');return;}
+    let {data,error}=await _supa.auth.signUp({email,password:pass});
+    let isExistingAccount=false;
+    if(error){
+      /* Same email may already have an account under Nursing Home OS
+         (or a previous Clinic signup) — that's allowed as long as
+         it's a different facility. Try signing in with the same
+         credentials instead of failing outright. */
+      if(/already registered/i.test(error.message||'')){
+        const signInRes=await _supa.auth.signInWithPassword({email,password:pass});
+        if(signInRes.error||!signInRes.data||!signInRes.data.user){
+          err.textContent='An account with this email already exists. Please sign in with its password, or use Forgot Password to reset it, before registering a new facility.';
+          err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}
+          return;
+        }
+        data=signInRes.data;
+        isExistingAccount=true;
+      }else{
+        err.textContent=error.message||'Signup failed. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}return;
+      }
+    }
+    if(!isExistingAccount&&(!data.user||!data.session)){err.textContent='Check your email to confirm your account, then sign in.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}switchAuthTab('login');return;}
     /* block onAuthStateChange from running _loadClinicAndGo until clinic row is inserted */
     _setupInProgress=true;
     const {data:clinicRow,error:clinicErr}=await _supa.from('clinics').insert({
@@ -3682,7 +3700,14 @@ async function handleSignup(){
     }).select().single();
     if(!clinicErr&&clinicRow){
       _clinicId=clinicRow.id;
-      await _supa.from('profiles').upsert({id:data.user.id,full_name:doctor,email,mobile,clinic_id:clinicRow.id});
+      await _supa.from('facility_members').upsert({user_id:data.user.id,clinic_id:clinicRow.id,role:'owner'});
+      /* Don't clobber an existing profiles.clinic_id link (e.g. this
+         login already runs a different clinic) — only set it if this
+         account has no Clinic OS link yet. */
+      const existingProfile=await _supa.from('profiles').select('clinic_id').eq('id',data.user.id).single();
+      if(!existingProfile.data||!existingProfile.data.clinic_id){
+        await _supa.from('profiles').upsert({id:data.user.id,full_name:doctor,email,mobile,clinic_id:clinicRow.id});
+      }
     }
     _setupInProgress=false;
     setMkt(authSelectedCountry);
@@ -3715,8 +3740,10 @@ async function _ensureClinicId(){
   if(pr.data&&pr.data.clinic_id){_clinicId=pr.data.clinic_id;return _clinicId;}
   var doctorName=(pr.data&&pr.data.full_name)||userEmail.split('@')[0]||'Doctor';
 
-  /* Step 3: no clinic_id in profile — look up clinic by owner_id */
-  var cr=await _supa.from('clinics').select('id').eq('owner_id',uid).limit(1);
+  /* Step 3: no clinic_id in profile — look up clinic by owner_id.
+     Exclude nursing-home rows so this can't accidentally pick up an
+     NH facility owned by the same login. */
+  var cr=await _supa.from('clinics').select('id').eq('owner_id',uid).or('facility_type.is.null,facility_type.neq.nursing_home').limit(1);
   if(cr.data&&cr.data.length>0){
     _clinicId=cr.data[0].id;
     await _supa.from('profiles').upsert({id:uid,clinic_id:_clinicId});
