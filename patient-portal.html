@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>AuraScale — My Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F7F6F3;color:#18170F;min-height:100vh;padding:20px;-webkit-text-size-adjust:100%}
+.wrap{max-width:480px;margin:0 auto}
+h1{font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:4px}
+.sub{color:#64605A;font-size:12.5px;margin-bottom:20px}
+.card{background:#fff;border:1px solid #E8E5DF;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.card h2{font-size:14px;margin-bottom:10px}
+input{width:100%;background:#F7F6F3;border:1px solid #E8E5DF;border-radius:8px;padding:12px;font-size:15px;margin-bottom:10px;min-height:46px}
+button{width:100%;background:#12976A;color:#fff;border:none;border-radius:8px;padding:13px;font-weight:700;font-size:14px;min-height:46px;cursor:pointer}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F0EEE9;font-size:13px}
+.row:last-child{border-bottom:none}
+.note{background:#FDF4E6;border:1px solid #F0CEAA;border-radius:8px;padding:10px 12px;font-size:11.5px;color:#64605A;margin-bottom:12px}
+.err{color:#C23838;font-size:12.5px;margin-top:8px;display:none}
+#result{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>AuraScale</h1>
+  <p class="sub">My Records — Patient Access</p>
+
+  <div class="card" id="lookup-card">
+    <h2>Enter your access code</h2>
+    <p class="note">Your facility gives you a private access code to view your own records here. AuraScale never shows another patient's information.</p>
+    <input id="code-input" placeholder="Access code" autocomplete="off"/>
+    <button onclick="lookup()">View My Records</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="result">
+    <div class="card">
+      <h2 id="p-name">—</h2>
+      <div class="row"><span>Age</span><span id="p-age">—</span></div>
+      <div class="row"><span>Gender</span><span id="p-gender">—</span></div>
+    </div>
+    <div class="card">
+      <h2>Visit History</h2>
+      <div id="p-admissions"></div>
+    </div>
+    <div class="card">
+      <h2>Documents</h2>
+      <div id="p-documents"></div>
+    </div>
+    <div class="card">
+      <h2>Ayushman / PM-JAY</h2>
+      <p class="note">Internal record only — confirm official status on the government portal.</p>
+      <div id="p-ayushman"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://qquyqejqrxfhtmidmgkb.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdXlxZWpxcnhmaHRtaWRtZ2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzA1MTIsImV4cCI6MjA5NjM0NjUxMn0.b7TgPU6ZzhC3-ahx-j0BRiRpJ9geyEMkePpV7KFyoZI';
+const _supa=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+async function lookup(){
+  var code=(document.getElementById('code-input').value||'').trim();
+  var err=document.getElementById('err');
+  err.style.display='none';
+  if(!code){err.textContent='Please enter your access code.';err.style.display='block';return;}
+  var r=await _supa.rpc('nh_patient_portal_lookup',{p_code:code});
+  if(r.error||!r.data||!r.data.found){
+    err.textContent='No records found for this code. Please check it or contact your facility.';
+    err.style.display='block';
+    return;
+  }
+  var d=r.data;
+  document.getElementById('p-name').textContent=d.patient.name||'Patient';
+  document.getElementById('p-age').textContent=d.patient.age||'—';
+  document.getElementById('p-gender').textContent=d.patient.gender||'—';
+
+  var adm=document.getElementById('p-admissions');
+  adm.innerHTML=(d.admissions&&d.admissions.length)?d.admissions.map(function(a){
+    return '<div class="row"><span>'+(a.status==='Active'?'🟢 Active':'✅ Discharged')+' — '+new Date(a.admission_date).toLocaleDateString('en-GB')+'</span><span>'+(a.diagnosis||'—')+'</span></div>';
+  }).join(''):'<p style="font-size:12.5px;color:#64605A">No visits recorded yet.</p>';
+
+  var docs=document.getElementById('p-documents');
+  docs.innerHTML=(d.documents&&d.documents.length)?d.documents.map(function(doc){
+    return '<div class="row"><span>'+(doc.file_name||'Document')+'</span><span>'+new Date(doc.created_at).toLocaleDateString('en-GB')+'</span></div>';
+  }).join(''):'<p style="font-size:12.5px;color:#64605A">No documents yet.</p>';
+
+  var ay=document.getElementById('p-ayushman');
+  ay.innerHTML=(d.ayushman&&d.ayushman.length)?d.ayushman.map(function(c){
+    return '<div class="row"><span>'+c.status.replace(/_/g,' ')+'</span><span>'+new Date(c.updated_at).toLocaleDateString('en-GB')+'</span></div>';
+  }).join(''):'<p style="font-size:12.5px;color:#64605A">No case recorded.</p>';
+
+  document.getElementById('lookup-card').style.display='none';
+  document.getElementById('result').style.display='block';
+}
+</script>
+</body>
+</html>
