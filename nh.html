@@ -244,6 +244,9 @@ body[data-role="doctor"] .owner-only,body[data-role="doctor"] .reception-only{di
 body[data-role="receptionist"] .owner-only,body[data-role="receptionist"] .doctor-only{display:none!important}
 body:not([data-role="owner"]) .owner-only{display:none!important}
 .mic-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:var(--r-sm);border:1.5px solid var(--red-border);background:var(--red-bg);color:var(--red);font-weight:700;font-size:13px}
+.doctor-home-only,.reception-home-only{display:none}
+body[data-role="doctor"] .doctor-home-only{display:flex}
+body[data-role="receptionist"] .reception-home-only{display:flex}
 .mic-btn.recording{background:var(--red);color:#fff;animation:pulseMic 1.2s infinite}
 @keyframes pulseMic{0%,100%{opacity:1}50%{opacity:.65}}
 .doc-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px}
@@ -316,6 +319,14 @@ body:not([data-role="owner"]) .owner-only{display:none!important}
         Dashboard
       </button>
       <p class="nav-sec">Patients</p>
+      <button class="nb doctor-home-only" onclick="nav('doctor-home',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+        My Patients Home
+      </button>
+      <button class="nb reception-home-only" onclick="nav('reception-home',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+        Reception Home
+      </button>
       <button class="nb" onclick="nav('patients',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
         Patients
@@ -341,6 +352,10 @@ body:not([data-role="owner"]) .owner-only{display:none!important}
       <button class="nb reception-only" onclick="nav('discharge',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
         Discharge
+      </button>
+      <button class="nb owner-only" onclick="nav('finance',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        Finance
       </button>
       <p class="nav-sec">Programs</p>
       <button class="nb" onclick="nav('ayushman',this)">
@@ -417,6 +432,33 @@ body:not([data-role="owner"]) .owner-only{display:none!important}
             <div class="ph"><div class="pt">Bed Occupancy</div></div>
             <div id="dash-bed-mini" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- DOCTOR HOME (distinct landing for doctor role) -->
+      <div id="v-doctor-home" class="view">
+        <div class="sh"><div><h1 class="st">My Patients</h1><p class="ss">Patients assigned to you</p></div></div>
+        <div class="mg" style="margin-bottom:16px">
+          <div class="mc"><div class="mc-lbl">Assigned Patients</div><div class="mc-val" id="dh-assigned-count">0</div></div>
+          <div class="mc"><div class="mc-lbl">Needs Review</div><div class="mc-val" id="dh-review-count">0</div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Needs Your Review</div></div>
+          <div id="dh-review-list"></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">All Assigned Patients</div></div>
+          <div id="dh-patient-list"></div>
+        </div>
+      </div>
+
+      <!-- RECEPTIONIST HOME (simple, register-first landing) -->
+      <div id="v-reception-home" class="view">
+        <div class="sh"><div><h1 class="st">Reception</h1><p class="ss">Register patients and manage admissions</p></div></div>
+        <button class="add-btn" style="width:100%;padding:16px;font-size:14px;margin-bottom:16px" onclick="openAdmitModal()">+ Register / Admit New Patient</button>
+        <div class="panel">
+          <input class="finput" id="rh-search" placeholder="Search patients by name or phone…" oninput="loadReceptionHome()" style="margin-bottom:10px"/>
+          <div id="rh-recent-list"></div>
         </div>
       </div>
 
@@ -519,6 +561,21 @@ body:not([data-role="owner"]) .owner-only{display:none!important}
         </div>
       </div>
 
+      <!-- FINANCE (owner only) -->
+      <div id="v-finance" class="view owner-only">
+        <div class="sh"><div><h1 class="st">Finance</h1><p class="ss">Revenue, payments and outstanding dues across the facility</p></div></div>
+        <div class="mg" style="margin-bottom:16px">
+          <div class="mc"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">This Month</div><div class="mc-val" id="fin-month">₹0</div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Per-Patient Balance</div></div>
+          <div id="fin-list"></div>
+        </div>
+      </div>
+
       <!-- AYUSHMAN / PM-JAY -->
       <div id="v-ayushman" class="view">
         <div class="sh">
@@ -571,6 +628,10 @@ body:not([data-role="owner"]) .owner-only{display:none!important}
         </div>
       </div>
       <div><label class="flbl">Admitting Doctor *</label><input class="finput" id="adm-doctor" placeholder="Dr. name"/></div>
+      <div><label class="flbl">Assign to Doctor Account (optional)</label>
+        <select class="finput" id="adm-assigned-doctor"><option value="">— Not linked to a login yet —</option></select>
+        <p class="ss" style="margin-top:4px">Linking gives that doctor's login access to this patient in My Patients.</p>
+      </div>
       <div><label class="flbl">Admission Diagnosis</label><input class="finput" id="adm-diagnosis" placeholder="e.g. Pneumonia, Fracture, Post-op"/></div>
       <div class="rx-2col">
         <div><label class="flbl">Daily Bed Rate (₹)</label><input class="finput" id="adm-rate" type="number" placeholder="500"/></div>
@@ -679,8 +740,11 @@ body:not([data-role="owner"]) .owner-only{display:none!important}
       </div>
       <div class="ptab-panel active" id="pp-overview"></div>
       <div class="ptab-panel" id="pp-documents">
-        <button class="add-btn reception-only" style="margin-bottom:10px" onclick="document.getElementById('doc-file-input').click()">📎 Upload Document</button>
+        <button class="add-btn reception-only" style="margin-bottom:8px" onclick="document.getElementById('doc-file-input').click()">📎 Upload Document</button>
+        <button class="add-btn reception-only" style="margin-bottom:8px;background:var(--surface);color:var(--text-primary);border:1.5px solid var(--border)" onclick="document.getElementById('photo-file-input').click()">📷 Upload Patient Photo</button>
+        <button class="add-btn reception-only" style="margin-bottom:10px;background:var(--blue);color:#fff" onclick="sendForDoctorReview()">✉️ Send for Doctor Review</button>
         <input type="file" id="doc-file-input" accept="application/pdf,image/*" style="display:none" onchange="handleDocUpload(event)"/>
+        <input type="file" id="photo-file-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)"/>
         <div id="pp-doc-list"></div>
       </div>
       <div class="ptab-panel" id="pp-notes"></div>
@@ -699,13 +763,12 @@ body:not([data-role="owner"]) .owner-only{display:none!important}
       <div><label class="flbl">ABHA ID (separate from PM-JAY — digital health ID)</label><input class="finput" id="ay-abha" placeholder="ABHA number"/></div>
       <div><label class="flbl">Status (internal record)</label>
         <select class="finput" id="ay-status">
-          <option value="pending_verification">Pending Verification</option>
-          <option value="verified">Verified</option>
-          <option value="not_eligible">Not Eligible</option>
-          <option value="claim_submitted">Claim Submitted</option>
-          <option value="claim_approved">Claim Approved</option>
-          <option value="claim_rejected">Claim Rejected</option>
-          <option value="claim_settled">Claim Settled</option>
+          <option value="internal_record">Internal Record</option>
+          <option value="submitted">Submitted</option>
+          <option value="pending">Pending</option>
+          <option value="verified_official">Verified by Official Portal</option>
+          <option value="rejected">Rejected</option>
+          <option value="unknown">Unknown / Not Checked</option>
         </select>
       </div>
       <div><label class="flbl">Notes</label><textarea class="finput ftextarea" id="ay-notes" rows="3" placeholder="Case notes, required documents pending, etc."></textarea></div>
@@ -791,8 +854,11 @@ function nav(id,btn){
   var v=document.getElementById('v-'+id);
   if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var titles={dashboard:'Dashboard',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',ayushman:'Ayushman / PM-JAY',staff:'Staff'};
+  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',finance:'Finance',ayushman:'Ayushman / PM-JAY',staff:'Staff'};
   var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
+  if(id==='doctor-home')loadDoctorHome();
+  if(id==='reception-home')loadReceptionHome();
+  if(id==='finance')loadFinance();
   if(id==='patients')loadPatientsList();
   if(id==='beds')loadBeds();
   if(id==='admissions'){loadAdmissions();loadDischarges();}
@@ -808,7 +874,13 @@ function nav(id,btn){
 /* ── MODAL ── */
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
-function openAdmitModal(){loadVacantBeds();openModal('mod-admit')}
+async function openAdmitModal(){
+  loadVacantBeds();
+  var docs=await _supa.from('nh_staff').select('id,full_name').eq('clinic_id',_clinicId).eq('role','doctor').eq('is_active',true);
+  var sel=document.getElementById('adm-assigned-doctor');
+  sel.innerHTML='<option value="">— Not linked to a login yet —</option>'+(docs.data||[]).map(function(d){return '<option value="'+d.id+'">'+(d.full_name||'Doctor')+'</option>';}).join('');
+  openModal('mod-admit');
+}
 function openAddBedModal(){openModal('mod-add-bed')}
 function openAddNoteModal(){
   if(!_currentRoundsPatient){showToast('Select a patient first');return;}
@@ -934,10 +1006,16 @@ async function _initApp(){
   }
   _clinicId=cl.data.id;
   document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
-  /* Doctor's natural landing view is clinical (Patients), not the
-     owner/reception-oriented Dashboard metrics. */
-  if(_myRole==='doctor'){nav('patients',document.querySelector('.nb[onclick*="patients"]'));}
-  loadDashboard();
+  /* Each role lands on its own portal home, not a shared dashboard. */
+  if(_myRole==='doctor'){
+    document.getElementById('v-dashboard').classList.remove('on');
+    nav('doctor-home',document.querySelector('.nb[onclick*="doctor-home"]')||null);
+  }else if(_myRole==='receptionist'){
+    document.getElementById('v-dashboard').classList.remove('on');
+    nav('reception-home',document.querySelector('.nb[onclick*="reception-home"]')||null);
+  }else{
+    loadDashboard();
+  }
 }
 
 /* ── DASHBOARD ── */
@@ -1035,7 +1113,8 @@ async function admitPatient(){
   if(!doctor){err.textContent='Admitting doctor is required';err.style.display='block';return;}
   /* Find-or-create a persistent patient record so this person has a
      real profile/history across visits, not just a one-off admission row. */
-  var patientId=await findOrCreatePatient(name,phone,age,gender);
+  var assignedDoctorId=document.getElementById('adm-assigned-doctor').value||null;
+  var patientId=await findOrCreatePatient(name,phone,age,gender,assignedDoctorId);
   var r=await _supa.from('admissions').insert({clinic_id:_clinicId,patient_id:patientId,patient_name:name,patient_phone:phone,patient_age:age,patient_gender:gender,bed_id:bedId,admitting_doctor:doctor,admission_diagnosis:diag,daily_rate:rate,status:'Active'}).select('id').single();
   if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
   await _supa.from('beds').update({status:'Occupied',current_admission_id:r.data.id}).eq('id',bedId);
@@ -1143,34 +1222,60 @@ async function saveProgressNote(){
 
 /* ── VOICE NOTES (Web Speech API — transcribes in-browser, doctor
    confirms/edits before saving; nothing is auto-submitted) ── */
+/* ── SPEECH PROVIDER (modular — swap NHSpeech.provider to change engine
+   later, e.g. to an OpenAI STT provider, without touching call sites) ── */
+var NHSpeech={
+  provider:{
+    /* Web Speech API implementation (default, free, in-browser) */
+    name:'webspeech',
+    _rec:null,
+    isSupported:function(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);},
+    start:function(opts){
+      var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      this._rec=new SR();
+      this._rec.lang=opts.lang||'en-IN';
+      this._rec.continuous=true;
+      this._rec.interimResults=true;
+      this._rec.onresult=function(e){
+        var t='';
+        for(var i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;}
+        opts.onResult(t);
+      };
+      this._rec.onerror=function(e){opts.onError&&opts.onError(e.error);};
+      this._rec.onend=function(){opts.onEnd&&opts.onEnd();};
+      this._rec.start();
+    },
+    stop:function(){ if(this._rec){try{this._rec.stop();}catch(e){}} }
+  },
+  start:function(opts){
+    if(!this.provider.isSupported()){opts.onError&&opts.onError('unsupported');return false;}
+    this.provider.start(opts);
+    return true;
+  },
+  stop:function(){ this.provider.stop(); }
+};
+
 function toggleVoiceNote(){
   if(_voiceActive){stopVoiceNote();return;}
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){showToast('Voice input is not supported in this browser.');return;}
-  _voiceRecognition=new SR();
-  _voiceRecognition.lang='en-IN';
-  _voiceRecognition.continuous=true;
-  _voiceRecognition.interimResults=true;
   var target=document.getElementById('note-subj');
   var baseText=target.value?target.value+' ':'';
-  _voiceRecognition.onresult=function(e){
-    var t='';
-    for(var i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;}
-    target.value=baseText+t;
-  };
-  _voiceRecognition.onerror=function(e){
-    document.getElementById('mic-status').textContent='Mic error: '+e.error+'. Please allow microphone access.';
-    stopVoiceNote();
-  };
-  _voiceRecognition.onend=function(){ if(_voiceActive){ /* auto-stopped by browser — reset UI */ stopVoiceNote(); } };
-  _voiceRecognition.start();
+  var started=NHSpeech.start({
+    lang:'en-IN',
+    onResult:function(transcript){ target.value=baseText+transcript; },
+    onError:function(err){
+      document.getElementById('mic-status').textContent=err==='unsupported'?'Voice input is not supported in this browser.':'Mic error: '+err+'. Please allow microphone access.';
+      stopVoiceNote();
+    },
+    onEnd:function(){ if(_voiceActive){ stopVoiceNote(); } }
+  });
+  if(!started)return;
   _voiceActive=true;
   document.getElementById('mic-btn').classList.add('recording');
   document.getElementById('mic-label').textContent='Stop Recording';
   document.getElementById('mic-status').textContent='🔴 Listening… speak naturally, then review the text before saving.';
 }
 function stopVoiceNote(){
-  if(_voiceRecognition){try{_voiceRecognition.stop();}catch(e){}}
+  NHSpeech.stop();
   _voiceActive=false;
   var btn=document.getElementById('mic-btn');
   if(btn){btn.classList.remove('recording');}
@@ -1319,13 +1424,95 @@ async function generateDischarge(){
   loadDashboard();loadAdmissions();loadDischarges();loadDischargeList();loadBeds();
 }
 
+/* ── DOCTOR HOME (distinct landing) ── */
+async function loadDoctorHome(){
+  if(!_clinicId||!_myUid)return;
+  var r=await _supa.from('nh_patients').select('id,full_name,phone,age,gender,needs_review').eq('clinic_id',_clinicId).eq('assigned_doctor_id',_myUid).order('created_at',{ascending:false});
+  var patients=r.data||[];
+  var needsReview=patients.filter(function(p){return p.needs_review;});
+  document.getElementById('dh-assigned-count').textContent=patients.length;
+  document.getElementById('dh-review-count').textContent=needsReview.length;
+  var reviewList=document.getElementById('dh-review-list');
+  reviewList.innerHTML=needsReview.length?needsReview.map(function(p){
+    return '<div class="adm-row" style="cursor:pointer" onclick="openPatientProfile(\''+p.id+'\',\''+(p.full_name||'').replace(/'/g,"\\'")+'\')">'
+      +'<div class="adm-av">'+(p.full_name||'?').charAt(0)+'</div>'
+      +'<div style="flex:1"><div class="adm-name">'+p.full_name+'</div><div class="adm-meta">Sent by reception — needs your review</div></div>'
+      +'<span class="chip ch-wait">Review</span></div>';
+  }).join(''):'<div class="empty"><div class="empty-ic">✅</div><p class="empty-t">Nothing pending review</p></div>';
+  var list=document.getElementById('dh-patient-list');
+  list.innerHTML=patients.length?patients.map(function(p){
+    return '<div class="adm-row" style="cursor:pointer" onclick="openPatientProfile(\''+p.id+'\',\''+(p.full_name||'').replace(/'/g,"\\'")+'\')">'
+      +'<div class="adm-av">'+(p.full_name||'?').charAt(0)+'</div>'
+      +'<div style="flex:1"><div class="adm-name">'+p.full_name+'</div><div class="adm-meta">'+(p.age?p.age+'y ':'')+(p.gender||'')+'</div></div></div>';
+  }).join(''):'<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients assigned to you yet</p><p class="empty-s">Ask reception to link a patient to your account when admitting</p></div>';
+}
+/* Mark reviewed when a doctor opens a patient sent for review */
+async function markReviewedIfNeeded(patientId){
+  if(_myRole!=='doctor')return;
+  await _supa.from('nh_patients').update({needs_review:false}).eq('id',patientId).eq('assigned_doctor_id',_myUid);
+}
+
+/* ── RECEPTIONIST HOME (distinct landing) ── */
+async function loadReceptionHome(){
+  if(!_clinicId)return;
+  var q=(document.getElementById('rh-search').value||'').trim();
+  var query=_supa.from('nh_patients').select('id,full_name,phone,age,gender,needs_review').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(30);
+  if(q)query=query.or('full_name.ilike.%'+q+'%,phone.ilike.%'+q+'%');
+  var r=await query;
+  var list=document.getElementById('rh-recent-list');
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients yet</p></div>';return;}
+  list.innerHTML=r.data.map(function(p){
+    return '<div class="adm-row" style="cursor:pointer" onclick="openPatientProfile(\''+p.id+'\',\''+(p.full_name||'').replace(/'/g,"\\'")+'\')">'
+      +'<div class="adm-av">'+(p.full_name||'?').charAt(0)+'</div>'
+      +'<div style="flex:1"><div class="adm-name">'+p.full_name+'</div><div class="adm-meta">'+(p.phone||'')+'</div></div>'
+      +(p.needs_review?'<span class="chip ch-wait">Sent to doctor</span>':'')+'</div>';
+  }).join('');
+}
+
+/* ── FINANCE (owner only) ── */
+async function loadFinance(){
+  if(!_clinicId||_myRole!=='owner')return;
+  var charges=await _supa.from('admission_charges').select('total_price,admission_id,created_at').eq('clinic_id',_clinicId);
+  var payments=await _supa.from('nh_payments').select('amount,admission_id,created_at').eq('clinic_id',_clinicId);
+  var adms=await _supa.from('admissions').select('id,patient_name,status').eq('clinic_id',_clinicId);
+  var chargeByAdm={},paidByAdm={};
+  var totalCharged=0,totalPaid=0,monthTotal=0;
+  var thisMonth=new Date().toISOString().slice(0,7);
+  (charges.data||[]).forEach(function(c){
+    totalCharged+=c.total_price||0;
+    chargeByAdm[c.admission_id]=(chargeByAdm[c.admission_id]||0)+(c.total_price||0);
+    if((c.created_at||'').slice(0,7)===thisMonth)monthTotal+=c.total_price||0;
+  });
+  (payments.data||[]).forEach(function(p){
+    totalPaid+=p.amount||0;
+    paidByAdm[p.admission_id]=(paidByAdm[p.admission_id]||0)+(p.amount||0);
+  });
+  document.getElementById('fin-charged').textContent='₹'+totalCharged.toLocaleString('en-IN');
+  document.getElementById('fin-paid').textContent='₹'+totalPaid.toLocaleString('en-IN');
+  document.getElementById('fin-due').textContent='₹'+(totalCharged-totalPaid).toLocaleString('en-IN');
+  document.getElementById('fin-month').textContent='₹'+monthTotal.toLocaleString('en-IN');
+  var list=document.getElementById('fin-list');
+  var rows=(adms.data||[]).map(function(a){
+    var charged=chargeByAdm[a.id]||0,paid=paidByAdm[a.id]||0;
+    return {name:a.patient_name,status:a.status,charged:charged,paid:paid,due:charged-paid};
+  }).filter(function(r){return r.charged>0;});
+  list.innerHTML=rows.length?rows.map(function(r){
+    return '<div class="adm-row"><div class="adm-av">'+(r.name||'?').charAt(0)+'</div>'
+      +'<div style="flex:1"><div class="adm-name">'+r.name+'</div><div class="adm-meta">Charged ₹'+r.charged.toLocaleString('en-IN')+' · Paid ₹'+r.paid.toLocaleString('en-IN')+'</div></div>'
+      +'<span class="chip '+(r.due>0?'ch-wait':'ch-act')+'">₹'+r.due.toLocaleString('en-IN')+' due</span></div>';
+  }).join(''):'<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No billing activity yet</p></div>';
+}
+
 /* ── PERSISTENT PATIENTS ── */
-async function findOrCreatePatient(name,phone,age,gender){
+async function findOrCreatePatient(name,phone,age,gender,assignedDoctorId){
   if(phone){
     var existing=await _supa.from('nh_patients').select('id').eq('clinic_id',_clinicId).eq('phone',phone).limit(1);
-    if(existing.data&&existing.data.length){return existing.data[0].id;}
+    if(existing.data&&existing.data.length){
+      if(assignedDoctorId){await _supa.from('nh_patients').update({assigned_doctor_id:assignedDoctorId}).eq('id',existing.data[0].id);}
+      return existing.data[0].id;
+    }
   }
-  var created=await _supa.from('nh_patients').insert({clinic_id:_clinicId,full_name:name,phone:phone,age:age,gender:gender}).select('id').single();
+  var created=await _supa.from('nh_patients').insert({clinic_id:_clinicId,full_name:name,phone:phone,age:age,gender:gender,assigned_doctor_id:assignedDoctorId||null,needs_review:!!assignedDoctorId}).select('id').single();
   return created.data?created.data.id:null;
 }
 async function loadPatientsList(){
@@ -1348,6 +1535,7 @@ async function openPatientProfile(id,name){
   _currentPatientId=id;
   document.getElementById('pp-title').textContent=name||'Patient';
   switchPatientTab('overview',document.querySelector('.patient-tab[data-pt="overview"]'));
+  markReviewedIfNeeded(id);
   var p=await _supa.from('nh_patients').select('*').eq('id',id).single();
   var adms=await _supa.from('admissions').select('status,admission_date,discharge_date,admission_diagnosis,admitting_doctor').eq('patient_id',id).order('admission_date',{ascending:false});
   var pd=p.data||{};
@@ -1394,6 +1582,26 @@ async function generateAccessCode(patientId){
   if(r.error){showToast('Error: '+r.error.message);return;}
   document.getElementById('pp-access-code').textContent=code;
   showToast('Access code generated — share it with the patient');
+}
+async function sendForDoctorReview(){
+  if(!_currentPatientId){showToast('Open a patient profile first');return;}
+  var r=await _supa.from('nh_patients').update({needs_review:true}).eq('id',_currentPatientId);
+  if(r.error){showToast('Error: '+r.error.message);return;}
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'sent_for_doctor_review',target_table:'nh_patients',target_id:_currentPatientId});
+  showToast('Sent to the assigned doctor for review');
+}
+async function handlePhotoUpload(evt){
+  var file=evt.target.files[0];
+  if(!file||!_currentPatientId)return;
+  showToast('Uploading photo…');
+  var path=_clinicId+'/'+_currentPatientId+'/photo_'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  var up=await _supa.storage.from('nh-documents').upload(path,file);
+  if(up.error){showToast('Upload failed: '+up.error.message);return;}
+  await _supa.from('nh_patients').update({photo_path:path}).eq('id',_currentPatientId);
+  await _supa.from('nh_patient_documents').insert({clinic_id:_clinicId,patient_id:_currentPatientId,file_path:path,file_name:file.name,doc_type:'photo',uploaded_by:_myUid});
+  showToast('Patient photo saved');
+  loadPatientDocuments(_currentPatientId);
+  evt.target.value='';
 }
 
 /* ── DOCUMENTS (upload → store original → best-effort extraction) ── */
