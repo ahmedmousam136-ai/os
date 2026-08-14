@@ -284,13 +284,33 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       </div>
       <!-- SIGNUP -->
       <div id="auth-panel-signup" class="auth-panel">
-        <div><label class="auth-label">Nursing Home Name</label><input class="auth-input" id="su-nhname" placeholder="e.g. Diamond Harbour Nursing Home"/></div>
-        <div><label class="auth-label">Owner / Administrator Name</label><input class="auth-input" id="su-name" placeholder="Full name"/></div>
-        <div><label class="auth-label">Email</label><input class="auth-input" id="su-email" type="email" placeholder="admin@yournursinghome.com"/></div>
-        <div><label class="auth-label">Mobile</label><input class="auth-input" id="su-mobile" type="tel" placeholder="WhatsApp number"/></div>
-        <div><label class="auth-label">Password</label><input class="auth-input" id="su-pass" type="password" placeholder="Min 6 characters"/></div>
-        <div id="signup-error" class="auth-error"></div>
-        <button class="auth-btn" onclick="handleSignup()">Register Nursing Home →</button>
+        <div class="auth-tabs" style="margin-bottom:14px">
+          <div class="auth-tab su-mode-tab active" id="su-mode-new" onclick="switchSignupMode('new')">New Nursing Home</div>
+          <div class="auth-tab su-mode-tab" id="su-mode-invite" onclick="switchSignupMode('invite')">I Have an Invite Code</div>
+        </div>
+
+        <!-- PATH A: new facility → always creates an OWNER -->
+        <div id="su-form-new">
+          <div><label class="auth-label">Nursing Home Name</label><input class="auth-input" id="su-nhname" placeholder="e.g. Diamond Harbour Nursing Home"/></div>
+          <div><label class="auth-label">Owner / Administrator Name</label><input class="auth-input" id="su-name" placeholder="Full name"/></div>
+          <div><label class="auth-label">Email</label><input class="auth-input" id="su-email" type="email" placeholder="admin@yournursinghome.com"/></div>
+          <div><label class="auth-label">Mobile</label><input class="auth-input" id="su-mobile" type="tel" placeholder="WhatsApp number"/></div>
+          <div><label class="auth-label">Password</label><input class="auth-input" id="su-pass" type="password" placeholder="Min 6 characters"/></div>
+          <div id="signup-error" class="auth-error"></div>
+          <button class="auth-btn" onclick="handleSignup()">Register Nursing Home →</button>
+        </div>
+
+        <!-- PATH B: invite code → creates a Doctor or Receptionist,
+             bound to the exact facility+role the Owner set on the invite -->
+        <div id="su-form-invite" style="display:none">
+          <p class="ss" style="margin-bottom:10px">Ask your Nursing Home's Owner for an invite code — this is how Doctor and Receptionist accounts are created. The public form above can only create a new facility.</p>
+          <div><label class="auth-label">Invite Code</label><input class="auth-input" id="inv-code" placeholder="e.g. AB12-CD34" autocapitalize="characters"/></div>
+          <div><label class="auth-label">Your Full Name</label><input class="auth-input" id="inv-name" placeholder="Full name"/></div>
+          <div><label class="auth-label">Email</label><input class="auth-input" id="inv-email" type="email" placeholder="you@email.com"/></div>
+          <div><label class="auth-label">Password</label><input class="auth-input" id="inv-pass" type="password" placeholder="Min 6 characters"/></div>
+          <div id="invite-signup-error" class="auth-error"></div>
+          <button class="auth-btn" onclick="handleInviteSignup()">Join with Invite Code →</button>
+        </div>
       </div>
     </div>
   </div>
@@ -598,6 +618,10 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <div class="ph"><div class="pt">Team</div></div>
           <div id="staff-list"></div>
         </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Invite Codes</div></div>
+          <div id="invites-list"></div>
+        </div>
       </div>
 
     </main>
@@ -780,16 +804,20 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 <!-- INVITE STAFF MODAL (owner only) -->
 <div class="mod-ov" id="mod-add-staff">
   <div class="modal">
-    <div class="mh"><div class="mtitle">👥 Invite Staff</div><button class="mclose" onclick="closeModal('mod-add-staff')">✕</button></div>
+    <div class="mh"><div class="mtitle">👥 Generate Invite Code</div><button class="mclose" onclick="closeModal('mod-add-staff')">✕</button></div>
     <div class="mb">
-      <div><label class="flbl">Full Name *</label><input class="finput" id="staff-name" placeholder="Staff member's name"/></div>
-      <div><label class="flbl">Email *</label><input class="finput" id="staff-email" type="email" placeholder="staff@email.com"/></div>
-      <div><label class="flbl">Temporary Password *</label><input class="finput" id="staff-pass" type="password" placeholder="Min 6 characters — share securely"/></div>
+      <p class="ss" style="margin-bottom:10px">Share this code with the person joining — they'll enter it under "I Have an Invite Code" when registering. You never need to know or set their password.</p>
       <div><label class="flbl">Role *</label>
         <select class="finput" id="staff-role"><option value="receptionist">Receptionist</option><option value="doctor">Doctor</option></select>
       </div>
+      <div><label class="flbl">Label (optional, for your reference)</label><input class="finput" id="staff-label" placeholder="e.g. Front desk — morning shift"/></div>
       <div id="staff-error" class="auth-error"></div>
-      <button class="msub" onclick="inviteStaff()">+ Create Account</button>
+      <button class="msub" onclick="generateStaffInvite()">+ Generate Invite Code</button>
+      <div id="staff-invite-result" style="display:none;margin-top:14px;padding:14px;background:var(--bg);border-radius:var(--r-sm);text-align:center">
+        <div class="ss">Invite Code</div>
+        <div id="staff-invite-code" style="font-family:monospace;font-size:20px;font-weight:700;margin:6px 0;letter-spacing:1px"></div>
+        <button class="qbtn" onclick="copyInviteCode()">Copy Code</button>
+      </div>
     </div>
   </div>
 </div>
@@ -893,10 +921,64 @@ function openAddChargeModal(){if(!_currentBillingPatient){showToast('Select a pa
 
 /* ── AUTH ── */
 function switchAuthTab(tab,el){
-  document.querySelectorAll('.auth-tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.auth-tab:not(.su-mode-tab)').forEach(function(t){t.classList.remove('active')});
   document.querySelectorAll('.auth-panel').forEach(function(p){p.classList.remove('active')});
   el.classList.add('active');
   document.getElementById('auth-panel-'+tab).classList.add('active');
+}
+
+/* Registration must genuinely fork here: "New Nursing Home" always
+   produces an Owner of a brand-new facility; "Invite Code" is the ONLY
+   path that can produce a Doctor or Receptionist account, and it binds
+   them to the exact facility+role the Owner set when generating the code. */
+function switchSignupMode(mode){
+  document.getElementById('su-mode-new').classList.toggle('active',mode==='new');
+  document.getElementById('su-mode-invite').classList.toggle('active',mode==='invite');
+  document.getElementById('su-form-new').style.display=mode==='new'?'block':'none';
+  document.getElementById('su-form-invite').style.display=mode==='invite'?'block':'none';
+}
+
+async function handleInviteSignup(){
+  var code=(document.getElementById('inv-code').value||'').trim().toUpperCase();
+  var name=(document.getElementById('inv-name').value||'').trim();
+  var email=(document.getElementById('inv-email').value||'').trim();
+  var pass=document.getElementById('inv-pass').value||'';
+  var err=document.getElementById('invite-signup-error');
+  err.style.display='none';
+  if(!code||!name||!email||!pass){err.textContent='Please fill all fields.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+
+  var r=await _supa.auth.signUp({email,password:pass});
+  if(r.error){
+    /* Same identity may already exist (e.g. this email already has a
+       Clinic OS account, or another Nursing Home role) — that is allowed;
+       sign in instead of failing, exactly like the "new facility" path. */
+    if(/already registered/i.test(r.error.message||'')){
+      var signInRes=await _supa.auth.signInWithPassword({email,password:pass});
+      if(signInRes.error||!signInRes.data||!signInRes.data.user){
+        err.textContent='An account with this email already exists. Sign in with its password, or reset it, before joining with an invite code.';
+        err.style.display='block';
+        return;
+      }
+      r={data:signInRes.data,error:null};
+    }else{
+      err.textContent=r.error.message;err.style.display='block';return;
+    }
+  }
+  if(!r.data||!r.data.user){err.textContent='Could not create account.';err.style.display='block';return;}
+
+  /* The invite code is what actually determines facility+role — this
+     RPC runs as the now-authenticated user and does the binding
+     server-side, so a Doctor/Receptionist can never end up owning or
+     joining a facility they weren't invited to. */
+  var redeem=await _supa.rpc('nh_redeem_invite',{p_code:code,p_full_name:name});
+  if(redeem.error||!redeem.data||!redeem.data.ok){
+    err.textContent=(redeem.data&&redeem.data.error)||'Could not redeem this invite code. Check it and try again.';
+    err.style.display='block';
+    return;
+  }
+  showToast('Welcome — your '+redeem.data.role+' account is ready.');
+  await _initApp();
 }
 
 async function handleLogin(){
@@ -1722,12 +1804,26 @@ async function loadStaffList(){
   if(!_clinicId||_myRole!=='owner')return;
   var r=await _supa.from('nh_staff').select('id,role,full_name,is_active,created_at').eq('clinic_id',_clinicId).order('created_at');
   var list=document.getElementById('staff-list');
-  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">👥</div><p class="empty-t">No staff yet</p></div>';return;}
-  list.innerHTML=r.data.map(function(s){
-    return '<div class="adm-row"><div class="adm-av">'+(s.full_name||'?').charAt(0)+'</div>'
-      +'<div style="flex:1"><div class="adm-name">'+(s.full_name||'Unnamed')+'</div><div class="adm-meta">'+s.role+(s.is_active?'':' · deactivated')+'</div></div>'
-      +'<button class="qbtn" onclick="toggleStaffActive(\''+s.id+'\','+(!s.is_active)+')">'+(s.is_active?'Deactivate':'Activate')+'</button>'
-      +'</div>';
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">👥</div><p class="empty-t">No staff yet</p></div>';}
+  else{
+    list.innerHTML=r.data.map(function(s){
+      return '<div class="adm-row"><div class="adm-av">'+(s.full_name||'?').charAt(0)+'</div>'
+        +'<div style="flex:1"><div class="adm-name">'+(s.full_name||'Unnamed')+'</div><div class="adm-meta">'+s.role+(s.is_active?'':' · deactivated')+'</div></div>'
+        +'<button class="qbtn" onclick="toggleStaffActive(\''+s.id+'\','+(!s.is_active)+')">'+(s.is_active?'Deactivate':'Activate')+'</button>'
+        +'</div>';
+    }).join('');
+  }
+  loadInvitesList();
+}
+async function loadInvitesList(){
+  var el=document.getElementById('invites-list');
+  if(!el)return;
+  var r=await _supa.from('nh_invites').select('code,role,label,used_by,created_at').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20);
+  if(!r.data||!r.data.length){el.innerHTML='<div class="empty"><div class="empty-ic">🎟️</div><p class="empty-t">No invite codes generated yet</p></div>';return;}
+  el.innerHTML=r.data.map(function(i){
+    return '<div class="adm-row"><div class="adm-av" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">🎟️</div>'
+      +'<div style="flex:1"><div class="adm-name" style="font-family:monospace">'+i.code+'</div><div class="adm-meta">'+i.role+(i.label?' · '+i.label:'')+'</div></div>'
+      +'<span class="chip '+(i.used_by?'ch-act':'ch-wait')+'">'+(i.used_by?'Used':'Pending')+'</span></div>';
   }).join('');
 }
 async function toggleStaffActive(staffId,makeActive){
@@ -1735,30 +1831,25 @@ async function toggleStaffActive(staffId,makeActive){
   await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:makeActive?'staff_activated':'staff_deactivated',target_table:'nh_staff',target_id:staffId});
   loadStaffList();
 }
-async function inviteStaff(){
-  var name=(document.getElementById('staff-name').value||'').trim();
-  var email=(document.getElementById('staff-email').value||'').trim();
-  var pass=document.getElementById('staff-pass').value||'';
+var _lastGeneratedInvite='';
+async function generateStaffInvite(){
   var role=document.getElementById('staff-role').value;
+  var label=(document.getElementById('staff-label').value||'').trim();
   var err=document.getElementById('staff-error');
   err.style.display='none';
-  if(!name||!email||!pass){err.textContent='All fields are required.';err.style.display='block';return;}
-  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
-  /* Creating a new login from the browser signs the browser into that new
-     account — capture the owner's session first and restore it after,
-     so the owner isn't bumped out of their own dashboard. */
-  var ownerSession=(await _supa.auth.getSession()).data.session;
-  var r=await _supa.auth.signUp({email,password:pass});
+  var code=Math.random().toString(36).slice(2,6).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
+  var r=await _supa.from('nh_invites').insert({code:code,clinic_id:_clinicId,role:role,label:label,created_by:_myUid});
   if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
-  if(r.data&&r.data.user){
-    await _supa.from('nh_staff').insert({id:r.data.user.id,clinic_id:_clinicId,role:role,full_name:name});
-    await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'staff_invited',target_table:'nh_staff',target_id:r.data.user.id,details:{role:role}});
-  }
-  if(ownerSession){await _supa.auth.setSession({access_token:ownerSession.access_token,refresh_token:ownerSession.refresh_token});}
-  closeModal('mod-add-staff');
-  ['staff-name','staff-email','staff-pass'].forEach(function(id){document.getElementById(id).value='';});
-  showToast(name+' invited as '+role);
-  loadStaffList();
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'invite_generated',target_table:'nh_invites',details:{role:role}});
+  _lastGeneratedInvite=code;
+  document.getElementById('staff-invite-code').textContent=code;
+  document.getElementById('staff-invite-result').style.display='block';
+  document.getElementById('staff-label').value='';
+  loadInvitesList();
+}
+function copyInviteCode(){
+  if(!_lastGeneratedInvite)return;
+  navigator.clipboard.writeText(_lastGeneratedInvite).then(function(){showToast('Code copied');}).catch(function(){showToast('Code: '+_lastGeneratedInvite);});
 }
 
 /* ── SESSION RESTORE ── */
