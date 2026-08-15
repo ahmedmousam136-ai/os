@@ -1055,11 +1055,26 @@ async function _initApp(){
   var uid=(await _supa.auth.getUser()).data.user.id;
   _myUid=uid;
 
-  /* Resolve facility access via nh_staff first — this is what lets
-     invited Receptionist/Doctor logins (not just the original owner)
-     find their clinic. Falls back to the legacy owner_id lookup for
-     any account that predates nh_staff and hasn't been backfilled. */
-  var staffRow=await _supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id',uid).single();
+  function withTimeout(promise,ms,label){
+    return Promise.race([
+      promise,
+      new Promise(function(_,reject){setTimeout(function(){reject(new Error('Timed out loading '+label+'. This usually means a database permission rule is stuck — please contact support with this message.'));},ms);})
+    ]);
+  }
+
+  var staffRow,cl;
+  try{
+    /* Resolve facility access via nh_staff first — this is what lets
+       invited Receptionist/Doctor logins (not just the original owner)
+       find their clinic. Falls back to the legacy owner_id lookup for
+       any account that predates nh_staff and hasn't been backfilled. */
+    staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id',uid).single(),15000,'your staff record');
+  }catch(e){
+    document.getElementById('app-shell').classList.remove('authenticated');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    showToast(e.message||'Could not load your account.');
+    return;
+  }
   var clinicId=null;
   if(staffRow.data&&staffRow.data.clinic_id){
     clinicId=staffRow.data.clinic_id;
@@ -1078,7 +1093,14 @@ async function _initApp(){
   if(!clinicId){showToast('Clinic record not found.');return;}
   document.body.setAttribute('data-role',_myRole);
 
-  var cl=await _supa.from('clinics').select('id,name,facility_type,is_approved').eq('id',clinicId).single();
+  try{
+    cl=await withTimeout(_supa.from('clinics').select('id,name,facility_type,is_approved').eq('id',clinicId).single(),15000,'your facility details');
+  }catch(e){
+    document.getElementById('app-shell').classList.remove('authenticated');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    showToast(e.message||'Could not load your facility.');
+    return;
+  }
   if(!cl.data){showToast('Clinic record not found.');return;}
   if(!cl.data.is_approved){
     document.getElementById('app-shell').classList.remove('authenticated');
