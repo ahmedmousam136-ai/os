@@ -1049,76 +1049,77 @@ async function handleLogout(){
 }
 
 /* ── INIT ── */
+/* AURASCALE_NH_BUILD: init-watchdog-v2 */
 async function _initApp(){
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app-shell').classList.add('authenticated');
-  var uid=(await _supa.auth.getUser()).data.user.id;
-  _myUid=uid;
 
   function withTimeout(promise,ms,label){
     return Promise.race([
       promise,
-      new Promise(function(_,reject){setTimeout(function(){reject(new Error('Timed out loading '+label+'. This usually means a database permission rule is stuck — please contact support with this message.'));},ms);})
+      new Promise(function(_,reject){setTimeout(function(){reject(new Error('Timed out loading '+label+'. Please check your internet connection and try again. If this keeps happening, contact support with this message.'));},ms);})
     ]);
   }
+  function failAndReturnToLogin(message){
+    document.getElementById('app-shell').classList.remove('authenticated');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    showToast(message);
+  }
 
-  var staffRow,cl;
   try{
+    /* EVERYTHING in this function — including just fetching who's
+       logged in — is now inside one watchdog. Nothing here can hang
+       silently anymore; any stuck step surfaces a visible error within
+       20 seconds instead of leaving the screen on "Loading…" forever. */
+    var userRes=await withTimeout(_supa.auth.getUser(),20000,'your session');
+    var uid=userRes.data.user.id;
+    _myUid=uid;
+
     /* Resolve facility access via nh_staff first — this is what lets
        invited Receptionist/Doctor logins (not just the original owner)
        find their clinic. Falls back to the legacy owner_id lookup for
        any account that predates nh_staff and hasn't been backfilled. */
-    staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id',uid).single(),15000,'your staff record');
-  }catch(e){
-    document.getElementById('app-shell').classList.remove('authenticated');
-    document.getElementById('auth-screen').classList.remove('hidden');
-    showToast(e.message||'Could not load your account.');
-    return;
-  }
-  var clinicId=null;
-  if(staffRow.data&&staffRow.data.clinic_id){
-    clinicId=staffRow.data.clinic_id;
-    _myRole=staffRow.data.role||'owner';
-    if(staffRow.data.is_active===false){
-      showToast('Your account has been deactivated. Contact your facility owner.');
-      await _supa.auth.signOut();
+    var staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id',uid).single(),20000,'your staff record');
+
+    var clinicId=null;
+    if(staffRow.data&&staffRow.data.clinic_id){
+      clinicId=staffRow.data.clinic_id;
+      _myRole=staffRow.data.role||'owner';
+      if(staffRow.data.is_active===false){
+        await _supa.auth.signOut();
+        failAndReturnToLogin('Your account has been deactivated. Contact your facility owner.');
+        return;
+      }
+    }else{
+      var legacy=await withTimeout(_supa.from('clinics').select('id').eq('owner_id',uid).eq('facility_type','nursing_home').single(),20000,'your facility (legacy lookup)');
+      if(legacy.data){clinicId=legacy.data.id;_myRole='owner';}
+    }
+    if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
+    document.body.setAttribute('data-role',_myRole);
+
+    var cl=await withTimeout(_supa.from('clinics').select('id,name,facility_type,is_approved').eq('id',clinicId).single(),20000,'your facility details');
+    if(!cl.data){failAndReturnToLogin('Clinic record not found.');return;}
+    if(!cl.data.is_approved){
       document.getElementById('app-shell').classList.remove('authenticated');
       document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/919330660325?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a></div></div>';
       return;
     }
-  }else{
-    var legacy=await _supa.from('clinics').select('id').eq('owner_id',uid).eq('facility_type','nursing_home').single();
-    if(legacy.data){clinicId=legacy.data.id;_myRole='owner';}
-  }
-  if(!clinicId){showToast('Clinic record not found.');return;}
-  document.body.setAttribute('data-role',_myRole);
-
-  try{
-    cl=await withTimeout(_supa.from('clinics').select('id,name,facility_type,is_approved').eq('id',clinicId).single(),15000,'your facility details');
+    _clinicId=cl.data.id;
+    document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
+    /* Each role lands on its own portal home, not a shared dashboard. */
+    if(_myRole==='doctor'){
+      document.getElementById('v-dashboard').classList.remove('on');
+      nav('doctor-home',document.querySelector('.nb[onclick*="doctor-home"]')||null);
+    }else if(_myRole==='receptionist'){
+      document.getElementById('v-dashboard').classList.remove('on');
+      nav('reception-home',document.querySelector('.nb[onclick*="reception-home"]')||null);
+    }else{
+      loadDashboard();
+    }
   }catch(e){
-    document.getElementById('app-shell').classList.remove('authenticated');
-    document.getElementById('auth-screen').classList.remove('hidden');
-    showToast(e.message||'Could not load your facility.');
-    return;
-  }
-  if(!cl.data){showToast('Clinic record not found.');return;}
-  if(!cl.data.is_approved){
-    document.getElementById('app-shell').classList.remove('authenticated');
-    document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/919330660325?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a></div></div>';
-    return;
-  }
-  _clinicId=cl.data.id;
-  document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
-  /* Each role lands on its own portal home, not a shared dashboard. */
-  if(_myRole==='doctor'){
-    document.getElementById('v-dashboard').classList.remove('on');
-    nav('doctor-home',document.querySelector('.nb[onclick*="doctor-home"]')||null);
-  }else if(_myRole==='receptionist'){
-    document.getElementById('v-dashboard').classList.remove('on');
-    nav('reception-home',document.querySelector('.nb[onclick*="reception-home"]')||null);
-  }else{
-    loadDashboard();
+    console.error('_initApp failed:',e);
+    failAndReturnToLogin(e.message||'Something went wrong loading your dashboard. Please try again.');
   }
 }
 
