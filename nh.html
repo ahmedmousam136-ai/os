@@ -1092,7 +1092,16 @@ async function _initApp(){
       }
     }else{
       var legacy=await withTimeout(_supa.from('clinics').select('id').eq('owner_id',uid).eq('facility_type','nursing_home').single(),20000,'your facility (legacy lookup)');
-      if(legacy.data){clinicId=legacy.data.id;_myRole='owner';}
+      if(legacy.data){
+        clinicId=legacy.data.id;
+        _myRole='owner';
+        /* This account was created before nh_staff existed (or the row
+           never got created) — self-heal by creating the real record now,
+           so every database-side rule (invites, patients, etc.) that
+           checks nh_staff actually sees this login as the owner it is,
+           instead of only believing it client-side. */
+        await _supa.from('nh_staff').upsert({id:uid,clinic_id:clinicId,role:'owner'});
+      }
     }
     if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
     document.body.setAttribute('data-role',_myRole);
