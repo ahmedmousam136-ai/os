@@ -627,11 +627,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <div class="ph"><div class="pt">Invite Codes</div></div>
           <div id="invites-list"></div>
         </div>
-        <div class="panel" style="border-color:var(--red-border)">
-          <div class="ph"><div class="pt" style="color:var(--red)">⚠️ Danger Zone</div></div>
-          <p class="ss" style="margin-bottom:12px">Permanently deletes this facility and everything in it — patients, admissions, documents, staff accounts, invites, billing history. This cannot be undone. Useful for wiping test data to start fresh.</p>
-          <button class="add-btn" style="background:var(--red);width:100%" onclick="openDeleteFacilityModal()">Delete This Nursing Home</button>
-        </div>
       </div>
 
     </main>
@@ -840,8 +835,10 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div class="extract-box" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)">This permanently deletes <b id="del-fac-name-display"></b> and every patient, admission, document, staff account, invite, and billing record in it. This cannot be undone.</div>
       <label class="flbl">Type the facility name to confirm</label>
       <input class="finput" id="del-fac-confirm-input" placeholder="Facility name"/>
+      <label class="flbl">Enter your password to confirm it's really you</label>
+      <input class="finput" id="del-fac-password-input" type="password" placeholder="Your account password"/>
       <div id="delete-facility-error" class="auth-error"></div>
-      <button class="msub" style="background:var(--red)" onclick="deleteFacility()">Permanently Delete</button>
+      <button class="msub" id="del-fac-submit-btn" style="background:var(--red)" onclick="deleteFacility()">Permanently Delete</button>
     </div>
   </div>
 </div>
@@ -1890,7 +1887,7 @@ async function loadStaffList(){
       return '<div class="adm-row"><div class="adm-av">'+(s.full_name||'?').charAt(0)+'</div>'
         +'<div style="flex:1"><div class="adm-name">'+(s.full_name||'Unnamed')+'</div><div class="adm-meta">'+s.role+(s.is_active?'':' · deactivated')+'</div></div>'
         +'<button class="qbtn" onclick="toggleStaffActive(\''+s.id+'\','+(!s.is_active)+')">'+(s.is_active?'Deactivate':'Activate')+'</button>'
-        +(s.role!=='owner'?'<button class="qbtn" style="color:var(--red);margin-left:6px" onclick="removeStaff(\''+s.id+'\',\''+(s.full_name||'this staff member').replace(/'/g,"\\'")+'\')">Remove</button>':'')
+        +(s.role!=='owner'?'<button class="qbtn" style="color:var(--red);margin-left:6px" onclick="removeStaff(\''+s.id+'\',\''+(s.full_name||'this staff member').replace(/'/g,"\\'")+'\')">Revoke Access</button>':'')
         +'</div>';
     }).join('');
   }
@@ -1913,10 +1910,10 @@ async function toggleStaffActive(staffId,makeActive){
   loadStaffList();
 }
 async function removeStaff(staffId,name){
-  if(!confirm('Permanently remove '+name+'\'s access to this facility? Their login itself is not deleted — only their staff role here.'))return;
+  if(!confirm('Revoke '+name+'\'s access to this facility?\n\nThis only removes their login\'s access here — it does NOT delete any patients, documents, notes, or other data they created or handled. Their personal login itself also stays valid; they simply can\'t reach this facility anymore.'))return;
   await _supa.from('nh_staff').delete().eq('id',staffId);
-  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'staff_removed',target_table:'nh_staff',target_id:staffId,details:{name:name}});
-  showToast(name+' removed');
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'staff_access_revoked',target_table:'nh_staff',target_id:staffId,details:{name:name}});
+  showToast(name+'\'s access revoked — no data was deleted');
   loadStaffList();
 }
 
@@ -1926,34 +1923,58 @@ function openDeleteFacilityModal(){
   _delFacName=document.getElementById('sb-nh-name').textContent||'';
   document.getElementById('del-fac-name-display').textContent=_delFacName;
   document.getElementById('del-fac-confirm-input').value='';
+  document.getElementById('del-fac-password-input').value='';
   document.getElementById('delete-facility-error').style.display='none';
   openModal('mod-delete-facility');
 }
 async function deleteFacility(){
   var typed=(document.getElementById('del-fac-confirm-input').value||'').trim();
+  var pass=document.getElementById('del-fac-password-input').value||'';
   var err=document.getElementById('delete-facility-error');
+  var btn=document.getElementById('del-fac-submit-btn');
   if(typed!==_delFacName){err.textContent='Name doesn\'t match. Type it exactly to confirm.';err.style.display='block';return;}
+  if(!pass){err.textContent='Enter your password to confirm it\'s really you.';err.style.display='block';return;}
   err.style.display='none';
-  showToast('Deleting facility…');
-  var cid=_clinicId;
-  /* Children first, then the facility row itself. Each delete is scoped
-     to this one clinic_id via RLS regardless, but scoping the query too
-     keeps this readable and avoids accidentally touching other tables. */
-  await _supa.from('nh_invites').delete().eq('clinic_id',cid);
-  await _supa.from('nh_audit_log').delete().eq('clinic_id',cid);
-  await _supa.from('nh_ayushman_cases').delete().eq('clinic_id',cid);
-  await _supa.from('nh_payments').delete().eq('clinic_id',cid);
-  await _supa.from('nh_patient_documents').delete().eq('clinic_id',cid);
-  await _supa.from('progress_notes').delete().eq('clinic_id',cid);
-  await _supa.from('admission_charges').delete().eq('clinic_id',cid);
-  await _supa.from('admissions').delete().eq('clinic_id',cid);
-  await _supa.from('beds').delete().eq('clinic_id',cid);
-  await _supa.from('nh_patients').delete().eq('clinic_id',cid);
-  await _supa.from('nh_staff').delete().eq('clinic_id',cid);
-  await _supa.from('clinics').delete().eq('id',cid);
-  closeModal('mod-delete-facility');
-  showToast('Facility deleted');
-  await handleLogout();
+  if(btn.disabled)return;
+  btn.disabled=true;
+  var originalLabel=btn.textContent;
+  btn.textContent='Verifying…';
+
+  try{
+    /* Require re-entering the password right before an irreversible
+       action — even though this browser is already signed in, this
+       protects against someone using a device you left unlocked. */
+    var userRes=await _supa.auth.getUser();
+    var email=userRes.data&&userRes.data.user?userRes.data.user.email:null;
+    if(!email){err.textContent='Could not verify your session. Please sign in again.';err.style.display='block';return;}
+    var verify=await _supa.auth.signInWithPassword({email:email,password:pass});
+    if(verify.error){err.textContent='Incorrect password.';err.style.display='block';return;}
+
+    btn.textContent='Deleting…';
+    showToast('Deleting facility…');
+    var cid=_clinicId;
+    /* Children first, then the facility row itself. Each delete is scoped
+       to this one clinic_id via RLS regardless, but scoping the query too
+       keeps this readable and avoids accidentally touching other tables. */
+    await _supa.from('nh_invites').delete().eq('clinic_id',cid);
+    await _supa.from('nh_audit_log').delete().eq('clinic_id',cid);
+    await _supa.from('nh_ayushman_cases').delete().eq('clinic_id',cid);
+    await _supa.from('nh_payments').delete().eq('clinic_id',cid);
+    await _supa.from('nh_patient_documents').delete().eq('clinic_id',cid);
+    await _supa.from('progress_notes').delete().eq('clinic_id',cid);
+    await _supa.from('admission_charges').delete().eq('clinic_id',cid);
+    await _supa.from('admissions').delete().eq('clinic_id',cid);
+    await _supa.from('beds').delete().eq('clinic_id',cid);
+    await _supa.from('nh_patients').delete().eq('clinic_id',cid);
+    await _supa.from('nh_staff').delete().eq('clinic_id',cid);
+    await _supa.from('clinics').delete().eq('id',cid);
+    closeModal('mod-delete-facility');
+    showToast('Facility deleted');
+    await handleLogout();
+  }finally{
+    btn.disabled=false;
+    btn.textContent=originalLabel;
+  }
 }
 var _lastGeneratedInvite='';
 async function generateStaffInvite(){
