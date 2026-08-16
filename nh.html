@@ -309,7 +309,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <div><label class="auth-label">Email</label><input class="auth-input" id="inv-email" type="email" placeholder="you@email.com"/></div>
           <div><label class="auth-label">Password</label><input class="auth-input" id="inv-pass" type="password" placeholder="Min 6 characters"/></div>
           <div id="invite-signup-error" class="auth-error"></div>
-          <button class="auth-btn" onclick="handleInviteSignup()">Join with Invite Code →</button>
+          <button class="auth-btn" id="inv-submit-btn" onclick="handleInviteSignup()">Join with Invite Code →</button>
         </div>
       </div>
     </div>
@@ -939,6 +939,8 @@ function switchSignupMode(mode){
 }
 
 async function handleInviteSignup(){
+  var btn=document.getElementById('inv-submit-btn');
+  if(btn.disabled)return; /* already in flight — ignore extra taps */
   var code=(document.getElementById('inv-code').value||'').trim().toUpperCase();
   var name=(document.getElementById('inv-name').value||'').trim();
   var email=(document.getElementById('inv-email').value||'').trim();
@@ -947,38 +949,46 @@ async function handleInviteSignup(){
   err.style.display='none';
   if(!code||!name||!email||!pass){err.textContent='Please fill all fields.';err.style.display='block';return;}
   if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  btn.disabled=true;
+  var originalLabel=btn.textContent;
+  btn.textContent='Joining…';
 
-  var r=await _supa.auth.signUp({email,password:pass});
-  if(r.error){
-    /* Same identity may already exist (e.g. this email already has a
-       Clinic OS account, or another Nursing Home role) — that is allowed;
-       sign in instead of failing, exactly like the "new facility" path. */
-    if(/already registered/i.test(r.error.message||'')){
-      var signInRes=await _supa.auth.signInWithPassword({email,password:pass});
-      if(signInRes.error||!signInRes.data||!signInRes.data.user){
-        err.textContent='An account with this email already exists. Sign in with its password, or reset it, before joining with an invite code.';
-        err.style.display='block';
-        return;
+  try{
+    var r=await _supa.auth.signUp({email,password:pass});
+    if(r.error){
+      /* Same identity may already exist (e.g. this email already has a
+         Clinic OS account, or another Nursing Home role) — that is allowed;
+         sign in instead of failing, exactly like the "new facility" path. */
+      if(/already registered/i.test(r.error.message||'')){
+        var signInRes=await _supa.auth.signInWithPassword({email,password:pass});
+        if(signInRes.error||!signInRes.data||!signInRes.data.user){
+          err.textContent='An account with this email already exists. Sign in with its password, or reset it, before joining with an invite code.';
+          err.style.display='block';
+          return;
+        }
+        r={data:signInRes.data,error:null};
+      }else{
+        err.textContent=r.error.message;err.style.display='block';return;
       }
-      r={data:signInRes.data,error:null};
-    }else{
-      err.textContent=r.error.message;err.style.display='block';return;
     }
-  }
-  if(!r.data||!r.data.user){err.textContent='Could not create account.';err.style.display='block';return;}
+    if(!r.data||!r.data.user){err.textContent='Could not create account.';err.style.display='block';return;}
 
-  /* The invite code is what actually determines facility+role — this
-     RPC runs as the now-authenticated user and does the binding
-     server-side, so a Doctor/Receptionist can never end up owning or
-     joining a facility they weren't invited to. */
-  var redeem=await _supa.rpc('nh_redeem_invite',{p_code:code,p_full_name:name});
-  if(redeem.error||!redeem.data||!redeem.data.ok){
-    err.textContent=(redeem.data&&redeem.data.error)||'Could not redeem this invite code. Check it and try again.';
-    err.style.display='block';
-    return;
+    /* The invite code is what actually determines facility+role — this
+       RPC runs as the now-authenticated user and does the binding
+       server-side, so a Doctor/Receptionist can never end up owning or
+       joining a facility they weren't invited to. */
+    var redeem=await _supa.rpc('nh_redeem_invite',{p_code:code,p_full_name:name});
+    if(redeem.error||!redeem.data||!redeem.data.ok){
+      err.textContent=(redeem.data&&redeem.data.error)||'Could not redeem this invite code. Check it and try again.';
+      err.style.display='block';
+      return;
+    }
+    showToast('Welcome — your '+redeem.data.role+' account is ready.');
+    await _initApp();
+  }finally{
+    btn.disabled=false;
+    btn.textContent=originalLabel;
   }
-  showToast('Welcome — your '+redeem.data.role+' account is ready.');
-  await _initApp();
 }
 
 async function handleLogin(){
