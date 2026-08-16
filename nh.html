@@ -840,6 +840,7 @@ var _currentRoundsPatient=null;
 var _currentBillingPatient=null;
 var _currentDischargeId=null;
 var _myRole='owner';
+var _initInProgress=false;
 var _myUid=null;
 var _currentPatientId=null;
 var _voiceRecognition=null;
@@ -1059,8 +1060,19 @@ async function handleLogout(){
 }
 
 /* ── INIT ── */
-/* AURASCALE_NH_BUILD: init-watchdog-v2 */
+/* AURASCALE_NH_BUILD: init-watchdog-v3-noconcurrency */
 async function _initApp(){
+  /* This function is triggered from multiple places (explicit call after
+     login/invite-redeem, AND automatically by Supabase's own session
+     listener for the same event) — without this guard, two overlapping
+     runs can race, and whichever one finishes last (even if it fails)
+     overrides the other's successful result. Only one run is ever
+     allowed at a time; any call that arrives while one is already in
+     flight is simply ignored — the in-flight one will finish and
+     correctly reflect the current session either way. */
+  if(_initInProgress)return;
+  _initInProgress=true;
+
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app-shell').classList.add('authenticated');
 
@@ -1139,6 +1151,8 @@ async function _initApp(){
   }catch(e){
     console.error('_initApp failed:',e);
     failAndReturnToLogin(e.message||'Something went wrong loading your dashboard. Please try again.');
+  }finally{
+    _initInProgress=false;
   }
 }
 
