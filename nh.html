@@ -1159,16 +1159,14 @@ async function _initApp(){
     }
     _clinicId=cl.data.id;
     document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
-    /* Each role lands on its own portal home, not a shared dashboard. */
-    if(_myRole==='doctor'){
-      document.getElementById('v-dashboard').classList.remove('on');
-      nav('doctor-home',document.querySelector('.nb[onclick*="doctor-home"]')||null);
-    }else if(_myRole==='receptionist'){
-      document.getElementById('v-dashboard').classList.remove('on');
-      nav('reception-home',document.querySelector('.nb[onclick*="reception-home"]')||null);
-    }else{
-      loadDashboard();
-    }
+    /* nh.html is the Owner portal only. Doctor and Receptionist logins
+       are sent to their own genuinely separate pages — not shown an
+       inline view within this file. Supabase persists the session in
+       this browser (same origin), so the other page picks it up
+       automatically without needing to sign in again. */
+    if(_myRole==='doctor'){ window.location.href='doctor.html'; return; }
+    if(_myRole==='receptionist'){ window.location.href='receptionist.html'; return; }
+    loadDashboard();
   }catch(e){
     console.error('_initApp failed:',e);
     failAndReturnToLogin(e.message||'Something went wrong loading your dashboard. Please try again.');
