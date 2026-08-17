@@ -388,15 +388,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           Staff
         </button>
       </div>
+      <p class="nav-sec">Account</p>
+      <button class="nb" onclick="nav('settings',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+        Settings
+      </button>
       <p class="nav-sec owner-only" style="color:var(--red)">Danger Zone</p>
       <button class="nb owner-only" style="color:var(--red)" onclick="nav('staff',this);setTimeout(function(){openDeleteFacilityModal();},50)">
         <span class="nb-ic" style="color:var(--red)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></span>
         Delete Facility
-      </button>
-      <p class="nav-sec">Clinic</p>
-      <button class="nb" onclick="window.open('clinic.html','_blank')">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span>
-        Open Clinic App ↗
       </button>
     </nav>
     <div class="sb-foot">
@@ -629,6 +629,34 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         </div>
       </div>
 
+      <!-- SETTINGS (account) -->
+      <div id="v-settings" class="view">
+        <div class="sh">
+          <div><h1 class="st">Settings</h1><p class="ss">Manage your account credentials</p></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Account</div></div>
+          <div class="adm-row" style="cursor:pointer" onclick="openChangePasswordModal()">
+            <div class="adm-av"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div style="flex:1"><div class="adm-name">Change Password</div><div class="adm-meta">Update the password used to sign in</div></div>
+            <span style="color:var(--text-tertiary)">›</span>
+          </div>
+          <div class="adm-row" style="cursor:pointer" onclick="openChangeEmailModal()">
+            <div class="adm-av"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div>
+            <div style="flex:1"><div class="adm-name">Change Email</div><div class="adm-meta" id="settings-current-email">Update the email address for this account</div></div>
+            <span style="color:var(--text-tertiary)">›</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt" style="color:var(--red)">Danger Zone</div></div>
+          <div class="adm-row" style="cursor:pointer" onclick="openDeleteAccountModal()">
+            <div class="adm-av" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></div>
+            <div style="flex:1"><div class="adm-name" style="color:var(--red)">Delete Account</div><div class="adm-meta">Permanently remove your access and account data</div></div>
+            <span style="color:var(--text-tertiary)">›</span>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -827,6 +855,59 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
   </div>
 </div>
 
+<!-- CHANGE PASSWORD MODAL -->
+<div class="mod-ov" id="mod-change-password">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">🔒 Change Password</div><button class="mclose" onclick="closeModal('mod-change-password')">✕</button></div>
+    <div class="mb">
+      <label class="flbl">Current Password</label>
+      <input class="finput" id="cp-current" type="password" placeholder="Enter your current password"/>
+      <label class="flbl">New Password</label>
+      <input class="finput" id="cp-new" type="password" placeholder="Min 6 characters"/>
+      <label class="flbl">Confirm New Password</label>
+      <input class="finput" id="cp-confirm" type="password" placeholder="Re-enter new password"/>
+      <div id="cp-error" class="auth-error"></div>
+      <button class="qbtn" id="cp-forgot-btn" style="display:none;justify-content:center;color:var(--blue);border-color:var(--blue-border);background:var(--blue-bg)" onclick="triggerForgotPassword('cp')">Forgot Password?</button>
+      <button class="msub" id="cp-submit-btn" onclick="submitChangePassword()">✓ Update Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE EMAIL MODAL -->
+<div class="mod-ov" id="mod-change-email">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">✉️ Change Email</div><button class="mclose" onclick="closeModal('mod-change-email')">✕</button></div>
+    <div class="mb">
+      <div class="ss" id="ce-current-email" style="margin-bottom:2px">Current email: —</div>
+      <label class="flbl">New Email Address</label>
+      <input class="finput" id="ce-new-email" type="email" placeholder="you@newemail.com"/>
+      <label class="flbl">Current Password (to confirm it's you)</label>
+      <input class="finput" id="ce-password" type="password" placeholder="Enter your current password"/>
+      <div id="ce-error" class="auth-error"></div>
+      <button class="qbtn" id="ce-forgot-btn" style="display:none;justify-content:center;color:var(--blue);border-color:var(--blue-border);background:var(--blue-bg)" onclick="triggerForgotPassword('ce')">Forgot Password?</button>
+      <button class="msub" id="ce-submit-btn" onclick="submitChangeEmail()">✓ Update Email</button>
+      <p class="ss">Supabase may send a confirmation link to the new address before the change takes effect.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="mod-ov" id="mod-delete-account">
+  <div class="modal">
+    <div class="mh"><div class="mtitle" style="color:var(--red)">⚠️ Delete Account</div><button class="mclose" onclick="closeModal('mod-delete-account')">✕</button></div>
+    <div class="mb">
+      <div class="extract-box" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)">
+        This will permanently remove your access to AuraScale NH. <span id="da-scope-note">If you are the facility Owner, this deletes the entire Nursing Home and every patient, admission, document, staff account, invite, and billing record in it. This cannot be undone.</span>
+      </div>
+      <label class="flbl">Enter your password to confirm</label>
+      <input class="finput" id="da-password" type="password" placeholder="Your account password"/>
+      <div id="da-error" class="auth-error"></div>
+      <button class="qbtn" id="da-forgot-btn" style="display:none;justify-content:center;color:var(--blue);border-color:var(--blue-border);background:var(--blue-bg)" onclick="triggerForgotPassword('da')">Forgot Password?</button>
+      <button class="msub" id="da-submit-btn" style="background:var(--red)" onclick="submitDeleteAccount()">Permanently Delete My Account</button>
+    </div>
+  </div>
+</div>
+
 <!-- DELETE FACILITY MODAL -->
 <div class="mod-ov" id="mod-delete-facility">
   <div class="modal">
@@ -904,7 +985,7 @@ function nav(id,btn){
   var v=document.getElementById('v-'+id);
   if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',finance:'Finance',ayushman:'Ayushman / PM-JAY',staff:'Staff'};
+  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',finance:'Finance',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings'};
   var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
@@ -917,6 +998,7 @@ function nav(id,btn){
   if(id==='discharge')loadDischargeList();
   if(id==='ayushman')loadAyushmanView();
   if(id==='staff')loadStaffList();
+  if(id==='settings')loadSettingsView();
   /* auto-close sidebar on mobile after navigating */
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
@@ -1993,6 +2075,169 @@ async function generateStaffInvite(){
 function copyInviteCode(){
   if(!_lastGeneratedInvite)return;
   navigator.clipboard.writeText(_lastGeneratedInvite).then(function(){showToast('Code copied');}).catch(function(){showToast('Code: '+_lastGeneratedInvite);});
+}
+
+/* ── SETTINGS / ACCOUNT ── */
+var _settingsEmail='';
+async function loadSettingsView(){
+  var userRes=await _supa.auth.getUser();
+  _settingsEmail=(userRes.data&&userRes.data.user)?userRes.data.user.email:'';
+  var el1=document.getElementById('settings-current-email');
+  if(el1)el1.textContent='Current: '+(_settingsEmail||'—');
+  var el2=document.getElementById('ce-current-email');
+  if(el2)el2.textContent='Current email: '+(_settingsEmail||'—');
+  var scopeNote=document.getElementById('da-scope-note');
+  if(scopeNote){
+    scopeNote.textContent=_myRole==='owner'
+      ?'You are the facility Owner — this deletes the entire Nursing Home and every patient, admission, document, staff account, invite, and billing record in it. This cannot be undone.'
+      :'This removes your staff access to this Nursing Home. It does not delete patients, documents, notes, or other data you created — that stays with the facility. This cannot be undone.';
+  }
+}
+function openChangePasswordModal(){
+  document.getElementById('cp-current').value='';
+  document.getElementById('cp-new').value='';
+  document.getElementById('cp-confirm').value='';
+  document.getElementById('cp-error').style.display='none';
+  document.getElementById('cp-forgot-btn').style.display='none';
+  openModal('mod-change-password');
+}
+function openChangeEmailModal(){
+  document.getElementById('ce-new-email').value='';
+  document.getElementById('ce-password').value='';
+  document.getElementById('ce-error').style.display='none';
+  document.getElementById('ce-forgot-btn').style.display='none';
+  openModal('mod-change-email');
+}
+function openDeleteAccountModal(){
+  document.getElementById('da-password').value='';
+  document.getElementById('da-error').style.display='none';
+  document.getElementById('da-forgot-btn').style.display='none';
+  openModal('mod-delete-account');
+}
+
+/* Every one of these three flows re-verifies the current password by
+   attempting a real sign-in with it before doing anything sensitive.
+   On the exact string "Invalid login credentials" (Supabase's wrong-
+   password error) we show "Wrong password." and reveal a Forgot
+   Password button — never on other errors (e.g. network issues),
+   which get their own message instead. */
+function _isWrongPasswordError(msg){
+  return /invalid login credentials/i.test(msg||'');
+}
+async function triggerForgotPassword(prefix){
+  if(!_settingsEmail){showToast('Could not determine your email.');return;}
+  var r=await _supa.auth.resetPasswordForEmail(_settingsEmail);
+  if(r.error){showToast('Could not send reset email: '+r.error.message);return;}
+  showToast('Password reset link sent to '+_settingsEmail);
+}
+
+async function submitChangePassword(){
+  var current=document.getElementById('cp-current').value||'';
+  var next=document.getElementById('cp-new').value||'';
+  var confirm=document.getElementById('cp-confirm').value||'';
+  var err=document.getElementById('cp-error');
+  var forgotBtn=document.getElementById('cp-forgot-btn');
+  err.style.display='none';forgotBtn.style.display='none';
+  if(!current||!next||!confirm){err.textContent='Please fill in all fields.';err.style.display='block';return;}
+  if(next.length<6){err.textContent='New password must be at least 6 characters.';err.style.display='block';return;}
+  if(next!==confirm){err.textContent='New passwords do not match.';err.style.display='block';return;}
+  var btn=document.getElementById('cp-submit-btn');
+  btn.disabled=true;var orig=btn.textContent;btn.textContent='Verifying…';
+  try{
+    var verify=await _supa.auth.signInWithPassword({email:_settingsEmail,password:current});
+    if(verify.error){
+      if(_isWrongPasswordError(verify.error.message)){
+        err.textContent='Wrong password.';err.style.display='block';
+        forgotBtn.style.display='flex';
+      }else{
+        err.textContent=verify.error.message;err.style.display='block';
+      }
+      return;
+    }
+    btn.textContent='Updating…';
+    var upd=await _supa.auth.updateUser({password:next});
+    if(upd.error){err.textContent=upd.error.message;err.style.display='block';return;}
+    closeModal('mod-change-password');
+    showToast('Password updated successfully.');
+  }finally{btn.disabled=false;btn.textContent=orig;}
+}
+
+async function submitChangeEmail(){
+  var newEmail=(document.getElementById('ce-new-email').value||'').trim();
+  var pass=document.getElementById('ce-password').value||'';
+  var err=document.getElementById('ce-error');
+  var forgotBtn=document.getElementById('ce-forgot-btn');
+  err.style.display='none';forgotBtn.style.display='none';
+  if(!newEmail||!pass){err.textContent='Please fill in all fields.';err.style.display='block';return;}
+  var btn=document.getElementById('ce-submit-btn');
+  btn.disabled=true;var orig=btn.textContent;btn.textContent='Verifying…';
+  try{
+    var verify=await _supa.auth.signInWithPassword({email:_settingsEmail,password:pass});
+    if(verify.error){
+      if(_isWrongPasswordError(verify.error.message)){
+        err.textContent='Wrong password.';err.style.display='block';
+        forgotBtn.style.display='flex';
+      }else{
+        err.textContent=verify.error.message;err.style.display='block';
+      }
+      return;
+    }
+    btn.textContent='Updating…';
+    var upd=await _supa.auth.updateUser({email:newEmail});
+    if(upd.error){err.textContent=upd.error.message;err.style.display='block';return;}
+    closeModal('mod-change-email');
+    showToast('Check your new email inbox to confirm the change.');
+  }finally{btn.disabled=false;btn.textContent=orig;}
+}
+
+async function submitDeleteAccount(){
+  var pass=document.getElementById('da-password').value||'';
+  var err=document.getElementById('da-error');
+  var forgotBtn=document.getElementById('da-forgot-btn');
+  err.style.display='none';forgotBtn.style.display='none';
+  if(!pass){err.textContent='Please enter your password to confirm.';err.style.display='block';return;}
+  var btn=document.getElementById('da-submit-btn');
+  btn.disabled=true;var orig=btn.textContent;btn.textContent='Verifying…';
+  try{
+    var verify=await _supa.auth.signInWithPassword({email:_settingsEmail,password:pass});
+    if(verify.error){
+      if(_isWrongPasswordError(verify.error.message)){
+        err.textContent='Wrong password.';err.style.display='block';
+        forgotBtn.style.display='flex';
+      }else{
+        err.textContent=verify.error.message;err.style.display='block';
+      }
+      return;
+    }
+    btn.textContent='Deleting…';
+    showToast('Deleting your account…');
+    var cid=_clinicId,uid=_myUid,role=_myRole;
+    if(role==='owner'){
+      /* Owner deletion removes the entire facility — same cascade as
+         the existing Danger Zone → Delete Facility flow. */
+      await _supa.from('nh_invites').delete().eq('clinic_id',cid);
+      await _supa.from('nh_audit_log').delete().eq('clinic_id',cid);
+      await _supa.from('nh_ayushman_cases').delete().eq('clinic_id',cid);
+      await _supa.from('nh_payments').delete().eq('clinic_id',cid);
+      await _supa.from('nh_patient_documents').delete().eq('clinic_id',cid);
+      await _supa.from('progress_notes').delete().eq('clinic_id',cid);
+      await _supa.from('admission_charges').delete().eq('clinic_id',cid);
+      await _supa.from('admissions').delete().eq('clinic_id',cid);
+      await _supa.from('beds').delete().eq('clinic_id',cid);
+      await _supa.from('nh_patients').delete().eq('clinic_id',cid);
+      await _supa.from('nh_staff').delete().eq('clinic_id',cid);
+      await _supa.from('clinics').delete().eq('id',cid);
+    }else{
+      /* Non-owner: only this login's access to the facility is
+         removed. Patients, documents, notes, and other data created
+         while staffing this facility stay with the facility. */
+      await _supa.from('nh_audit_log').insert({clinic_id:cid,actor_id:uid,action:'account_self_deleted',target_table:'nh_staff',target_id:uid});
+      await _supa.from('nh_staff').delete().eq('id',uid);
+    }
+    closeModal('mod-delete-account');
+    showToast('Your account access has been removed.');
+    await handleLogout();
+  }finally{btn.disabled=false;btn.textContent=orig;}
 }
 
 /* ── SESSION RESTORE ── */
