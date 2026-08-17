@@ -641,10 +641,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="panel">
           <div class="ph"><div class="pt">Change Password</div></div>
           <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label class="flbl">Current Password</label>
+              <input class="finput" id="set-old-pass" type="password" placeholder="Enter your current password"/>
+              <p class="ss" style="margin-top:4px;cursor:pointer;text-decoration:underline;display:inline-block" onclick="openForgotPasswordFromSettings()">Forgot password?</p>
+            </div>
             <div><label class="flbl">New Password</label><input class="finput" id="set-new-pass" type="password" placeholder="Min 6 characters"/></div>
             <div><label class="flbl">Confirm New Password</label><input class="finput" id="set-new-pass-confirm" type="password"/></div>
             <div id="set-pass-error" style="color:var(--red);font-size:11.5px;display:none"></div>
-            <button class="add-btn" style="width:100%;justify-content:center" onclick="handleChangePassword()">Update Password</button>
+            <button class="add-btn" style="width:100%;justify-content:center" id="set-pass-btn" onclick="handleChangePassword()">Update Password</button>
           </div>
         </div>
 
@@ -652,10 +657,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <div class="ph"><div class="pt">Change Email</div></div>
           <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
             <p class="ss">A confirmation link will be sent to the new email — the change only takes effect once you click it.</p>
+            <div>
+              <label class="flbl">Current Password</label>
+              <input class="finput" id="set-email-current-pass" type="password" placeholder="Enter your current password"/>
+              <p class="ss" style="margin-top:4px;cursor:pointer;text-decoration:underline;display:inline-block" onclick="openForgotPasswordFromSettings()">Forgot password?</p>
+            </div>
             <div><label class="flbl">New Email</label><input class="finput" id="set-new-email" type="email"/></div>
             <div id="set-email-error" style="color:var(--red);font-size:11.5px;display:none"></div>
             <div id="set-email-success" style="color:var(--green);font-size:11.5px;display:none"></div>
-            <button class="add-btn" style="width:100%;justify-content:center" onclick="handleChangeEmail()">Send Confirmation Link</button>
+            <button class="add-btn" style="width:100%;justify-content:center" id="set-email-btn" onclick="handleChangeEmail()">Send Confirmation Link</button>
           </div>
         </div>
 
@@ -1064,6 +1074,21 @@ function openForgotPassword(){
   document.getElementById('forgot-error').style.display='none';
   document.getElementById('forgot-success').style.display='none';
 }
+/* Entry point for "Forgot password?" links inside the authenticated
+   Settings page (Change Password / Change Email). Signs the user out
+   back to the auth screen and opens the same recovery flow used at
+   login, pre-filled with their own email so they don't have to retype it. */
+function openForgotPasswordFromSettings(){
+  var email='';
+  try{ email=(_supa.auth.getSession&&_myUid)?'':''; }catch(e){}
+  _supa.auth.getUser().then(function(res){
+    var em=(res&&res.data&&res.data.user)?res.data.user.email:'';
+    handleLogout().then(function(){
+      openForgotPassword();
+      if(em)document.getElementById('forgot-email').value=em;
+    });
+  });
+}
 async function handleForgotPassword(){
   var email=(document.getElementById('forgot-email').value||'').trim();
   var err=document.getElementById('forgot-error');
@@ -1139,29 +1164,103 @@ async function handleSignup(){
   document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Registration Submitted</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your nursing home account is under review.<br>We will activate it within 24 hours.<br><br>WhatsApp us to expedite activation.</p><a href="https://wa.me/919330660325?text=Hi, I registered '+nhname+' on AuraScale NH. Please activate." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us to Activate</a></div></div>';
 }
 
+/* ── CHANGE PASSWORD (requires current password) ──
+   Supabase's client SDK has no standalone "verify this password"
+   call, so the current password is verified the same way the Danger
+   Zone already does it: re-authenticate against Supabase Auth itself
+   (the real backend) via signInWithPassword. That call fails server-side
+   for a wrong password — it is never judged in the browser — so this
+   cannot be bypassed by editing the page's JavaScript. Only once that
+   re-auth succeeds do we call auth.updateUser to set the new password. */
 async function handleChangePassword(){
+  var oldPass=document.getElementById('set-old-pass').value||'';
   var pass=document.getElementById('set-new-pass').value||'';
   var confirm=document.getElementById('set-new-pass-confirm').value||'';
   var err=document.getElementById('set-pass-error');
+  var btn=document.getElementById('set-pass-btn');
   err.style.display='none';
+  if(!oldPass){err.textContent='Enter your current password.';err.style.display='block';return;}
   if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
   if(pass!==confirm){err.textContent='Passwords do not match.';err.style.display='block';return;}
-  var r=await _supa.auth.updateUser({password:pass});
-  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
-  document.getElementById('set-new-pass').value='';
-  document.getElementById('set-new-pass-confirm').value='';
-  showToast('Password updated');
+  if(oldPass===pass){err.textContent='New password must be different from your current password.';err.style.display='block';return;}
+  if(btn.disabled)return;
+  btn.disabled=true;
+  var originalLabel=btn.textContent;
+  btn.textContent='Verifying…';
+  try{
+    var userRes=await _supa.auth.getUser();
+    var email=userRes.data&&userRes.data.user?userRes.data.user.email:null;
+    if(!email){err.textContent='Could not verify your session. Please sign in again.';err.style.display='block';return;}
+    /* Re-authenticate with the CURRENT password — this is the actual
+       server-side check. A wrong old password fails right here and
+       nothing further happens. */
+    var verify=await _supa.auth.signInWithPassword({email:email,password:oldPass});
+    if(verify.error){err.textContent='Current password is incorrect.';err.style.display='block';return;}
+    btn.textContent='Updating…';
+    var r=await _supa.auth.updateUser({password:pass});
+    if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+    document.getElementById('set-old-pass').value='';
+    document.getElementById('set-new-pass').value='';
+    document.getElementById('set-new-pass-confirm').value='';
+    showToast('Password updated');
+  }finally{
+    btn.disabled=false;
+    btn.textContent=originalLabel;
+  }
 }
+
+/* ── CHANGE EMAIL (requires current password) ──
+   Same re-authentication approach as Change Password: the current
+   password is verified against Supabase Auth via signInWithPassword
+   before the email-change confirmation link is ever requested. The new
+   email only becomes active once the user clicks the confirmation link
+   sent to it — that part of the flow is unchanged. */
 async function handleChangeEmail(){
+  var oldPass=document.getElementById('set-email-current-pass').value||'';
   var email=(document.getElementById('set-new-email').value||'').trim();
   var err=document.getElementById('set-email-error');
   var ok=document.getElementById('set-email-success');
+  var btn=document.getElementById('set-email-btn');
   err.style.display='none';ok.style.display='none';
+  if(!oldPass){err.textContent='Enter your current password.';err.style.display='block';return;}
   if(!email){err.textContent='Enter a new email.';err.style.display='block';return;}
-  var r=await _supa.auth.updateUser({email:email});
-  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
-  ok.textContent='Confirmation link sent to '+email+'. The change takes effect once you click it.';
-  ok.style.display='block';
+  var emailPattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!emailPattern.test(email)){err.textContent='Enter a valid email address.';err.style.display='block';return;}
+  if(btn.disabled)return;
+  btn.disabled=true;
+  var originalLabel=btn.textContent;
+  btn.textContent='Verifying…';
+  try{
+    var userRes=await _supa.auth.getUser();
+    var currentEmail=userRes.data&&userRes.data.user?userRes.data.user.email:null;
+    if(!currentEmail){err.textContent='Could not verify your session. Please sign in again.';err.style.display='block';return;}
+    if(email.toLowerCase()===currentEmail.toLowerCase()){err.textContent='This is already your current email.';err.style.display='block';return;}
+    /* Re-authenticate with the CURRENT password against Supabase Auth —
+       this is the real server-side check, not a client-side gate. */
+    var verify=await _supa.auth.signInWithPassword({email:currentEmail,password:oldPass});
+    if(verify.error){err.textContent='Current password is incorrect.';err.style.display='block';return;}
+    btn.textContent='Sending…';
+    var r=await _supa.auth.updateUser({email:email});
+    if(r.error){
+      /* Supabase returns a generic-looking error for a new email that's
+         already tied to another account — surface it plainly without
+         revealing anything about that other account. */
+      var msg=(r.error.message||'').toLowerCase();
+      if(msg.indexOf('already')>-1||msg.indexOf('registered')>-1||msg.indexOf('exists')>-1){
+        err.textContent='This email is already associated with an account. Use a different email.';
+      }else{
+        err.textContent=r.error.message;
+      }
+      err.style.display='block';
+      return;
+    }
+    document.getElementById('set-email-current-pass').value='';
+    ok.textContent='Confirmation link sent to '+email+'. The change takes effect once you click it.';
+    ok.style.display='block';
+  }finally{
+    btn.disabled=false;
+    btn.textContent=originalLabel;
+  }
 }
 
 async function handleLogout(){
