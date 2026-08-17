@@ -398,15 +398,10 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           Staff
         </button>
       </div>
-      <p class="nav-sec owner-only" style="color:var(--red)">Danger Zone</p>
-      <button class="nb owner-only" style="color:var(--red)" onclick="nav('staff',this);setTimeout(function(){openDeleteFacilityModal();},50)">
-        <span class="nb-ic" style="color:var(--red)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></span>
-        Delete Facility
-      </button>
-      <p class="nav-sec">Clinic</p>
-      <button class="nb" onclick="window.open('clinic.html','_blank')">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span>
-        Open Clinic App ↗
+      <p class="nav-sec">Account</p>
+      <button class="nb" onclick="nav('settings',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+        Settings
       </button>
     </nav>
     <div class="sb-foot">
@@ -636,6 +631,40 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="panel">
           <div class="ph"><div class="pt">Invite Codes</div></div>
           <div id="invites-list"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS (owner only) -->
+      <div id="v-settings" class="view owner-only">
+        <div class="sh"><div><h1 class="st">Settings</h1><p class="ss">Manage your account</p></div></div>
+
+        <div class="panel">
+          <div class="ph"><div class="pt">Change Password</div></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div><label class="flbl">New Password</label><input class="finput" id="set-new-pass" type="password" placeholder="Min 6 characters"/></div>
+            <div><label class="flbl">Confirm New Password</label><input class="finput" id="set-new-pass-confirm" type="password"/></div>
+            <div id="set-pass-error" style="color:var(--red);font-size:11.5px;display:none"></div>
+            <button class="add-btn" style="width:100%;justify-content:center" onclick="handleChangePassword()">Update Password</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph"><div class="pt">Change Email</div></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+            <p class="ss">A confirmation link will be sent to the new email — the change only takes effect once you click it.</p>
+            <div><label class="flbl">New Email</label><input class="finput" id="set-new-email" type="email"/></div>
+            <div id="set-email-error" style="color:var(--red);font-size:11.5px;display:none"></div>
+            <div id="set-email-success" style="color:var(--green);font-size:11.5px;display:none"></div>
+            <button class="add-btn" style="width:100%;justify-content:center" onclick="handleChangeEmail()">Send Confirmation Link</button>
+          </div>
+        </div>
+
+        <div class="panel" style="border-color:var(--red-border)">
+          <div class="ph"><div class="pt" style="color:var(--red)">⚠️ Danger Zone</div></div>
+          <div style="padding:16px">
+            <p class="ss" style="margin-bottom:12px">Permanently deletes this facility and everything in it — patients, admissions, documents, staff accounts, invites, billing history. This cannot be undone.</p>
+            <button class="add-btn" style="background:var(--red);width:100%;justify-content:center" onclick="openDeleteFacilityModal()">Delete This Nursing Home</button>
+          </div>
         </div>
       </div>
 
@@ -914,7 +943,7 @@ function nav(id,btn){
   var v=document.getElementById('v-'+id);
   if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',finance:'Finance',ayushman:'Ayushman / PM-JAY',staff:'Staff'};
+  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',finance:'Finance',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings'};
   var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
@@ -1108,6 +1137,31 @@ async function handleSignup(){
     await _supa.from('nh_staff').upsert({id:r.data.user.id,clinic_id:ins.data.id,role:'owner',full_name:name});
   }
   document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Registration Submitted</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your nursing home account is under review.<br>We will activate it within 24 hours.<br><br>WhatsApp us to expedite activation.</p><a href="https://wa.me/919330660325?text=Hi, I registered '+nhname+' on AuraScale NH. Please activate." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us to Activate</a></div></div>';
+}
+
+async function handleChangePassword(){
+  var pass=document.getElementById('set-new-pass').value||'';
+  var confirm=document.getElementById('set-new-pass-confirm').value||'';
+  var err=document.getElementById('set-pass-error');
+  err.style.display='none';
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  if(pass!==confirm){err.textContent='Passwords do not match.';err.style.display='block';return;}
+  var r=await _supa.auth.updateUser({password:pass});
+  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+  document.getElementById('set-new-pass').value='';
+  document.getElementById('set-new-pass-confirm').value='';
+  showToast('Password updated');
+}
+async function handleChangeEmail(){
+  var email=(document.getElementById('set-new-email').value||'').trim();
+  var err=document.getElementById('set-email-error');
+  var ok=document.getElementById('set-email-success');
+  err.style.display='none';ok.style.display='none';
+  if(!email){err.textContent='Enter a new email.';err.style.display='block';return;}
+  var r=await _supa.auth.updateUser({email:email});
+  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+  ok.textContent='Confirmation link sent to '+email+'. The change takes effect once you click it.';
+  ok.style.display='block';
 }
 
 async function handleLogout(){
