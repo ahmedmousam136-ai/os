@@ -270,6 +270,10 @@ var _activeAdmissionId=null;
 var _voiceActive=false;
 
 async function init(){
+  if(typeof nhAuthGuard!=='function'){
+    document.getElementById('loading').textContent='Could not load required files (nh-shared.js). Please check your internet connection and refresh.';
+    return;
+  }
   var guard=await nhAuthGuard('doctor');
   if(!guard)return;
   document.getElementById('sb-fac-name').textContent=guard.facilityName;
