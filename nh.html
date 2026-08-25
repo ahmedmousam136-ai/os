@@ -259,7 +259,31 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 </style>
 </head>
 <body>
-  
+  <!-- ── BACK-BUTTON GUARD: browser Back returns to the AuraScale system chooser ── -->
+<script>
+(function(){
+  var HOME = 'index.html';           // the "Choose your system" page
+  var TAG  = 'aurascale-back-guard';
+
+  function arm(){
+    try { history.pushState({ g: TAG }, '', location.href); } catch(e){}
+  }
+  arm();
+
+  window.addEventListener('popstate', function(){
+    // If a modal / drawer / overlay is open, Back just closes it and stays.
+    var open = document.querySelectorAll('.mod-ov.open, .modal.open, .sheet.open, .drawer.open');
+    if (open.length){
+      Array.prototype.forEach.call(open, function(m){ m.classList.remove('open'); });
+      var ov = document.getElementById('overlay'); if (ov) ov.classList.remove('on');
+      var sb = document.getElementById('sidebar'); if (sb) sb.classList.remove('open');
+      arm();
+      return;
+    }
+    location.replace(HOME);
+  });
+})();
+</script>
 <!-- ── BACK-BUTTON GUARD: browser Back returns to the AuraScale system chooser ── -->
 <script>
 (function(){
