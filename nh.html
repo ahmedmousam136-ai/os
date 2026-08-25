@@ -284,34 +284,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
   });
 })();
 </script>
-<!-- ── BACK-BUTTON GUARD: browser Back returns to the AuraScale system chooser ── -->
-<script>
-(function(){
-  var HOME = 'index.html';           // the "Choose your system" page
-  var TAG  = 'aurascale-back-guard';
-
-  // Push a sentinel entry so the first Back press is caught by this page
-  // instead of leaving the site (Google / new tab / previous site).
-  function arm(){
-    try { history.pushState({ g: TAG }, '', location.href); } catch(e){}
-  }
-  arm();
-
-  window.addEventListener('popstate', function(){
-    // If a modal / drawer / overlay is open, Back should just close it and stay put.
-    var open = document.querySelectorAll('.mod-ov.open, .modal.open, .sheet.open, .drawer.open');
-    if (open.length){
-      Array.prototype.forEach.call(open, function(m){ m.classList.remove('open'); });
-      var ov = document.getElementById('overlay'); if (ov) ov.classList.remove('on');
-      var sb = document.getElementById('sidebar'); if (sb) sb.classList.remove('open');
-      arm();                          // re-arm so the next Back is caught too
-      return;
-    }
-    // Otherwise: go to the system chooser.
-    location.replace(HOME);
-  });
-})();
-</script>
 
 
 <!-- AUTH SCREEN -->
