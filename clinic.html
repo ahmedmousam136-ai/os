@@ -1207,6 +1207,31 @@ main.content{
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+  <!-- ── BACK-BUTTON GUARD: browser Back returns to the AuraScale system chooser ── -->
+<script>
+(function(){
+  var HOME = 'index.html';           // the "Choose your system" page
+  var TAG  = 'aurascale-back-guard';
+
+  function arm(){
+    try { history.pushState({ g: TAG }, '', location.href); } catch(e){}
+  }
+  arm();
+
+  window.addEventListener('popstate', function(){
+    // If a modal / drawer / overlay is open, Back just closes it and stays.
+    var open = document.querySelectorAll('.mod-ov.open, .modal.open, .sheet.open, .drawer.open');
+    if (open.length){
+      Array.prototype.forEach.call(open, function(m){ m.classList.remove('open'); });
+      var ov = document.getElementById('overlay'); if (ov) ov.classList.remove('on');
+      var sb = document.getElementById('sidebar'); if (sb) sb.classList.remove('open');
+      arm();
+      return;
+    }
+    location.replace(HOME);
+  });
+})();
+</script>
 <!-- ══ AUTH SCREEN — outside app shell, always on top ══ -->
 <div id="auth-screen">
   <div class="auth-wrap">
