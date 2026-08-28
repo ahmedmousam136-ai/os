@@ -218,6 +218,35 @@ main.content{flex:1;padding:20px;overflow-y:auto}
   .hdr-search{display:none}
   .id-grid{grid-template-columns:1fr 1fr}
 }
+
+/* ── BED PROFILE & WARD OVERVIEW ── */
+.ward-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);margin-bottom:14px}
+.ward-hd{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.ward-nm{font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-.01em}
+.ward-st{display:flex;gap:10px;font-size:10.5px;color:var(--text-secondary)}
+.ward-st b{font-weight:700}
+.bed-ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:14px}
+.bov{border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 9px;text-align:center;cursor:pointer;transition:all var(--ease);background:var(--bg);position:relative}
+.bov:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
+.bov.occupied{border-color:var(--green-border);background:var(--green-bg)}
+.bov.cleaning{border-color:var(--amber-border);background:var(--amber-bg)}
+.bov.reserved{border-color:var(--blue-border);background:var(--blue-bg)}
+.bov.critical{border-color:var(--red-border);background:var(--red-bg)}
+.bov.inactive{opacity:.4;filter:grayscale(.5)}
+.bov-num{font-family:'Instrument Serif',serif;font-size:21px;font-weight:700}
+.bov-ward{font-size:8.5px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px}
+.bov-pt{font-size:10px;font-weight:600;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bov-day{font-size:8.5px;color:var(--text-tertiary);margin-top:2px}
+/* BED PROFILE MODAL TABS */
+.bp-tabs{display:flex;gap:3px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:12px;overflow-x:auto}
+.bp-tab{padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;color:var(--text-tertiary);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all var(--ease)}
+.bp-tab.on{background:var(--surface);color:var(--text-primary);box-shadow:var(--sh-xs)}
+.bp-pnl{display:none}.bp-pnl.on{display:block}
+/* EXPENSE CARDS */
+.exp-card{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;background:var(--surface)}
+.exp-ic{width:30px;height:30px;border-radius:8px;background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.exp-amt{font-family:'Instrument Serif',serif;font-size:16px;font-weight:700;color:var(--text-primary)}
+.female-badge{display:inline-flex;align-items:center;gap:3px;background:#FDF0F7;border:1px solid #F0B8DC;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700;color:#9C2B6E;letter-spacing:.05em;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -319,14 +348,16 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <!-- BEDS -->
       <div id="v-beds" class="view">
         <div class="sh">
-          <div><h1 class="st">Bed Management</h1><p class="ss"><span class="rt-dot"></span>Live updates · tap a bed to change status</p></div>
+          <div>
+            <h1 class="st">Bed Overview</h1>
+            <p class="ss"><span class="rt-dot"></span>Live · tap any bed to see profile · <span id="beds-summary-pill" style="color:var(--text-secondary);font-weight:600"></span></p>
+          </div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
             <span class="chip ch-act">🟢 Occupied</span>
             <span class="chip ch-vac">⬜ Vacant</span>
             <span class="chip ch-wait">🟡 Cleaning</span>
             <span class="chip ch-dis">🔵 Reserved</span>
             <span class="chip ch-crit">🔴 Critical</span>
-            <button class="add-btn" onclick="openAddBedModal()">+ Add Bed</button>
           </div>
         </div>
         <div id="beds-by-ward"></div>
@@ -652,6 +683,167 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <div><label class="flbl">Payment Date</label><input class="finput" id="pay-date" type="date"/></div>
       <div><label class="flbl">Notes</label><input class="finput" id="pay-notes" placeholder="Optional"/></div>
       <button class="msub green" onclick="savePayment()">✓ Record Payment</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- BED PROFILE MODAL -->
+<div class="mod-ov" id="mod-bed-profile">
+  <div class="modal modal-wide">
+    <div class="mh">
+      <div>
+        <div class="mtitle" id="bp-title">Bed Profile</div>
+        <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px" id="bp-subtitle"></div>
+      </div>
+      <button class="mclose" onclick="closeModal('mod-bed-profile')">✕</button>
+    </div>
+    <!-- Vacant: simple action panel -->
+    <div id="bp-vacant-panel" style="display:none">
+      <div class="mb">
+        <div class="note-green" style="font-size:12.5px;text-align:center;padding:20px">
+          <div style="font-size:28px;margin-bottom:8px">🛏️</div>
+          <div style="font-weight:700;margin-bottom:4px">This bed is vacant</div>
+          <div style="font-size:11px;color:var(--text-secondary)">Ready to admit a new patient</div>
+        </div>
+        <button class="msub green" onclick="closeModal('mod-bed-profile');openRegisterModal()">+ Register &amp; Admit New Patient</button>
+        <div style="text-align:center;font-size:11px;color:var(--text-tertiary)">or search for an existing patient in the Patients view to admit them to this bed</div>
+      </div>
+    </div>
+    <!-- Occupied: tabbed profile -->
+    <div id="bp-occupied-panel" style="display:none">
+      <div style="padding:14px 17px 0">
+        <!-- Patient identity bar -->
+        <div id="bp-patient-bar" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);margin-bottom:14px">
+          <div class="adm-av" id="bp-av" style="width:42px;height:42px;border-radius:10px;font-size:18px;background:var(--green-bg);border-color:var(--green-border);color:var(--green)">?</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:13.5px" id="bp-pt-name">—</div>
+            <div style="font-size:10.5px;color:var(--text-secondary);margin-top:2px" id="bp-pt-meta">—</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:'Instrument Serif',serif;font-size:22px;color:var(--green)" id="bp-days">—</div>
+            <div style="font-size:9px;color:var(--text-tertiary)">days</div>
+          </div>
+        </div>
+        <div class="bp-tabs">
+          <div class="bp-tab on" onclick="bpTab('info',this)">📋 Info</div>
+          <div class="bp-tab" onclick="bpTab('expenses',this)">💳 Expenses</div>
+          <div class="bp-tab" onclick="bpTab('documents',this)">📎 Documents</div>
+          <div class="bp-tab" onclick="bpTab('voice',this)">🎙️ Notes</div>
+        </div>
+      </div>
+      <!-- INFO TAB -->
+      <div class="mb" style="padding-top:0">
+        <div class="bp-pnl on" id="bp-pnl-info">
+          <div id="bp-adm-info" style="display:flex;flex-direction:column;gap:3px"></div>
+          <button class="qbtn" style="margin-top:10px;width:100%;justify-content:center" onclick="doDischargeFromProfile()">📄 Discharge This Patient</button>
+        </div>
+        <!-- EXPENSES TAB -->
+        <div class="bp-pnl" id="bp-pnl-expenses">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="qbtn" onclick="openExpenseModal()">+ Add Expense</button>
+            <button class="qbtn" onclick="document.getElementById('bill-upload-input').click()">📷 Upload Bill</button>
+            <input type="file" id="bill-upload-input" accept="image/*,application/pdf" capture="environment" style="display:none" onchange="handleBillUpload(event)"/>
+          </div>
+          <div id="bp-expenses-list"></div>
+        </div>
+        <!-- DOCUMENTS TAB -->
+        <div class="bp-pnl" id="bp-pnl-documents">
+          <div class="note-box note-blue" style="margin-bottom:10px;font-size:11px">Documents uploaded for this patient. Tap View to open originals.</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <button class="qbtn" onclick="document.getElementById('bp-doc-cam').click()">📷 Take Photo</button>
+            <button class="qbtn" onclick="document.getElementById('bp-doc-file').click()">📎 Upload</button>
+          </div>
+          <input type="file" id="bp-doc-cam" accept="image/*" capture="environment" style="display:none" onchange="handleBpDocUpload(event)"/>
+          <input type="file" id="bp-doc-file" accept="application/pdf,image/*" style="display:none" onchange="handleBpDocUpload(event)"/>
+          <div id="bp-doc-list"></div>
+        </div>
+        <!-- VOICE NOTES TAB -->
+        <div class="bp-pnl" id="bp-pnl-voice">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <button class="voice-btn" id="bp-voice-btn" onclick="toggleBpVoice()">🎙️</button>
+            <div>
+              <div style="font-size:12.5px;font-weight:600" id="bp-voice-status">Tap mic to record</div>
+              <div style="font-size:10.5px;color:var(--text-tertiary)">Voice → text · review before saving</div>
+            </div>
+          </div>
+          <div class="voice-box" id="bp-voice-box">Nothing recorded yet.</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="qbtn" onclick="clearBpVoice()">✕ Clear</button>
+            <button class="msub" style="flex:1" onclick="saveBpVoice()">✓ Save Note</button>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Saved Notes</div>
+            <div id="bp-voice-saved"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Cleaning/Reserved: status only -->
+    <div id="bp-other-panel" style="display:none">
+      <div class="mb">
+        <div id="bp-other-info" class="note-box note-amber" style="text-align:center;padding:20px">Bed status: <b id="bp-other-status">—</b></div>
+        <button class="msub" onclick="updateBpStatus('Vacant')">Mark as Vacant</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EXPENSE MODAL -->
+<div class="mod-ov" id="mod-expense">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">💳 Add Expense</div><button class="mclose" onclick="closeModal('mod-expense')">✕</button></div>
+    <div class="mb">
+      <div><label class="flbl">Charge Type</label>
+        <select class="finput" id="exp-type">
+          <option>Bed Charge</option><option>Doctor Visit</option><option>Medicine</option>
+          <option>Procedure</option><option>Lab Test</option><option>Consumable</option>
+          <option>Nursing</option><option>Other</option>
+        </select>
+      </div>
+      <div><label class="flbl">Description *</label><input class="finput" id="exp-desc" placeholder="e.g. IV Drip, X-Ray, Dressing"/></div>
+      <div class="rx-3">
+        <div><label class="flbl">Qty</label><input class="finput" id="exp-qty" type="number" value="1" min="1" oninput="calcExp()"/></div>
+        <div><label class="flbl">Unit Price (₹)</label><input class="finput" id="exp-price" type="number" placeholder="0" oninput="calcExp()"/></div>
+        <div><label class="flbl">Total</label><input class="finput" id="exp-total" readonly style="background:var(--green-bg);border-color:var(--green-border);color:var(--green);font-weight:700"/></div>
+      </div>
+      <div><label class="flbl">Date</label><input class="finput" id="exp-date" type="date"/></div>
+      <div><label class="flbl">Notes (optional)</label><input class="finput" id="exp-notes" placeholder="Any additional details"/></div>
+      <!-- Bill image upload inline -->
+      <div>
+        <label class="flbl">Bill Image / PDF (optional)</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="qbtn" onclick="document.getElementById('exp-bill-cam').click()">📷 Take Photo of Bill</button>
+          <button class="qbtn" onclick="document.getElementById('exp-bill-file').click()">📎 Upload Bill</button>
+        </div>
+        <input type="file" id="exp-bill-cam" accept="image/*" capture="environment" style="display:none" onchange="previewExpBill(event)"/>
+        <input type="file" id="exp-bill-file" accept="image/*,application/pdf" style="display:none" onchange="previewExpBill(event)"/>
+        <div id="exp-bill-preview" style="margin-top:8px;display:none">
+          <img id="exp-bill-img" style="max-width:100%;max-height:120px;border-radius:var(--r-sm);border:1px solid var(--border);display:none" alt=""/>
+          <div id="exp-bill-name" style="font-size:10.5px;color:var(--text-secondary);margin-top:4px"></div>
+        </div>
+      </div>
+      <div id="exp-err" style="color:var(--red);font-size:11.5px;display:none"></div>
+      <button class="msub" onclick="saveExpense()">+ Add Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- BED STATUS QUICK-CHANGE (for cleaning/reserved) -->
+<div class="mod-ov" id="mod-bed-status">
+  <div class="modal">
+    <div class="mh"><div class="mtitle" id="bst-title">Bed</div><button class="mclose" onclick="closeModal('mod-bed-status')">✕</button></div>
+    <div class="mb">
+      <div><label class="flbl">Status</label>
+        <select class="finput" id="bst-sel">
+          <option value="Vacant">Vacant</option>
+          <option value="Occupied">Occupied</option>
+          <option value="Cleaning">Cleaning</option>
+          <option value="Reserved">Reserved</option>
+          <option value="Critical">Critical</option>
+        </select>
+      </div>
+      <button class="msub" onclick="saveBedStatus()">Update Status</button>
     </div>
   </div>
 </div>
@@ -1100,64 +1292,285 @@ async function sendForReview(){
   showToast('Sent to assigned doctor for review');
 }
 
-/* ── BEDS ── */
+/* ── BEDS — Ward-grouped overview + rich Bed Profile ─────────────────────── */
+var _bpBedId=null,_bpAdmId=null,_bpPatientId=null,_bpVoiceRec=false,_bpVoiceText='';
+var _expBillFile=null;
+
 async function loadBeds(){
-  var r=await _supa.from('beds').select('*').eq('clinic_id',_clinicId).order('ward').order('bed_number');
-  var adms=await _supa.from('admissions').select('bed_id,patient_name,admission_date').eq('clinic_id',_clinicId).eq('status','Active');
-  var am={};(adms.data||[]).forEach(function(a){am[a.bed_id]=a;});
-  _cachedBeds=r.data||[];
+  var [bedsRes,admsRes]=await Promise.all([
+    _supa.from('beds').select('*').eq('clinic_id',_clinicId).order('ward').order('bed_number'),
+    _supa.from('admissions').select('id,bed_id,patient_id,patient_name,admission_date,admitting_doctor,admission_diagnosis').eq('clinic_id',_clinicId).eq('status','Active')
+  ]);
+  _cachedBeds=bedsRes.data||[];
+  var am={};(admsRes.data||[]).forEach(function(a){am[a.bed_id]=a;});
   var container=document.getElementById('beds-by-ward');
-  if(!_cachedBeds.length){container.innerHTML='<div class="panel"><div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No beds added yet</p><p class="empty-s">Click "Add Bed" to configure your facility</p></div></div>';return;}
+  if(!_cachedBeds.length){
+    container.innerHTML='<div class="panel"><div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No beds configured</p><p class="empty-s">The owner can add beds in the Owner Portal</p></div></div>';
+    return;
+  }
   var wards={};
   _cachedBeds.forEach(function(b){var w=b.ward||'General';if(!wards[w])wards[w]=[];wards[w].push(b);});
+  var totalOcc=0,totalVac=0;
   container.innerHTML=Object.keys(wards).map(function(w){
     var beds=wards[w];
-    var v=beds.filter(function(b){return(b.status||'vacant').toLowerCase()==='vacant';}).length;
-    return '<div class="panel" style="margin-bottom:14px">'
-      +'<div class="ph"><div class="pt">'+esc(w)+' <span style="font-size:10px;color:var(--text-tertiary);font-weight:400">'+v+' vacant / '+beds.length+' total</span></div></div>'
-      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px;padding:16px">'
+    var occ=beds.filter(function(b){return am[b.id]||b.status==='Occupied';}).length;
+    var vac=beds.filter(function(b){return !am[b.id]&&(b.status||'').toLowerCase()==='vacant';}).length;
+    var cln=beds.filter(function(b){return(b.status||'').toLowerCase()==='cleaning';}).length;
+    totalOcc+=occ;totalVac+=vac;
+    var isFemale=w==='Female';
+    var hdrStyle=isFemale?'background:#FDF0F7;border-bottom:1px solid #F0B8DC':'';
+    return '<div class="ward-sec">'
+      +'<div class="ward-hd" style="'+hdrStyle+'">'
+        +'<div style="display:flex;align-items:center;gap:8px"><span class="ward-nm">'+esc(w)+'</span>'+(isFemale?'<span class="female-badge">♀ Female</span>':'')+'</div>'
+        +'<div class="ward-st"><span><b>'+occ+'</b> occupied</span><span><b>'+vac+'</b> vacant</span>'+(cln?'<span><b>'+cln+'</b> cleaning</span>':'')+'<span style="color:var(--text-tertiary)">'+beds.length+' total</span></div>'
+      +'</div>'
+      +'<div class="bed-ov-grid">'
       +beds.map(function(b){
+        var adm=am[b.id];
         var s=(b.status||'vacant').toLowerCase();
-        var cls=s==='occupied'?'occupied':s==='cleaning'?'cleaning':s==='reserved'?'reserved':s==='critical'?'critical':'';
-        var a=am[b.id];var days=a?Math.floor((Date.now()-new Date(a.admission_date))/86400000):0;
-        var rate=b.daily_rate?'₹'+Number(b.daily_rate).toLocaleString('en-IN')+'/d':'';
-        return '<div class="bed-card '+cls+'" onclick="openBedStatus(\''+b.id+'\',\''+esc(b.bed_number)+'\',\''+s+'\',\''+esc(a?a.patient_name||'':'')+'\')">'
-          +'<div class="bed-num">'+esc(b.bed_number)+'</div>'
-          +'<div class="bed-ward">'+esc(w)+'</div>'
-          +(rate?'<div style="font-size:8.5px;color:var(--text-tertiary);margin-top:2px">'+rate+'</div>':'')
-          +(a?'<div class="bed-patient">'+esc(a.patient_name||'')+'</div><div class="bed-days">Day '+(days+1)+'</div>':'<div class="bed-days">'+s+'</div>')
+        var isOcc=!!(adm&&adm.patient_name)||s==='occupied';
+        var cls=isOcc?'occupied':s==='cleaning'?'cleaning':s==='reserved'?'reserved':s==='critical'?'critical':'';
+        var inact=b.is_active===false?' inactive':'';
+        var days=adm?Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1:0;
+        return '<div class="bov '+cls+inact+'" onclick="openBedProfile(''+b.id+'',''+esc(b.bed_number)+'',''+esc(w)+'',''+s+'',''+(adm?adm.id:'')+'',''+(adm?adm.patient_id||'':'')+'',''+esc(adm?adm.patient_name||'':'')+'','+days+')">'
+          +'<div class="bov-num">'+esc(b.bed_number)+'</div>'
+          +'<div class="bov-ward">'+esc(w)+'</div>'
+          +(adm?'<div class="bov-pt">'+esc(adm.patient_name||'')+'</div><div class="bov-day">Day '+days+'</div>':'<div class="bov-day">'+(b.is_active===false?'Deactivated':cls||'vacant')+'</div>')
           +'</div>';
-      }).join('')+'</div></div>';
+      }).join('')
+      +'</div></div>';
   }).join('');
+  /* Summary pill */
+  var sp=document.getElementById('beds-summary-pill');
+  if(sp)sp.textContent=totalOcc+' occupied · '+totalVac+' vacant';
   renderBedMini();
 }
-function openAddBedModal(){document.getElementById('bed-num').value='';document.getElementById('bed-rate').value='';openModal('mod-add-bed');}
-async function addBed(){
-  var num=(document.getElementById('bed-num').value||'').trim();
-  var ward=document.getElementById('bed-ward').value;
-  var rate=parseFloat(document.getElementById('bed-rate').value)||0;
-  if(!num){showToast('Bed number required');return;}
-  var r=await _supa.from('beds').insert({clinic_id:_clinicId,bed_number:num,ward:ward,status:'vacant',daily_rate:rate});
-  if(r.error){showToast('Error: '+r.error.message);return;}
-  closeModal('mod-add-bed');showToast('Bed '+num+' added');loadBeds();
-}
-function openBedStatus(id,num,status,patient){
-  _bedId=id;
-  document.getElementById('bst-title').textContent='Bed '+num;
-  document.getElementById('bst-sel').value=status;
-  var pi=document.getElementById('bst-patient');
-  if(patient&&status==='occupied'){pi.innerHTML='<div class="note-box note-green" style="margin-bottom:4px"><b>'+esc(patient)+'</b> — currently admitted in this bed</div>';pi.style.display='block';}
-  else pi.style.display='none';
-  openModal('mod-bed-status');
-}
-async function updateBedStatus(){
-  if(!_bedId)return;
-  var s=document.getElementById('bst-sel').value;
-  await _supa.from('beds').update({status:s}).eq('id',_bedId);
-  closeModal('mod-bed-status');showToast('Bed status updated to '+s);loadBeds();
+
+async function openBedProfile(bedId,num,ward,status,admId,patientId,patientName,days){
+  _bpBedId=bedId;
+  _bpAdmId=admId||null;
+  _bpPatientId=patientId||null;
+  document.getElementById('bp-title').textContent='Bed '+num+' — '+ward;
+  document.getElementById('bp-subtitle').textContent=ward+' Ward'+(status?' · '+status.charAt(0).toUpperCase()+status.slice(1):'');
+  ['bp-vacant-panel','bp-occupied-panel','bp-other-panel'].forEach(function(id){document.getElementById(id).style.display='none';});
+  var s=status.toLowerCase();
+  if(s==='vacant'||!admId){
+    document.getElementById('bp-vacant-panel').style.display='block';
+  } else if(s==='occupied'||admId){
+    document.getElementById('bp-occupied-panel').style.display='block';
+    /* Fill patient bar */
+    document.getElementById('bp-av').textContent=(patientName||'?').charAt(0).toUpperCase();
+    document.getElementById('bp-pt-name').textContent=patientName||'Patient';
+    document.getElementById('bp-days').textContent=days||'—';
+    /* Load admission details */
+    var adm=await _supa.from('admissions').select('*').eq('id',admId).single();
+    var d=adm.data||{};
+    document.getElementById('bp-pt-meta').textContent=(d.patient_age?d.patient_age+'y ':'')+(d.patient_gender||'')+(d.admitting_doctor?' · Dr. '+d.admitting_doctor:'');
+    document.getElementById('bp-adm-info').innerHTML=
+      '<div class="ir"><span class="il">Diagnosis</span><span class="iv">'+esc(d.admission_diagnosis||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">Admitted</span><span class="iv">'+new Date(d.admission_date).toLocaleDateString('en-GB')+'</span></div>'
+      +'<div class="ir"><span class="il">Doctor</span><span class="iv">'+esc(d.admitting_doctor||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">Ward / Bed</span><span class="iv">'+esc(ward)+' / '+esc(num)+'</span></div>'
+      +'<div class="ir"><span class="il">Duration</span><span class="iv">'+days+' day(s)</span></div>'
+      +(d.daily_rate?'<div class="ir"><span class="il">Daily Rate</span><span class="iv">₹'+Number(d.daily_rate).toLocaleString('en-IN')+'</span></div>':'');
+    /* Switch to info tab */
+    bpTab('info',document.querySelector('.bp-tab'));
+    /* Pre-load expenses and docs */
+    loadBpExpenses();
+    loadBpDocs();
+    loadBpVoiceNotes();
+  } else {
+    document.getElementById('bp-occupied-panel').style.display='none';
+    document.getElementById('bp-other-panel').style.display='block';
+    document.getElementById('bp-other-status').textContent=status;
+  }
+  openModal('mod-bed-profile');
 }
 
-/* ── DISCHARGE ── */
+function bpTab(tab,el){
+  document.querySelectorAll('.bp-tab').forEach(function(t){t.classList.remove('on')});
+  document.querySelectorAll('.bp-pnl').forEach(function(p){p.classList.remove('on')});
+  if(el)el.classList.add('on');
+  var p=document.getElementById('bp-pnl-'+tab);if(p)p.classList.add('on');
+  if(tab==='expenses')loadBpExpenses();
+  if(tab==='documents')loadBpDocs();
+  if(tab==='voice')loadBpVoiceNotes();
+}
+
+async function updateBpStatus(s){
+  if(!_bpBedId)return;
+  await _supa.from('beds').update({status:s}).eq('id',_bpBedId);
+  closeModal('mod-bed-profile');showToast('Bed status → '+s);loadBeds();
+}
+
+async function doDischargeFromProfile(){
+  if(!_bpAdmId||!_bpBedId){showToast('No active admission');return;}
+  if(!confirm('Discharge this patient? The bed will be set to Cleaning.'))return;
+  await _supa.from('admissions').update({status:'Discharged',discharge_date:new Date().toISOString()}).eq('id',_bpAdmId);
+  await _supa.from('beds').update({status:'cleaning'}).eq('id',_bpBedId);
+  closeModal('mod-bed-profile');
+  showToast('Patient discharged · Bed set to Cleaning');
+  loadHome();loadBeds();
+}
+
+/* ── EXPENSES ── */
+async function loadBpExpenses(){
+  if(!_bpAdmId){document.getElementById('bp-expenses-list').innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No active admission.</p>';return;}
+  var [ch,pay]=await Promise.all([
+    _supa.from('admission_charges').select('*').eq('admission_id',_bpAdmId).order('created_at',{ascending:false}),
+    _supa.from('nh_payments').select('amount').eq('admission_id',_bpAdmId)
+  ]);
+  var charges=ch.data||[];
+  var total=charges.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var paid=(pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+  var due=total-paid;
+  var el=document.getElementById('bp-expenses-list');
+  if(!charges.length){el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">💳</div><p class="empty-t">No expenses yet</p><p class="empty-s">Tap "+ Add Expense" to record a charge</p></div>';return;}
+  el.innerHTML='<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total</div><div class="bill-amt">₹'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">₹'+due.toLocaleString('en-IN')+'</div></div></div>'
+    +charges.map(function(c){
+      return '<div class="exp-card">'
+        +'<div class="exp-ic">💳</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-weight:600;font-size:12px">'+esc(c.description||c.charge_type)+'</div>'
+          +'<div style="font-size:10px;color:var(--text-tertiary)">'+c.charge_type+' · '+new Date(c.created_at).toLocaleDateString('en-GB')+'</div>'
+          +(c.notes?'<div style="font-size:10.5px;color:var(--text-secondary);margin-top:3px">'+esc(c.notes)+'</div>':'')
+          +(c.bill_path?'<button class="qbtn" style="margin-top:6px" onclick="viewBillOriginal(''+esc(c.bill_path)+'')">📎 View Bill</button>':'')
+        +'</div>'
+        +'<div class="exp-amt">₹'+Number(c.total_price).toLocaleString('en-IN')+'</div>'
+        +'</div>';
+    }).join('');
+}
+
+function openExpenseModal(){
+  if(!_bpAdmId){showToast('No active admission');return;}
+  ['exp-desc','exp-notes','exp-total'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('exp-qty').value=1;
+  document.getElementById('exp-price').value='';
+  document.getElementById('exp-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('exp-err').style.display='none';
+  document.getElementById('exp-bill-preview').style.display='none';
+  document.getElementById('exp-bill-img').style.display='none';
+  _expBillFile=null;
+  openModal('mod-expense');
+}
+function calcExp(){
+  var q=parseFloat(document.getElementById('exp-qty').value)||1;
+  var p=parseFloat(document.getElementById('exp-price').value)||0;
+  document.getElementById('exp-total').value='₹'+(q*p).toLocaleString('en-IN');
+}
+function previewExpBill(evt){
+  var f=evt.target.files[0];if(!f)return;
+  _expBillFile=f;
+  var prev=document.getElementById('exp-bill-preview');prev.style.display='block';
+  document.getElementById('exp-bill-name').textContent=f.name+' ('+Math.round(f.size/1024)+' KB)';
+  var img=document.getElementById('exp-bill-img');
+  if(f.type.startsWith('image/')){
+    var r=new FileReader();r.onload=function(e){img.src=e.target.result;img.style.display='block';};r.readAsDataURL(f);
+  } else {img.style.display='none';}
+  evt.target.value='';
+}
+async function saveExpense(){
+  if(!_bpAdmId){showToast('No active admission');return;}
+  var type=document.getElementById('exp-type').value;
+  var desc=(document.getElementById('exp-desc').value||'').trim();
+  var qty=parseFloat(document.getElementById('exp-qty').value)||1;
+  var price=parseFloat(document.getElementById('exp-price').value)||0;
+  var notes=(document.getElementById('exp-notes').value||'').trim();
+  var expDate=document.getElementById('exp-date').value;
+  var err=document.getElementById('exp-err');err.style.display='none';
+  if(!desc){err.textContent='Description required';err.style.display='block';return;}
+  if(price<=0){err.textContent='Enter a price';err.style.display='block';return;}
+  /* Upload bill image if present */
+  var billPath=null;
+  if(_expBillFile&&_bpPatientId){
+    var safeName=_expBillFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    billPath=_clinicId+'/'+_bpPatientId+'/bill_'+Date.now()+'_'+safeName;
+    var up=await _supa.storage.from('nh-documents').upload(billPath,_expBillFile,{upsert:true});
+    if(up.error){showToast('Bill upload failed: '+up.error.message);billPath=null;}
+    else{
+      await _supa.from('nh_patient_documents').insert({clinic_id:_clinicId,patient_id:_bpPatientId,file_path:billPath,file_name:_expBillFile.name,doc_type:_expBillFile.type,uploaded_by:_myUid,document_type:'Bill / Receipt'});
+    }
+  }
+  var r=await _supa.from('admission_charges').insert({
+    clinic_id:_clinicId,admission_id:_bpAdmId,charge_type:type,description:desc,
+    quantity:qty,unit_price:price,total_price:qty*price,
+    notes:notes,bill_path:billPath,charge_date:expDate,added_by:_myUid
+  });
+  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+  closeModal('mod-expense');
+  showToast('Expense added'+(billPath?' · bill uploaded':''));
+  loadBpExpenses();
+}
+async function handleBillUpload(evt){
+  var f=evt.target.files[0];if(!f||!_bpPatientId)return;
+  showToast('Uploading bill…');
+  var path=_clinicId+'/'+_bpPatientId+'/bill_'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  var up=await _supa.storage.from('nh-documents').upload(path,f,{upsert:true});
+  if(up.error){showToast('Upload failed: '+up.error.message);evt.target.value='';return;}
+  await _supa.from('nh_patient_documents').insert({clinic_id:_clinicId,patient_id:_bpPatientId,file_path:path,file_name:f.name,doc_type:f.type,uploaded_by:_myUid,document_type:'Bill / Receipt'});
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'bill_uploaded',target_table:'nh_patient_documents',target_id:_bpPatientId,details:{file_name:f.name}});
+  showToast('Bill uploaded — appears in Expenses tab');
+  loadBpDocs();evt.target.value='';
+}
+async function viewBillOriginal(path){
+  var r=await _supa.storage.from('nh-documents').createSignedUrl(path,300);
+  if(r.error||!r.data){showToast('Could not open: '+(r.error?r.error.message:'unknown'));return;}
+  window.open(r.data.signedUrl,'_blank');
+}
+
+/* ── DOCUMENTS IN BED PROFILE ── */
+async function loadBpDocs(){
+  if(!_bpPatientId){document.getElementById('bp-doc-list').innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No patient linked.</p>';return;}
+  var r=await _supa.from('nh_patient_documents').select('*').eq('patient_id',_bpPatientId).order('created_at',{ascending:false});
+  var el=document.getElementById('bp-doc-list');
+  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No documents uploaded yet.</p>';return;}
+  el.innerHTML=r.data.map(function(d){
+    var icon=d.doc_type==='application/pdf'?'📄':d.doc_type&&d.doc_type.startsWith('image/')?'🖼️':'📎';
+    return '<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:7px;background:var(--surface)">'
+      +'<div style="width:28px;height:28px;border-radius:7px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+icon+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(d.file_name||d.document_type||'Document')+'</div>'
+      +'<div style="font-size:10px;color:var(--text-tertiary)">'+new Date(d.created_at).toLocaleDateString('en-GB')+(d.document_type?' · '+d.document_type:'')+'</div></div>'
+      +'<button class="qbtn" onclick="viewBillOriginal(''+esc(d.file_path)+'')">View</button>'
+      +'</div>';
+  }).join('');
+}
+function handleBpDocUpload(evt){
+  var f=evt.target.files[0];if(!f||!_bpPatientId)return;
+  uploadPatientDocument(f,_bpPatientId,function(){loadBpDocs();});
+  evt.target.value='';
+}
+
+/* ── VOICE NOTES IN BED PROFILE ── */
+function toggleBpVoice(){_bpVoiceRec?stopBpVoice():startBpVoice();}
+function startBpVoice(){
+  var ok=NHSpeech.start({lang:'en-IN',onResult:function(t){_bpVoiceText=t;document.getElementById('bp-voice-box').textContent=t;},onError:function(e){showToast('Mic: '+(e||'not supported'));stopBpVoice();},onEnd:function(){if(_bpVoiceRec)stopBpVoice();}});
+  if(!ok){showToast('Voice not supported');return;}
+  _bpVoiceRec=true;document.getElementById('bp-voice-btn').classList.add('rec');document.getElementById('bp-voice-btn').textContent='⏹️';document.getElementById('bp-voice-status').textContent='Recording… tap to stop';document.getElementById('bp-voice-box').textContent='Listening…';
+}
+function stopBpVoice(){NHSpeech.stop();_bpVoiceRec=false;document.getElementById('bp-voice-btn').classList.remove('rec');document.getElementById('bp-voice-btn').textContent='🎙️';document.getElementById('bp-voice-status').textContent='Review and save';}
+function clearBpVoice(){_bpVoiceText='';document.getElementById('bp-voice-box').textContent='Nothing recorded yet.';document.getElementById('bp-voice-status').textContent='Tap mic to record';}
+async function saveBpVoice(){
+  if(!_bpVoiceText||!_bpPatientId){showToast('Nothing to save');return;}
+  var r=await _supa.from('nh_voice_notes').insert({clinic_id:_clinicId,patient_id:_bpPatientId,note_text:_bpVoiceText,created_by:_myUid});
+  if(r.error){showToast('Error: '+r.error.message);return;}
+  showToast('Voice note saved');clearBpVoice();loadBpVoiceNotes();
+}
+async function loadBpVoiceNotes(){
+  if(!_bpPatientId){return;}
+  var r=await _supa.from('nh_voice_notes').select('*').eq('patient_id',_bpPatientId).order('created_at',{ascending:false}).limit(10);
+  var el=document.getElementById('bp-voice-saved');if(!el)return;
+  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No notes yet.</p>';return;}
+  el.innerHTML=r.data.map(function(n){return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;margin-bottom:8px;font-size:12.5px"><div style="font-size:10px;color:var(--text-tertiary);margin-bottom:3px">'+new Date(n.created_at).toLocaleString('en-GB')+'</div>'+esc(n.note_text||'')+'</div>';}).join('');
+}
+
+/* ── BED STATUS QUICK UPDATE ── */
+async function saveBedStatus(){
+  if(!_bpBedId)return;
+  var s=document.getElementById('bst-sel').value;
+  await _supa.from('beds').update({status:s}).eq('id',_bpBedId);
+  closeModal('mod-bed-status');showToast('Bed → '+s);loadBeds();
+}
+
 async function loadDischarge(){
   var r=await _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admission_diagnosis').eq('clinic_id',_clinicId).eq('status','Active');
   var el=document.getElementById('discharge-list');
