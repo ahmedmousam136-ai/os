@@ -181,6 +181,36 @@ main.content{flex:1;padding:20px;overflow-y:auto}
   .hdr-search{display:none}
   .mg{grid-template-columns:1fr 1fr}
 }
+
+/* ── BED OVERVIEW ── */
+.ward-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);margin-bottom:14px}
+.ward-hd{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.ward-nm{font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.ward-ct{display:flex;gap:10px;font-size:10.5px;color:var(--text-secondary)}
+.female-badge{display:inline-flex;align-items:center;background:#FDF0F7;border:1px solid #F0B8DC;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700;color:#9C2B6E;letter-spacing:.05em;text-transform:uppercase}
+.bed-ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:14px}
+.bov{border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 9px;text-align:center;cursor:pointer;transition:all var(--ease);background:var(--bg)}
+.bov:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
+.bov.occupied{border-color:var(--green-border);background:var(--green-bg)}
+.bov.cleaning{border-color:var(--amber-border);background:var(--amber-bg)}
+.bov.reserved{border-color:var(--blue-border);background:var(--blue-bg)}
+.bov.critical{border-color:var(--red-border);background:var(--red-bg)}
+.bov-num{font-family:'Instrument Serif',serif;font-size:20px;font-weight:700}
+.bov-ward{font-size:8.5px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px}
+.bov-pt{font-size:10px;font-weight:600;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bov-day{font-size:8.5px;color:var(--text-tertiary);margin-top:2px}
+/* BED PATIENT PROFILE TABS */
+.bp-tabs{display:flex;gap:3px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:12px;overflow-x:auto}
+.bp-tab{padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;color:var(--text-tertiary);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all var(--ease)}
+.bp-tab.on{background:var(--surface);color:var(--text-primary);box-shadow:var(--sh-xs)}
+.bp-pnl{display:none}.bp-pnl.on{display:block}
+/* PRESCRIPTION CARD */
+.rx-card{border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:10px;background:var(--surface)}
+.rx-drug{font-weight:700;font-size:13px;color:var(--text-primary)}
+.rx-detail{font-size:11px;color:var(--text-secondary);margin-top:3px;line-height:1.5}
+.rx-badge{display:inline-flex;align-items:center;background:var(--green-bg);border:1px solid var(--green-border);border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700;color:var(--green);margin-top:6px}
+/* CLINICAL NOTE CARD */
+.cn-card{border-left:3px solid var(--blue);padding:10px 12px;margin-bottom:10px;background:var(--surface2);border-radius:0 var(--r-sm) var(--r-sm) 0}
 </style>
 </head>
 <body>
@@ -209,6 +239,9 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       </button>
       <button class="nb" onclick="nav('patients',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>All Patients
+      </button>
+      <button class="nb" onclick="nav('beds',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/></svg></span>Bed Overview
       </button>
       <button class="nb" onclick="nav('ayushman',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>Ayushman / PM-JAY
@@ -248,10 +281,15 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div class="sh">
           <div><h1 class="st">My Patients</h1><p class="ss" id="home-date-sub">Patients assigned to you · Today</p></div>
         </div>
-        <div class="mg">
-          <div class="mc"><div class="mc-lbl">Assigned Patients</div><div class="mc-val" id="h-assigned">—</div><div class="mc-sub">linked to my login</div></div>
+        <div class="mg" style="grid-template-columns:repeat(3,1fr)">
+          <div class="mc"><div class="mc-lbl">My Patients</div><div class="mc-val" id="h-assigned">—</div><div class="mc-sub">assigned to me</div></div>
           <div class="mc" style="border-color:var(--amber-border);background:var(--amber-bg)"><div class="mc-lbl" style="color:var(--amber)">Pending Review</div><div class="mc-val" id="h-review">—</div><div class="mc-sub">sent by reception</div></div>
           <div class="mc"><div class="mc-lbl">Active Admissions</div><div class="mc-val" id="h-active">—</div><div class="mc-sub">currently admitted</div></div>
+        </div>
+        <div class="mg" style="grid-template-columns:repeat(3,1fr)">
+          <div class="mc"><div class="mc-lbl">Admitted Today</div><div class="mc-val" id="h-today">—</div><div class="mc-sub">new admissions today</div></div>
+          <div class="mc"><div class="mc-lbl">Progress Notes</div><div class="mc-val" id="h-notes-today">—</div><div class="mc-sub">written today</div></div>
+          <div class="mc"><div class="mc-lbl">Occupied Beds</div><div class="mc-val" id="h-beds-occ">—</div><div class="mc-sub">of <span id="h-beds-total">—</span> total</div></div>
         </div>
         <!-- Review queue -->
         <div class="panel">
@@ -303,6 +341,23 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         </div>
         <input class="finput" id="patient-search" placeholder="Search by name or phone…" oninput="loadPatientsList()"/>
         <div id="patients-list"></div>
+      </div>
+
+      <!-- BEDS OVERVIEW -->
+      <div id="v-beds" class="view">
+        <div class="sh">
+          <div>
+            <h1 class="st">Bed Overview</h1>
+            <p class="ss"><span class="rt-dot"></span>Live · click an occupied bed to view patient</p>
+          </div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+            <span class="chip ch-act">🟢 Occupied</span>
+            <span class="chip ch-vac">⬜ Vacant</span>
+            <span class="chip ch-wait">🟡 Cleaning</span>
+            <span class="chip ch-dis">🔵 Reserved</span>
+          </div>
+        </div>
+        <div id="beds-by-ward"></div>
       </div>
 
       <!-- AYUSHMAN -->
@@ -367,16 +422,30 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <div class="patient-tabs">
         <div class="patient-tab active" onclick="switchTab('overview',this)">Overview</div>
         <div class="patient-tab" onclick="switchTab('notes',this)">Clinical Notes</div>
+        <div class="patient-tab" onclick="switchTab('prescription',this)">Prescription</div>
         <div class="patient-tab" onclick="switchTab('documents',this)">Documents</div>
+        <div class="patient-tab" onclick="switchTab('history',this)">Full History</div>
         <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
       </div>
     </div>
     <div class="mb" style="padding-top:0">
       <div class="ptab active" id="t-overview"></div>
-      <div class="ptab" id="t-notes"></div>
+      <div class="ptab" id="t-notes">
+        <button class="qbtn" style="margin-bottom:10px;width:100%;justify-content:center" onclick="openNoteModal()">+ Add Progress Note</button>
+        <div id="t-notes-list"></div>
+      </div>
+      <div class="ptab" id="t-prescription">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <button class="qbtn" onclick="openPrescriptionModal()">+ Write Prescription</button>
+        </div>
+        <div id="t-rx-list"></div>
+      </div>
       <div class="ptab" id="t-documents">
-        <div class="note-box note-amber" style="margin-bottom:10px;font-size:11px">Documents uploaded by reception — view originals to verify content.</div>
+        <div class="note-box note-amber" style="margin-bottom:10px;font-size:11px">Documents uploaded by reception — view originals to verify. Never rely solely on extracted text for clinical decisions.</div>
         <div id="pp-doc-list"></div>
+      </div>
+      <div class="ptab" id="t-history">
+        <div id="t-history-list"></div>
       </div>
       <div class="ptab" id="t-ayushman"></div>
     </div>
@@ -403,6 +472,89 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       </div>
       <div><label class="flbl">Notes</label><textarea class="finput ftextarea" id="ay-notes" rows="3" placeholder="Claim number, documents, follow-up…"></textarea></div>
       <button class="msub" onclick="saveAyushman()">✓ Save Record</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- BED PATIENT PROFILE MODAL (from bed click) -->
+<div class="mod-ov" id="mod-bed-profile">
+  <div class="modal modal-wide">
+    <div class="mh">
+      <div>
+        <div class="mtitle" id="bpp-title">Bed Patient</div>
+        <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px" id="bpp-sub"></div>
+      </div>
+      <button class="mclose" onclick="closeModal('mod-bed-profile')">✕</button>
+    </div>
+    <!-- Patient identity bar -->
+    <div style="margin:14px 17px 0;padding:12px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);display:flex;align-items:center;gap:12px">
+      <div class="adm-av" id="bpp-av" style="width:42px;height:42px;border-radius:10px;font-size:18px;flex-shrink:0">?</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:13.5px" id="bpp-name">—</div>
+        <div style="font-size:10.5px;color:var(--text-secondary);margin-top:2px" id="bpp-meta">—</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'Instrument Serif',serif;font-size:22px;color:var(--green)" id="bpp-days">—</div>
+        <div style="font-size:9px;color:var(--text-tertiary)">days</div>
+      </div>
+    </div>
+    <div style="padding:12px 17px 0">
+      <div class="bp-tabs">
+        <div class="bp-tab on" onclick="bppTab('info',this)">📋 Info</div>
+        <div class="bp-tab" onclick="bppTab('notes',this)">🩺 Notes</div>
+        <div class="bp-tab" onclick="bppTab('prescription',this)">💊 Prescription</div>
+        <div class="bp-tab" onclick="bppTab('documents',this)">📎 Documents</div>
+        <div class="bp-tab" onclick="bppTab('history',this)">📂 History</div>
+      </div>
+    </div>
+    <div class="mb" style="padding-top:0">
+      <div class="bp-pnl on" id="bpp-pnl-info">
+        <div id="bpp-adm-info" style="display:flex;flex-direction:column;gap:3px"></div>
+        <button class="qbtn" style="margin-top:10px;width:100%;justify-content:center" onclick="openNoteModalFromBed()">📋 Add Progress Note</button>
+      </div>
+      <div class="bp-pnl" id="bpp-pnl-notes">
+        <button class="qbtn" style="margin-bottom:10px;width:100%;justify-content:center" onclick="openNoteModalFromBed()">+ Add Progress Note</button>
+        <div id="bpp-notes-list"></div>
+      </div>
+      <div class="bp-pnl" id="bpp-pnl-prescription">
+        <button class="qbtn" style="margin-bottom:10px;width:100%;justify-content:center" onclick="openPrescriptionModal()">+ Write Prescription</button>
+        <div id="bpp-rx-list"></div>
+      </div>
+      <div class="bp-pnl" id="bpp-pnl-documents">
+        <div class="note-box note-amber" style="margin-bottom:10px;font-size:11px">View originals — never rely on extracted text alone for clinical decisions.</div>
+        <div id="bpp-doc-list"></div>
+      </div>
+      <div class="bp-pnl" id="bpp-pnl-history">
+        <div id="bpp-history-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRESCRIPTION MODAL -->
+<div class="mod-ov" id="mod-prescription">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">💊 Write Prescription</div><button class="mclose" onclick="closeModal('mod-prescription')">✕</button></div>
+    <div class="mb">
+      <div><label class="flbl">Diagnosis / Clinical Impression</label><input class="finput" id="rx-diagnosis" placeholder="e.g. Viral fever, Pneumonia, Post-op day 2"/></div>
+      <div><label class="flbl">Prescription (Drug · Dose · Frequency · Duration)</label><textarea class="finput ftextarea" id="rx-drugs" rows="5" placeholder="Tab Paracetamol 500mg — 1 tab TDS × 5 days&#10;Inj Amoxicillin 500mg IV — BD × 3 days&#10;Tab Pantoprazole 40mg — 1 tab OD before breakfast"></textarea></div>
+      <!-- Voice for prescription -->
+      <div style="border:1.5px solid var(--red-border);background:var(--red-bg);border-radius:var(--r-md);padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <button class="mic-btn" id="rx-mic-btn" onclick="toggleRxVoice()" style="width:40px;height:40px;border-radius:50%;background:var(--red-bg);border:1.5px solid var(--red-border);color:var(--red);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px">🎙️</button>
+        <div>
+          <div style="font-weight:700;font-size:12.5px" id="rx-mic-label">Dictate Prescription</div>
+          <div style="font-size:10.5px;color:var(--text-tertiary)" id="rx-mic-status">Tap mic — voice goes to prescription field above</div>
+        </div>
+      </div>
+      <div><label class="flbl">Treatment Instructions / Notes</label><textarea class="finput ftextarea" id="rx-instructions" rows="2" placeholder="Bed rest, plenty of fluids, avoid spicy food…"></textarea></div>
+      <div class="rx-2">
+        <div><label class="flbl">Follow-up Date</label><input class="finput" id="rx-followup" type="date"/></div>
+        <div><label class="flbl">Follow-up Instructions</label><input class="finput" id="rx-followup-note" placeholder="e.g. Repeat CBC after 5 days"/></div>
+      </div>
+      <div class="note-box note-amber" style="font-size:10.5px">Review all voice-transcribed text before saving. Always verify drug names, doses and frequencies.</div>
+      <div id="rx-err" style="color:var(--red);font-size:11.5px;display:none"></div>
+      <button class="msub green" onclick="savePrescription()">✓ Save Prescription</button>
     </div>
   </div>
 </div>
@@ -440,11 +592,12 @@ function nav(id,btn){
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var t={home:'My Patients',rounds:'Progress Notes',patients:'All Patients',ayushman:'Ayushman / PM-JAY'};
+  var t={home:'My Patients',rounds:'Progress Notes',patients:'All Patients',beds:'Bed Overview',ayushman:'Ayushman / PM-JAY'};
   document.getElementById('tab-title').textContent=t[id]||id;
   if(id==='home')loadHome();
   if(id==='rounds')loadRoundsPatients();
   if(id==='patients')loadPatientsList();
+  if(id==='beds')loadBeds();
   if(id==='ayushman')loadAyushmanView();
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
@@ -453,8 +606,15 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 
 /* ── HOME ── */
 async function loadHome(){
+  var today=new Date().toISOString().slice(0,10);
   /* Patients assigned to this doctor */
-  var r=await _supa.from('nh_patients').select('id,full_name,phone,age,gender,needs_review').eq('clinic_id',_clinicId).eq('assigned_doctor_id',_myUid).order('created_at',{ascending:false});
+  var [r,admsAll,todayAdms,bedsRes,notesToday]=await Promise.all([
+    _supa.from('nh_patients').select('id,full_name,phone,age,gender,needs_review').eq('clinic_id',_clinicId).eq('assigned_doctor_id',_myUid).order('created_at',{ascending:false}),
+    _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('status','Active'),
+    _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00').lte('admission_date',today+'T23:59:59'),
+    _supa.from('beds').select('id,status',{count:'exact'}).eq('clinic_id',_clinicId),
+    _supa.from('progress_notes').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('created_by',_myUid).gte('created_at',today+'T00:00:00')
+  ]);
   var patients=r.data||[];
   var review=patients.filter(function(p){return p.needs_review;});
   document.getElementById('h-assigned').textContent=patients.length;
@@ -463,9 +623,13 @@ async function loadHome(){
   badge.textContent=review.length;badge.style.display=review.length>0?'':'none';
   var rb=document.getElementById('review-count-badge');
   rb.textContent=review.length;rb.style.display=review.length>0?'':'none';
-  /* Active admissions (not limited to assigned) */
-  var adms=await _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('status','Active');
-  document.getElementById('h-active').textContent=adms.count||0;
+  document.getElementById('h-active').textContent=admsAll.count||0;
+  document.getElementById('h-today').textContent=todayAdms.count||0;
+  document.getElementById('h-notes-today').textContent=notesToday.count||0;
+  var allBeds=bedsRes.data||[];
+  var occ=allBeds.filter(function(b){return b.status==='Occupied';}).length;
+  document.getElementById('h-beds-occ').textContent=occ;
+  document.getElementById('h-beds-total').textContent=allBeds.length;
   /* Review list */
   var rl=document.getElementById('review-list');
   if(!review.length){rl.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">✅</div><p class="empty-t">No pending reviews</p><p class="empty-s">Reception will flag patients here when they need your attention</p></div>';}
@@ -640,15 +804,17 @@ async function openProfile(id,name){
         +'</div>';
     }).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No admissions yet.</p>');
   loadNotesTab(id);
+  loadPrescriptionTab(id);
   loadPatientDocumentsInto(id,'pp-doc-list',true);
+  loadFullHistoryTab(id);
   loadAyushmanTab(id);
   /* Refresh home badge */
   loadHome();
 }
 async function loadNotesTab(patientId){
   var r=await _supa.from('progress_notes').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(20);
-  var el=document.getElementById('t-notes');
-  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary);padding:8px 0">No clinical notes recorded yet.</p>';return;}
+  var el=document.getElementById('t-notes-list')||document.getElementById('t-notes');
+  if(!r.data||!r.data.length){if(el)el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary);padding:8px 0">No clinical notes recorded yet.</p>';return;}
   el.innerHTML=r.data.map(function(n){
     var t=new Date(n.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
     var vitals=[];
@@ -708,6 +874,261 @@ async function saveAyushman(){
   if(res.error){showToast('Error: '+res.error.message);return;}
   closeModal('mod-ayushman');showToast('Ayushman record saved');
   loadAyushmanTab(_pid);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   BED OVERVIEW
+══════════════════════════════════════════════════════════════ */
+var _bppPatientId=null,_bppAdmId=null,_bppBedId=null;
+var _rxVoiceActive=false;
+
+async function loadBeds(){
+  var [bedsRes,admsRes]=await Promise.all([
+    _supa.from('beds').select('*').eq('clinic_id',_clinicId).order('ward').order('bed_number'),
+    _supa.from('admissions').select('id,bed_id,patient_id,patient_name,admission_date,admitting_doctor,admission_diagnosis').eq('clinic_id',_clinicId).eq('status','Active')
+  ]);
+  var beds=bedsRes.data||[];
+  var am={};(admsRes.data||[]).forEach(function(a){am[a.bed_id]=a;});
+  var container=document.getElementById('beds-by-ward');
+  if(!beds.length){container.innerHTML='<div class="panel"><div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No beds configured</p><p class="empty-s">Beds are configured by the nursing home owner</p></div></div>';return;}
+  var wards={};
+  beds.forEach(function(b){var w=b.ward||'General';if(!wards[w])wards[w]=[];wards[w].push(b);});
+  container.innerHTML=Object.keys(wards).map(function(w){
+    var wBeds=wards[w];
+    var occ=wBeds.filter(function(b){return am[b.id];}).length;
+    var vac=wBeds.filter(function(b){return !am[b.id]&&(b.status||'').toLowerCase()==='vacant';}).length;
+    var isFemale=w==='Female';
+    var hdrStyle=isFemale?'background:#FDF0F7;border-bottom:1px solid #F0B8DC':'';
+    return '<div class="ward-sec">'
+      +'<div class="ward-hd" style="'+hdrStyle+'">'
+        +'<div class="ward-nm">'+esc(w)+(isFemale?' <span class="female-badge">♀ Female</span>':'')+'</div>'
+        +'<div class="ward-ct"><span><b>'+occ+'</b> occ</span><span><b>'+vac+'</b> vacant</span><span style="color:var(--text-tertiary)">'+wBeds.length+' total</span></div>'
+      +'</div>'
+      +'<div class="bed-ov-grid">'
+      +wBeds.map(function(b){
+        var adm=am[b.id];
+        var s=(b.status||'vacant').toLowerCase();
+        var isOcc=!!(adm&&adm.patient_name)||s==='occupied';
+        var cls=isOcc?'occupied':s==='cleaning'?'cleaning':s==='reserved'?'reserved':s==='critical'?'critical':'';
+        var days=adm?Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1:0;
+        var clickable=isOcc?'onclick="openBedPatientProfile(''+b.id+'',''+esc(b.bed_number)+'',''+esc(w)+'',''+(adm?adm.id:'')+'',''+(adm?adm.patient_id||'':'')+'',''+esc(adm?adm.patient_name||'':'')+'','+days+')"':'style="cursor:default"';
+        return '<div class="bov '+cls+'" '+clickable+'>'
+          +'<div class="bov-num">'+esc(b.bed_number)+'</div>'
+          +'<div class="bov-ward">'+esc(w)+'</div>'
+          +(adm?'<div class="bov-pt">'+esc(adm.patient_name||'')+'</div><div class="bov-day">Day '+days+'</div>':'<div class="bov-day">'+(s||'vacant')+'</div>')
+          +'</div>';
+      }).join('')
+      +'</div></div>';
+  }).join('');
+}
+
+async function openBedPatientProfile(bedId,num,ward,admId,patientId,patientName,days){
+  _bppBedId=bedId;_bppAdmId=admId;_bppPatientId=patientId;
+  document.getElementById('bpp-title').textContent='Bed '+num+' — '+ward;
+  document.getElementById('bpp-sub').textContent=ward+' Ward · Occupied · Day '+days;
+  document.getElementById('bpp-av').textContent=(patientName||'?').charAt(0).toUpperCase();
+  document.getElementById('bpp-name').textContent=patientName||'Patient';
+  document.getElementById('bpp-days').textContent=days;
+  /* Switch to info tab */
+  bppTab('info',document.querySelector('.bp-tab'));
+  openModal('mod-bed-profile');
+  /* Load admission details */
+  var [adm,pt]=await Promise.all([
+    _supa.from('admissions').select('*').eq('id',admId).single(),
+    _supa.from('nh_patients').select('*').eq('id',patientId).single()
+  ]);
+  var d=adm.data||{};
+  var pd=pt.data||{};
+  document.getElementById('bpp-meta').textContent=(pd.age?pd.age+'y ':'')+(pd.gender||'')+(pd.phone?' · '+pd.phone:'')+(d.admitting_doctor?' · Dr. '+d.admitting_doctor:'');
+  /* Mark reviewed */
+  if(patientId)await _supa.from('nh_patients').update({needs_review:false}).eq('id',patientId).eq('assigned_doctor_id',_myUid);
+  document.getElementById('bpp-adm-info').innerHTML=
+    '<div class="ir"><span class="il">Patient Name</span><span class="iv">'+esc(pd.full_name||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Age / Gender</span><span class="iv">'+(pd.age||'—')+' / '+(pd.gender||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Phone</span><span class="iv">'+(pd.phone||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Diagnosis</span><span class="iv">'+esc(d.admission_diagnosis||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Admitted</span><span class="iv">'+new Date(d.admission_date).toLocaleDateString('en-GB')+'</span></div>'
+    +'<div class="ir"><span class="il">Duration</span><span class="iv">'+days+' day(s)</span></div>'
+    +'<div class="ir"><span class="il">Doctor</span><span class="iv">'+esc(d.admitting_doctor||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Ward / Bed</span><span class="iv">'+esc(ward)+' / '+esc(num)+'</span></div>'
+    +(pd.guardian?'<div class="ir"><span class="il">Guardian</span><span class="iv">'+esc(pd.guardian)+'</span></div>':'');
+  /* Pre-load other tabs */
+  loadBppNotes();loadBppRx();loadBppDocs();loadBppHistory();
+  /* Set pid/admId for notes modal */
+  _pid=patientId;_admId=admId;
+}
+
+function bppTab(tab,el){
+  document.querySelectorAll('.bp-tab').forEach(function(t){t.classList.remove('on')});
+  document.querySelectorAll('.bp-pnl').forEach(function(p){p.classList.remove('on')});
+  if(el)el.classList.add('on');
+  var p=document.getElementById('bpp-pnl-'+tab);if(p)p.classList.add('on');
+}
+
+async function loadBppNotes(){
+  if(!_bppAdmId)return;
+  var r=await _supa.from('progress_notes').select('*').eq('admission_id',_bppAdmId).order('created_at',{ascending:false});
+  var el=document.getElementById('bpp-notes-list');
+  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No notes yet for this admission.</p>';return;}
+  el.innerHTML=renderNoteCards(r.data);
+}
+async function loadBppRx(){
+  if(!_bppPatientId)return;
+  var r=await _supa.from('nh_prescriptions').select('*').eq('patient_id',_bppPatientId).order('created_at',{ascending:false}).limit(10);
+  renderRxList('bpp-rx-list',r.data||[]);
+}
+async function loadBppDocs(){
+  if(!_bppPatientId)return;
+  loadPatientDocumentsInto(_bppPatientId,'bpp-doc-list',true);
+}
+async function loadBppHistory(){
+  if(!_bppPatientId)return;
+  var r=await _supa.from('admissions').select('*').eq('patient_id',_bppPatientId).order('admission_date',{ascending:false});
+  var el=document.getElementById('bpp-history-list');
+  el.innerHTML=renderAdmissionHistory(r.data||[]);
+}
+function openNoteModalFromBed(){
+  if(!_bppAdmId){showToast('No active admission');return;}
+  _admId=_bppAdmId;_pid=_bppPatientId;
+  _currentAdmId=_bppAdmId;_currentAdmName=document.getElementById('bpp-name').textContent;
+  openNoteModal();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PRESCRIPTION
+══════════════════════════════════════════════════════════════ */
+async function openPrescriptionModal(){
+  ['rx-diagnosis','rx-drugs','rx-instructions','rx-followup-note'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('rx-followup').value='';
+  document.getElementById('rx-err').style.display='none';
+  stopRxVoice();
+  document.getElementById('rx-mic-status').textContent='Tap mic — voice goes to prescription field above';
+  openModal('mod-prescription');
+}
+async function savePrescription(){
+  var pid=_bppPatientId||_pid;
+  var admid=_bppAdmId||_admId;
+  if(!pid){showToast('No patient selected');return;}
+  var diag=(document.getElementById('rx-diagnosis').value||'').trim();
+  var drugs=(document.getElementById('rx-drugs').value||'').trim();
+  var instr=(document.getElementById('rx-instructions').value||'').trim();
+  var followup=document.getElementById('rx-followup').value;
+  var followupNote=(document.getElementById('rx-followup-note').value||'').trim();
+  var err=document.getElementById('rx-err');err.style.display='none';
+  if(!drugs){err.textContent='Prescription drugs/treatment is required';err.style.display='block';return;}
+  stopRxVoice();
+  /* Save to nh_prescriptions (create table if needed, or use progress_notes with type='prescription') */
+  var r=await _supa.from('nh_prescriptions').insert({
+    clinic_id:_clinicId,patient_id:pid,admission_id:admid||null,
+    diagnosis:diag,drugs:drugs,instructions:instr,
+    follow_up_date:followup||null,follow_up_note:followupNote,
+    prescribed_by:_myUid,doctor_name:_myDocName
+  });
+  if(r.error){
+    /* Fallback: table may not exist — save as a detailed progress note */
+    var fallback=await _supa.from('progress_notes').insert({
+      clinic_id:_clinicId,admission_id:admid||null,patient_id:pid,created_by:_myUid,
+      doctor_name:_myDocName,subjective:'PRESCRIPTION',
+      plan:'DIAGNOSIS: '+diag+'\n\nDRUGS:\n'+drugs+'\n\nINSTRUCTIONS: '+instr+(followup?'\n\nFOLLOW-UP: '+followup+(followupNote?' — '+followupNote:''):''),
+      note_date:new Date().toISOString().slice(0,10)
+    });
+    if(fallback.error){err.textContent='Error: '+fallback.error.message;err.style.display='block';return;}
+  }
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'prescription_saved',target_table:'nh_prescriptions',target_id:pid,details:{diagnosis:diag}});
+  closeModal('mod-prescription');showToast('Prescription saved');
+  /* Reload prescription tab in whichever modal is open */
+  if(document.getElementById('mod-bed-profile').classList.contains('open'))loadBppRx();
+  if(document.getElementById('mod-profile').classList.contains('open'))loadPrescriptionTab(pid);
+}
+async function loadPrescriptionTab(patientId){
+  /* Try nh_prescriptions table first, fall back to prescription-type notes */
+  var r=await _supa.from('nh_prescriptions').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(20);
+  var el=document.getElementById('t-rx-list');if(!el)return;
+  renderRxList('t-rx-list',r.data||[]);
+}
+function renderRxList(elId,rows){
+  var el=document.getElementById(elId);if(!el)return;
+  if(!rows.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No prescriptions recorded yet.</p>';return;}
+  el.innerHTML=rows.map(function(rx){
+    var t=new Date(rx.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return '<div class="rx-card">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span class="note-doc">'+esc(rx.doctor_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
+      +(rx.diagnosis?'<div class="rx-drug">'+esc(rx.diagnosis)+'</div>':'')
+      +(rx.drugs?'<div class="rx-detail" style="white-space:pre-wrap">'+esc(rx.drugs)+'</div>':'')
+      +(rx.instructions?'<div class="rx-detail" style="margin-top:5px"><b>Instructions:</b> '+esc(rx.instructions)+'</div>':'')
+      +(rx.follow_up_date?'<span class="rx-badge">Follow-up: '+new Date(rx.follow_up_date).toLocaleDateString('en-GB')+(rx.follow_up_note?' — '+esc(rx.follow_up_note):'')+'</span>':'')
+      +'</div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FULL PATIENT HISTORY (persists across discharges/beds)
+══════════════════════════════════════════════════════════════ */
+async function loadFullHistoryTab(patientId){
+  var el=document.getElementById('t-history-list');if(!el)return;
+  var [adms,notes]=await Promise.all([
+    _supa.from('admissions').select('*').eq('patient_id',patientId).order('admission_date',{ascending:false}),
+    _supa.from('progress_notes').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(30)
+  ]);
+  el.innerHTML='<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">All Admissions</div>'
+    +renderAdmissionHistory(adms.data||[])
+    +'<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px">All Clinical Notes ('+((notes.data||[]).length)+')</div>'
+    +(notes.data&&notes.data.length?renderNoteCards(notes.data):'<p style="font-size:12px;color:var(--text-tertiary)">No notes recorded.</p>');
+}
+function renderAdmissionHistory(adms){
+  if(!adms||!adms.length)return '<p style="font-size:12px;color:var(--text-tertiary)">No admissions recorded.</p>';
+  return adms.map(function(a){
+    var days=Math.floor((Date.now()-new Date(a.admission_date))/86400000)+1;
+    return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:12px;margin-bottom:10px;font-size:12.5px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+        +'<span class="chip '+(a.status==='Active'?'ch-act':'ch-dis')+'">'+a.status+'</span>'
+        +'<span style="font-size:10.5px;color:var(--text-tertiary)">'+new Date(a.admission_date).toLocaleDateString('en-GB')+(a.discharge_date?' → '+new Date(a.discharge_date).toLocaleDateString('en-GB'):'')+'</span>'
+      +'</div>'
+      +'<div><b>Doctor:</b> '+(a.admitting_doctor||'—')+'</div>'
+      +'<div><b>Diagnosis:</b> '+(a.admission_diagnosis||'Not recorded')+'</div>'
+      +(a.status==='Active'?'<div><b>Duration:</b> '+days+' day(s) so far</div>':'')
+      +'</div>';
+  }).join('');
+}
+function renderNoteCards(notes){
+  return notes.map(function(n){
+    var t=new Date(n.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    var vitals=[];
+    if(n.bp)vitals.push('BP:'+n.bp);if(n.temperature)vitals.push('T:'+n.temperature+'°F');
+    if(n.pulse)vitals.push('P:'+n.pulse);if(n.spo2)vitals.push('SpO₂:'+n.spo2+'%');if(n.weight)vitals.push('Wt:'+n.weight+'kg');
+    return '<div class="cn-card">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span class="note-doc">'+esc(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
+      +(vitals.length?'<div class="note-vitals">'+vitals.map(function(v){return '<span class="vital-pill">'+v+'</span>';}).join('')+'</div>':'')
+      +(n.subjective?'<div class="note-text" style="margin-top:5px"><b>S:</b> '+esc(n.subjective)+'</div>':'')
+      +(n.plan?'<div class="note-text"><b>A/P:</b> '+esc(n.plan)+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PRESCRIPTION VOICE
+══════════════════════════════════════════════════════════════ */
+function toggleRxVoice(){_rxVoiceActive?stopRxVoice():startRxVoice();}
+function startRxVoice(){
+  var target=document.getElementById('rx-drugs');
+  var base=target.value?target.value+'\n':'';
+  var ok=NHSpeech.start({lang:'en-IN',
+    onResult:function(t){target.value=base+t;},
+    onError:function(e){document.getElementById('rx-mic-status').textContent='Mic error: '+e;stopRxVoice();},
+    onEnd:function(){if(_rxVoiceActive)stopRxVoice();}
+  });
+  if(!ok){showToast('Voice not supported');return;}
+  _rxVoiceActive=true;
+  document.getElementById('rx-mic-btn').style.background='var(--red)';document.getElementById('rx-mic-btn').style.color='#fff';
+  document.getElementById('rx-mic-label').textContent='Stop Dictation';
+  document.getElementById('rx-mic-status').textContent='🔴 Listening… speak drug names clearly. Review before saving.';
+}
+function stopRxVoice(){
+  NHSpeech.stop();_rxVoiceActive=false;
+  var btn=document.getElementById('rx-mic-btn');if(btn){btn.style.background='var(--red-bg)';btn.style.color='var(--red)';}
+  var lbl=document.getElementById('rx-mic-label');if(lbl)lbl.textContent='Dictate Prescription';
+  var st=document.getElementById('rx-mic-status');if(st)st.textContent='Review drug names, doses and frequencies before saving.';
 }
 
 /* ── UTILS ── */
