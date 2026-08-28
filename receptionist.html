@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- AuraScale OS | receptionist.html | Fixed build 2026-08-28 21:36 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -1332,7 +1333,8 @@ async function loadBeds(){
         var cls=isOcc?'occupied':s==='cleaning'?'cleaning':s==='reserved'?'reserved':s==='critical'?'critical':'';
         var inact=b.is_active===false?' inactive':'';
         var days=adm?Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1:0;
-        return '<div class="bov '+cls+inact+'" onclick="openBedProfile(''+b.id+'',''+esc(b.bed_number)+'',''+esc(w)+'',''+s+'',''+(adm?adm.id:'')+'',''+(adm?adm.patient_id||'':'')+'',''+esc(adm?adm.patient_name||'':'')+'','+days+')">'
+        var _oc='openBedProfile('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(esc(w))+','+JSON.stringify(s)+','+(adm?JSON.stringify(adm.id):JSON.stringify(''))+','+(adm?JSON.stringify(adm.patient_id||''):JSON.stringify(''))+','+(adm?JSON.stringify(esc(adm.patient_name||'')):JSON.stringify(''))+','+days+')';
+        return '<div class="bov '+cls+inact+'" onclick="'+_oc.replace(/"/g,"&quot;")+'">'
           +'<div class="bov-num">'+esc(b.bed_number)+'</div>'
           +'<div class="bov-ward">'+esc(w)+'</div>'
           +(adm?'<div class="bov-pt">'+esc(adm.patient_name||'')+'</div><div class="bov-day">Day '+days+'</div>':'<div class="bov-day">'+(b.is_active===false?'Deactivated':cls||'vacant')+'</div>')
@@ -1434,7 +1436,7 @@ async function loadBpExpenses(){
           +'<div style="font-weight:600;font-size:12px">'+esc(c.description||c.charge_type)+'</div>'
           +'<div style="font-size:10px;color:var(--text-tertiary)">'+c.charge_type+' · '+new Date(c.created_at).toLocaleDateString('en-GB')+'</div>'
           +(c.notes?'<div style="font-size:10.5px;color:var(--text-secondary);margin-top:3px">'+esc(c.notes)+'</div>':'')
-          +(c.bill_path?'<button class="qbtn" style="margin-top:6px" onclick="viewBillOriginal(''+esc(c.bill_path)+'')">📎 View Bill</button>':'')
+          +(c.bill_path?'<button class="qbtn" style="margin-top:6px" data-billpath="'+c.bill_path.replace(/"/g,"&quot;")+'">📎 View Bill</button>':'')
         +'</div>'
         +'<div class="exp-amt">₹'+Number(c.total_price).toLocaleString('en-IN')+'</div>'
         +'</div>';
@@ -1530,7 +1532,7 @@ async function loadBpDocs(){
       +'<div style="width:28px;height:28px;border-radius:7px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+icon+'</div>'
       +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(d.file_name||d.document_type||'Document')+'</div>'
       +'<div style="font-size:10px;color:var(--text-tertiary)">'+new Date(d.created_at).toLocaleDateString('en-GB')+(d.document_type?' · '+d.document_type:'')+'</div></div>'
-      +'<button class="qbtn" onclick="viewBillOriginal(''+esc(d.file_path)+'')">View</button>'
+      +'<button class="qbtn" data-billpath="'+d.file_path.replace(/"/g,"&quot;")+'">View</button>'
       +'</div>';
   }).join('');
 }
@@ -1660,6 +1662,12 @@ async function loadVoiceNotes(id){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 init();
+
+/* ── BILL VIEW EVENT DELEGATION ── */
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('[data-billpath]');
+  if(btn){ viewBillOriginal(btn.getAttribute('data-billpath')); }
+});
 </script>
 </body>
 </html>
