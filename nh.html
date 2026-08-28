@@ -532,21 +532,22 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- BED MANAGEMENT -->
       <div id="v-beds" class="view">
         <div class="sh">
-          <div><h1 class="st">Bed Management</h1><p class="ss">Real-time occupancy · Click a bed to view patient</p></div>
-          <button class="add-btn" onclick="openAddBedModal()">+ Add Bed</button>
-        </div>
-        <div class="panel">
-          <div class="ph">
-            <div class="pt">All Beds</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <span class="pb pb-g">🟢 Occupied</span>
-              <span style="display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;background:var(--bg);border:1px solid var(--border);color:var(--text-secondary)">⬜ Vacant</span>
-              <span class="pb pb-a">🟡 Cleaning</span>
-              <span class="pb pb-r">🔴 Critical</span>
-            </div>
+          <div>
+            <h1 class="st">Bed Management</h1>
+            <p class="ss">Ward-grouped · Real-time occupancy · Owner-only rate configuration</p>
           </div>
-          <div class="bed-grid" id="bed-grid"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--text-tertiary)">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Occupied
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block;margin-left:6px"></span>Vacant
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;margin-left:6px"></span>Cleaning
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;margin-left:6px"></span>Critical
+            </span>
+            <button class="add-btn" onclick="openAddBedModal()">+ Add Bed</button>
+          </div>
         </div>
+        <!-- Ward-grouped bed panels rendered here by loadBeds() -->
+        <div id="beds-by-ward"></div>
       </div>
 
       <!-- ADMISSIONS -->
@@ -727,7 +728,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <select class="finput" id="adm-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
         </div>
         <div><label class="flbl">Bed Number *</label>
-          <select class="finput" id="adm-bed"></select>
+          <select class="finput" id="adm-bed" onchange="autofillBedRate()"></select>
         </div>
       </div>
       <div><label class="flbl">Admitting Doctor *</label><input class="finput" id="adm-doctor" placeholder="Dr. name"/></div>
@@ -752,12 +753,68 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
     <div class="mh"><div class="mtitle">🛏️ Add New Bed</div><button class="mclose" onclick="closeModal('mod-add-bed')">✕</button></div>
     <div class="mb">
       <div class="rx-2col">
-        <div><label class="flbl">Bed Number *</label><input class="finput" id="bed-num" placeholder="e.g. 1, 2A, ICU-1"/></div>
-        <div><label class="flbl">Ward</label>
-          <select class="finput" id="bed-ward"><option>General</option><option>Semi-Private</option><option>Private</option><option>ICU</option><option>Maternity</option><option>Paediatric</option></select>
+        <div><label class="flbl">Bed Number *</label><input class="finput" id="bed-num" placeholder="e.g. 101, ICU-1, F-01"/></div>
+        <div><label class="flbl">Ward *</label>
+          <select class="finput" id="bed-ward">
+            <option>General</option>
+            <option>Female</option>
+            <option>Semi-Private</option>
+            <option>Private</option>
+            <option>ICU</option>
+            <option>Maternity</option>
+            <option>Paediatric</option>
+            <option>Emergency</option>
+          </select>
         </div>
       </div>
+      <div><label class="flbl">Daily Rate (₹) — Owner Configured</label><input class="finput" id="bed-rate-add" type="number" min="0" placeholder="e.g. 500"/></div>
+      <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-sm);padding:10px 12px;font-size:11px;color:var(--text-secondary)">💡 Daily rates are set here by the Owner. Receptionists can see rates but cannot change them. Rates set at admission are locked to that admission record for accurate historical billing.</div>
       <button class="msub" onclick="addBed()">+ Add Bed</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT BED MODAL (owner only) -->
+<div class="mod-ov" id="mod-edit-bed">
+  <div class="modal">
+    <div class="mh"><div class="mtitle" id="edit-bed-title">✏️ Edit Bed</div><button class="mclose" onclick="closeModal('mod-edit-bed')">✕</button></div>
+    <div class="mb">
+      <div class="rx-2col">
+        <div><label class="flbl">Bed Number</label><input class="finput" id="edit-bed-num" placeholder="Bed number"/></div>
+        <div><label class="flbl">Ward</label>
+          <select class="finput" id="edit-bed-ward">
+            <option>General</option>
+            <option>Female</option>
+            <option>Semi-Private</option>
+            <option>Private</option>
+            <option>ICU</option>
+            <option>Maternity</option>
+            <option>Paediatric</option>
+            <option>Emergency</option>
+          </select>
+        </div>
+      </div>
+      <div><label class="flbl">Daily Rate (₹)</label><input class="finput" id="edit-bed-rate" type="number" min="0" placeholder="0"/></div>
+      <div><label class="flbl">Status</label>
+        <select class="finput" id="edit-bed-status">
+          <option value="Vacant">Vacant</option>
+          <option value="Occupied">Occupied</option>
+          <option value="Cleaning">Cleaning</option>
+          <option value="Reserved">Reserved</option>
+          <option value="Critical">Critical</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm)">
+        <input type="checkbox" id="edit-bed-active" style="width:16px;height:16px;cursor:pointer"/>
+        <div>
+          <div style="font-size:12.5px;font-weight:600">Bed Active</div>
+          <div style="font-size:10.5px;color:var(--text-tertiary)">Uncheck to deactivate (e.g. maintenance). Deactivated beds are hidden from admission.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="qbtn" style="color:var(--red);border-color:var(--red-border)" onclick="confirmDeleteBed()">🗑 Delete Bed</button>
+        <button class="msub" style="flex:1" onclick="saveBedEdit()">✓ Save Changes</button>
+      </div>
     </div>
   </div>
 </div>
@@ -956,6 +1013,8 @@ function showToast(msg){
   t.textContent=msg;t.classList.add('show');
   setTimeout(function(){t.classList.remove('show');},3000);
 }
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 /* ── THEME ── */
 function toggleTheme(){
@@ -1418,54 +1477,190 @@ async function loadDashboard(){
     return '<div class="adm-row"><div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div><div style="flex:1"><div class="adm-name">'+a.patient_name+'</div><div class="adm-meta">'+a.admitting_doctor+' · '+days+' day(s) · '+(a.admission_diagnosis||'')+'</div></div><span class="chip ch-act">Active</span></div>';
   }).join('');
   var mini=document.getElementById('dash-bed-mini');
+  var FEMALE_WARDS = ['Female','Maternity'];
   mini.innerHTML=allBeds.map(function(b){
-    var col=b.status==='Occupied'?'var(--green)':b.status==='Cleaning'?'var(--amber)':b.status==='Reserved'?'var(--blue)':'var(--border)';
-    return '<div title="Bed '+b.bed_number+' — '+b.status+'" style="width:100%;aspect-ratio:1;background:'+col+';border-radius:6px;opacity:0.7;cursor:default"></div>';
+    var isFemale = FEMALE_WARDS.indexOf(b.ward) >= 0;
+    var col = b.status==='Occupied' ? (isFemale?'#C0398A':'var(--green)')
+            : b.status==='Cleaning' ? 'var(--amber)'
+            : b.status==='Reserved' ? 'var(--blue)'
+            : b.status==='Critical' ? 'var(--red)'
+            : 'var(--border)';
+    return '<div title="Bed '+b.bed_number+' ('+b.ward+') — '+b.status+'" style="width:100%;aspect-ratio:1;background:'+col+';border-radius:6px;opacity:0.75;cursor:default"></div>';
   }).join('');
 }
 
 /* ── BEDS ── */
+/* ── ENHANCED BED MANAGEMENT ─────────────────────────────────────────── */
+var _editBedId = null;
+
 async function loadBeds(){
   if(!_clinicId)return;
-  var r=await _supa.from('beds').select('*').eq('clinic_id',_clinicId).order('bed_number');
-  var adm=await _supa.from('admissions').select('bed_id,patient_name,admission_date').eq('clinic_id',_clinicId).eq('status','Active');
-  var admMap={};
-  (adm.data||[]).forEach(function(a){admMap[a.bed_id]=a;});
-  var beds=r.data||[];
-  var grid=document.getElementById('bed-grid');
-  if(!beds.length){grid.innerHTML='<div style="grid-column:1/-1"><div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No beds added yet</p><p class="empty-s">Click "Add Bed" to set up your bed management</p></div></div>';return;}
-  grid.innerHTML=beds.map(function(b){
-    var a=admMap[b.id];
-    var cls=b.status==='Occupied'?'occupied':b.status==='Cleaning'?'cleaning':b.status==='Reserved'?'occupied':'';
-    if(a&&a.patient_name){cls='occupied';}
-    var days=a?Math.floor((Date.now()-new Date(a.admission_date))/(1000*60*60*24)):0;
-    return '<div class="bed-card '+cls+'" onclick="bedClick(\''+b.id+'\',\''+b.status+'\')">'
-      +'<div class="bed-num">'+b.bed_number+'</div>'
-      +'<div class="bed-ward">'+b.ward+'</div>'
-      +(a?'<div class="bed-patient">'+a.patient_name+'</div><div class="bed-days">Day '+days+'</div>':'')
-      +'<div class="bed-status-dot"></div>'
+  var [bedsRes, admsRes] = await Promise.all([
+    _supa.from('beds').select('*').eq('clinic_id',_clinicId).order('ward').order('bed_number'),
+    _supa.from('admissions').select('bed_id,patient_name,patient_id,admission_date').eq('clinic_id',_clinicId).eq('status','Active')
+  ]);
+  var beds   = bedsRes.data  || [];
+  var admMap = {};
+  (admsRes.data||[]).forEach(function(a){ admMap[a.bed_id] = a; });
+
+  var container = document.getElementById('beds-by-ward');
+  if(!beds.length){
+    container.innerHTML='<div class="panel"><div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No beds added yet</p><p class="empty-s">Click "+ Add Bed" to configure your facility</p></div></div>';
+    return;
+  }
+
+  /* Group by ward */
+  var wards = {};
+  beds.forEach(function(b){
+    var w = b.ward || 'General';
+    if(!wards[w]) wards[w] = [];
+    wards[w].push(b);
+  });
+
+  var WARD_COLORS = {
+    'Female'    : { bg:'#FDF0F7', border:'#F0B8DC', dot:'#C0398A' },
+    'ICU'       : { bg:'var(--red-bg)', border:'var(--red-border)', dot:'var(--red)' },
+    'Emergency' : { bg:'var(--red-bg)', border:'var(--red-border)', dot:'var(--red)' },
+    'Maternity' : { bg:'#F3EDFB', border:'#D4B8F0', dot:'#6B3FA0' },
+  };
+
+  var wardKeys = Object.keys(wards);
+  container.innerHTML = wardKeys.map(function(ward){
+    var wBeds   = wards[ward];
+    var occupied = wBeds.filter(function(b){return admMap[b.id]||b.status==='Occupied';}).length;
+    var cleaning = wBeds.filter(function(b){return b.status==='Cleaning';}).length;
+    var active   = wBeds.filter(function(b){return b.is_active!==false;}).length;
+    var col      = WARD_COLORS[ward] || {};
+    var isFemale = ward === 'Female';
+    var hdrStyle = isFemale ? 'background:'+col.bg+';border-bottom:1px solid '+col.border : '';
+
+    var bedCards = wBeds.map(function(b){
+      var adm     = admMap[b.id];
+      var days    = adm ? Math.floor((Date.now()-new Date(adm.admission_date))/86400000) : 0;
+      var isOcc   = !!(adm && adm.patient_name) || b.status==='Occupied';
+      var cls     = isOcc ? 'occupied' : b.status==='Cleaning' ? 'cleaning' : b.status==='Reserved' ? 'occupied' : b.status==='Critical' ? 'critical' : '';
+      var inact   = b.is_active===false ? ' bed-card-inactive' : '';
+      var rate    = b.daily_rate ? '₹'+Number(b.daily_rate).toLocaleString('en-IN')+'/d' : '';
+      return '<div class="bed-card '+cls+inact+'" onclick="openEditBed(''+b.id+'',''+esc(b.bed_number)+'',''+ward+'','+(b.daily_rate||0)+',''+b.status+'','+(b.is_active!==false)+')">'
+        +'<div class="bed-edit-btn" title="Edit bed">✏</div>'
+        +'<div class="bed-num">'+esc(b.bed_number)+'</div>'
+        +'<div class="bed-ward">'+esc(ward)+'</div>'
+        +(rate?'<div class="bed-card-rate">'+rate+'</div>':'')
+        +(adm?'<div class="bed-patient">'+esc(adm.patient_name||'')+'</div><div class="bed-days">Day '+(days+1)+'</div>':'')
+        +(b.is_active===false?'<div class="bed-days" style="color:var(--red)">Deactivated</div>':'')
+        +'<div class="bed-status-dot"></div>'
+        +'</div>';
+    }).join('');
+
+    return '<div class="ward-section">'
+      +'<div class="ward-header" style="'+hdrStyle+'">'
+        +'<div style="display:flex;align-items:center;gap:10px">'
+          +'<span class="ward-title">'+esc(ward)+(isFemale?' <span class="female-ward-badge">♀ Female</span>':'')+'</span>'
+        +'</div>'
+        +'<div class="ward-stats">'
+          +'<span class="ward-stat"><span class="ward-stat-dot" style="background:var(--green)"></span>'+occupied+' occupied</span>'
+          +'<span class="ward-stat"><span class="ward-stat-dot" style="background:var(--border)"></span>'+(active-occupied)+' vacant</span>'
+          +(cleaning?'<span class="ward-stat"><span class="ward-stat-dot" style="background:var(--amber)"></span>'+cleaning+' cleaning</span>':'')
+          +'<span style="font-size:10px;color:var(--text-tertiary);margin-left:4px">'+wBeds.length+' total</span>'
+        +'</div>'
+      +'</div>'
+      +'<div class="bed-grid-ward">'+bedCards+'</div>'
       +'</div>';
   }).join('');
+
+  /* Update sidebar occupancy badge */
+  var totalOcc = beds.filter(function(b){return admMap[b.id]||b.status==='Occupied';}).length;
+  var totalAll = beds.length;
+  var badge = document.getElementById('nav-occupied-count');
+  if(badge) badge.textContent = totalOcc;
+  var occ = document.getElementById('sb-occupancy');
+  if(occ) occ.textContent = totalOcc+'/'+totalAll+' beds occupied';
 }
-function bedClick(bedId,status){
-  if(status==='Vacant')showToast('Bed is vacant — admit a patient from the header button');
-  else showToast('Click Admissions to view patient details');
+
+function openEditBed(id, num, ward, rate, status, isActive){
+  _editBedId = id;
+  document.getElementById('edit-bed-title').textContent = '✏️ Edit Bed ' + num;
+  document.getElementById('edit-bed-num').value  = num;
+  document.getElementById('edit-bed-ward').value = ward;
+  document.getElementById('edit-bed-rate').value = rate || '';
+  document.getElementById('edit-bed-status').value = status || 'Vacant';
+  document.getElementById('edit-bed-active').checked = isActive;
+  openModal('mod-edit-bed');
 }
-async function addBed(){
-  var num=(document.getElementById('bed-num').value||'').trim();
-  var ward=document.getElementById('bed-ward').value;
+async function saveBedEdit(){
+  if(!_editBedId)return;
+  var num    = (document.getElementById('edit-bed-num').value||'').trim();
+  var ward   = document.getElementById('edit-bed-ward').value;
+  var rate   = parseFloat(document.getElementById('edit-bed-rate').value)||0;
+  var status = document.getElementById('edit-bed-status').value;
+  var active = document.getElementById('edit-bed-active').checked;
   if(!num){showToast('Bed number is required');return;}
-  var r=await _supa.from('beds').insert({clinic_id:_clinicId,bed_number:num,ward:ward,status:'Vacant'});
+  var r = await _supa.from('beds').update({
+    bed_number : num,
+    ward       : ward,
+    daily_rate : rate,
+    status     : status,
+    is_active  : active
+  }).eq('id', _editBedId);
   if(r.error){showToast('Error: '+r.error.message);return;}
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'bed_edited',target_table:'beds',target_id:_editBedId,details:{num:num,ward:ward,rate:rate,status:status,active:active}});
+  closeModal('mod-edit-bed');
+  showToast('Bed '+num+' updated');
+  loadBeds();loadDashboard();
+}
+async function confirmDeleteBed(){
+  if(!_editBedId)return;
+  var num = document.getElementById('edit-bed-num').value||'this bed';
+  if(!confirm('Delete bed '+num+'?\n\nThis permanently removes the bed from the system. Patient history for previous admissions is not affected.'))return;
+  var r = await _supa.from('beds').delete().eq('id',_editBedId);
+  if(r.error){showToast('Error: '+r.error.message);return;}
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'bed_deleted',target_table:'beds',target_id:_editBedId,details:{num:num}});
+  closeModal('mod-edit-bed');
+  showToast('Bed '+num+' deleted');
+  loadBeds();loadDashboard();
+}
+
+async function addBed(){
+  var num  = (document.getElementById('bed-num').value||'').trim();
+  var ward = document.getElementById('bed-ward').value;
+  var rate = parseFloat(document.getElementById('bed-rate-add').value)||0;
+  if(!num){showToast('Bed number is required');return;}
+  var r = await _supa.from('beds').insert({
+    clinic_id  : _clinicId,
+    bed_number : num,
+    ward       : ward,
+    status     : 'Vacant',
+    daily_rate : rate,
+    is_active  : true
+  });
+  if(r.error){showToast('Error: '+r.error.message);return;}
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'bed_added',target_table:'beds',details:{num:num,ward:ward,rate:rate}});
   closeModal('mod-add-bed');
-  document.getElementById('bed-num').value='';
-  showToast('Bed '+num+' added');
+  document.getElementById('bed-num').value = '';
+  document.getElementById('bed-rate-add').value = '';
+  showToast('Bed '+num+' added ('+ward+(rate?' · ₹'+rate+'/day':'')+')');
   loadBeds();loadDashboard();
 }
 async function loadVacantBeds(){
-  var r=await _supa.from('beds').select('id,bed_number,ward').eq('clinic_id',_clinicId).eq('status','Vacant');
-  var sel=document.getElementById('adm-bed');
-  sel.innerHTML='<option value="">Select vacant bed</option>'+((r.data||[]).map(function(b){return '<option value="'+b.id+'">Bed '+b.bed_number+' ('+b.ward+')</option>';})).join('');
+  /* Only show active beds that are currently Vacant */
+  var r = await _supa.from('beds').select('id,bed_number,ward,daily_rate').eq('clinic_id',_clinicId).eq('status','Vacant').order('ward').order('bed_number');
+  var sel = document.getElementById('adm-bed');
+  var active = (r.data||[]).filter(function(b){ return b.is_active !== false; });
+  sel.innerHTML = '<option value="">Select vacant bed</option>'
+    + active.map(function(b){
+        var rate = b.daily_rate ? ' — ₹'+Number(b.daily_rate).toLocaleString('en-IN')+'/day' : '';
+        return '<option value="'+b.id+'" data-rate="'+(b.daily_rate||0)+'">'+esc(b.bed_number)+' ('+b.ward+')'+rate+'</option>';
+      }).join('');
+  _vacantBedRates = {};
+  active.forEach(function(b){ _vacantBedRates[b.id] = b.daily_rate||0; });
+}
+var _vacantBedRates = {};
+function autofillBedRate(){
+  var sel = document.getElementById('adm-bed');
+  var opt = sel.options[sel.selectedIndex];
+  var rate = opt ? (opt.getAttribute('data-rate')||'0') : '0';
+  var rateField = document.getElementById('adm-rate');
+  if(rateField && rate !== '0') rateField.value = rate;
 }
 
 /* ── ADMISSIONS ── */
