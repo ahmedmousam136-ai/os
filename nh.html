@@ -1541,7 +1541,7 @@ async function loadBeds(){
       var cls     = isOcc ? 'occupied' : b.status==='Cleaning' ? 'cleaning' : b.status==='Reserved' ? 'occupied' : b.status==='Critical' ? 'critical' : '';
       var inact   = b.is_active===false ? ' bed-card-inactive' : '';
       var rate    = b.daily_rate ? '₹'+Number(b.daily_rate).toLocaleString('en-IN')+'/d' : '';
-      return '<div class="bed-card '+cls+inact+'" onclick="openEditBed(''+b.id+'',''+esc(b.bed_number)+'',''+ward+'','+(b.daily_rate||0)+',''+b.status+'','+(b.is_active!==false)+')">'
+      var _oc='openEditBed('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(ward)+','+(b.daily_rate||0)+','+JSON.stringify(b.status)+','+(b.is_active!==false)+')'; return '<div class="bed-card '+cls+inact+'" onclick="'+_oc.replace(/"/g,"&quot;")+'">' 
         +'<div class="bed-edit-btn" title="Edit bed">✏</div>'
         +'<div class="bed-num">'+esc(b.bed_number)+'</div>'
         +'<div class="bed-ward">'+esc(ward)+'</div>'
