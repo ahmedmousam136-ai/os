@@ -1,175 +1,317 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>AuraScale NH — Doctor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#F7F6F3;--surface:#FFFFFF;--surface2:#FAFAF8;
+:root,[data-theme="light"]{
+  --bg:#F7F6F3;--surface:#FFF;--surface2:#FAFAF8;
   --border:#E8E5DF;--border-mid:#D2CEC6;
   --text-primary:#18170F;--text-secondary:#64605A;--text-tertiary:#9E9A93;
-  --blue:#2E63D4;--blue-bg:#EDF2FC;--blue-border:#BDD0F7;
+  --blue:#2E63D4;--blue-light:#4475E0;--blue-bg:#EDF2FC;--blue-border:#BDD0F7;
   --green:#12976A;--green-bg:#EAFAF3;--green-border:#9ADEC3;
   --amber:#C27820;--amber-bg:#FDF4E6;--amber-border:#F0CEAA;
   --red:#C23838;--red-bg:#FDF0F0;--red-border:#F2B8B8;
-  --purple:#6B3FA0;--purple-bg:#F3EDFB;--purple-border:#D4B8F0;
-  --sidebar-w:250px;--header-h:54px;
+  --sidebar-w:252px;--header-h:54px;
   --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
-  --sh-xs:0 1px 3px rgba(0,0,0,.05);--sh-lg:0 12px 42px rgba(0,0,0,.13);
+  --sh-xs:0 1px 3px rgba(0,0,0,.05);--sh-sm:0 2px 8px rgba(0,0,0,.07);--sh-lg:0 12px 42px rgba(0,0,0,.13);
+  --ease:.17s cubic-bezier(.4,0,.2,1);
 }
-html{background:var(--bg)}
-body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.55}
-button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none}
-input,textarea,select{font-family:'DM Sans',sans-serif;outline:none}
-#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:200;font-size:13px;color:var(--text-tertiary)}
+[data-theme="dark"]{
+  --bg:#0F1117;--surface:#171B24;--surface2:#1C2130;
+  --border:#252A38;--border-mid:#2E3448;
+  --text-primary:#E8E9EF;--text-secondary:#8E96B0;--text-tertiary:#525A72;
+  --blue:#4D85F0;--blue-bg:#1A243D;--blue-border:#2A3A5C;
+  --green:#1BB880;--green-bg:#0E2A1F;--green-border:#1A4A35;
+  --amber:#E09940;--amber-bg:#271E0E;--amber-border:#3D2E10;
+  --red:#E05050;--red-bg:#250F0F;--red-border:#3D1A1A;
+}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;outline:none}
+input,textarea,select{font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;appearance:none}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
+#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:200;gap:12px}
+.spin{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-size:13px;color:var(--text-tertiary)}
 #app-shell{display:none;min-height:100vh}
 #app-shell.on{display:flex}
-.hamburger{display:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--text-primary);flex-shrink:0;margin-right:8px}
+.hamburger{display:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:8px;background:var(--bg);border:1px solid var(--border);flex-shrink:0;margin-right:8px}
 .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:39}
 .sidebar-backdrop.open{display:block}
 #sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;overflow-y:auto}
 .sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
-.sb-mark .a{font-family:'Instrument Serif',serif;font-size:21px}
-.sb-mark .s{font-family:'Instrument Serif',serif;font-size:21px;color:var(--purple)}
+.sb-mark .a{font-family:'Instrument Serif',serif;font-size:21px;color:var(--text-primary)}
+.sb-mark .s{font-family:'Instrument Serif',serif;font-size:21px;color:var(--green)}
+.sb-mark .os{font-size:10px;font-weight:700;color:var(--text-tertiary);letter-spacing:.08em;margin-left:5px}
 .sb-tag{font-size:10px;color:var(--text-tertiary);margin-top:3px}
 .sb-facility{padding:11px 13px;border-bottom:1px solid var(--border)}
-.sb-facility-inner{background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:var(--r-md);padding:12px 13px}
+.sb-fac-inner{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);padding:12px 13px}
 .sb-fac-name{font-size:12.5px;font-weight:700}
-.sb-fac-type{font-size:10px;color:var(--purple);font-weight:600;margin-top:2px}
+.sb-fac-type{font-size:10px;color:var(--green);font-weight:600;margin-top:2px}
 nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px}
 .nav-sec{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-tertiary);font-weight:700;padding:9px 9px 4px;margin-top:4px}
-.nb{width:100%;display:flex;align-items:center;gap:9px;padding:10px 9px;border-radius:var(--r-sm);color:var(--text-secondary);font-size:12.5px;font-weight:500;cursor:pointer;min-height:42px}
+.nb{width:100%;display:flex;align-items:center;gap:9px;padding:10px 9px;border-radius:var(--r-sm);color:var(--text-secondary);font-size:12.5px;font-weight:500;transition:all var(--ease);cursor:pointer;min-height:42px;text-align:left;position:relative}
 .nb:hover:not(.on){background:var(--bg);color:var(--text-primary)}
-.nb.on{background:var(--purple-bg);color:var(--purple);font-weight:600}
+.nb.on{background:var(--green-bg);color:var(--green);font-weight:600}
+.nb.on::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--green);border-radius:0 2px 2px 0}
+.nb-ic{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.65}
+.nb.on .nb-ic{opacity:1}
 .nb-badge{margin-left:auto;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:4px}
 .sb-foot{padding:11px 13px;border-top:1px solid var(--border)}
-.sb-out{display:flex;align-items:center;gap:6px;color:var(--text-tertiary);font-size:11px;cursor:pointer;padding:6px 0}
+.sb-out{display:flex;align-items:center;gap:6px;color:var(--text-tertiary);font-size:11px;cursor:pointer;padding:6px 0;transition:color var(--ease)}
 .sb-out:hover{color:var(--red)}
+.theme-toggle{display:flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;transition:all var(--ease);min-height:32px;color:var(--text-secondary);font-size:10px;font-weight:600;width:100%;margin-bottom:10px}
 #main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
 header{height:var(--header-h);background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(16px)}
+[data-theme="dark"] header{background:rgba(23,27,36,.94)}
 .hdr-l{display:flex;align-items:center;gap:9px;flex:1}
 .bc-root{font-family:'Instrument Serif',serif;font-size:15px}
+.bc-sep{color:var(--text-tertiary);font-size:12px}
+.bc-page{color:var(--text-secondary);font-size:12.5px;font-weight:500}
+.hdr-r{display:flex;align-items:center;gap:8px}
+.hdr-search{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;font-size:12.5px;width:200px;transition:border-color var(--ease)}
+.hdr-search:focus{border-color:var(--green);width:240px}
 main.content{flex:1;padding:20px;overflow-y:auto}
 .view{display:none;flex-direction:column;gap:18px}.view.on{display:flex}
 .sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.st{font-family:'Instrument Serif',serif;font-size:23px}
-.ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px}
-.mg{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
-.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px}
-.mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
-.mc-val{font-family:'Instrument Serif',serif;font-size:28px}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.st{font-family:'Instrument Serif',serif;font-size:23px;letter-spacing:-.02em;line-height:1.25}
+.ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh-xs);transition:all var(--ease)}
+.mc:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
+.mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary);margin-bottom:10px}
+.mc-val{font-family:'Instrument Serif',serif;font-size:28px;letter-spacing:-.02em}
+.mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:4px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
 .ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
-.pt{font-weight:600;font-size:12.5px}
-.adm-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
+.pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
+.chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.ch-wait{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.ch-dis{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.adm-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
+.adm-row:hover{background:var(--bg)}
 .adm-row:last-child{border-bottom:none}
-.adm-av{width:34px;height:34px;border-radius:8px;background:var(--purple-bg);border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;color:var(--purple);font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
+.adm-av{width:36px;height:36px;border-radius:9px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:14px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
 .adm-name{font-size:12.5px;font-weight:600}
 .adm-meta{font-size:10.5px;color:var(--text-secondary);margin-top:1px}
-.chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-.ch-wait{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.note-row{padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
+.note-row:last-child{border-bottom:none}
+.note-doc{font-size:11px;font-weight:700;color:var(--blue)}
+.note-time{font-size:10px;color:var(--text-tertiary)}
+.note-text{font-size:12px;color:var(--text-primary);margin-top:5px;line-height:1.6}
+.note-vitals{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.vital-pill{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:10px;font-weight:600;color:var(--text-secondary)}
+/* ROUNDS LAYOUT */
+.rounds-wrap{display:grid;grid-template-columns:260px 1fr;gap:14px}
+.rounds-patient-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);max-height:calc(100vh - 160px);overflow-y:auto}
+.rounds-detail{display:flex;flex-direction:column;gap:14px}
+.patient-selected-bar{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+/* MODALS */
 .mod-ov{position:fixed;inset:0;z-index:70;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(8px)}
 .mod-ov.open{display:flex}
 @media(min-width:600px){.mod-ov{align-items:center;padding:20px}}
-.modal{background:var(--surface);border:1px solid var(--border);width:100%;max-width:560px;border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:94vh;overflow-y:auto}
-@media(min-width:600px){.modal{border-radius:var(--r-xl);max-height:90vh}}
-.mh{display:flex;align-items:center;justify-content:space-between;padding:16px 17px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface)}
+.modal{background:var(--surface);border:1px solid var(--border);width:100%;max-width:520px;box-shadow:var(--sh-lg);animation:slideUp .22s ease;border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:94vh;overflow-y:auto;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+@media(min-width:600px){.modal{border-radius:var(--r-xl);max-height:90vh;padding-bottom:0}}
+.modal-wide{max-width:620px}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:16px 17px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1}
 .mtitle{font-weight:700;font-size:13px}
-.mclose{color:var(--text-tertiary);padding:4px;cursor:pointer;min-width:34px;min-height:34px}
+.mclose{color:var(--text-tertiary);padding:4px;cursor:pointer;min-width:34px;min-height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all var(--ease)}
+.mclose:hover{background:var(--bg);color:var(--text-primary)}
 .mb{padding:16px 17px;display:flex;flex-direction:column;gap:13px}
 .flbl{color:var(--text-tertiary);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:block;margin-bottom:5px}
-.finput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;font-size:14px;min-height:44px}
-.finput:focus{border-color:var(--purple)}
-.ftextarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;font-size:14px;resize:none}
-.msub{width:100%;background:var(--purple);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;min-height:46px}
-.qbtn{background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-size:10px;padding:6px 10px;border-radius:5px;font-weight:600;cursor:pointer;min-height:32px}
-.doc-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px}
-.doc-ic{width:32px;height:32px;border-radius:8px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.extract-box{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;color:var(--text-secondary)}
-.patient-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:12px;overflow-x:auto}
-.patient-tab{padding:8px 12px;border-radius:6px;font-size:11.5px;font-weight:600;color:var(--text-tertiary);cursor:pointer;white-space:nowrap}
-.patient-tab.active{background:var(--surface);color:var(--text-primary)}
-.ptab-panel{display:none}.ptab-panel.active{display:block}
-.note-row{padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
-.note-row:last-child{border-bottom:none}
-.note-doc{font-size:11px;font-weight:700;color:var(--purple)}
-.note-time{font-size:10px;color:var(--text-tertiary)}
-.note-text{font-size:12px;margin-top:5px;line-height:1.6}
-.mic-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:var(--r-sm);border:1.5px solid var(--red-border);background:var(--red-bg);color:var(--red);font-weight:700;font-size:13px}
-.mic-btn.recording{background:var(--red);color:#fff}
-.empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
-.empty-ic{font-size:32px;margin-bottom:10px;opacity:.45}
-.empty-t{font-size:13px;font-weight:600;color:var(--text-secondary)}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text-primary);color:var(--surface);padding:10px 18px;border-radius:var(--r-md);font-size:12.5px;font-weight:600;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+.finput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;transition:border-color var(--ease);min-height:44px}
+.finput:focus{border-color:var(--green);background:var(--surface)}
+.ftextarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;resize:none;line-height:1.6}
+.ftextarea:focus{border-color:var(--green);background:var(--surface)}
+.rx-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rx-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.rx-5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.msub{width:100%;background:var(--green);color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease)}
+.msub:hover{background:#0f8059}
+.qbtn{background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-size:10px;padding:6px 10px;border-radius:5px;display:inline-flex;align-items:center;gap:3px;font-weight:600;transition:all var(--ease);cursor:pointer;box-shadow:var(--sh-xs);min-height:32px}
+.qbtn:hover{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.note-box{border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;line-height:1.55}
+.note-amber{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--text-secondary)}
+.note-green{background:var(--green-bg);border:1px solid var(--green-border);color:var(--text-secondary)}
+.patient-tabs{display:flex;gap:3px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:14px;overflow-x:auto}
+.patient-tab{padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;color:var(--text-tertiary);cursor:pointer;white-space:nowrap;transition:all var(--ease);flex-shrink:0}
+.patient-tab.active{background:var(--surface);color:var(--text-primary);box-shadow:var(--sh-xs)}
+.ptab{display:none}.ptab.active{display:block}
+.ir{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(228,224,216,.5);font-size:12.5px}
+.ir:last-child{border-bottom:none}
+.il{color:var(--text-tertiary);font-weight:500}
+.iv{font-weight:600;text-align:right;max-width:60%}
+/* VOICE */
+.mic-wrap{border:1.5px solid var(--red-border);background:var(--red-bg);border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.mic-btn{width:44px;height:44px;border-radius:50%;background:var(--red-bg);border:1.5px solid var(--red-border);color:var(--red);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:18px;transition:all var(--ease)}
+.mic-btn.recording{background:var(--red);color:#fff;animation:pulseMic 1.2s infinite}
+@keyframes pulseMic{0%,100%{box-shadow:0 0 0 0 rgba(194,56,56,.4)}50%{box-shadow:0 0 0 8px rgba(194,56,56,0)}}
+.mic-label{font-weight:700;font-size:12.5px}
+.mic-status{font-size:10.5px;color:var(--text-tertiary);margin-top:2px}
+.doc-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;background:var(--surface)}
+.empty{text-align:center;padding:36px 20px;color:var(--text-tertiary)}
+.empty-ic{font-size:30px;margin-bottom:9px;opacity:.4}
+.empty-t{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
+.empty-s{font-size:11.5px;line-height:1.5}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text-primary);color:var(--surface);padding:10px 18px;border-radius:var(--r-md);font-size:12.5px;font-weight:600;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
+.rt-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:rtpulse 2s ease-in-out infinite}
+@keyframes rtpulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:900px){.two-col,.rounds-wrap{grid-template-columns:1fr}.mg{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){
-  #sidebar{transform:translateX(-100%);transition:transform .2s ease}
+  #sidebar{transform:translateX(-100%);transition:transform .22s ease}
   #sidebar.open{transform:none}
   #main{margin-left:0}
   .hamburger{display:flex!important}
   header{padding:0 12px}
   main.content{padding:12px}
+  .rx-2,.rx-3,.rx-5{grid-template-columns:1fr 1fr}
+  .hdr-search{display:none}
+  .mg{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
 <body>
 
-<div id="loading">Loading…</div>
-
+<div id="loading"><div class="spin"></div><p>Loading Doctor Portal…</p></div>
 <div id="app-shell">
   <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
   <div id="sidebar">
     <div class="sb-logo">
-      <div class="sb-mark"><span class="a">Aura</span><span class="s">Scale</span></div>
+      <div class="sb-mark"><span class="a">Aura</span><span class="s">Scale</span><span class="os">NH</span></div>
       <div class="sb-tag">Doctor Portal</div>
     </div>
-    <div class="sb-facility">
-      <div class="sb-facility-inner">
-        <div class="sb-fac-name" id="sb-fac-name">Loading…</div>
-        <div class="sb-fac-type">🩺 Doctor</div>
-      </div>
-    </div>
+    <div class="sb-facility"><div class="sb-fac-inner">
+      <div class="sb-fac-name" id="sb-fac-name">Loading…</div>
+      <div class="sb-fac-type">🩺 Clinical Team</div>
+    </div></div>
     <nav class="sb-nav">
-      <p class="nav-sec">Clinical</p>
-      <button class="nb" onclick="nav('home',this)">
-        <span class="nb-ic">🏠</span> My Patients
-        <span class="nb-badge" id="review-badge" style="display:none">0</span>
+      <p class="nav-sec">Overview</p>
+      <button class="nb on" onclick="nav('home',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>My Patients
+        <span class="nb-badge" id="nav-review-badge" style="display:none">0</span>
+      </button>
+      <p class="nav-sec">Inpatient Work</p>
+      <button class="nb" onclick="nav('rounds',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>Progress Notes
+      </button>
+      <button class="nb" onclick="nav('patients',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>All Patients
+      </button>
+      <button class="nb" onclick="nav('ayushman',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>Ayushman / PM-JAY
       </button>
     </nav>
     <div class="sb-foot">
-      <div class="sb-out" onclick="handleLogout()">← Sign Out</div>
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        Toggle Theme
+      </button>
+      <div class="sb-out" onclick="handleLogout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </div>
     </div>
   </div>
 
   <div id="main">
     <header>
       <div class="hdr-l">
-        <button class="hamburger" onclick="toggleSidebar()">☰</button>
-        <span class="bc-root">My Patients</span>
+        <button class="hamburger" onclick="toggleSidebar()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="bc-root">AuraScale NH</span>
+        <span class="bc-sep">/</span>
+        <span class="bc-page" id="tab-title">My Patients</span>
+      </div>
+      <div class="hdr-r">
+        <input class="hdr-search" id="global-search" placeholder="Search patient name or phone…" oninput="searchPatients(this.value)"/>
+        <span style="font-size:10px;color:var(--text-tertiary)"><span class="rt-dot"></span>Live</span>
       </div>
     </header>
     <main class="content">
 
-      <div id="v-home" class="view">
-        <div class="sh"><div><h1 class="st">My Patients</h1><p class="ss">Patients assigned to you</p></div></div>
+      <!-- HOME: MY PATIENTS -->
+      <div id="v-home" class="view on">
+        <div class="sh">
+          <div><h1 class="st">My Patients</h1><p class="ss" id="home-date-sub">Patients assigned to you · Today</p></div>
+        </div>
         <div class="mg">
-          <div class="mc"><div class="mc-lbl">Assigned Patients</div><div class="mc-val" id="dh-assigned-count">0</div></div>
-          <div class="mc"><div class="mc-lbl">Needs Review</div><div class="mc-val" id="dh-review-count">0</div></div>
+          <div class="mc"><div class="mc-lbl">Assigned Patients</div><div class="mc-val" id="h-assigned">—</div><div class="mc-sub">linked to my login</div></div>
+          <div class="mc" style="border-color:var(--amber-border);background:var(--amber-bg)"><div class="mc-lbl" style="color:var(--amber)">Pending Review</div><div class="mc-val" id="h-review">—</div><div class="mc-sub">sent by reception</div></div>
+          <div class="mc"><div class="mc-lbl">Active Admissions</div><div class="mc-val" id="h-active">—</div><div class="mc-sub">currently admitted</div></div>
         </div>
+        <!-- Review queue -->
         <div class="panel">
-          <div class="ph"><div class="pt">Needs Your Review</div></div>
-          <div id="dh-review-list"></div>
+          <div class="ph">
+            <div class="pt">🔔 Needs Your Review <span class="nb-badge" id="review-count-badge" style="margin-left:8px;display:none">0</span></div>
+          </div>
+          <div id="review-list"></div>
         </div>
+        <!-- All assigned patients -->
         <div class="panel">
           <div class="ph"><div class="pt">All Assigned Patients</div></div>
-          <div style="padding:12px 15px"><input class="finput" id="dh-search" placeholder="Search by name or phone…" oninput="loadDoctorHome()"/></div>
-          <div id="dh-patient-list"></div>
+          <div id="assigned-list"></div>
+        </div>
+      </div>
+
+      <!-- PROGRESS NOTES / ROUNDS -->
+      <div id="v-rounds" class="view">
+        <div class="sh">
+          <div><h1 class="st">Progress Notes</h1><p class="ss">Select a patient to write or view notes</p></div>
+          <button class="qbtn" onclick="openNoteModal()" id="add-note-btn" style="display:none">+ Add Note</button>
+        </div>
+        <div class="rounds-wrap">
+          <div class="rounds-patient-list">
+            <div class="ph"><div class="pt">Active Patients</div></div>
+            <div id="rounds-patient-list"></div>
+          </div>
+          <div class="rounds-detail">
+            <div id="rounds-selected-bar" style="display:none" class="patient-selected-bar">
+              <div>
+                <div style="font-weight:700;font-size:13px" id="rounds-patient-name">—</div>
+                <div style="font-size:10.5px;color:var(--green)" id="rounds-patient-meta"></div>
+              </div>
+              <button class="qbtn" onclick="openNoteModal()">+ Add Note</button>
+            </div>
+            <div class="panel">
+              <div class="ph"><div class="pt">Notes</div></div>
+              <div id="rounds-notes-list">
+                <div class="empty"><div class="empty-ic">📋</div><p class="empty-t">Select a patient</p><p class="empty-s">Choose from the list on the left</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALL PATIENTS -->
+      <div id="v-patients" class="view">
+        <div class="sh">
+          <div><h1 class="st">Patients</h1><p class="ss">All patients at this facility</p></div>
+        </div>
+        <input class="finput" id="patient-search" placeholder="Search by name or phone…" oninput="loadPatientsList()"/>
+        <div id="patients-list"></div>
+      </div>
+
+      <!-- AYUSHMAN -->
+      <div id="v-ayushman" class="view">
+        <div class="sh"><div><h1 class="st">Ayushman / PM-JAY</h1><p class="ss">Internal case tracking — not an official government status</p></div></div>
+        <div class="note-box note-amber">AuraScale is not a government authority. This section is for your facility's internal record-keeping only. Always confirm actual status on the official Ayushman Bharat / PM-JAY portal.</div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Cases Tracked</div><span id="ayushman-count" style="font-size:11px;color:var(--text-tertiary);font-weight:600">—</span></div>
+          <div id="ayushman-list"></div>
         </div>
       </div>
 
@@ -177,267 +319,399 @@ main.content{flex:1;padding:20px;overflow-y:auto}
   </div>
 </div>
 
-<!-- PATIENT PROFILE MODAL -->
-<div class="mod-ov" id="mod-patient-profile">
-  <div class="modal">
-    <div class="mh"><div class="mtitle" id="pp-title">Patient</div><button class="mclose" onclick="closeModal('mod-patient-profile')">✕</button></div>
-    <div class="mb">
-      <div class="patient-tabs">
-        <div class="patient-tab active" data-pt="overview" onclick="switchPatientTab('overview',this)">Overview</div>
-        <div class="patient-tab" data-pt="documents" onclick="switchPatientTab('documents',this)">Documents</div>
-        <div class="patient-tab" data-pt="notes" onclick="switchPatientTab('notes',this)">Notes</div>
-        <div class="patient-tab" data-pt="ayushman" onclick="switchPatientTab('ayushman',this)">Ayushman</div>
-      </div>
-      <div class="ptab-panel active" id="pp-overview"></div>
-      <div class="ptab-panel" id="pp-documents"><div id="pp-doc-list"></div></div>
-      <div class="ptab-panel" id="pp-notes">
-        <div id="pp-note-list" style="margin-bottom:14px"></div>
-        <button class="qbtn" style="width:100%;justify-content:center" onclick="openAddNoteModal()">+ Add Progress Note</button>
-      </div>
-      <div class="ptab-panel" id="pp-ayushman"></div>
-    </div>
-  </div>
-</div>
-
 <!-- PROGRESS NOTE MODAL -->
 <div class="mod-ov" id="mod-note">
   <div class="modal">
-    <div class="mh"><div class="mtitle">📝 Progress Note</div><button class="mclose" onclick="closeModal('mod-note')">✕</button></div>
+    <div class="mh"><div class="mtitle">📋 Progress Note</div><button class="mclose" onclick="closeModal('mod-note')">✕</button></div>
     <div class="mb">
-      <div><label class="flbl">Diagnosis / Clinical Impression</label><input class="finput" id="note-diag" placeholder="Updates this admission's diagnosis"/></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label class="flbl">Doctor Name</label><input class="finput" id="note-doc" placeholder="Your name"/></div>
+      <!-- Vitals -->
+      <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Vitals (optional)</div>
+      <div class="rx-3">
         <div><label class="flbl">BP</label><input class="finput" id="note-bp" placeholder="120/80"/></div>
-        <div><label class="flbl">Temp (°F)</label><input class="finput" id="note-temp"/></div>
-        <div><label class="flbl">SpO2 (%)</label><input class="finput" id="note-spo2"/></div>
-        <div><label class="flbl">Pulse (bpm)</label><input class="finput" id="note-pulse"/></div>
-        <div style="grid-column:1/-1"><label class="flbl">Weight (kg)</label><input class="finput" id="note-weight"/></div>
+        <div><label class="flbl">Temp (°F)</label><input class="finput" id="note-temp" placeholder="98.6"/></div>
+        <div><label class="flbl">Pulse</label><input class="finput" id="note-pulse" placeholder="72"/></div>
       </div>
-      <div><label class="flbl">Subjective (Patient complaints)</label><textarea class="finput ftextarea" id="note-subj" rows="2" placeholder="Patient says..."></textarea></div>
-      <div><label class="flbl">Assessment & Treatment Plan</label><textarea class="finput ftextarea" id="note-plan" rows="3" placeholder="Impression and treatment plan..."></textarea></div>
-      <div>
-        <button class="mic-btn" id="mic-btn" onclick="toggleVoiceNoteUI()">
-          <span id="mic-ic">🎙</span><span id="mic-label">Start Voice Note</span>
-        </button>
-        <p class="ss" id="mic-status" style="margin-top:6px"></p>
+      <div class="rx-2">
+        <div><label class="flbl">SpO₂ (%)</label><input class="finput" id="note-spo2" placeholder="98"/></div>
+        <div><label class="flbl">Weight (kg)</label><input class="finput" id="note-weight" placeholder="65"/></div>
       </div>
-      <button class="msub" onclick="saveProgressNote()">✓ Save Note</button>
+      <!-- Voice mic -->
+      <div class="mic-wrap">
+        <button class="mic-btn" id="mic-btn" onclick="toggleVoice()">🎙️</button>
+        <div>
+          <div class="mic-label" id="mic-label">Start Voice Note</div>
+          <div class="mic-status" id="mic-status">Tap to dictate — transcript goes to Subjective below</div>
+        </div>
+      </div>
+      <!-- SOAP -->
+      <div><label class="flbl">Subjective (S) — Patient's complaints & history</label><textarea class="finput ftextarea" id="note-subj" rows="3" placeholder="Patient reports…"></textarea></div>
+      <div><label class="flbl">Assessment / Plan (A/P) — Clinical findings & next steps</label><textarea class="finput ftextarea" id="note-plan" rows="3" placeholder="Assessment: … Plan: …"></textarea></div>
+      <div class="note-box note-amber" style="font-size:10.5px">Review all transcribed text before saving. Voice transcription may contain errors — always verify clinical details.</div>
+      <button class="msub" onclick="saveNote()">✓ Save Note</button>
     </div>
   </div>
 </div>
 
-<!-- AYUSHMAN CASE MODAL (clinical view — read/update clinical-relevant fields) -->
+<!-- PATIENT PROFILE MODAL -->
+<div class="mod-ov" id="mod-profile">
+  <div class="modal modal-wide">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="adm-av" id="pp-av" style="width:40px;height:40px;border-radius:10px;font-size:16px">?</div>
+        <div><div class="mtitle" id="pp-name">Patient</div><div style="font-size:10px;color:var(--text-tertiary)" id="pp-uhid"></div></div>
+      </div>
+      <button class="mclose" onclick="closeModal('mod-profile')">✕</button>
+    </div>
+    <div style="padding:0 17px">
+      <div class="patient-tabs">
+        <div class="patient-tab active" onclick="switchTab('overview',this)">Overview</div>
+        <div class="patient-tab" onclick="switchTab('notes',this)">Clinical Notes</div>
+        <div class="patient-tab" onclick="switchTab('documents',this)">Documents</div>
+        <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
+      </div>
+    </div>
+    <div class="mb" style="padding-top:0">
+      <div class="ptab active" id="t-overview"></div>
+      <div class="ptab" id="t-notes"></div>
+      <div class="ptab" id="t-documents">
+        <div class="note-box note-amber" style="margin-bottom:10px;font-size:11px">Documents uploaded by reception — view originals to verify content.</div>
+        <div id="pp-doc-list"></div>
+      </div>
+      <div class="ptab" id="t-ayushman"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AYUSHMAN MODAL -->
 <div class="mod-ov" id="mod-ayushman">
   <div class="modal">
-    <div class="mh"><div class="mtitle">🤝 Ayushman / PM-JAY Case</div><button class="mclose" onclick="closeModal('mod-ayushman')">✕</button></div>
+    <div class="mh"><div class="mtitle">🤝 Ayushman / PM-JAY Record</div><button class="mclose" onclick="closeModal('mod-ayushman')">✕</button></div>
     <div class="mb">
-      <div class="extract-box">Internal Record only — confirm real status on the official portal.</div>
-      <div><label class="flbl">Beneficiary ID</label><input class="finput" id="ay-beneficiary"/></div>
-      <div><label class="flbl">ABHA ID</label><input class="finput" id="ay-abha"/></div>
-      <div><label class="flbl">Status (internal)</label>
+      <div class="note-box note-amber" style="font-size:11px">Internal record only. Confirm actual status on pmjay.gov.in or with your authorised Ayushman provider.</div>
+      <div><label class="flbl">Beneficiary ID</label><input class="finput" id="ay-bid" placeholder="Government-issued Beneficiary ID"/></div>
+      <div><label class="flbl">ABHA ID</label><input class="finput" id="ay-abha" placeholder="14-digit ABHA number"/></div>
+      <div><label class="flbl">Internal Status</label>
         <select class="finput" id="ay-status">
-          <option value="internal_record">Internal Record</option>
-          <option value="submitted">Submitted</option>
-          <option value="pending">Pending</option>
-          <option value="verified_official">Verified by Official Portal</option>
+          <option value="internal_record">Internal Record (not verified)</option>
+          <option value="submitted">Submitted to Provider</option>
+          <option value="pending">Pending Verification</option>
+          <option value="verified_official">Verified via Official Portal</option>
           <option value="rejected">Rejected</option>
           <option value="unknown">Unknown / Not Checked</option>
         </select>
       </div>
-      <div><label class="flbl">Notes</label><textarea class="finput ftextarea" id="ay-notes" rows="3"></textarea></div>
-      <button class="msub" onclick="saveAyushmanCase(_activePatientId,function(){loadPatientAyushmanInto(_activePatientId,'pp-ayushman',true)})">✓ Save Case</button>
-    </div>
-  </div>
-</div>
-
-<!-- EXTRACTED TEXT EDITOR MODAL -->
-<div class="mod-ov" id="mod-extract-editor">
-  <div class="modal">
-    <div class="mh"><div class="mtitle">✏️ Correct Extracted Text</div><button class="mclose" onclick="closeModal('mod-extract-editor')">✕</button></div>
-    <div class="mb">
-      <div class="extract-box">This is a best-effort draft pulled from the PDF — not verified medical data. Review and correct it before relying on it.</div>
-      <textarea class="finput ftextarea" id="extract-edit-textarea" rows="10"></textarea>
-      <button class="msub" onclick="saveExtractedTextCorrection()">✓ Save Correction</button>
+      <div><label class="flbl">Notes</label><textarea class="finput ftextarea" id="ay-notes" rows="3" placeholder="Claim number, documents, follow-up…"></textarea></div>
+      <button class="msub" onclick="saveAyushman()">✓ Save Record</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="nh-toast"></div>
-
 <script src="nh-shared.js"></script>
 <script>
-var _activePatientId=null;
-var _activeAdmissionId=null;
-var _voiceActive=false;
+/* AuraScale NH — Doctor Portal v1 */
 
+var _pid=null,_admId=null,_voiceActive=false;
+var _myDocName='';
+
+/* ── INIT ── */
 async function init(){
   if(typeof nhAuthGuard!=='function'){
-    document.getElementById('loading').textContent='Could not load required files (nh-shared.js). Please check your internet connection and refresh.';
+    document.getElementById('loading').querySelector('p').textContent='Could not load nh-shared.js — check connection and refresh.';
     return;
   }
-  var guard=await nhAuthGuard('doctor');
-  if(!guard)return;
-  document.getElementById('sb-fac-name').textContent=guard.facilityName;
+  var g=await nhAuthGuard('doctor');
+  if(!g)return;
+  document.getElementById('sb-fac-name').textContent=g.facilityName;
+  document.getElementById('home-date-sub').textContent='Patients assigned to you · '+new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  /* Pre-fill doctor name from staff record */
+  var me=await _supa.from('nh_staff').select('full_name').eq('id',_myUid).single();
+  if(me.data&&me.data.full_name)_myDocName=me.data.full_name;
   document.getElementById('loading').style.display='none';
   document.getElementById('app-shell').classList.add('on');
-  nav('home',null);
+  nav('home',document.querySelector('.nb'));
 }
 
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebar-backdrop').classList.toggle('open');
-}
+/* ── NAV ── */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-backdrop').classList.toggle('open');}
 function nav(id,btn){
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')});
-  document.getElementById('v-'+id).classList.add('on');
-  if(id==='home')loadDoctorHome();
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
+  var v=document.getElementById('v-'+id);if(v)v.classList.add('on');
+  if(btn)btn.classList.add('on');
+  var t={home:'My Patients',rounds:'Progress Notes',patients:'All Patients',ayushman:'Ayushman / PM-JAY'};
+  document.getElementById('tab-title').textContent=t[id]||id;
+  if(id==='home')loadHome();
+  if(id==='rounds')loadRoundsPatients();
+  if(id==='patients')loadPatientsList();
+  if(id==='ayushman')loadAyushmanView();
+  if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
 
-async function loadDoctorHome(){
-  var q=(document.getElementById('dh-search')?document.getElementById('dh-search').value:'').trim();
-  var query=_supa.from('nh_patients').select('id,full_name,phone,age,gender,needs_review').eq('clinic_id',_clinicId).eq('assigned_doctor_id',_myUid).order('created_at',{ascending:false});
-  if(q)query=query.or('full_name.ilike.%'+q+'%,phone.ilike.%'+q+'%');
-  var r=await query;
+/* ── HOME ── */
+async function loadHome(){
+  /* Patients assigned to this doctor */
+  var r=await _supa.from('nh_patients').select('id,full_name,phone,age,gender,needs_review').eq('clinic_id',_clinicId).eq('assigned_doctor_id',_myUid).order('created_at',{ascending:false});
   var patients=r.data||[];
-  var needsReview=patients.filter(function(p){return p.needs_review;});
-  document.getElementById('dh-assigned-count').textContent=patients.length;
-  document.getElementById('dh-review-count').textContent=needsReview.length;
-  var badge=document.getElementById('review-badge');
-  if(needsReview.length){badge.style.display='inline-flex';badge.textContent=needsReview.length;}else{badge.style.display='none';}
-
-  var reviewList=document.getElementById('dh-review-list');
-  reviewList.innerHTML=needsReview.length?needsReview.map(function(p){
-    return '<div class="adm-row" style="cursor:pointer" onclick="openPatientProfile(\''+p.id+'\',\''+(p.full_name||'').replace(/'/g,"\\'")+'\')">'
-      +'<div class="adm-av">'+(p.full_name||'?').charAt(0)+'</div>'
-      +'<div style="flex:1"><div class="adm-name">'+p.full_name+'</div><div class="adm-meta">Sent by reception — needs your review</div></div>'
-      +'<span class="chip ch-wait">Review</span></div>';
-  }).join(''):'<div class="empty"><div class="empty-ic">✅</div><p class="empty-t">Nothing pending review</p></div>';
-
-  var list=document.getElementById('dh-patient-list');
-  list.innerHTML=patients.length?patients.map(function(p){
-    return '<div class="adm-row" style="cursor:pointer" onclick="openPatientProfile(\''+p.id+'\',\''+(p.full_name||'').replace(/'/g,"\\'")+'\')">'
-      +'<div class="adm-av">'+(p.full_name||'?').charAt(0)+'</div>'
-      +'<div style="flex:1"><div class="adm-name">'+p.full_name+'</div><div class="adm-meta">'+(p.age?p.age+'y ':'')+(p.gender||'')+'</div></div></div>';
-  }).join(''):'<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients assigned to you yet</p><p class="ss">Ask reception to link a patient to your account when admitting</p></div>';
+  var review=patients.filter(function(p){return p.needs_review;});
+  document.getElementById('h-assigned').textContent=patients.length;
+  document.getElementById('h-review').textContent=review.length;
+  var badge=document.getElementById('nav-review-badge');
+  badge.textContent=review.length;badge.style.display=review.length>0?'':'none';
+  var rb=document.getElementById('review-count-badge');
+  rb.textContent=review.length;rb.style.display=review.length>0?'':'none';
+  /* Active admissions (not limited to assigned) */
+  var adms=await _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('status','Active');
+  document.getElementById('h-active').textContent=adms.count||0;
+  /* Review list */
+  var rl=document.getElementById('review-list');
+  if(!review.length){rl.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">✅</div><p class="empty-t">No pending reviews</p><p class="empty-s">Reception will flag patients here when they need your attention</p></div>';}
+  else{rl.innerHTML=review.map(function(p){return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+p.id+'\',\''+esc(p.full_name||'')+'\')"><div class="adm-av" style="background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)">'+((p.full_name||'?').charAt(0).toUpperCase())+'</div><div style="flex:1;min-width:0"><div class="adm-name">'+esc(p.full_name||'')+'</div><div class="adm-meta">'+(p.phone||'')+(p.age?' · '+p.age+'y ':' ')+(p.gender||'')+'</div></div><span class="chip ch-wait">Review</span></div>';}).join('');}
+  /* All assigned */
+  var al=document.getElementById('assigned-list');
+  if(!patients.length){al.innerHTML='<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients assigned to you yet</p><p class="empty-s">Reception assigns patients to your login when they admit them</p></div>';}
+  else{al.innerHTML=patients.map(function(p){return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+p.id+'\',\''+esc(p.full_name||'')+'\')"><div class="adm-av">'+((p.full_name||'?').charAt(0).toUpperCase())+'</div><div style="flex:1;min-width:0"><div class="adm-name">'+esc(p.full_name||'')+'</div><div class="adm-meta">'+(p.age?p.age+'y ':'')+''+(p.gender||'')+(p.phone?' · '+p.phone:'')+'</div></div>'+(p.needs_review?'<span class="chip ch-wait">Review</span>':'')+'</div>';}).join('');}
 }
 
-async function openPatientProfile(id,name){
-  _activePatientId=id;
-  document.getElementById('pp-title').textContent=name||'Patient';
-  switchPatientTab('overview',document.querySelector('.patient-tab[data-pt="overview"]'));
-  /* Opening a patient sent for review counts as reviewing it */
-  await _supa.from('nh_patients').update({needs_review:false}).eq('id',id).eq('assigned_doctor_id',_myUid);
-
-  var p=await _supa.from('nh_patients').select('*').eq('id',id).single();
-  var adms=await _supa.from('admissions').select('id,status,admission_date,discharge_date,admission_diagnosis,admitting_doctor,bed_id,beds(bed_number,ward)').eq('patient_id',id).order('admission_date',{ascending:false});
-  _activeAdmissionId=adms.data&&adms.data.length?adms.data[0].id:null;
-  var pd=p.data||{};
-  document.getElementById('pp-overview').innerHTML=
-    '<div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">'
-    +'<div><b>Name:</b> '+(pd.full_name||'')+'</div>'
-    +'<div><b>Age / Gender:</b> '+(pd.age||'—')+' / '+(pd.gender||'—')+'</div>'
-    +'<div><b>Phone:</b> '+(pd.phone||'—')+'</div>'
-    +'<div style="margin-top:8px;font-weight:700">Visit History</div>'
-    +((adms.data||[]).length?(adms.data||[]).map(function(a){
-        var bed=a.beds?('Bed '+a.beds.bed_number+(a.beds.ward?' · '+a.beds.ward:'')):'';
-        return '<div style="font-size:11.5px;padding:6px 0;border-bottom:1px solid var(--border)">'+(a.status==='Active'?'🟢 Active':'✅ Discharged')+(bed?' · '+bed:'')+' · '+new Date(a.admission_date).toLocaleDateString('en-GB')+'<br>Dr. '+(a.admitting_doctor||'—')+' · '+(a.admission_diagnosis||'No diagnosis recorded')+'</div>';
-      }).join(''):'<p class="ss">No visit history yet.</p>')
-    +'</div>';
-  openModal('mod-patient-profile');
-  loadPatientDocumentsInto(id,'pp-doc-list',false);
-  loadPatientAyushmanInto(id,'pp-ayushman',true);
-  loadProgressNotes(id);
-  loadDoctorHome();
-}
-function switchPatientTab(tab,el){
-  document.querySelectorAll('.patient-tab').forEach(function(t){t.classList.remove('active')});
-  document.querySelectorAll('.ptab-panel').forEach(function(p){p.classList.remove('active')});
-  if(el)el.classList.add('active');
-  document.getElementById('pp-'+tab).classList.add('active');
-}
-
-async function loadProgressNotes(patientId){
-  var r=await _supa.from('progress_notes').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(20);
-  var el=document.getElementById('pp-note-list');
-  if(!r.data||!r.data.length){el.innerHTML='<p class="ss">No clinical notes yet.</p>';return;}
-  el.innerHTML=r.data.map(function(n){
-    var t=new Date(n.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    var vitals=[n.bp?'BP '+n.bp:'',n.temperature?'Temp '+n.temperature+'°F':'',n.spo2?'SpO2 '+n.spo2+'%':'',n.pulse?'Pulse '+n.pulse:'',n.weight?'Wt '+n.weight+'kg':''].filter(Boolean).join(' · ');
-    return '<div class="note-row"><div style="display:flex;justify-content:space-between"><span class="note-doc">'+(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
-      +(vitals?'<div class="note-text" style="color:var(--text-secondary)">'+vitals+'</div>':'')
-      +(n.subjective?'<div class="note-text"><b>S:</b> '+n.subjective+'</div>':'')
-      +(n.plan?'<div class="note-text"><b>A/P:</b> '+n.plan+'</div>':'')+'</div>';
+/* ── ROUNDS ── */
+async function loadRoundsPatients(){
+  var r=await _supa.from('admissions').select('id,patient_id,patient_name,admitting_doctor,admission_diagnosis,admission_date').eq('clinic_id',_clinicId).eq('status','Active').order('admission_date',{ascending:true});
+  var list=document.getElementById('rounds-patient-list');
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">🛏️</div><p class="empty-t">No active patients</p></div>';return;}
+  list.innerHTML=r.data.map(function(a){
+    var days=Math.floor((Date.now()-new Date(a.admission_date))/86400000);
+    return '<div class="adm-row" style="cursor:pointer" onclick="selectRoundsPatient(\''+a.id+'\',\''+esc(a.patient_name||'')+'\')" id="rounds-row-'+a.id+'"><div class="adm-av">'+((a.patient_name||'?').charAt(0).toUpperCase())+'</div><div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'')+'</div><div class="adm-meta">Day '+(days+1)+(a.admission_diagnosis?' · '+esc(a.admission_diagnosis):'')+'</div></div></div>';
   }).join('');
 }
-async function openAddNoteModal(){
-  document.getElementById('note-bp').value='';
-  document.getElementById('note-temp').value='';
-  document.getElementById('note-spo2').value='';
-  document.getElementById('note-pulse').value='';
-  document.getElementById('note-weight').value='';
-  document.getElementById('note-subj').value='';
-  document.getElementById('note-plan').value='';
-  document.getElementById('mic-status').textContent='';
-  document.getElementById('mic-btn').classList.remove('recording');
-  document.getElementById('mic-label').textContent='Start Voice Note';
-  if(_activeAdmissionId){
-    var adm=await _supa.from('admissions').select('admission_diagnosis').eq('id',_activeAdmissionId).single();
-    document.getElementById('note-diag').value=(adm.data&&adm.data.admission_diagnosis)||'';
-  }else{
-    document.getElementById('note-diag').value='';
-  }
+
+var _currentAdmId=null,_currentAdmName='';
+function selectRoundsPatient(admId,name){
+  _currentAdmId=admId;_currentAdmName=name;
+  /* Highlight selected row */
+  document.querySelectorAll('#rounds-patient-list .adm-row').forEach(function(r){r.style.background='';});
+  var row=document.getElementById('rounds-row-'+admId);
+  if(row)row.style.background='var(--green-bg)';
+  /* Show selected bar */
+  var bar=document.getElementById('rounds-selected-bar');bar.style.display='flex';
+  document.getElementById('rounds-patient-name').textContent=name;
+  document.getElementById('rounds-patient-meta').textContent='Active Admission · Select to add note';
+  document.getElementById('add-note-btn').style.display='';
+  loadNotes(admId);
+}
+async function loadNotes(admId){
+  var r=await _supa.from('progress_notes').select('*').eq('admission_id',admId).order('created_at',{ascending:false});
+  var list=document.getElementById('rounds-notes-list');
+  if(!r.data||!r.data.length){list.innerHTML='<div class="empty" style="padding:28px"><div class="empty-ic">📋</div><p class="empty-t">No notes yet</p><p class="empty-s">Tap "Add Note" to write the first progress note for this patient</p></div>';return;}
+  list.innerHTML=r.data.map(function(n){
+    var t=new Date(n.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    var vitals=[];
+    if(n.bp)vitals.push('BP: '+n.bp);
+    if(n.temperature)vitals.push('T: '+n.temperature+'°F');
+    if(n.pulse)vitals.push('P: '+n.pulse+'/min');
+    if(n.spo2)vitals.push('SpO₂: '+n.spo2+'%');
+    if(n.weight)vitals.push('Wt: '+n.weight+' kg');
+    return '<div class="note-row">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="note-doc">'+esc(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
+      +(vitals.length?'<div class="note-vitals">'+vitals.map(function(v){return '<span class="vital-pill">'+v+'</span>';}).join('')+'</div>':'')
+      +(n.subjective?'<div class="note-text"><b>S:</b> '+esc(n.subjective)+'</div>':'')
+      +(n.plan?'<div class="note-text"><b>A/P:</b> '+esc(n.plan)+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function openNoteModal(){
+  if(!_currentAdmId){showToast('Select a patient first');return;}
+  /* Reset form */
+  ['note-bp','note-temp','note-pulse','note-spo2','note-weight','note-subj','note-plan'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('note-doc').value=_myDocName;
+  stopVoice();
+  document.getElementById('mic-status').textContent='Tap to dictate — transcript goes to Subjective below';
   openModal('mod-note');
 }
-async function saveProgressNote(){
-  var diag=(document.getElementById('note-diag').value||'').trim();
-  var bp=(document.getElementById('note-bp').value||'').trim();
-  var temp=(document.getElementById('note-temp').value||'').trim();
-  var spo2=(document.getElementById('note-spo2').value||'').trim();
-  var pulse=(document.getElementById('note-pulse').value||'').trim();
-  var weight=(document.getElementById('note-weight').value||'').trim();
+async function saveNote(){
+  if(!_currentAdmId){showToast('No patient selected');return;}
+  var doc=(document.getElementById('note-doc').value||'').trim()||_myDocName;
   var subj=(document.getElementById('note-subj').value||'').trim();
   var plan=(document.getElementById('note-plan').value||'').trim();
-  if(!subj&&!plan&&!bp&&!temp&&!spo2&&!pulse&&!weight){showToast('Add at least one field');return;}
-  if(_voiceActive)stopVoiceNoteUI();
-  var doctorName=(await _supa.from('nh_staff').select('full_name').eq('id',_myUid).single()).data;
-  var r=await _supa.from('progress_notes').insert({clinic_id:_clinicId,admission_id:_activeAdmissionId,patient_id:_activePatientId,created_by:_myUid,doctor_name:doctorName?doctorName.full_name:'Doctor',bp:bp,temperature:temp,spo2:spo2,pulse:pulse,weight:weight,subjective:subj,plan:plan,note_date:new Date().toISOString().slice(0,10)});
+  if(!subj&&!plan){showToast('Add at least one note (Subjective or Assessment/Plan)');return;}
+  stopVoice();
+  var r=await _supa.from('progress_notes').insert({
+    clinic_id:_clinicId,admission_id:_currentAdmId,patient_id:_pid||null,
+    created_by:_myUid,doctor_name:doc,
+    bp:(document.getElementById('note-bp').value||'').trim(),
+    temperature:(document.getElementById('note-temp').value||'').trim(),
+    spo2:(document.getElementById('note-spo2').value||'').trim(),
+    pulse:(document.getElementById('note-pulse').value||'').trim(),
+    weight:(document.getElementById('note-weight').value||'').trim(),
+    subjective:subj,plan:plan,
+    note_date:new Date().toISOString().slice(0,10)
+  });
   if(r.error){showToast('Error: '+r.error.message);return;}
-  if(diag&&_activeAdmissionId){
-    await _supa.from('admissions').update({admission_diagnosis:diag}).eq('id',_activeAdmissionId);
-    await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'diagnosis_updated',target_table:'admissions',target_id:_activeAdmissionId,details:{diagnosis:diag}});
-  }
   closeModal('mod-note');
-  showToast('Note saved');
-  loadProgressNotes(_activePatientId);
-  openPatientProfile(_activePatientId,document.getElementById('pp-title').textContent);
+  showToast('Note saved · '+_currentAdmName);
+  loadNotes(_currentAdmId);
 }
 
 /* ── VOICE ── */
-function toggleVoiceNoteUI(){
-  if(_voiceActive){stopVoiceNoteUI();return;}
+function toggleVoice(){_voiceActive?stopVoice():startVoice();}
+function startVoice(){
   var target=document.getElementById('note-subj');
-  var baseText=target.value?target.value+' ':'';
-  var started=NHSpeech.start({
+  var base=target.value?target.value+' ':'';
+  var ok=NHSpeech.start({
     lang:'en-IN',
-    onResult:function(t){ target.value=baseText+t; },
-    onError:function(err){
-      document.getElementById('mic-status').textContent=err==='unsupported'?'Voice input is not supported in this browser.':'Mic error: '+err+'. Please allow microphone access.';
-      stopVoiceNoteUI();
+    onResult:function(t){target.value=base+t;},
+    onError:function(e){
+      document.getElementById('mic-status').textContent=e==='unsupported'?'Voice not supported in this browser.':'Mic error: '+e+'. Allow microphone access.';
+      stopVoice();
     },
-    onEnd:function(){ if(_voiceActive){stopVoiceNoteUI();} }
+    onEnd:function(){if(_voiceActive)stopVoice();}
   });
-  if(!started)return;
+  if(!ok)return;
   _voiceActive=true;
   document.getElementById('mic-btn').classList.add('recording');
   document.getElementById('mic-label').textContent='Stop Recording';
-  document.getElementById('mic-status').textContent='🔴 Listening… speak naturally, then review the text before saving.';
+  document.getElementById('mic-status').textContent='🔴 Listening… speak naturally. Review text before saving.';
 }
-function stopVoiceNoteUI(){
+function stopVoice(){
   NHSpeech.stop();
   _voiceActive=false;
-  document.getElementById('mic-btn').classList.remove('recording');
-  document.getElementById('mic-label').textContent='Start Voice Note';
-  document.getElementById('mic-status').textContent='Transcript added to Subjective — edit as needed, then Save Note.';
+  var btn=document.getElementById('mic-btn');if(btn)btn.classList.remove('recording');
+  var lbl=document.getElementById('mic-label');if(lbl)lbl.textContent='Start Voice Note';
+  var st=document.getElementById('mic-status');if(st)st.textContent='Transcript added to Subjective — edit as needed before saving.';
 }
+
+/* ── PATIENTS LIST ── */
+async function loadPatientsList(){
+  var q=(document.getElementById('patient-search').value||'').trim();
+  var query=_supa.from('nh_patients').select('id,full_name,phone,age,gender,needs_review').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(50);
+  if(q)query=query.or('full_name.ilike.%'+q+'%,phone.ilike.%'+q+'%');
+  var r=await query;
+  var el=document.getElementById('patients-list');
+  if(!r.data||!r.data.length){el.innerHTML='<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients found</p></div>';return;}
+  el.innerHTML='<div class="panel">'+r.data.map(function(p){
+    return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+p.id+'\',\''+esc(p.full_name||'')+'\')"><div class="adm-av">'+((p.full_name||'?').charAt(0).toUpperCase())+'</div><div style="flex:1;min-width:0"><div class="adm-name">'+esc(p.full_name||'')+'</div><div class="adm-meta">'+(p.age?p.age+'y ':'')+''+(p.gender||'')+(p.phone?' · '+p.phone:'')+'</div></div>'+(p.needs_review?'<span class="chip ch-wait">Review</span>':'')+'</div>';
+  }).join('')+'</div>';
+}
+function searchPatients(q){
+  nav('patients',document.querySelector('.nb[onclick*=patients]'));
+  document.getElementById('patient-search').value=q;
+  loadPatientsList();
+}
+
+/* ── PATIENT PROFILE ── */
+async function openProfile(id,name){
+  _pid=id;
+  document.getElementById('pp-name').textContent=name||'Patient';
+  document.getElementById('pp-av').textContent=(name||'?').charAt(0).toUpperCase();
+  document.getElementById('pp-uhid').textContent='';
+  switchTab('overview',document.querySelector('.patient-tab'));
+  openModal('mod-profile');
+  /* Mark as reviewed */
+  await _supa.from('nh_patients').update({needs_review:false}).eq('id',id).eq('assigned_doctor_id',_myUid);
+  /* Load patient details */
+  var p=await _supa.from('nh_patients').select('*').eq('id',id).single();
+  var adms=await _supa.from('admissions').select('*').eq('patient_id',id).order('admission_date',{ascending:false});
+  var pd=p.data||{};
+  if(pd.uhid)document.getElementById('pp-uhid').textContent='UHID: '+pd.uhid;
+  var activeAdm=(adms.data||[]).find(function(a){return a.status==='Active';});
+  if(activeAdm)_admId=activeAdm.id;
+  document.getElementById('t-overview').innerHTML=
+    '<div style="display:flex;flex-direction:column;gap:4px">'
+    +'<div class="ir"><span class="il">Name</span><span class="iv">'+esc(pd.full_name||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Age / Gender</span><span class="iv">'+(pd.age||'—')+' / '+(pd.gender||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Phone</span><span class="iv">'+(pd.phone||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Address</span><span class="iv">'+(pd.address||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Guardian</span><span class="iv">'+(pd.guardian||'—')+'</span></div>'
+    +'</div>'
+    +'<div style="margin-top:12px;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Admission History</div>'
+    +((adms.data&&adms.data.length)?adms.data.map(function(a){
+      var days=Math.floor((Date.now()-new Date(a.admission_date))/86400000);
+      return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:12px;margin-bottom:10px;font-size:12.5px">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+        +'<span class="chip '+(a.status==='Active'?'ch-act':'ch-dis')+'">'+a.status+'</span>'
+        +'<span style="font-size:10.5px;color:var(--text-tertiary)">'+new Date(a.admission_date).toLocaleDateString('en-GB')+'</span></div>'
+        +'<div><b>Doctor:</b> '+(a.admitting_doctor||'—')+'</div>'
+        +'<div><b>Diagnosis:</b> '+(a.admission_diagnosis||'Not recorded')+'</div>'
+        +(a.status==='Active'?'<div><b>Duration:</b> '+(days+1)+' day(s)</div>':'')
+        +(a.status==='Active'?'<button class="qbtn" style="margin-top:8px" onclick="selectRoundsPatient(\''+a.id+'\',\''+esc(pd.full_name||'')+'\')" >📋 Add Progress Note</button>':'')
+        +'</div>';
+    }).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No admissions yet.</p>');
+  loadNotesTab(id);
+  loadPatientDocumentsInto(id,'pp-doc-list',true);
+  loadAyushmanTab(id);
+  /* Refresh home badge */
+  loadHome();
+}
+async function loadNotesTab(patientId){
+  var r=await _supa.from('progress_notes').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(20);
+  var el=document.getElementById('t-notes');
+  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary);padding:8px 0">No clinical notes recorded yet.</p>';return;}
+  el.innerHTML=r.data.map(function(n){
+    var t=new Date(n.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    var vitals=[];
+    if(n.bp)vitals.push('BP:'+n.bp);if(n.temperature)vitals.push('T:'+n.temperature+'°F');
+    if(n.pulse)vitals.push('P:'+n.pulse);if(n.spo2)vitals.push('SpO₂:'+n.spo2+'%');if(n.weight)vitals.push('Wt:'+n.weight+'kg');
+    return '<div class="note-row"><div style="display:flex;justify-content:space-between"><span class="note-doc">'+esc(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
+      +(vitals.length?'<div class="note-vitals">'+vitals.map(function(v){return '<span class="vital-pill">'+v+'</span>';}).join('')+'</div>':'')
+      +(n.subjective?'<div class="note-text"><b>S:</b> '+esc(n.subjective)+'</div>':'')
+      +(n.plan?'<div class="note-text"><b>A/P:</b> '+esc(n.plan)+'</div>':'')+'</div>';
+  }).join('');
+}
+function switchTab(tab,el){
+  document.querySelectorAll('.patient-tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.ptab').forEach(function(p){p.classList.remove('active')});
+  if(el)el.classList.add('active');
+  var panel=document.getElementById('t-'+tab);if(panel)panel.classList.add('active');
+}
+
+/* ── AYUSHMAN ── */
+async function loadAyushmanView(){
+  var r=await _supa.from('nh_ayushman_cases').select('*,nh_patients(full_name)').eq('clinic_id',_clinicId).order('updated_at',{ascending:false});
+  var rows=r.data||[];
+  document.getElementById('ayushman-count').textContent=rows.length+' cases';
+  var list=document.getElementById('ayushman-list');
+  if(!rows.length){list.innerHTML='<div class="empty"><div class="empty-ic">🤝</div><p class="empty-t">No Ayushman / PM-JAY cases yet</p><p class="empty-s">Open a patient profile → Ayushman tab to start tracking</p></div>';return;}
+  list.innerHTML=rows.map(function(c){
+    var name=c.nh_patients?c.nh_patients.full_name:'Patient';
+    return '<div class="adm-row"><div class="adm-av" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">🤝</div>'
+      +'<div style="flex:1"><div class="adm-name">'+esc(name)+'</div><div class="adm-meta">'+c.status.replace(/_/g,' ')+'</div></div>'
+      +'<span class="chip ch-wait">'+c.status.replace(/_/g,' ')+'</span></div>';
+  }).join('');
+}
+async function loadAyushmanTab(patientId){
+  var r=await _supa.from('nh_ayushman_cases').select('*').eq('patient_id',patientId).order('updated_at',{ascending:false}).limit(1);
+  var el=document.getElementById('t-ayushman');
+  var ex=r.data&&r.data.length?r.data[0]:null;
+  el.innerHTML='<div class="note-box note-amber" style="margin-bottom:12px;font-size:11px">Internal record only — confirm actual status on pmjay.gov.in or with your authorised provider.</div>'
+    +(ex?'<div style="font-size:12.5px;display:flex;flex-direction:column;gap:4px">'
+        +'<div class="ir"><span class="il">Status</span><span class="iv">'+ex.status.replace(/_/g,' ')+'</span></div>'
+        +'<div class="ir"><span class="il">Beneficiary ID</span><span class="iv">'+(ex.beneficiary_id||'—')+'</span></div>'
+        +'<div class="ir"><span class="il">ABHA ID</span><span class="iv">'+(ex.abha_id||'—')+'</span></div>'
+        +'<div class="ir"><span class="il">Notes</span><span class="iv">'+(ex.notes||'—')+'</span></div></div>'
+      :'<p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">No case recorded yet.</p>')
+    +'<button class="qbtn" style="margin-top:10px" onclick="openAyushmanModal(\''+(ex?esc(ex.beneficiary_id||''):'')+'\')">'+(ex?'Update Case':'+ Start Ayushman Case')+'</button>';
+}
+function openAyushmanModal(b){
+  document.getElementById('ay-bid').value=b||'';
+  document.getElementById('ay-abha').value='';
+  document.getElementById('ay-notes').value='';
+  openModal('mod-ayushman');
+}
+async function saveAyushman(){
+  if(!_pid){showToast('No patient selected');return;}
+  var p={clinic_id:_clinicId,patient_id:_pid,beneficiary_id:(document.getElementById('ay-bid').value||'').trim(),abha_id:(document.getElementById('ay-abha').value||'').trim(),status:document.getElementById('ay-status').value,notes:(document.getElementById('ay-notes').value||'').trim(),created_by:_myUid,updated_at:new Date().toISOString()};
+  var ex=await _supa.from('nh_ayushman_cases').select('id').eq('patient_id',_pid).limit(1);
+  var res=ex.data&&ex.data.length?await _supa.from('nh_ayushman_cases').update(p).eq('id',ex.data[0].id):await _supa.from('nh_ayushman_cases').insert(p);
+  if(res.error){showToast('Error: '+res.error.message);return;}
+  closeModal('mod-ayushman');showToast('Ayushman record saved');
+  loadAyushmanTab(_pid);
+}
+
+/* ── UTILS ── */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 init();
 </script>
