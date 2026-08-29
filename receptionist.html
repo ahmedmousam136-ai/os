@@ -854,7 +854,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 /* AuraScale NH — Receptionist Portal v2
    Multi-step wizard · ID capture · AI OCR · Ward-grouped beds · Supabase Realtime */
 
-var _pid=null,_admId=null,_bedId=null,_selBedId=null,_selBedRate=0;
+var _pid=null,_admId=null,_bedId=null,_selBedId=null,_selBedRate=0,_existingPatientId=null;
 var _imgs={front:null,back:null};
 var _idType=null,_wizStep=1;
 var _voiceRec=false,_voiceText='';
@@ -1147,7 +1147,8 @@ async function doRegisterAndAdmit(){
   if(needsBed&&!_selBedId){err.textContent='Please select a bed for '+visit+' admission';err.style.display='block';return;}
   var btn=document.getElementById('admit-btn');btn.disabled=true;btn.textContent='Saving…';
   // Create/find patient
-  var pid=await findOrCreatePatient(name,phone,age,gender,docLogin);
+  var pid=_existingPatientId||await findOrCreatePatient(name,phone,age,gender,docLogin);
+  _existingPatientId=null;
   if(!pid){err.textContent='Could not create patient record — please try again';err.style.display='block';btn.disabled=false;btn.innerHTML='✓ Assign Bed &amp; Admit Patient';return;}
   await _supa.from('nh_patients').update({guardian:guardian,address:address,visit_type:visit,uhid:uhid}).eq('id',pid);
   // Upload captured ID images
@@ -1215,7 +1216,11 @@ async function openProfile(id,name){
     +'<div class="ir"><span class="il">Address</span><span class="iv">'+(d.address||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Guardian / Emergency</span><span class="iv">'+(d.guardian||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Visit Type</span><span class="iv">'+(d.visit_type||'—')+'</span></div>'
-    +'</div><button class="qbtn" style="margin-top:10px" onclick="openRegisterModal()">+ New Admission for this Patient</button>';
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
+    +'<button class="qbtn" onclick="openRegisterModal()">+ New Admission</button>'
+    +'<button class="msub" style="flex:1;font-size:11.5px;min-height:38px;padding:8px 12px" data-assign-pid="'+id+'" data-assign-name="'+esc(pd.full_name||'')+'">🛏️ Assign Bed &amp; Admit</button>'
+    +'</div>';
   loadHistory(id);loadDocs(id);loadBilling(id);loadFinancing(id);loadAyushman(id);loadVoiceNotes(id);
 }
 async function loadHistory(id){
@@ -1672,6 +1677,39 @@ async function loadVoiceNotes(id){
   el.innerHTML=r.data.map(function(n){return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px"><div style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px">'+new Date(n.created_at).toLocaleString('en-GB')+'</div><div>'+esc(n.note_text||'')+'</div></div>';}).join('');
 }
 
+/* ── ASSIGN BED FOR EXISTING PATIENT ── */
+async function assignBedForPatient(patientId, patientName){
+  /* Pre-load patient data */
+  var p = await _supa.from('nh_patients').select('*').eq('id', patientId).single();
+  var pd = p.data || {};
+  closeModal('mod-profile');
+  /* Reset wizard */
+  _selectedBedId = null; _selBedRate = 0; _existingPatientId = null;
+  _imgs = {front:null, back:null}; _idType = 'manual';
+  /* Pre-fill step 3 form with existing patient data */
+  document.getElementById('reg-name').value = pd.full_name || '';
+  document.getElementById('reg-phone').value = pd.phone || '';
+  document.getElementById('reg-age').value = pd.age || '';
+  document.getElementById('reg-gender').value = pd.gender || 'Male';
+  document.getElementById('reg-address').value = pd.address || '';
+  document.getElementById('reg-guardian').value = pd.guardian || '';
+  document.getElementById('reg-uhid').value = pd.uhid || '';
+  document.getElementById('reg-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('reg-err').style.display = 'none';
+  /* Load doctors */
+  var docs = await _supa.from('nh_staff').select('id,full_name').eq('clinic_id',_clinicId).eq('role','doctor').eq('is_active',true);
+  var ds = document.getElementById('reg-doc-login');
+  ds.innerHTML = '<option value="">— None —</option>' + (docs.data||[]).map(function(d){
+    return '<option value="'+d.id+'">'+esc(d.full_name||'Doctor')+'</option>';
+  }).join('');
+  /* Store patient ID so we reuse it instead of creating a new patient */
+  _existingPatientId = patientId;
+  /* Jump straight to step 4 — bed selection */
+  openModal('mod-register');
+  wizGo(4);
+  showToast('Select a bed to admit '+patientName);
+}
+
 /* ── UTILS ── */
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
@@ -1681,6 +1719,8 @@ init();
 document.addEventListener('click', function(e){
   var btn = e.target.closest('[data-billpath]');
   if(btn){ viewBillOriginal(btn.getAttribute('data-billpath')); }
+  var abtn = e.target.closest('[data-assign-pid]');
+  if(abtn){ assignBedForPatient(abtn.getAttribute('data-assign-pid'), abtn.getAttribute('data-assign-name')); }
 });
 </script>
 </body>
