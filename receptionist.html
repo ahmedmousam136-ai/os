@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- AuraScale OS | receptionist.html | Fixed build 2026-08-28 21:36 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -1052,19 +1051,33 @@ async function callClaudeOCR(){
   var imgData=_imgs.front||_imgs.back;if(!imgData)return null;
   var b64=imgData.replace(/^data:image\/(png|jpg|jpeg|webp);base64,/,'');
   var mime=imgData.startsWith('data:image/png')?'image/png':'image/jpeg';
-  var res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-6',max_tokens:400,
-      messages:[{role:'user',content:[
-        {type:'image',source:{type:'base64',media_type:mime,data:b64}},
-        {type:'text',text:'This is an Indian '+(_idType==='aadhaar'?'Aadhaar Card':'Voter ID Card')+'. Extract registration information and return ONLY valid JSON: {"name":"","dob":"YYYY-MM-DD or null","gender":"Male or Female or Other or null","address":""}. CRITICAL: Do NOT include any Aadhaar number, Voter ID number, or any government ID number in your response. Return null for fields you cannot read clearly.'}
-      ]}]
-    })
-  });
-  var data=await res.json();
-  var text=(data.content||[]).map(function(c){return c.text||'';}).join('');
-  return JSON.parse(text.replace(/```json|```/g,'').trim());
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': typeof ANTHROPIC_API_KEY !== 'undefined' ? ANTHROPIC_API_KEY : '',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',max_tokens:400,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mime,data:b64}},
+          {type:'text',text:'This is an Indian '+(_idType==='aadhaar'?'Aadhaar Card':'Voter ID Card')+'. Extract registration information and return ONLY valid JSON with no extra text: {"name":"","dob":"YYYY-MM-DD or null","gender":"Male or Female or Other or null","address":""}. CRITICAL: Do NOT include any Aadhaar number, Voter ID number, or any government ID number. Return null for fields you cannot read clearly.'}
+        ]}]
+      })
+    });
+    if(!res.ok)throw new Error('API error '+res.status);
+    var data=await res.json();
+    var text=(data.content||[]).map(function(c){return c.text||'';}).join('');
+    var clean=text.replace(/```json|```/g,'').trim();
+    if(!clean||clean==='{}'||clean==='null')return null;
+    return JSON.parse(clean);
+  }catch(e){
+    console.warn('OCR failed:',e.message);
+    return null;
+  }
 }
 function dataURLtoBlob(d){
   try{var p=d.split(','),m=p[0].match(/:(.*?);/)[1],b=atob(p[1]),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:m});}catch(e){return null;}
@@ -1079,10 +1092,11 @@ function toggleBedSec(){
 }
 async function loadBedPicker(){
   toggleBedSec();
-  var r=await _supa.from('beds').select('id,bed_number,ward,status,daily_rate').eq('clinic_id',_clinicId).order('ward').order('bed_number');
-  _cachedBeds=r.data||[];
+  var r=await _supa.from('beds').select('id,bed_number,ward,status,daily_rate,is_active').eq('clinic_id',_clinicId).order('ward').order('bed_number');
+  if(r.error){console.error('Beds error:',r.error);showToast('Could not load beds: '+r.error.message);return;}
+  _cachedBeds=(r.data||[]).filter(function(b){return b.is_active!==false;});
   var el=document.getElementById('bed-pick-area');
-  if(!_cachedBeds.length){el.innerHTML='<div class="empty" style="padding:16px"><div class="empty-ic">🛏️</div><p class="empty-t">No beds configured yet</p></div>';return;}
+  if(!_cachedBeds.length){el.innerHTML='<div class="empty" style="padding:16px"><div class="empty-ic">🛏️</div><p class="empty-t">No beds available</p><p class="empty-s">The owner needs to add beds from the Owner Portal first, or beds may not be accessible yet.</p></div>';return;}
   var wards={};
   _cachedBeds.forEach(function(b){var w=b.ward||'General';if(!wards[w])wards[w]=[];wards[w].push(b);});
   var html='';
