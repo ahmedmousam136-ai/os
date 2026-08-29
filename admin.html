@@ -238,6 +238,10 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg></span>Pending Approvals
         <span class="nb-badge" id="nav-approvals-badge" style="display:none">0</span>
       </button>
+      <p class="nav-sec">Account</p>
+      <button class="nb" onclick="nav('settings',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings
+      </button>
     </nav>
     <div class="sb-foot"><div class="sb-out" onclick="doLogout()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
@@ -362,6 +366,42 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         </div>
         <input class="search-bar" id="staff-search" placeholder="Search staff by name or role…" oninput="loadAllStaff()"/>
         <div class="panel"><div id="staff-list"></div></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="v-settings" class="view">
+        <div class="sh"><div><h1 class="st">Settings</h1><p class="ss">Manage your Super Admin account</p></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <!-- Change Password -->
+          <div class="panel">
+            <div class="ph"><div class="pt">🔐 Change Password</div></div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div>
+                <label style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);display:block;margin-bottom:5px">New Password</label>
+                <input class="hdr-search" id="set-new-pass" type="password" placeholder="Enter new password (min 6 chars)" style="width:100%;min-height:44px"/>
+              </div>
+              <div>
+                <label style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);display:block;margin-bottom:5px">Confirm New Password</label>
+                <input class="hdr-search" id="set-confirm-pass" type="password" placeholder="Confirm new password" style="width:100%;min-height:44px"/>
+              </div>
+              <div id="pass-err" style="background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--r-sm);padding:9px 12px;font-size:11.5px;display:none"></div>
+              <div id="pass-ok" style="background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);border-radius:var(--r-sm);padding:9px 12px;font-size:11.5px;display:none">✅ Password changed successfully</div>
+              <button class="btn-brand" style="width:100%;justify-content:center;min-height:44px" onclick="changeAdminPassword()">Save New Password</button>
+            </div>
+          </div>
+          <!-- Account Info -->
+          <div class="panel">
+            <div class="ph"><div class="pt">👤 Account Info</div></div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+              <div class="ir"><span class="il">Email</span><span class="iv" id="set-email-display">—</span></div>
+              <div class="ir"><span class="il">Role</span><span class="iv"><span class="chip ch-brand">Super Admin</span></span></div>
+              <div class="ir"><span class="il">Platform</span><span class="iv">AuraScale OS</span></div>
+              <div style="margin-top:8px;background:var(--brand-bg);border:1px solid var(--brand-border);border-radius:var(--r-sm);padding:10px 12px;font-size:11px;color:var(--text-secondary)">
+                To reset your password via email, sign out and click "Forgot password" on the login screen.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- APPROVALS -->
@@ -515,6 +555,10 @@ function nav(id,btn){
   if(id==='patients')loadPatientAnalytics();
   if(id==='staff')loadAllStaff();
   if(id==='approvals')loadApprovals();
+  if(id==='settings'){
+    var emailEl=document.getElementById('set-email-display');
+    if(emailEl)emailEl.textContent=_saEmail||'—';
+  }
 }
 
 /* ── DASHBOARD ── */
@@ -920,6 +964,24 @@ async function rejectNH(nhId,name){
   _allHomes=_allHomes.filter(function(h){return h.id!==nhId;});
   showToast('Rejected and removed: '+name);
   loadApprovals();loadDashboard();
+}
+
+/* ── CHANGE PASSWORD ── */
+async function changeAdminPassword(){
+  var np=(document.getElementById('set-new-pass').value||'').trim();
+  var cp=(document.getElementById('set-confirm-pass').value||'').trim();
+  var err=document.getElementById('pass-err');
+  var ok=document.getElementById('pass-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!np){err.textContent='Enter a new password.';err.style.display='block';return;}
+  if(np.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  if(np!==cp){err.textContent='Passwords do not match.';err.style.display='block';return;}
+  var r=await _supa.auth.updateUser({password:np});
+  if(r.error){err.textContent='Error: '+r.error.message;err.style.display='block';return;}
+  document.getElementById('set-new-pass').value='';
+  document.getElementById('set-confirm-pass').value='';
+  ok.style.display='block';
+  showToast('Password changed successfully');
 }
 
 /* ── HELPERS ── */
