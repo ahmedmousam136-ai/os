@@ -2415,19 +2415,34 @@ async function deleteFacility(){
 }
 var _lastGeneratedInvite='';
 async function generateStaffInvite(){
-  var role=document.getElementById('staff-role').value;
-  var label=(document.getElementById('staff-label').value||'').trim();
-  var err=document.getElementById('staff-error');
-  err.style.display='none';
-  var code=role.toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
-  var expiresAt=new Date(Date.now()+7*24*60*60*1000).toISOString();
-  var r=await _supa.from('nh_invites').insert({code:code,clinic_id:_clinicId,role:role,label:label,created_by:_myUid,expires_at:expiresAt});
-  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
-  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'invite_generated',target_table:'nh_invites',details:{role:role}});
-  _lastGeneratedInvite=code;
-  document.getElementById('staff-invite-code').textContent=code;
-  document.getElementById('staff-invite-result').style.display='block';
-  document.getElementById('staff-label').value='';
+  var role  = document.getElementById('staff-role').value;
+  var label = (document.getElementById('staff-label').value||'').trim();
+  var err   = document.getElementById('staff-error');
+  err.style.display = 'none';
+
+  /* Use SECURITY DEFINER RPC — bypasses RLS permanently for all owners */
+  var r = await _supa.rpc('nh_generate_invite', {
+    p_role      : role,
+    p_label     : label,
+    p_clinic_id : _clinicId
+  });
+
+  if(r.error){
+    err.textContent = 'Error: ' + r.error.message;
+    err.style.display = 'block';
+    return;
+  }
+  if(!r.data || !r.data.ok){
+    err.textContent = (r.data && r.data.error) || 'Could not generate code. Please refresh and try again.';
+    err.style.display = 'block';
+    return;
+  }
+
+  var code = r.data.code;
+  _lastGeneratedInvite = code;
+  document.getElementById('staff-invite-code').textContent = code;
+  document.getElementById('staff-invite-result').style.display = 'block';
+  document.getElementById('staff-label').value = '';
   loadInvitesList();
 }
 function copyInviteCode(){
@@ -2439,6 +2454,78 @@ function copyInviteCode(){
 _supa.auth.onAuthStateChange(async function(event,session){
   if(session&&session.user){await _initApp();}
 });
+
+/* ══════════════════════════════════════════════
+   PASSWORD RESET — handles all Supabase formats
+   Implicit:  #access_token=xxx&type=recovery
+   PKCE:      ?code=xxx
+══════════════════════════════════════════════ */
+(function(){
+  var h = window.location.hash  || '';
+  var s = window.location.search || '';
+  var isReset = (h.includes('type=recovery') && h.includes('access_token'))
+             || (s.includes('code=') && !s.includes('error='))
+             || s.includes('type=recovery');
+  if(!isReset) return;
+
+  var _rSupa = supabase.createClient(
+    'https://qquyqejqrxfhtmidmgkb.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdXlxZWpxcnhmaHRtaWRtZ2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzA1MTIsImV4cCI6MjA5NjM0NjUxMn0.b7TgPU6ZzhC3-ahx-j0BRiRpJ9geyEMkePpV7KFyoZI'
+  );
+  window._rSupa = _rSupa;
+
+  function showResetModal(){
+    var el = document.getElementById('loading');
+    if(el) el.style.display = 'none';
+    var app = document.getElementById('app-shell');
+    if(app){ app.style.visibility = 'hidden'; app.style.pointerEvents = 'none'; }
+    var m = document.getElementById('mod-reset-password');
+    if(m) m.classList.add('open');
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', async function(){
+      showResetModal();
+      /* PKCE: exchange code for session */
+      if(s.includes('code=')){
+        var code = new URLSearchParams(s).get('code');
+        if(code){
+          var res = await _rSupa.auth.exchangeCodeForSession(code);
+          if(res.error){
+            var e = document.getElementById('reset-err');
+            if(e){ e.textContent = 'This reset link has expired. Please go back and request a new one.'; e.style.display = 'block'; }
+            var b = document.getElementById('reset-btn');
+            if(b){ b.disabled = true; b.textContent = 'Link Expired'; }
+          }
+        }
+      }
+    });
+  } else {
+    showResetModal();
+  }
+})();
+
+async function doPasswordReset(){
+  var np = (document.getElementById('reset-new-pass').value || '').trim();
+  var cp = (document.getElementById('reset-confirm-pass').value || '').trim();
+  var err = document.getElementById('reset-err');
+  var ok  = document.getElementById('reset-ok');
+  var btn = document.getElementById('reset-btn');
+  err.style.display = 'none'; ok.style.display = 'none';
+  if(!np){ err.textContent = 'Enter a new password.'; err.style.display = 'block'; return; }
+  if(np.length < 6){ err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
+  if(np !== cp){ err.textContent = 'Passwords do not match.'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  var sb = window._rSupa || (typeof _supa !== 'undefined' ? _supa : null);
+  if(!sb){ err.textContent = 'Session error — please request a new reset link.'; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Set New Password'; return; }
+  var r = await sb.auth.updateUser({ password: np });
+  if(r.error){ err.textContent = 'Error: ' + r.error.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Set New Password'; return; }
+  ok.style.display = 'block';
+  btn.textContent = '✓ Password Changed';
+  setTimeout(function(){
+    window.location.replace('nh.html');
+  }, 2000);
+}
 
 </script>
 </body>
