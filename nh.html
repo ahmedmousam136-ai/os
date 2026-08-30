@@ -266,6 +266,37 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 .patient-tab.active{background:var(--surface);color:var(--text-primary);box-shadow:var(--sh-xs)}
 .ptab-panel{display:none}.ptab-panel.active{display:block}
 .extract-box{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;color:var(--text-secondary);margin-bottom:10px}
+
+/* ── ENHANCED OWNER DASHBOARD ── */
+.mg6{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mg3b{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.mc-green{border-color:var(--green-border)!important;background:var(--green-bg)!important}
+.mc-amber{border-color:var(--amber-border)!important;background:var(--amber-bg)!important}
+.mc-red{border-color:var(--red-border)!important;background:var(--red-bg)!important}
+.mc-blue{border-color:var(--blue-border)!important;background:var(--blue-bg)!important}
+/* ACTIVITY FEED */
+.activity-row{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(228,224,216,.5)}
+.activity-row:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.act-dot-green{background:var(--green)}
+.act-dot-blue{background:var(--blue)}
+.act-dot-amber{background:var(--amber)}
+.act-dot-red{background:var(--red)}
+.act-main{font-size:12px;font-weight:600;color:var(--text-primary)}
+.act-meta{font-size:10.5px;color:var(--text-tertiary);margin-top:2px}
+/* FINANCE CATEGORY */
+.fin-cat-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid rgba(228,224,216,.5)}
+.fin-cat-row:last-child{border-bottom:none}
+.fin-cat-bar{height:4px;border-radius:2px;margin-top:4px;background:var(--green);transition:width .4s}
+.fin-cat-name{font-size:12px;font-weight:600}
+.fin-cat-sub{font-size:10px;color:var(--text-tertiary)}
+.fin-cat-amt{font-family:'Instrument Serif',serif;font-size:16px;font-weight:700;text-align:right}
+/* BED BILLING BADGE */
+.bed-billing-badge{font-size:8px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);padding:2px 5px;border-radius:3px;font-weight:700;margin-top:3px;display:inline-block}
+/* REALTIME PULSE */
+.rt-live{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);font-weight:600}
+@media(max-width:900px){.mg6{grid-template-columns:repeat(2,1fr)}.mg3b{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.mg6{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -423,6 +454,9 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         Finance
       </button>
       <p class="nav-sec">Programs</p>
+      <button class="nb owner-only" onclick="nav('audit',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Activity Audit
+      </button>
       <button class="nb" onclick="nav('ayushman',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
         Ayushman / PM-JAY
@@ -478,24 +512,42 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-dashboard" class="view on">
         <div class="sh">
           <div>
-            <h1 class="st">Good morning 🏥</h1>
-            <p class="ss">Nursing Home overview · <span id="dash-date2"></span></p>
+            <h1 class="st">Owner Dashboard 🏥</h1>
+            <p class="ss">Live facility overview · <span id="dash-date2"></span></p>
           </div>
+          <div class="rt-live"><span class="rt-dot"></span>Live</div>
         </div>
-        <div class="mg" id="dash-metrics">
-          <div class="mc"><div class="mc-top"><span class="mc-lbl">Occupied Beds</span><div class="mc-icon">🛏️</div></div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">of <span id="dm-total-beds">—</span> total beds</div></div>
-          <div class="mc"><div class="mc-top"><span class="mc-lbl">Today Admissions</span><div class="mc-icon">📋</div></div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new patients today</div></div>
-          <div class="mc"><div class="mc-top"><span class="mc-lbl">Today Discharges</span><div class="mc-icon">✅</div></div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
-          <div class="mc"><div class="mc-top"><span class="mc-lbl">Today Revenue</span><div class="mc-icon">💰</div></div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">billing today</div></div>
+        <!-- Row 1: Bed & Admission metrics -->
+        <div class="mg6">
+          <div class="mc mc-green"><div class="mc-lbl">Occupied Beds</div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">of <span id="dm-total-beds">—</span> total</div></div>
+          <div class="mc"><div class="mc-lbl">Available Beds</div><div class="mc-val" id="dm-available">—</div><div class="mc-sub">ready to admit</div></div>
+          <div class="mc"><div class="mc-lbl">Today Admissions</div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new today</div></div>
+          <div class="mc"><div class="mc-lbl">Today Discharges</div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
         </div>
-        <div class="two-col">
-          <div class="panel">
-            <div class="ph"><div class="pt">Active Patients</div><span class="pb pb-g" id="active-count">0</span></div>
-            <div id="dash-active-list"></div>
+        <!-- Row 2: Financial metrics -->
+        <div class="mg6">
+          <div class="mc mc-green"><div class="mc-lbl">Today Revenue</div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">charges today</div></div>
+          <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="dm-outstanding">—</div><div class="mc-sub">unpaid balance</div></div>
+          <div class="mc mc-blue"><div class="mc-lbl">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub">active admissions total</div></div>
+          <div class="mc"><div class="mc-lbl">Total Patients</div><div class="mc-val" id="dm-total-patients">—</div><div class="mc-sub">all time</div></div>
+        </div>
+        <!-- Row 3: Active patients + Activity feed + Bed map -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div class="panel">
+              <div class="ph"><div class="pt">Active Patients</div><span class="pb pb-g" id="active-count">0</span></div>
+              <div id="dash-active-list"></div>
+            </div>
           </div>
-          <div class="panel">
-            <div class="ph"><div class="pt">Bed Occupancy</div></div>
-            <div id="dash-bed-mini" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:6px"></div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="panel">
+              <div class="ph"><div class="pt">⚡ Recent Activity</div><button class="qbtn" onclick="nav('audit',document.querySelector('.nb[onclick*=audit]'))">View All</button></div>
+              <div id="dash-activity-feed"></div>
+            </div>
+            <div class="panel">
+              <div class="ph"><div class="pt">Bed Map</div></div>
+              <div id="dash-bed-mini" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:5px"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -629,17 +681,70 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
       <!-- FINANCE (owner only) -->
       <div id="v-finance" class="view owner-only">
-        <div class="sh"><div><h1 class="st">Finance</h1><p class="ss">Revenue, payments and outstanding dues across the facility</p></div></div>
-        <div class="mg" style="margin-bottom:16px">
-          <div class="mc"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">This Month</div><div class="mc-val" id="fin-month">₹0</div></div>
+        <div class="sh">
+          <div><h1 class="st">Finance</h1><p class="ss">Revenue, payments and outstanding dues</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="finput" id="fin-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadFinance()">
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month" selected>This Month</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
         </div>
-        <div class="panel">
-          <div class="ph"><div class="pt">Per-Patient Balance</div></div>
-          <div id="fin-list"></div>
+        <!-- Summary metrics -->
+        <div class="mg">
+          <div class="mc mc-green"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
+          <div class="mc mc-blue"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
+          <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
         </div>
+        <!-- Category breakdown -->
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><div class="pt">Revenue by Category</div></div>
+            <div id="fin-by-category"></div>
+          </div>
+          <div class="panel">
+            <div class="ph"><div class="pt">Per-Patient Balance</div></div>
+            <div id="fin-list"></div>
+          </div>
+        </div>
+        <!-- Per-day billing config (owner only) -->
+        <div class="panel owner-only">
+          <div class="ph"><div class="pt">⚙️ Billing Method</div></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div><label class="flbl">Billing Method</label>
+              <select class="finput" id="fin-billing-method">
+                <option value="24hr">24-Hour Billing (from admission time)</option>
+                <option value="calendar">Calendar Day (midnight cutoff)</option>
+                <option value="cutoff">Custom Hospital Cutoff</option>
+              </select>
+            </div>
+            <div id="fin-cutoff-wrap" style="display:none">
+              <label class="flbl">Cutoff Time</label>
+              <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
+            </div>
+            <button class="qbtn" onclick="saveBillingConfig()">Save Billing Config</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAFF AUDIT / ACTIVITY (owner only) -->
+      <div id="v-audit" class="view owner-only">
+        <div class="sh">
+          <div><h1 class="st">Activity Audit</h1><p class="ss">Every staff action with patient, bed, time and amount</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="finput" id="audit-filter-role" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadAudit()">
+              <option value="">All Roles</option>
+              <option value="owner">Owner</option>
+              <option value="receptionist">Receptionist</option>
+              <option value="doctor">Doctor</option>
+            </select>
+            <input type="date" class="finput" id="audit-filter-date" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadAudit()"/>
+          </div>
+        </div>
+        <div class="panel"><div id="audit-list"></div></div>
       </div>
 
       <!-- AYUSHMAN / PM-JAY -->
@@ -1091,6 +1196,7 @@ function nav(id,btn){
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
   if(id==='finance')loadFinance();
+  if(id==='audit')loadAudit();
   if(id==='patients')loadPatientsList();
   if(id==='beds')loadBeds();
   if(id==='admissions'){loadAdmissions();loadDischarges();}
@@ -1501,42 +1607,173 @@ async function _initApp(){
 /* ── DASHBOARD ── */
 async function loadDashboard(){
   if(!_clinicId)return;
-  var today=new Date().toISOString().slice(0,10);
-  var adm=await _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admitting_doctor,admission_diagnosis,status').eq('clinic_id',_clinicId).eq('status','Active');
-  var beds=await _supa.from('beds').select('id,bed_number,status').eq('clinic_id',_clinicId);
-  var todayAdm=await _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00').lte('admission_date',today+'T23:59:59');
-  var todayDis=await _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',today+'T00:00:00');
-  var charges=await _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',today+'T00:00:00');
-  var active=adm.data||[];
-  var allBeds=beds.data||[];
-  var occupied=allBeds.filter(function(b){return b.status==='Occupied'}).length;
-  var todayRev=(charges.data||[]).reduce(function(s,c){return s+(c.total_price||0)},0);
-  document.getElementById('dm-occupied').textContent=occupied;
-  document.getElementById('dm-total-beds').textContent=allBeds.length;
-  document.getElementById('dm-today-adm').textContent=(todayAdm.data||[]).length;
-  document.getElementById('dm-today-dis').textContent=(todayDis.data||[]).length;
-  document.getElementById('dm-revenue').textContent='₹'+todayRev.toLocaleString('en-IN');
-  document.getElementById('active-count').textContent=active.length;
-  document.getElementById('nav-occupied-count').textContent=occupied;
-  document.getElementById('sb-occupancy').textContent=occupied+'/'+allBeds.length+' beds occupied';
-  var list=document.getElementById('dash-active-list');
-  if(!active.length){list.innerHTML='<div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No active admissions</p></div>';return;}
-  list.innerHTML=active.slice(0,5).map(function(a){
-    var days=Math.floor((Date.now()-new Date(a.admission_date))/(1000*60*60*24));
-    return '<div class="adm-row"><div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div><div style="flex:1"><div class="adm-name">'+a.patient_name+'</div><div class="adm-meta">'+a.admitting_doctor+' · '+days+' day(s) · '+(a.admission_diagnosis||'')+'</div></div><span class="chip ch-act">Active</span></div>';
-  }).join('');
-  var mini=document.getElementById('dash-bed-mini');
-  var FEMALE_WARDS = ['Female','Maternity'];
-  mini.innerHTML=allBeds.map(function(b){
-    var isFemale = FEMALE_WARDS.indexOf(b.ward) >= 0;
-    var col = b.status==='Occupied' ? (isFemale?'#C0398A':'var(--green)')
-            : b.status==='Cleaning' ? 'var(--amber)'
-            : b.status==='Reserved' ? 'var(--blue)'
-            : b.status==='Critical' ? 'var(--red)'
-            : 'var(--border)';
-    return '<div title="Bed '+b.bed_number+' ('+b.ward+') — '+b.status+'" style="width:100%;aspect-ratio:1;background:'+col+';border-radius:6px;opacity:0.75;cursor:default"></div>';
+  var today = new Date().toISOString().slice(0,10);
+  var monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+
+  var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients, activity] = await Promise.all([
+    _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admitting_doctor,admission_diagnosis,status').eq('clinic_id',_clinicId).eq('status','Active'),
+    _supa.from('beds').select('id,bed_number,ward,status').eq('clinic_id',_clinicId),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00'),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',today+'T00:00:00'),
+    _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',today+'T00:00:00'),
+    _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId),
+    _supa.from('nh_payments').select('amount').eq('clinic_id',_clinicId),
+    _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId),
+    _supa.from('nh_audit_log').select('action,details,created_at,actor_id,clinic_id').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(8)
+  ]);
+
+  var active   = adm.data || [];
+  var allBeds  = beds.data || [];
+  var occupied = allBeds.filter(function(b){return b.status==='Occupied';}).length;
+  var available= allBeds.filter(function(b){return (b.status||'').toLowerCase()==='vacant';}).length;
+  var todayRev = (charges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+  var totalCharged = (allCharges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+  var totalPaid    = (payments.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+  var outstanding  = Math.max(0, totalCharged - totalPaid);
+
+  /* Update DOM */
+  var safe = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+  safe('dm-occupied', occupied);
+  safe('dm-total-beds', allBeds.length);
+  safe('dm-available', available);
+  safe('dm-today-adm', (todayAdm.data||[]).length);
+  safe('dm-today-dis', (todayDis.data||[]).length);
+  safe('dm-revenue',   '₹'+todayRev.toLocaleString('en-IN'));
+  safe('dm-outstanding','₹'+outstanding.toLocaleString('en-IN'));
+  safe('dm-current-billing','₹'+totalCharged.toLocaleString('en-IN'));
+  safe('dm-total-patients',(patients.count||0).toString());
+  safe('active-count', active.length);
+  safe('nav-occupied-count', occupied);
+  safe('sb-occupancy', occupied+'/'+allBeds.length+' beds occupied');
+
+  /* Active patients list */
+  var list = document.getElementById('dash-active-list');
+  if(list){
+    if(!active.length){
+      list.innerHTML='<div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No active admissions</p></div>';
+    } else {
+      var rows = [];
+      active.slice(0,6).forEach(function(a){
+        var days = Math.floor((Date.now()-new Date(a.admission_date))/86400000)+1;
+        var div = document.createElement('div');
+        div.className = 'adm-row';
+        div.style.cursor = 'pointer';
+        div.innerHTML = '<div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div>'
+          +'<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'')+'</div>'
+          +'<div class="adm-meta">'+esc(a.admitting_doctor||'')+(a.admission_diagnosis?' &middot; '+esc(a.admission_diagnosis):'')+' &middot; Day '+days+'</div></div>'
+          +'<span class="chip ch-act">Active</span>';
+        div.onclick = (function(id,nm){ return function(){ openProfile(id,nm); }; })(a.id, a.patient_name||'');
+        rows.push(div);
+      });
+      list.innerHTML = '';
+      rows.forEach(function(d){ list.appendChild(d); });
+    }
+  }
+
+  /* Activity feed */
+  var feedEl = document.getElementById('dash-activity-feed');
+  if(feedEl){
+    var acts = activity.data || [];
+    if(!acts.length){
+      feedEl.innerHTML='<div class="empty" style="padding:18px"><div class="empty-ic">📋</div><p class="empty-t">No recent activity</p></div>';
+    } else {
+      var ACTION_META = {
+        charge_added:   {dot:'act-dot-green', icon:'💳', label:'Charge added'},
+        voice_charges_added:{dot:'act-dot-green',icon:'🎙️',label:'Voice charges added'},
+        bed_edited:     {dot:'act-dot-amber', icon:'🛏️', label:'Bed updated'},
+        bed_added:      {dot:'act-dot-blue',  icon:'🛏️', label:'Bed added'},
+        prescription_saved:{dot:'act-dot-blue',icon:'💊',label:'Prescription saved'},
+        invite_generated:{dot:'act-dot-blue', icon:'👥', label:'Invite generated'},
+        patient_admitted:{dot:'act-dot-green',icon:'🏥',label:'Patient admitted'},
+        bill_uploaded:  {dot:'act-dot-blue',  icon:'📎', label:'Bill uploaded'},
+      };
+      feedEl.innerHTML = acts.map(function(a){
+        var m = ACTION_META[a.action] || {dot:'act-dot-amber',icon:'📋',label:a.action.replace(/_/g,' ')};
+        var d = a.details || {};
+        var detail = d.desc || d.name || d.num || d.role || '';
+        var amt = d.total ? ' · ₹'+Number(d.total).toLocaleString('en-IN') : (d.price?' · ₹'+Number(d.price).toLocaleString('en-IN'):'');
+        var t = new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+        return '<div class="activity-row">'
+          +'<div class="act-dot '+m.dot+'"></div>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div class="act-main">'+m.icon+' '+m.label+(detail?' — '+esc(detail):'')+(amt?'<b>'+amt+'</b>':'')+'</div>'
+            +'<div class="act-meta">'+t+' today</div>'
+          +'</div></div>';
+      }).join('');
+    }
+  }
+
+  /* Bed mini map */
+  var mini = document.getElementById('dash-bed-mini');
+  if(mini){
+    var FEMALE_WARDS = ['Female','Maternity'];
+    mini.innerHTML = allBeds.map(function(b){
+      var isFemale = FEMALE_WARDS.indexOf(b.ward||'') >= 0;
+      var col = b.status==='Occupied' ? (isFemale?'#C0398A':'var(--green)')
+              : b.status==='Cleaning' ? 'var(--amber)'
+              : b.status==='Reserved' ? 'var(--blue)'
+              : b.status==='Critical' ? 'var(--red)'
+              : 'var(--border)';
+      return '<div title="Bed '+(b.bed_number||'')+' ('+(b.ward||'')+') — '+b.status+'" style="width:100%;aspect-ratio:1;background:'+col+';border-radius:5px;opacity:.8;cursor:default"></div>';
+    }).join('');
+  }
+
+  /* Header date */
+  var d2 = document.getElementById('dash-date2');
+  if(d2) d2.textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AUDIT / ACTIVITY LOG (owner only)
+══════════════════════════════════════════════════════════════ */
+async function loadAudit(){
+  if(!_clinicId) return;
+  var role = (document.getElementById('audit-filter-role')||{value:''}).value;
+  var date = (document.getElementById('audit-filter-date')||{value:''}).value;
+  var el   = document.getElementById('audit-list');
+  if(!el) return;
+
+  /* Get staff map for names */
+  var staff = await _supa.from('nh_staff').select('id,full_name,role').eq('clinic_id',_clinicId);
+  var staffMap = {};
+  (staff.data||[]).forEach(function(s){ staffMap[s.id] = s; });
+
+  var query = _supa.from('nh_audit_log').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(100);
+  if(date) query = query.gte('created_at', date+'T00:00:00').lte('created_at', date+'T23:59:59');
+
+  var r = await query;
+  var rows = (r.data||[]).filter(function(a){
+    if(!role) return true;
+    var s = staffMap[a.actor_id];
+    return s && s.role === role;
+  });
+
+  if(!rows.length){ el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">📋</div><p class="empty-t">No activity found</p></div>'; return; }
+
+  var ICONS = {charge_added:'💳',voice_charges_added:'🎙️',bed_edited:'🛏️',bed_added:'➕',prescription_saved:'💊',invite_generated:'👥',bill_uploaded:'📎',bed_deleted:'🗑️'};
+  el.innerHTML = rows.map(function(a){
+    var s    = staffMap[a.actor_id] || {full_name:'Unknown',role:'unknown'};
+    var d    = a.details || {};
+    var icon = ICONS[a.action] || '📋';
+    var label= a.action.replace(/_/g,' ').replace(/\w/g,function(c){return c.toUpperCase();});
+    var detail = d.desc || d.name || d.num || d.role || d.file_name || '';
+    var amt  = d.total ? ' — ₹'+Number(d.total).toLocaleString('en-IN') : '';
+    var t    = new Date(a.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    var roleChip = '<span class="chip '+(s.role==='owner'?'ch-act':s.role==='doctor'?'ch-dis':'ch-wait')+'">'+s.role+'</span>';
+    return '<div class="activity-row">'
+      +'<div class="act-dot '+(a.action.includes('charge')||a.action.includes('pay')?'act-dot-green':'act-dot-blue')+'"></div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">'+roleChip+'<span style="font-size:12px;font-weight:700">'+esc(s.full_name||'Unknown')+'</span></div>'
+        +'<div class="act-main">'+icon+' '+label+(detail?' — '+esc(detail):'')+(amt?'<b>'+amt+'</b>':'')+'</div>'
+        +'<div class="act-meta">'+t+'</div>'
+      +'</div></div>';
   }).join('');
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ENHANCED FINANCE with category breakdown + per-day billing
+══════════════════════════════════════════════════════════════ */
+
 
 /* ── BEDS ── */
 /* ── ENHANCED BED MANAGEMENT ─────────────────────────────────────────── */
@@ -2087,39 +2324,100 @@ async function loadReceptionHome(){
 
 /* ── FINANCE (owner only) ── */
 async function loadFinance(){
-  if(!_clinicId||_myRole!=='owner')return;
-  var charges=await _supa.from('admission_charges').select('total_price,admission_id,created_at').eq('clinic_id',_clinicId);
-  var payments=await _supa.from('nh_payments').select('amount,admission_id,created_at').eq('clinic_id',_clinicId);
-  var adms=await _supa.from('admissions').select('id,patient_name,status').eq('clinic_id',_clinicId);
-  var chargeByAdm={},paidByAdm={};
-  var totalCharged=0,totalPaid=0,monthTotal=0;
-  var thisMonth=new Date().toISOString().slice(0,7);
-  (charges.data||[]).forEach(function(c){
-    totalCharged+=c.total_price||0;
-    chargeByAdm[c.admission_id]=(chargeByAdm[c.admission_id]||0)+(c.total_price||0);
-    if((c.created_at||'').slice(0,7)===thisMonth)monthTotal+=c.total_price||0;
+  if(!_clinicId) return;
+  var period = document.getElementById('fin-filter-period');
+  var p = period ? period.value : 'month';
+  var now = new Date();
+  var from = '';
+  if(p==='today') from = now.toISOString().slice(0,10)+'T00:00:00';
+  else if(p==='week'){ var d=new Date(now); d.setDate(d.getDate()-7); from=d.toISOString(); }
+  else if(p==='month') from = new Date(now.getFullYear(),now.getMonth(),1).toISOString();
+
+  var query = _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId);
+  if(from) query = query.gte('created_at', from);
+  var [charges, payments, adms] = await Promise.all([
+    query,
+    _supa.from('nh_payments').select('amount,admission_id').eq('clinic_id',_clinicId),
+    _supa.from('admissions').select('id,patient_name,status').eq('clinic_id',_clinicId).eq('status','Active')
+  ]);
+
+  var ch = charges.data || [];
+  var py = payments.data || [];
+  var totalCharged = ch.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var totalPaid    = py.reduce(function(s,p){return s+(p.amount||0);},0);
+  var due          = Math.max(0, totalCharged-totalPaid);
+
+  var safe = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+  safe('fin-charged','₹'+totalCharged.toLocaleString('en-IN'));
+  safe('fin-paid','₹'+totalPaid.toLocaleString('en-IN'));
+  safe('fin-due','₹'+due.toLocaleString('en-IN'));
+  safe('fin-month','₹'+totalCharged.toLocaleString('en-IN'));
+
+  /* Category breakdown */
+  var cats = {};
+  ch.forEach(function(c){
+    var t = c.charge_type || 'Other';
+    if(!cats[t]) cats[t] = 0;
+    cats[t] += (c.total_price||0);
   });
-  (payments.data||[]).forEach(function(p){
-    totalPaid+=p.amount||0;
-    paidByAdm[p.admission_id]=(paidByAdm[p.admission_id]||0)+(p.amount||0);
+  var catEl = document.getElementById('fin-by-category');
+  if(catEl){
+    var catEntries = Object.entries(cats).sort(function(a,b){return b[1]-a[1];});
+    var maxAmt = catEntries.length ? catEntries[0][1] : 1;
+    var CAT_ICONS = {'Bed Charge':'🛏️','Doctor Fee':'🩺','Injection':'💉','Medicine':'💊','Lab Test':'🧪','Diagnostic':'📷','Procedure':'🔬','Nursing':'👩‍⚕️','Other':'📋'};
+    if(!catEntries.length){
+      catEl.innerHTML='<div class="empty" style="padding:20px"><p class="empty-t">No charges in this period</p></div>';
+    } else {
+      catEl.innerHTML = catEntries.map(function(entry){
+        var pct = maxAmt > 0 ? Math.round(entry[1]/maxAmt*100) : 0;
+        var icon = CAT_ICONS[entry[0]] || '📋';
+        return '<div class="fin-cat-row">'
+          +'<div style="flex:1;min-width:0"><div class="fin-cat-name">'+icon+' '+esc(entry[0])+'</div>'
+          +'<div style="margin-top:5px;background:var(--border);border-radius:2px;height:4px"><div class="fin-cat-bar" style="width:'+pct+'%;background:var(--green)"></div></div>'
+          +'</div>'
+          +'<div class="fin-cat-amt">₹'+entry[1].toLocaleString('en-IN')+'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+
+  /* Per-patient balance */
+  var el = document.getElementById('fin-list');
+  if(!el) return;
+  var admList = adms.data || [];
+  if(!admList.length){ el.innerHTML='<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No active admissions</p></div>'; return; }
+  var admIds = admList.map(function(a){return a.id;});
+  var [admCh, admPy] = await Promise.all([
+    _supa.from('admission_charges').select('admission_id,total_price').in('admission_id',admIds),
+    _supa.from('nh_payments').select('admission_id,amount').in('admission_id',admIds)
+  ]);
+  var chMap={}, pyMap={};
+  (admCh.data||[]).forEach(function(c){chMap[c.admission_id]=(chMap[c.admission_id]||0)+(c.total_price||0);});
+  (admPy.data||[]).forEach(function(p){pyMap[p.admission_id]=(pyMap[p.admission_id]||0)+(p.amount||0);});
+  el.innerHTML = '';
+  admList.forEach(function(a){
+    var tot=chMap[a.id]||0, paid=pyMap[a.id]||0, due2=tot-paid;
+    var div = document.createElement('div');
+    div.className = 'adm-row';
+    div.style.cursor = 'pointer';
+    div.innerHTML = '<div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div>'
+      +'<div style="flex:1"><div class="adm-name">'+esc(a.patient_name||'')+'</div>'
+      +'<div class="adm-meta">Billed: &#8377;'+tot.toLocaleString('en-IN')+' &middot; Paid: &#8377;'+paid.toLocaleString('en-IN')+'</div></div>'
+      +'<span style="font-weight:700;color:'+(due2>0?'var(--red)':'var(--green)')+'">&#8377;'+Math.abs(due2).toLocaleString('en-IN')+(due2>0?' due':' clear')+'</span>';
+    div.onclick = (function(id,nm){ return function(){ openProfile(id,nm); }; })(a.id, a.patient_name||'');
+    el.appendChild(div);
   });
-  document.getElementById('fin-charged').textContent='₹'+totalCharged.toLocaleString('en-IN');
-  document.getElementById('fin-paid').textContent='₹'+totalPaid.toLocaleString('en-IN');
-  document.getElementById('fin-due').textContent='₹'+(totalCharged-totalPaid).toLocaleString('en-IN');
-  document.getElementById('fin-month').textContent='₹'+monthTotal.toLocaleString('en-IN');
-  var list=document.getElementById('fin-list');
-  var rows=(adms.data||[]).map(function(a){
-    var charged=chargeByAdm[a.id]||0,paid=paidByAdm[a.id]||0;
-    return {name:a.patient_name,status:a.status,charged:charged,paid:paid,due:charged-paid};
-  }).filter(function(r){return r.charged>0;});
-  list.innerHTML=rows.length?rows.map(function(r){
-    return '<div class="adm-row"><div class="adm-av">'+(r.name||'?').charAt(0)+'</div>'
-      +'<div style="flex:1"><div class="adm-name">'+r.name+'</div><div class="adm-meta">Charged ₹'+r.charged.toLocaleString('en-IN')+' · Paid ₹'+r.paid.toLocaleString('en-IN')+'</div></div>'
-      +'<span class="chip '+(r.due>0?'ch-wait':'ch-act')+'">₹'+r.due.toLocaleString('en-IN')+' due</span></div>';
-  }).join(''):'<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No billing activity yet</p></div>';
 }
 
-/* ── PERSISTENT PATIENTS ── */
+function saveBillingConfig(){
+  var method = (document.getElementById('fin-billing-method')||{}).value;
+  var cutoff = (document.getElementById('fin-cutoff-time')||{}).value;
+  localStorage.setItem('billing_method_'+_clinicId, method);
+  if(cutoff) localStorage.setItem('billing_cutoff_'+_clinicId, cutoff);
+  showToast('Billing configuration saved');
+}
+
+
 async function findOrCreatePatient(name,phone,age,gender,assignedDoctorId){
   if(phone){
     var existing=await _supa.from('nh_patients').select('id').eq('clinic_id',_clinicId).eq('phone',phone).limit(1);
