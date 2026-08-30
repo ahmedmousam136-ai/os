@@ -247,6 +247,36 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .exp-ic{width:30px;height:30px;border-radius:8px;background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
 .exp-amt{font-family:'Instrument Serif',serif;font-size:16px;font-weight:700;color:var(--text-primary)}
 .female-badge{display:inline-flex;align-items:center;gap:3px;background:#FDF0F7;border:1px solid #F0B8DC;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700;color:#9C2B6E;letter-spacing:.05em;text-transform:uppercase}
+
+/* ── SMART CHARGE UI ── */
+.charge-cats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.cat-btn{border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 6px;text-align:center;cursor:pointer;transition:all var(--ease);background:var(--bg)}
+.cat-btn:hover,.cat-btn.sel{border-color:var(--green-border);background:var(--green-bg)}
+.cat-btn.sel{box-shadow:0 0 0 2px var(--green)}
+.cat-icon{font-size:22px;margin-bottom:4px}
+.cat-label{font-size:10px;font-weight:700;color:var(--text-secondary)}
+.preset-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:200px;overflow-y:auto}
+.preset-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;background:var(--bg);transition:all var(--ease)}
+.preset-item:hover{border-color:var(--green-border);background:var(--green-bg)}
+.preset-item.sel{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 1.5px var(--green)}
+.preset-name{font-size:12.5px;font-weight:600}
+.preset-price{font-size:12px;font-weight:700;color:var(--green)}
+.qty-ctrl{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px}
+.qty-btn{width:34px;height:34px;border-radius:6px;background:var(--surface);border:1px solid var(--border);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--ease);flex-shrink:0}
+.qty-btn:hover{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.qty-val{font-family:'Instrument Serif',serif;font-size:22px;font-weight:700;flex:1;text-align:center}
+.charge-total-bar{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.charge-total-lbl{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em}
+.charge-total-amt{font-family:'Instrument Serif',serif;font-size:22px;color:var(--green)}
+/* VOICE PARSE CONFIRM */
+.voice-parsed-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--green-border);border-radius:var(--r-sm);margin-bottom:7px;background:var(--green-bg)}
+.vpi-name{font-size:12.5px;font-weight:600}
+.vpi-remove{font-size:16px;cursor:pointer;color:var(--red);padding:2px 6px;border-radius:4px}
+.vpi-remove:hover{background:var(--red-bg)}
+/* QUICK CHARGE BAR in billing */
+.quick-bar{display:flex;gap:6px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.quick-chip{border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;background:var(--surface);transition:all var(--ease);white-space:nowrap}
+.quick-chip:hover{border-color:var(--green-border);background:var(--green-bg);color:var(--green)}
 </style>
 </head>
 <body>
@@ -371,7 +401,10 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 
       <!-- BILLING -->
       <div id="v-billing" class="view">
-        <div class="sh"><div><h1 class="st">Billing</h1><p class="ss">Add charges · record payments</p></div></div>
+        <div class="sh">
+          <div><h1 class="st">Billing</h1><p class="ss">Add charges · record payments</p></div>
+          <button class="qbtn" onclick="openVoiceCharge()" style="gap:6px"><span style="font-size:16px">🎙️</span> Voice Charge</button>
+        </div>
         <div id="billing-list"></div>
       </div>
 
@@ -643,23 +676,73 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 
 <!-- ADD CHARGE -->
 <div class="mod-ov" id="mod-charge">
-  <div class="modal">
-    <div class="mh"><div class="mtitle">💳 Add Charge</div><button class="mclose" onclick="closeModal('mod-charge')">✕</button></div>
-    <div class="mb">
-      <div><label class="flbl">Charge Type</label>
-        <select class="finput" id="ch-type">
-          <option>Bed Charge</option><option>Doctor Visit</option><option>Medicine</option>
-          <option>Procedure</option><option>Lab Test</option><option>Consumable</option><option>Nursing</option><option>Other</option>
-        </select>
+  <div class="modal modal-wide">
+    <div class="mh">
+      <div>
+        <div class="mtitle">💳 Add Charge</div>
+        <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px" id="ch-patient-name">Select item → set quantity → confirm</div>
       </div>
-      <div><label class="flbl">Description *</label><input class="finput" id="ch-desc" placeholder="e.g. IV Drip, X-Ray, Dressing"/></div>
-      <div class="rx-3">
-        <div><label class="flbl">Qty</label><input class="finput" id="ch-qty" type="number" value="1" oninput="calcCharge()"/></div>
-        <div><label class="flbl">Unit Price (₹)</label><input class="finput" id="ch-price" type="number" placeholder="0" oninput="calcCharge()"/></div>
-        <div><label class="flbl">Total</label><input class="finput" id="ch-total" readonly style="background:var(--green-bg);border-color:var(--green-border);color:var(--green);font-weight:700"/></div>
+      <button class="mclose" onclick="closeModal('mod-charge')">✕</button>
+    </div>
+    <div class="mb">
+      <!-- Step 1: Category -->
+      <div>
+        <div class="flbl" style="margin-bottom:8px">Step 1 — Select Category</div>
+        <div class="charge-cats">
+          <div class="cat-btn sel" onclick="selectCat('Bed Charge',this)"><div class="cat-icon">🛏️</div><div class="cat-label">Bed</div></div>
+          <div class="cat-btn" onclick="selectCat('Doctor Fee',this)"><div class="cat-icon">🩺</div><div class="cat-label">Doctor</div></div>
+          <div class="cat-btn" onclick="selectCat('Injection',this)"><div class="cat-icon">💉</div><div class="cat-label">Injection</div></div>
+          <div class="cat-btn" onclick="selectCat('Medicine',this)"><div class="cat-icon">💊</div><div class="cat-label">Medicine</div></div>
+          <div class="cat-btn" onclick="selectCat('Lab Test',this)"><div class="cat-icon">🧪</div><div class="cat-label">Lab</div></div>
+          <div class="cat-btn" onclick="selectCat('Diagnostic',this)"><div class="cat-icon">📷</div><div class="cat-label">Diagnostic</div></div>
+          <div class="cat-btn" onclick="selectCat('Procedure',this)"><div class="cat-icon">🔬</div><div class="cat-label">Procedure</div></div>
+          <div class="cat-btn" onclick="selectCat('Nursing',this)"><div class="cat-icon">👩‍⚕️</div><div class="cat-label">Nursing</div></div>
+          <div class="cat-btn" onclick="selectCat('Other',this)"><div class="cat-icon">📋</div><div class="cat-label">Other</div></div>
+        </div>
+      </div>
+      <!-- Step 2: Preset items -->
+      <div id="ch-presets-wrap">
+        <div class="flbl" style="margin-bottom:8px">Step 2 — Select Item (or type below)</div>
+        <div class="preset-list" id="ch-preset-list"></div>
+        <div style="display:flex;gap:8px">
+          <input class="finput" id="ch-desc" placeholder="Or type custom item name…" style="margin-bottom:0;flex:1" oninput="ch_customDesc()"/>
+          <input class="finput" id="ch-price" type="number" placeholder="₹" style="margin-bottom:0;width:90px" oninput="calcCharge()"/>
+        </div>
+      </div>
+      <!-- Step 3: Quantity -->
+      <div>
+        <div class="flbl" style="margin-bottom:8px">Step 3 — Quantity</div>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <div class="qty-val" id="ch-qty-display">1</div>
+          <button class="qty-btn" onclick="changeQty(1)">+</button>
+        </div>
+        <input type="hidden" id="ch-qty" value="1"/>
+        <input type="hidden" id="ch-type" value="Bed Charge"/>
+      </div>
+      <!-- Total -->
+      <div class="charge-total-bar">
+        <div><div class="charge-total-lbl">Total</div></div>
+        <div class="charge-total-amt" id="ch-total">₹0</div>
       </div>
       <div id="ch-err" style="color:var(--red);font-size:11.5px;display:none"></div>
-      <button class="msub" onclick="addCharge()">+ Add to Bill</button>
+      <button class="msub" onclick="addCharge()">✓ Add to Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE → CHARGE CONFIRM MODAL -->
+<div class="mod-ov" id="mod-voice-charge">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">🎙️ Voice Charges — Confirm</div><button class="mclose" onclick="closeModal('mod-voice-charge')">✕</button></div>
+    <div class="mb">
+      <div class="note-box note-amber" style="font-size:11.5px;margin-bottom:10px">Speak naturally — example: <b>"One injection ceftriaxone and CBC test"</b>. Review before saving.</div>
+      <div style="display:flex;justify-content:center;margin-bottom:14px">
+        <button class="voice-btn" id="vc-mic-btn" onclick="toggleVcMic()" style="width:auto;border-radius:24px;padding:10px 20px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;height:auto">🎙️ Speak Charges</button>
+      </div>
+      <div id="voice-parsed-list"></div>
+      <div id="vc-err" style="color:var(--red);font-size:11.5px;display:none"></div>
+      <button class="msub" onclick="confirmVoiceCharges()">✓ Confirm &amp; Add All to Bill</button>
     </div>
   </div>
 </div>
@@ -1627,22 +1710,229 @@ async function loadBilling(){
   }
   el.innerHTML=html;
 }
-function openCharge(){openChargeFor(_admId);}
-function openChargeFor(id){_admId=id;['ch-desc','ch-price','ch-total'].forEach(function(x){document.getElementById(x).value='';});document.getElementById('ch-qty').value=1;document.getElementById('ch-err').style.display='none';openModal('mod-charge');}
-function calcCharge(){var q=parseFloat(document.getElementById('ch-qty').value)||1;var p=parseFloat(document.getElementById('ch-price').value)||0;document.getElementById('ch-total').value='₹'+(q*p).toLocaleString('en-IN');}
-async function addCharge(){
-  var type=document.getElementById('ch-type').value;
-  var desc=(document.getElementById('ch-desc').value||'').trim();
-  var qty=parseFloat(document.getElementById('ch-qty').value)||1;
-  var price=parseFloat(document.getElementById('ch-price').value)||0;
-  var err=document.getElementById('ch-err');err.style.display='none';
-  if(!desc){err.textContent='Description required';err.style.display='block';return;}
-  if(price<=0){err.textContent='Enter a price';err.style.display='block';return;}
-  var r=await _supa.from('admission_charges').insert({clinic_id:_clinicId,admission_id:_admId,charge_type:type,description:desc,quantity:qty,unit_price:price,total_price:qty*price,added_by:_myUid});
-  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
-  closeModal('mod-charge');showToast('Charge added');
-  if(_pid)loadBilling(_pid);else loadBilling();
+/* ══════════════════════════════════════════════════════════════
+   SMART CHARGE SYSTEM — Click → Select → Confirm → Done
+══════════════════════════════════════════════════════════════ */
+
+/* Preset charge items per category */
+var CHARGE_PRESETS = {
+  'Bed Charge':  [{n:'Daily Bed Charge',p:500},{n:'ICU Bed Charge',p:1500},{n:'Private Room',p:1000},{n:'Semi-Private',p:700}],
+  'Doctor Fee':  [{n:'Doctor Visit',p:300},{n:'Specialist Consultation',p:500},{n:'Emergency Consultation',p:800}],
+  'Injection':   [{n:'Ceftriaxone',p:150},{n:'Amoxicillin',p:80},{n:'Tramadol',p:100},{n:'Ondansetron',p:60},{n:'Ranitidine',p:40},{n:'Metronidazole',p:70}],
+  'Medicine':    [{n:'Paracetamol',p:20},{n:'Ibuprofen',p:30},{n:'Omeprazole',p:40},{n:'Pantoprazole',p:35},{n:'Amoxicillin Capsule',p:15},{n:'Metformin',p:10}],
+  'Lab Test':    [{n:'CBC (Complete Blood Count)',p:250},{n:'Blood Sugar',p:80},{n:'Urine Routine',p:100},{n:'HbA1c',p:350},{n:'Liver Function Test',p:400},{n:'Kidney Function Test',p:400},{n:'Lipid Profile',p:500}],
+  'Diagnostic':  [{n:'X-Ray',p:300},{n:'ECG',p:200},{n:'Ultrasound',p:800},{n:'CT Scan',p:3000},{n:'MRI',p:5000},{n:'2D Echo',p:1500}],
+  'Procedure':   [{n:'Dressing',p:150},{n:'IV Cannula',p:80},{n:'Catheterisation',p:200},{n:'Suturing',p:300},{n:'Nebulisation',p:100}],
+  'Nursing':     [{n:'Nursing Charges (Day)',p:300},{n:'Night Nursing',p:400},{n:'Special Nursing',p:600}],
+  'Other':       [{n:'Oxygen',p:200},{n:'Ambulance',p:500},{n:'Miscellaneous',p:100}]
+};
+
+var _chSelectedItem = null, _chQty = 1, _chCat = 'Bed Charge';
+
+function selectCat(cat, el){
+  _chCat = cat;
+  _chSelectedItem = null;
+  document.getElementById('ch-type').value = cat;
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('sel')});
+  if(el) el.classList.add('sel');
+  renderPresets(cat);
+  document.getElementById('ch-desc').value = '';
+  document.getElementById('ch-price').value = '';
+  calcCharge();
 }
+
+function renderPresets(cat){
+  var items = CHARGE_PRESETS[cat] || [];
+  var el = document.getElementById('ch-preset-list');
+  el.innerHTML = '';
+  items.forEach(function(item, i){
+    var d = document.createElement('div');
+    d.className = 'preset-item';
+    d.id = 'preset-' + i;
+    d.innerHTML = '<span class="preset-name">' + esc(item.n) + '</span><span class="preset-price">&#8377;' + item.p.toLocaleString('en-IN') + '</span>';
+    d.onclick = (function(idx, c){ return function(){ selectPreset(idx, c); }; })(i, cat);
+    el.appendChild(d);
+  });
+}
+
+function selectPreset(i, cat){
+  var item = CHARGE_PRESETS[cat][i];
+  _chSelectedItem = item;
+  document.querySelectorAll('.preset-item').forEach(function(p){p.classList.remove('sel')});
+  var el = document.getElementById('preset-'+i);
+  if(el) el.classList.add('sel');
+  document.getElementById('ch-desc').value  = item.n;
+  document.getElementById('ch-price').value = item.p;
+  calcCharge();
+}
+
+function ch_customDesc(){
+  _chSelectedItem = null;
+  document.querySelectorAll('.preset-item').forEach(function(p){p.classList.remove('sel')});
+  calcCharge();
+}
+
+function changeQty(delta){
+  _chQty = Math.max(1, _chQty + delta);
+  document.getElementById('ch-qty').value         = _chQty;
+  document.getElementById('ch-qty-display').textContent = _chQty;
+  calcCharge();
+}
+
+function calcCharge(){
+  var q = _chQty || 1;
+  var p = parseFloat(document.getElementById('ch-price').value) || 0;
+  document.getElementById('ch-total').textContent = '₹'+(q*p).toLocaleString('en-IN');
+}
+
+function openCharge(){openChargeFor(_admId);}
+function openChargeFor(id){
+  _admId = id;
+  _chQty = 1; _chCat = 'Bed Charge'; _chSelectedItem = null;
+  document.getElementById('ch-qty').value = 1;
+  document.getElementById('ch-qty-display').textContent = '1';
+  document.getElementById('ch-desc').value  = '';
+  document.getElementById('ch-price').value = '';
+  document.getElementById('ch-total').textContent = '₹0';
+  document.getElementById('ch-err').style.display = 'none';
+  document.getElementById('ch-type').value = 'Bed Charge';
+  /* Find patient name */
+  var pname = document.getElementById('bpp-name') ? document.getElementById('bpp-name').textContent : '';
+  document.getElementById('ch-patient-name').textContent = pname || 'Select item → set quantity → confirm';
+  /* Reset categories */
+  document.querySelectorAll('.cat-btn').forEach(function(b,i){b.classList.toggle('sel',i===0)});
+  renderPresets('Bed Charge');
+  openModal('mod-charge');
+}
+
+async function addCharge(){
+  var type  = document.getElementById('ch-type').value;
+  var desc  = (document.getElementById('ch-desc').value||'').trim();
+  var qty   = _chQty || 1;
+  var price = parseFloat(document.getElementById('ch-price').value)||0;
+  var err   = document.getElementById('ch-err'); err.style.display='none';
+  if(!desc){ err.textContent='Select or type an item name.'; err.style.display='block'; return; }
+  if(price<=0){ err.textContent='Enter a price.'; err.style.display='block'; return; }
+  /* Get bed_id for audit */
+  var bedId = _bppBedId || null;
+  var r = await _supa.from('admission_charges').insert({
+    clinic_id:_clinicId, admission_id:_admId,
+    charge_type:type, description:desc,
+    quantity:qty, unit_price:price, total_price:qty*price,
+    added_by:_myUid, charge_date:new Date().toISOString().slice(0,10),
+    notes: bedId ? 'Bed: '+bedId : null
+  });
+  if(r.error){ err.textContent=r.error.message; err.style.display='block'; return; }
+  /* Audit log */
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'charge_added',target_table:'admission_charges',target_id:_admId,details:{type:type,desc:desc,qty:qty,price:price,total:qty*price}});
+  closeModal('mod-charge');
+  showToast(desc+' — ₹'+(qty*price).toLocaleString('en-IN')+' added');
+  if(_pid) loadBilling(_pid); else loadBilling();
+  if(_bppAdmId === _admId) loadBpExpenses();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VOICE → STRUCTURED CHARGES
+══════════════════════════════════════════════════════════════ */
+var _voiceParsed = [];
+var _vcVoiceActive = false;
+
+function openVoiceCharge(){
+  if(!_admId){ showToast('Select a patient from billing first'); return; }
+  _voiceParsed = [];
+  document.getElementById('voice-parsed-list').innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px">Tap the mic and speak. Example:<br/><b>"One injection ceftriaxone and CBC test"</b></div>';
+  document.getElementById('vc-err').style.display = 'none';
+  openModal('mod-voice-charge');
+}
+
+/* Simple keyword parser — no API needed */
+function parseVoiceToCharges(text){
+  var t = text.toLowerCase();
+  var found = [];
+  /* Check every preset item across all categories */
+  Object.keys(CHARGE_PRESETS).forEach(function(cat){
+    CHARGE_PRESETS[cat].forEach(function(item){
+      var name = item.n.toLowerCase();
+      var keywords = name.split(/[\s\/,]+/);
+      /* Check if main keyword appears in text */
+      var match = keywords.some(function(kw){ return kw.length > 3 && t.includes(kw); });
+      if(match && !found.find(function(f){return f.n===item.n;})){
+        /* Try to parse quantity */
+        var qtyMatch = t.match(/(\d+)\s*(injection|tablet|tab|capsule|test|dose|ml|unit|vial)?/);
+        var qty = (qtyMatch && parseInt(qtyMatch[1]) <= 20) ? parseInt(qtyMatch[1]) : 1;
+        found.push({n:item.n, p:item.p, qty:qty, cat:cat});
+      }
+    });
+  });
+  /* Fallback: extract any number + word as a custom charge */
+  if(!found.length){
+    found.push({n:text.charAt(0).toUpperCase()+text.slice(1).substring(0,50), p:0, qty:1, cat:'Other'});
+  }
+  return found;
+}
+
+function renderParsedCharges(){
+  var el = document.getElementById('voice-parsed-list');
+  if(!_voiceParsed.length){ el.innerHTML='<div style="padding:12px;color:var(--text-tertiary);font-size:12px">Nothing detected yet.</div>'; return; }
+  el.innerHTML = _voiceParsed.map(function(item,i){
+    return '<div class="voice-parsed-item" id="vpi-'+i+'">'
+      +'<div><div class="vpi-name">'+esc(item.n)+'</div>'
+      +'<div style="font-size:10.5px;color:var(--text-tertiary)">'+item.cat+' · Qty: '+item.qty+(item.p?' · ₹'+item.p.toLocaleString('en-IN'):'')+'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+      +(item.p===0?'<input type="number" placeholder="₹Price" style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text-primary)" onchange="_voiceParsed['+i+'].p=parseFloat(this.value)||0"/>':'')
+      +'<span class="vpi-remove" onclick="removeVoiceParsed('+i+')">✕</span>'
+      +'</div></div>';
+  }).join('');
+}
+
+function removeVoiceParsed(i){
+  _voiceParsed.splice(i,1);
+  renderParsedCharges();
+}
+
+async function confirmVoiceCharges(){
+  var err = document.getElementById('vc-err'); err.style.display='none';
+  var unprice = _voiceParsed.filter(function(i){return !i.p;});
+  if(unprice.length){ err.textContent='Please enter a price for: '+unprice.map(function(i){return i.n;}).join(', '); err.style.display='block'; return; }
+  if(!_voiceParsed.length){ err.textContent='Nothing to save.'; err.style.display='block'; return; }
+  var inserts = _voiceParsed.map(function(item){
+    return {clinic_id:_clinicId,admission_id:_admId,charge_type:item.cat,description:item.n,quantity:item.qty,unit_price:item.p,total_price:item.qty*item.p,added_by:_myUid,charge_date:new Date().toISOString().slice(0,10)};
+  });
+  var r = await _supa.from('admission_charges').insert(inserts);
+  if(r.error){ err.textContent=r.error.message; err.style.display='block'; return; }
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'voice_charges_added',target_table:'admission_charges',target_id:_admId,details:{count:inserts.length,items:_voiceParsed.map(function(i){return i.n;})}});
+  closeModal('mod-voice-charge');
+  showToast(_voiceParsed.length+' charge(s) added to bill');
+  _voiceParsed = [];
+  if(_pid) loadBilling(_pid); else loadBilling();
+  if(_bppAdmId === _admId) loadBpExpenses();
+}
+
+/* Quick inline mic on voice-charge modal — uses existing NHSpeech */
+var _vcRec = false;
+function toggleVcMic(){
+  if(_vcRec){ stopVcMic(); return; }
+  var ok = NHSpeech.start({lang:'en-IN',
+    onResult: function(t){
+      var parsed = parseVoiceToCharges(t);
+      parsed.forEach(function(p){ if(!_voiceParsed.find(function(x){return x.n===p.n;})) _voiceParsed.push(p); });
+      renderParsedCharges();
+      stopVcMic();
+    },
+    onError: function(e){ showToast('Mic error: '+e); stopVcMic(); },
+    onEnd:   function(){ if(_vcRec) stopVcMic(); }
+  });
+  if(!ok){ showToast('Voice not supported on this browser'); return; }
+  _vcRec = true;
+  var btn = document.getElementById('vc-mic-btn');
+  if(btn){ btn.classList.add('rec'); btn.textContent='⏹️ Stop'; }
+}
+function stopVcMic(){
+  NHSpeech.stop(); _vcRec=false;
+  var btn=document.getElementById('vc-mic-btn');
+  if(btn){ btn.classList.remove('rec'); btn.textContent='🎙️ Speak Charges'; }
+}
+
 function openPayment(){openPaymentFor(_admId);}
 function openPaymentFor(id){_admId=id;['pay-amount','pay-upi','pay-txn','pay-notes'].forEach(function(x){document.getElementById(x).value='';});document.getElementById('pay-date').value=new Date().toISOString().slice(0,10);document.getElementById('pay-method').value='Cash';openModal('mod-payment');}
 async function savePayment(){
