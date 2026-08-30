@@ -7,6 +7,16 @@
 <title>AuraScale NH — Nursing Home OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script>
+/* RESET REDIRECT — must run before Supabase loads */
+(function(){
+  var h=window.location.hash||'';
+  var s=window.location.search||'';
+  if(h.includes('type=recovery')||(s.includes('code=')&&!s.includes('error='))||s.includes('type=recovery')){
+    window.location.replace('reset-password.html'+s+h);
+  }
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -1008,6 +1018,19 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
    AuraScale NH — Nursing Home Operating System
    Same Supabase project as clinic app
 ══════════════════════════════════════════════════════ */
+/* ── RESET PASSWORD REDIRECT (runs before anything else) ── */
+(function(){
+  var h = window.location.hash   || '';
+  var s = window.location.search || '';
+  var isReset = h.includes('type=recovery')
+             || (s.includes('code=') && !s.includes('error='))
+             || s.includes('type=recovery');
+  if(isReset){
+    window.location.replace('reset-password.html' + s + h);
+    return;
+  }
+})();
+
 const SUPABASE_URL='https://qquyqejqrxfhtmidmgkb.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdXlxZWpxcnhmaHRtaWRtZ2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzA1MTIsImV4cCI6MjA5NjM0NjUxMn0.b7TgPU6ZzhC3-ahx-j0BRiRpJ9geyEMkePpV7KFyoZI';
 const _supa=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
