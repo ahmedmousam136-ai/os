@@ -770,10 +770,11 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           </div>
         </div>
         <div class="bp-tabs">
-          <div class="bp-tab on" onclick="bpTab('info',this)">📋 Info</div>
-          <div class="bp-tab" onclick="bpTab('expenses',this)">💳 Expenses</div>
-          <div class="bp-tab" onclick="bpTab('documents',this)">📎 Documents</div>
-          <div class="bp-tab" onclick="bpTab('voice',this)">🎙️ Notes</div>
+          <div class="bp-tab on" onclick="bpTab('info',this)">&#128203; Info</div>
+          <div class="bp-tab" onclick="bpTab('expenses',this)">&#128179; Expenses</div>
+          <div class="bp-tab" onclick="bpTab('documents',this)">&#128206; Docs</div>
+          <div class="bp-tab" onclick="bpTab('ayushman',this)">&#129309; Ayushman</div>
+          <div class="bp-tab" onclick="bpTab('voice',this)">&#127899; Notes</div>
         </div>
       </div>
       <!-- INFO TAB -->
@@ -803,6 +804,58 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <div id="bp-doc-list"></div>
         </div>
         <!-- VOICE NOTES TAB -->
+        <div class="bp-pnl" id="bp-pnl-ayushman">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div onclick="bpShowAyushmanExisting()" style="border:1.5px solid var(--green-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--green-bg)">
+              <div style="font-size:22px;margin-bottom:5px">&#9989;</div>
+              <div style="font-weight:700;font-size:12px;margin-bottom:3px">Has Ayushman Card</div>
+              <div style="font-size:10.5px;color:var(--text-tertiary)">Enter card / beneficiary number</div>
+            </div>
+            <div onclick="bpShowAyushmanApply()" style="border:1.5px solid var(--blue-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--blue-bg)">
+              <div style="font-size:22px;margin-bottom:5px">&#128221;</div>
+              <div style="font-weight:700;font-size:12px;margin-bottom:3px">No Card &#8212; Apply</div>
+              <div style="font-size:10.5px;color:var(--text-tertiary)">Start PM-JAY application</div>
+            </div>
+          </div>
+          <div class="note-box note-amber" style="font-size:11px;margin-bottom:10px">
+            &#9888; Internal record only. Verify actual status on <b>pmjay.gov.in</b> or authorised CSC centre. AuraScale is not a government authority.
+          </div>
+          <div id="bp-ay-existing" style="display:none;border:1px solid var(--green-border);border-radius:var(--r-md);padding:14px;background:var(--green-bg)">
+            <div style="font-weight:700;font-size:12.5px;margin-bottom:10px">Link Existing Ayushman Card</div>
+            <label class="flbl">Beneficiary ID / Card Number *</label>
+            <input class="finput" id="bp-ay-bid" placeholder="Enter beneficiary number"/>
+            <label class="flbl">ABHA ID (optional)</label>
+            <input class="finput" id="bp-ay-abha" placeholder="Enter ABHA ID"/>
+            <label class="flbl">Claim Amount (&#8377;)</label>
+            <input class="finput" id="bp-ay-amt" type="number" placeholder="0"/>
+            <label class="flbl">Status</label>
+            <select class="finput" id="bp-ay-status">
+              <option value="Active">Active</option>
+              <option value="pending_verification">Pending Verification</option>
+              <option value="claim_submitted">Claim Submitted</option>
+              <option value="claim_approved">Claim Approved</option>
+              <option value="claim_rejected">Claim Rejected</option>
+            </select>
+            <button class="msub" onclick="saveBpAyushman('existing')">Save Card Details</button>
+          </div>
+          <div id="bp-ay-apply" style="display:none;border:1px solid var(--blue-border);border-radius:var(--r-md);padding:14px;background:var(--blue-bg)">
+            <div style="font-weight:700;font-size:12.5px;margin-bottom:4px">Apply for PM-JAY (Ayushman Bharat)</div>
+            <div style="font-size:10.5px;color:var(--text-tertiary);margin-bottom:10px">Records the application intent. For official application visit pmjay.gov.in or nearest Common Service Centre (CSC).</div>
+            <label class="flbl">Patient Full Name *</label>
+            <input class="finput" id="bp-ay-name"/>
+            <label class="flbl">Date of Birth</label>
+            <input class="finput" id="bp-ay-dob" type="date"/>
+            <label class="flbl">Aadhaar Last 4 Digits (for records only)</label>
+            <input class="finput" id="bp-ay-aadh" maxlength="4" placeholder="XXXX"/>
+            <label class="flbl">Ration Card / HH ID (if available)</label>
+            <input class="finput" id="bp-ay-hh"/>
+            <label class="flbl">Mobile Number</label>
+            <input class="finput" id="bp-ay-mob" type="tel"/>
+            <label class="flbl">District</label>
+            <input class="finput" id="bp-ay-dist"/>
+            <button class="msub" style="background:var(--blue);color:#fff" onclick="saveBpAyushman('apply')">Submit Application Record</button>
+          </div>
+        </div>
         <div class="bp-pnl" id="bp-pnl-voice">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
             <button class="voice-btn" id="bp-voice-btn" onclick="toggleBpVoice()">🎙️</button>
@@ -836,39 +889,62 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 <!-- ADD EXPENSE MODAL -->
 <div class="mod-ov" id="mod-expense">
   <div class="modal">
-    <div class="mh"><div class="mtitle">💳 Add Expense</div><button class="mclose" onclick="closeModal('mod-expense')">✕</button></div>
+    <div class="mh">
+      <div><div class="mtitle">&#128179; Add Expense</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button id="exp-mode-type" onclick="setExpMode('type')" style="border:1.5px solid var(--green);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;cursor:pointer;background:var(--green);color:#fff">&#9000; Type</button>
+          <button id="exp-mode-voice" onclick="setExpMode('voice')" style="border:1.5px solid var(--border);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;cursor:pointer;background:var(--surface);color:var(--text-secondary)">&#127899; Voice</button>
+        </div>
+      </div>
+      <button class="mclose" onclick="closeModal('mod-expense');stopExpVoice()">&#10005;</button>
+    </div>
     <div class="mb">
-      <div><label class="flbl">Charge Type</label>
-        <select class="finput" id="exp-type">
-          <option>Bed Charge</option><option>Doctor Visit</option><option>Medicine</option>
-          <option>Procedure</option><option>Lab Test</option><option>Consumable</option>
-          <option>Nursing</option><option>Other</option>
-        </select>
-      </div>
-      <div><label class="flbl">Description *</label><input class="finput" id="exp-desc" placeholder="e.g. IV Drip, X-Ray, Dressing"/></div>
-      <div class="rx-3">
-        <div><label class="flbl">Qty</label><input class="finput" id="exp-qty" type="number" value="1" min="1" oninput="calcExp()"/></div>
-        <div><label class="flbl">Unit Price (₹)</label><input class="finput" id="exp-price" type="number" placeholder="0" oninput="calcExp()"/></div>
-        <div><label class="flbl">Total</label><input class="finput" id="exp-total" readonly style="background:var(--green-bg);border-color:var(--green-border);color:var(--green);font-weight:700"/></div>
-      </div>
-      <div><label class="flbl">Date</label><input class="finput" id="exp-date" type="date"/></div>
-      <div><label class="flbl">Notes (optional)</label><input class="finput" id="exp-notes" placeholder="Any additional details"/></div>
-      <!-- Bill image upload inline -->
-      <div>
-        <label class="flbl">Bill Image / PDF (optional)</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="qbtn" onclick="document.getElementById('exp-bill-cam').click()">📷 Take Photo of Bill</button>
-          <button class="qbtn" onclick="document.getElementById('exp-bill-file').click()">📎 Upload Bill</button>
+      <!-- TYPE MODE -->
+      <div id="exp-type-mode">
+        <div><label class="flbl">Charge Type</label>
+          <select class="finput" id="exp-type">
+            <option>Bed Charge</option><option>Doctor Fee</option><option>Injection</option>
+            <option>Medicine</option><option>Lab Test</option><option>Diagnostic</option>
+            <option>Procedure</option><option>Nursing</option><option>Other</option>
+          </select>
         </div>
-        <input type="file" id="exp-bill-cam" accept="image/*" capture="environment" style="display:none" onchange="previewExpBill(event)"/>
-        <input type="file" id="exp-bill-file" accept="image/*,application/pdf" style="display:none" onchange="previewExpBill(event)"/>
-        <div id="exp-bill-preview" style="margin-top:8px;display:none">
-          <img id="exp-bill-img" style="max-width:100%;max-height:120px;border-radius:var(--r-sm);border:1px solid var(--border);display:none" alt=""/>
-          <div id="exp-bill-name" style="font-size:10.5px;color:var(--text-secondary);margin-top:4px"></div>
+        <div><label class="flbl">Description *</label><input class="finput" id="exp-desc" placeholder="e.g. Ceftriaxone, CBC test, X-Ray"/></div>
+        <div class="rx-3">
+          <div><label class="flbl">Qty</label><input class="finput" id="exp-qty" type="number" value="1" min="1" oninput="calcExp()"/></div>
+          <div><label class="flbl">Unit Price (&#8377;)</label><input class="finput" id="exp-price" type="number" placeholder="0" oninput="calcExp()"/></div>
+          <div><label class="flbl">Total</label><input class="finput" id="exp-total" readonly style="background:var(--green-bg);border-color:var(--green-border);color:var(--green);font-weight:700"/></div>
+        </div>
+        <div><label class="flbl">Date</label><input class="finput" id="exp-date" type="date"/></div>
+        <div><label class="flbl">Notes (optional)</label><input class="finput" id="exp-notes" placeholder="Any additional details"/></div>
+        <!-- Bill image upload -->
+        <div>
+          <label class="flbl">Bill Photo / PDF (optional)</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="qbtn" onclick="document.getElementById('exp-bill-cam').click()">&#128247; Take Photo</button>
+            <button class="qbtn" onclick="document.getElementById('exp-bill-file').click()">&#128206; Upload File</button>
+          </div>
+          <input type="file" id="exp-bill-cam" accept="image/*" capture="environment" style="display:none" onchange="previewExpBill(event)"/>
+          <input type="file" id="exp-bill-file" accept="image/*,application/pdf" style="display:none" onchange="previewExpBill(event)"/>
+          <div id="exp-bill-preview" style="margin-top:8px;display:none">
+            <img id="exp-bill-img" style="max-width:100%;max-height:110px;border-radius:var(--r-sm);border:1px solid var(--border);display:none" alt=""/>
+            <div id="exp-bill-name" style="font-size:10.5px;color:var(--text-secondary);margin-top:4px"></div>
+          </div>
         </div>
       </div>
-      <div id="exp-err" style="color:var(--red);font-size:11.5px;display:none"></div>
-      <button class="msub" onclick="saveExpense()">+ Add Expense</button>
+      <!-- VOICE MODE -->
+      <div id="exp-voice-mode" style="display:none">
+        <div style="text-align:center;padding:10px 0 14px">
+          <button id="exp-voice-btn" onclick="toggleExpVoice()" style="border:none;border-radius:50px;padding:14px 28px;font-size:14px;font-weight:700;cursor:pointer;background:var(--green-bg);color:var(--green);border:1.5px solid var(--green-border)">&#127899; Speak Charge</button>
+          <div id="exp-voice-status" style="margin-top:8px;font-size:11.5px;color:var(--text-tertiary)">Tap mic and speak one charge at a time</div>
+        </div>
+        <div style="font-size:11px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:6px;padding:8px 10px;margin-bottom:10px">
+          Example: <b style="color:var(--text-primary)">"Ceftriaxone injection, one unit, one fifty rupees"</b>
+        </div>
+        <div id="exp-voice-result" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;min-height:50px;font-size:12px;color:var(--text-secondary);margin-bottom:10px">Spoken text will appear here...</div>
+        <button class="qbtn" onclick="applyVoiceToExpense()">&#8594; Apply to form above</button>
+      </div>
+      <div id="exp-err" style="color:var(--red);font-size:11.5px;margin-top:8px;display:none"></div>
+      <button class="msub" onclick="saveExpense()" style="margin-top:10px">&#10003; Save Expense</button>
     </div>
   </div>
 </div>
@@ -1578,6 +1654,10 @@ function bpTab(tab,el){
   if(tab==='expenses') loadBpExpenses();
   if(tab==='documents') loadBpDocs();
   if(tab==='voice') loadBpVoiceNotes();
+  if(tab==='ayushman'){
+    document.getElementById('bp-ay-existing').style.display='none';
+    document.getElementById('bp-ay-apply').style.display='none';
+  }
 }
 
 async function updateBpStatus(s){
@@ -1601,7 +1681,7 @@ async function loadBpExpenses(){
   var due = total - paid;
   if(!charges.length){ el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">&#128179;</div><p class="empty-t">No expenses yet</p></div>'; return; }
   el.innerHTML = '<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total</div><div class="bill-amt">&#8377;'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">&#8377;'+due.toLocaleString('en-IN')+'</div></div></div>'
-    + '<div style="display:flex;gap:8px;margin-bottom:12px"><button class="qbtn" onclick="openCharge()">+ Add Charge</button><button class="qbtn" onclick="openPayment()">&#128176; Payment</button><button class="qbtn" onclick="openVoiceCharge()" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#127899; Voice</button></div>'
+    + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="qbtn" onclick="openExpenseModal()">+ Add Expense</button><button class="qbtn" onclick="openPayment()">&#128176; Payment</button><button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button></div>'
     + charges.map(function(c){
         return '<div class="exp-card">'
           + '<div class="exp-ic">&#128179;</div>'
@@ -1953,6 +2033,238 @@ async function printPatientBill(){
     +'<div style="margin-top:12px"><button onclick="window.print()" style="padding:10px 24px;background:#000;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">Print / Save as PDF</button></div>'
     +'</body></html>');
   w.document.close();
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   EXPENSE FUNCTIONS — All the missing ones restored
+══════════════════════════════════════════════════════════════ */
+var _expBillFile = null, _expVoiceRec = false, _expVoiceRecognition = null, _expMode = 'type';
+
+function setExpMode(mode){
+  _expMode = mode;
+  var typeBtn  = document.getElementById('exp-mode-type');
+  var voiceBtn = document.getElementById('exp-mode-voice');
+  var typeDiv  = document.getElementById('exp-type-mode');
+  var voiceDiv = document.getElementById('exp-voice-mode');
+  if(mode === 'type'){
+    typeBtn.style.background  = 'var(--green)'; typeBtn.style.color = '#fff'; typeBtn.style.borderColor = 'var(--green)';
+    voiceBtn.style.background = 'var(--surface)'; voiceBtn.style.color = 'var(--text-secondary)'; voiceBtn.style.borderColor = 'var(--border)';
+    typeDiv.style.display  = 'block';
+    voiceDiv.style.display = 'none';
+    stopExpVoice();
+  } else {
+    voiceBtn.style.background = 'var(--green)'; voiceBtn.style.color = '#fff'; voiceBtn.style.borderColor = 'var(--green)';
+    typeBtn.style.background  = 'var(--surface)'; typeBtn.style.color = 'var(--text-secondary)'; typeBtn.style.borderColor = 'var(--border)';
+    typeDiv.style.display  = 'none';
+    voiceDiv.style.display = 'block';
+  }
+}
+
+function toggleExpVoice(){
+  if(_expVoiceRec){ stopExpVoice(); } else { startExpVoice(); }
+}
+
+function startExpVoice(){
+  if(!window.SpeechRecognition && !window.webkitSpeechRecognition){
+    showToast('Voice not supported. Use Chrome.');
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _expVoiceRecognition = new SR();
+  _expVoiceRecognition.continuous = false;
+  _expVoiceRecognition.interimResults = true;
+  _expVoiceRecognition.lang = 'en-IN';
+  var statusEl = document.getElementById('exp-voice-status');
+  var resEl    = document.getElementById('exp-voice-result');
+  var btn      = document.getElementById('exp-voice-btn');
+  _expVoiceRecognition.onstart = function(){
+    _expVoiceRec = true;
+    btn.innerHTML = '&#9209; Stop'; btn.style.background = 'var(--red)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--red)';
+    if(statusEl) statusEl.textContent = '&#128308; Recording... speak the charge details';
+    if(resEl) resEl.textContent = 'Listening...';
+  };
+  _expVoiceRecognition.onresult = function(ev){
+    var text = '';
+    for(var i=0;i<ev.results.length;i++) text += ev.results[i][0].transcript;
+    if(resEl) resEl.textContent = text;
+  };
+  _expVoiceRecognition.onend = function(){
+    stopExpVoice();
+  };
+  _expVoiceRecognition.onerror = function(ev){
+    showToast('Mic error: '+ev.error);
+    stopExpVoice();
+  };
+  try{ _expVoiceRecognition.start(); } catch(e){ showToast('Mic error: '+e.message); }
+}
+
+function stopExpVoice(){
+  _expVoiceRec = false;
+  if(_expVoiceRecognition){ try{_expVoiceRecognition.stop();}catch(e){} _expVoiceRecognition=null; }
+  var btn = document.getElementById('exp-voice-btn');
+  if(btn){ btn.innerHTML = '&#127899; Speak Charge'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'var(--green-border)'; }
+  var statusEl = document.getElementById('exp-voice-status');
+  if(statusEl) statusEl.textContent = 'Tap "Apply to form" to transfer the spoken text';
+}
+
+function applyVoiceToExpense(){
+  /* Copy spoken text to description field and switch to type mode */
+  var resEl = document.getElementById('exp-voice-result');
+  var text = resEl ? resEl.textContent : '';
+  if(!text || text === 'Spoken text will appear here...'){ showToast('Speak first'); return; }
+  /* Try to parse price from text */
+  var priceMatch = text.match(/(\d[\d,]*)\s*(?:rupees?|rs\.?|&#8377;)?/i);
+  var price = priceMatch ? parseInt(priceMatch[1].replace(',','')) : 0;
+  setExpMode('type');
+  var descEl = document.getElementById('exp-desc');
+  if(descEl) descEl.value = text.charAt(0).toUpperCase() + text.slice(1,80);
+  if(price > 0){
+    var priceEl = document.getElementById('exp-price');
+    if(priceEl){ priceEl.value = price; calcExp(); }
+  }
+  showToast('Text applied — review and save');
+}
+
+function openExpenseModal(){
+  if(!_bpAdmId){ showToast('No active admission for this bed'); return; }
+  var descEl  = document.getElementById('exp-desc');
+  var qtyEl   = document.getElementById('exp-qty');
+  var priceEl = document.getElementById('exp-price');
+  var totalEl = document.getElementById('exp-total');
+  var dateEl  = document.getElementById('exp-date');
+  var notesEl = document.getElementById('exp-notes');
+  var errEl   = document.getElementById('exp-err');
+  var prevEl  = document.getElementById('exp-bill-preview');
+  var imgEl   = document.getElementById('exp-bill-img');
+  if(descEl)  descEl.value  = '';
+  if(qtyEl)   qtyEl.value   = 1;
+  if(priceEl) priceEl.value = '';
+  if(totalEl) totalEl.value = '';
+  if(dateEl)  dateEl.value  = new Date().toISOString().slice(0,10);
+  if(notesEl) notesEl.value = '';
+  if(errEl)   errEl.style.display  = 'none';
+  if(prevEl)  prevEl.style.display = 'none';
+  if(imgEl)   imgEl.style.display  = 'none';
+  _expBillFile = null;
+  setExpMode('type');
+  var resEl = document.getElementById('exp-voice-result');
+  if(resEl) resEl.textContent = 'Spoken text will appear here...';
+  openModal('mod-expense');
+}
+
+function calcExp(){
+  var q = parseFloat((document.getElementById('exp-qty')||{value:1}).value)||1;
+  var p = parseFloat((document.getElementById('exp-price')||{value:0}).value)||0;
+  var el = document.getElementById('exp-total');
+  if(el) el.value = '&#8377;'+(q*p).toLocaleString('en-IN');
+}
+
+function previewExpBill(evt){
+  var f = evt.target.files[0];
+  if(!f) return;
+  _expBillFile = f;
+  var prev = document.getElementById('exp-bill-preview');
+  if(prev) prev.style.display = 'block';
+  var nameEl = document.getElementById('exp-bill-name');
+  if(nameEl) nameEl.textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
+  var img = document.getElementById('exp-bill-img');
+  if(img && f.type.startsWith('image/')){
+    var reader = new FileReader();
+    reader.onload = function(e){ img.src=e.target.result; img.style.display='block'; };
+    reader.readAsDataURL(f);
+  } else if(img){
+    img.style.display = 'none';
+  }
+  evt.target.value = '';
+}
+
+async function saveExpense(){
+  if(!_bpAdmId){ showToast('No active admission'); return; }
+  var type  = (document.getElementById('exp-type')||{value:'Other'}).value;
+  var desc  = ((document.getElementById('exp-desc')||{value:''}).value||'').trim();
+  var qty   = parseFloat((document.getElementById('exp-qty')||{value:1}).value)||1;
+  var price = parseFloat((document.getElementById('exp-price')||{value:0}).value)||0;
+  var notes = ((document.getElementById('exp-notes')||{value:''}).value||'').trim();
+  var expDate = (document.getElementById('exp-date')||{value:''}).value;
+  var errEl = document.getElementById('exp-err');
+  if(errEl) errEl.style.display = 'none';
+  if(!desc){ if(errEl){errEl.textContent='Description is required';errEl.style.display='block';} return; }
+  if(price <= 0){ if(errEl){errEl.textContent='Enter a price';errEl.style.display='block';} return; }
+  /* Upload bill image if present */
+  var billPath = null;
+  if(_expBillFile && _bpPatientId){
+    var safeName = _expBillFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    billPath = _clinicId+'/'+_bpPatientId+'/bill_'+Date.now()+'_'+safeName;
+    var up = await _supa.storage.from('nh-documents').upload(billPath, _expBillFile, {upsert:true});
+    if(up.error){ showToast('Bill upload failed: '+up.error.message); billPath = null; }
+    else {
+      await _supa.from('nh_patient_documents').insert({
+        clinic_id:_clinicId, patient_id:_bpPatientId,
+        file_path:billPath, file_name:_expBillFile.name,
+        doc_type:_expBillFile.type, uploaded_by:_myUid,
+        document_type:'Bill / Receipt'
+      });
+    }
+  }
+  var r = await _supa.from('admission_charges').insert({
+    clinic_id:_clinicId, admission_id:_bpAdmId,
+    charge_type:type, description:desc,
+    quantity:qty, unit_price:price, total_price:qty*price,
+    notes:notes, bill_path:billPath,
+    charge_date:expDate||new Date().toISOString().slice(0,10),
+    added_by:_myUid
+  });
+  if(r.error){ if(errEl){errEl.textContent=r.error.message;errEl.style.display='block';} return; }
+  await _supa.from('nh_audit_log').insert({
+    clinic_id:_clinicId, actor_id:_myUid, action:'charge_added',
+    target_table:'admission_charges', target_id:_bpAdmId,
+    details:{type:type, desc:desc, qty:qty, price:price, total:qty*price}
+  });
+  closeModal('mod-expense');
+  stopExpVoice();
+  showToast(esc(desc)+' &#8212; &#8377;'+(qty*price).toLocaleString('en-IN')+' added');
+  loadBpExpenses();
+  if(_pid) loadBilling(_pid);
+}
+
+/* ── BED PROFILE AYUSHMAN ── */
+function bpShowAyushmanExisting(){
+  document.getElementById('bp-ay-existing').style.display = 'block';
+  document.getElementById('bp-ay-apply').style.display    = 'none';
+}
+function bpShowAyushmanApply(){
+  document.getElementById('bp-ay-apply').style.display    = 'block';
+  document.getElementById('bp-ay-existing').style.display = 'none';
+}
+async function saveBpAyushman(type){
+  if(!_bpPatientId){ showToast('No patient linked to this bed'); return; }
+  var p = {clinic_id:_clinicId, patient_id:_bpPatientId, created_by:_myUid, updated_at:new Date().toISOString()};
+  if(type==='existing'){
+    p.beneficiary_id = (document.getElementById('bp-ay-bid').value||'').trim();
+    p.abha_id        = (document.getElementById('bp-ay-abha').value||'').trim();
+    p.claim_amount   = parseFloat(document.getElementById('bp-ay-amt').value)||0;
+    p.status         = document.getElementById('bp-ay-status').value;
+    p.notes          = '';
+    if(!p.beneficiary_id){ showToast('Beneficiary ID is required'); return; }
+  } else {
+    p.beneficiary_id = ''; p.abha_id = ''; p.status = 'application_started'; p.claim_amount = 0;
+    p.notes = 'Name:'+(document.getElementById('bp-ay-name').value||'')
+      +'|DOB:'+(document.getElementById('bp-ay-dob').value||'')
+      +'|Aadh4:'+(document.getElementById('bp-ay-aadh').value||'')
+      +'|HH:'+(document.getElementById('bp-ay-hh').value||'')
+      +'|Mob:'+(document.getElementById('bp-ay-mob').value||'')
+      +'|Dist:'+(document.getElementById('bp-ay-dist').value||'');
+    if(!(document.getElementById('bp-ay-name').value||'').trim()){ showToast('Patient name is required'); return; }
+  }
+  var ex = await _supa.from('nh_ayushman_cases').select('id').eq('patient_id',_bpPatientId).limit(1);
+  var res = ex.data&&ex.data.length
+    ? await _supa.from('nh_ayushman_cases').update(p).eq('id',ex.data[0].id)
+    : await _supa.from('nh_ayushman_cases').insert(p);
+  if(res.error){ showToast('Error: '+res.error.message); return; }
+  showToast(type==='existing'?'Ayushman card linked &#10003;':'Application record saved &#10003;');
+  document.getElementById('bp-ay-existing').style.display = 'none';
+  document.getElementById('bp-ay-apply').style.display    = 'none';
 }
 
 </script>
