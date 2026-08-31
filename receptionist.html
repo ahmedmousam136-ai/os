@@ -1154,6 +1154,64 @@ function toggleBedSec(){
   var v=document.getElementById('reg-visit').value;
   document.getElementById('bed-section').style.display=v==='OPD'?'none':'';
 }
+async function loadBeds(){
+  if(!_clinicId)return;
+  var [bedsRes,admsRes]=await Promise.all([
+    _supa.from('beds').select('*').eq('clinic_id',_clinicId).order('ward').order('bed_number'),
+    _supa.from('admissions').select('id,bed_id,patient_id,patient_name,admission_date').eq('clinic_id',_clinicId).eq('status','Active')
+  ]);
+  if(bedsRes.error){console.error('loadBeds error:',bedsRes.error);showToast('Could not load beds');return;}
+  var beds=bedsRes.data||[];
+  var am={};
+  (admsRes.data||[]).forEach(function(a){am[a.bed_id]=a;});
+  var container=document.getElementById('beds-by-ward');
+  if(!container)return;
+  if(!beds.length){
+    container.innerHTML='<div class="panel"><div class="empty"><div class="empty-ic">&#128719;</div><p class="empty-t">No beds configured</p><p class="empty-s">The owner must add beds from nh.html Owner Portal first</p></div></div>';
+    return;
+  }
+  var wards={};
+  beds.forEach(function(b){var w=b.ward||'General';if(!wards[w])wards[w]=[];wards[w].push(b);});
+  container.innerHTML='';
+  Object.keys(wards).forEach(function(ward){
+    var wBeds=wards[ward];
+    var occ=wBeds.filter(function(b){return am[b.id];}).length;
+    var vac=wBeds.filter(function(b){return !am[b.id]&&(b.status||'').toLowerCase()==='vacant';}).length;
+    var cln=wBeds.filter(function(b){return(b.status||'').toLowerCase()==='cleaning';}).length;
+    var sec=document.createElement('div');
+    sec.className='ward-sec';
+    var hd=document.createElement('div');
+    hd.className='ward-hd';
+    hd.innerHTML='<span class="ward-nm">'+esc(ward)+'</span>'
+      +'<div class="ward-st"><span><b>'+occ+'</b> occupied</span><span><b>'+vac+'</b> vacant</span>'+(cln?'<span><b>'+cln+'</b> cleaning</span>':'')+'<span style="color:var(--text-tertiary)">'+wBeds.length+' total</span></div>';
+    var grid=document.createElement('div');
+    grid.className='bed-ov-grid';
+    wBeds.forEach(function(b){
+      var adm=am[b.id];
+      var s=(b.status||'vacant').toLowerCase();
+      var isOcc=!!(adm&&adm.patient_name)||s==='occupied';
+      var cls=isOcc?'occupied':s==='cleaning'?'cleaning':s==='reserved'?'reserved':s==='critical'?'critical':'';
+      var days=adm?Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1:0;
+      var card=document.createElement('div');
+      card.className='bov '+cls;
+      card.innerHTML='<div class="bov-num">'+esc(b.bed_number)+'</div>'
+        +'<div class="bov-ward">'+esc(ward)+'</div>'
+        +(adm?'<div class="bov-pt">'+esc(adm.patient_name||'')+'</div><div class="bov-day">Day '+days+'</div>':'<div class="bov-day">'+(s||'vacant')+'</div>');
+      if(adm&&adm.patient_id){
+        card.onclick=(function(bid,bnum,bward,bst,admId,patId,patName,bdays){
+          return function(){openBedProfile(bid,bnum,bward,bst,admId,patId,patName,bdays);};
+        })(b.id,b.bed_number,ward,s,adm.id,adm.patient_id,adm.patient_name,days);
+      } else if(s==='cleaning'){
+        card.innerHTML+='<div style="font-size:9px;color:var(--amber);font-weight:700;margin-top:3px">&#x1F9F9; Cleaning</div>';
+      }
+      grid.appendChild(card);
+    });
+    sec.appendChild(hd);
+    sec.appendChild(grid);
+    container.appendChild(sec);
+  });
+}
+
 async function loadBedPicker(){
   toggleBedSec();
   var r=await _supa.from('beds').select('id,bed_number,ward,status,daily_rate,is_active').eq('clinic_id',_clinicId).order('ward').order('bed_number');
