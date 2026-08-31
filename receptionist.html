@@ -2157,7 +2157,7 @@ function calcExp(){
   var q = parseFloat((document.getElementById('exp-qty')||{value:1}).value)||1;
   var p = parseFloat((document.getElementById('exp-price')||{value:0}).value)||0;
   var el = document.getElementById('exp-total');
-  if(el) el.value = '&#8377;'+(q*p).toLocaleString('en-IN');
+  if(el) el.value = '₹'+(q*p).toLocaleString('en-IN');
 }
 
 function previewExpBill(evt){
