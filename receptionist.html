@@ -277,6 +277,10 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .quick-bar{display:flex;gap:6px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
 .quick-chip{border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;background:var(--surface);transition:all var(--ease);white-space:nowrap}
 .quick-chip:hover{border-color:var(--green-border);background:var(--green-bg);color:var(--green)}
+
+.pay-opt-card{border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;cursor:pointer;text-align:center;transition:all var(--ease);background:var(--surface)}
+.pay-opt-card:hover{border-color:var(--green-border);background:var(--green-bg)}
+.pay-opt-card.selected{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 2px var(--green)}
 </style>
 </head>
 <body>
@@ -785,11 +789,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         </div>
         <!-- EXPENSES TAB -->
         <div class="bp-pnl" id="bp-pnl-expenses">
-          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-            <button class="qbtn" onclick="openExpenseModal()">+ Add Expense</button>
-            <button class="qbtn" onclick="document.getElementById('bill-upload-input').click()">📷 Upload Bill</button>
-            <input type="file" id="bill-upload-input" accept="image/*,application/pdf" capture="environment" style="display:none" onchange="handleBillUpload(event)"/>
-          </div>
+
           <div id="bp-expenses-list"></div>
         </div>
         <!-- DOCUMENTS TAB -->
@@ -2267,6 +2267,138 @@ async function saveBpAyushman(type){
   document.getElementById('bp-ay-apply').style.display    = 'none';
 }
 
+
+/* ══ PAYMENT OPTIONS ══ */
+var _payMode = '';
+
+function openPayment(){
+  if(!_bpAdmId){ showToast('No active admission'); return; }
+  _payMode = '';
+  /* Reset all cards */
+  ['self','insurance','finance','ayushman'].forEach(function(m){
+    var el = document.getElementById('pay-opt-'+m);
+    if(el) el.classList.remove('selected');
+  });
+  var form = document.getElementById('pay-detail-form');
+  if(form) form.style.display = 'none';
+  var amtEl = document.getElementById('pay-amount');
+  var txnEl = document.getElementById('pay-txn');
+  var notesEl = document.getElementById('pay-notes');
+  var errEl = document.getElementById('pay-err');
+  if(amtEl) amtEl.value = '';
+  if(txnEl) txnEl.value = '';
+  if(notesEl) notesEl.value = '';
+  if(errEl) errEl.style.display = 'none';
+  openModal('mod-payment-options');
+}
+
+function selectPaymentMode(mode){
+  _payMode = mode;
+  ['self','insurance','finance','ayushman'].forEach(function(m){
+    var el = document.getElementById('pay-opt-'+m);
+    if(el) el.classList.toggle('selected', m===mode);
+  });
+  var titles = {
+    'self':      '&#128176; Self Payment — Cash / UPI / Card',
+    'insurance': '&#127759; Insurance Claim Details',
+    'finance':   '&#128200; Finance / EMI Details',
+    'ayushman':  '&#129309; Ayushman Bharat (PM-JAY)'
+  };
+  var extraFields = {
+    'self': '<label class="flbl">Payment Method</label><select class="finput" id="pay-method"><option>Cash</option><option>UPI</option><option>Card</option><option>Cheque</option><option>Net Banking</option></select>',
+    'insurance': '<label class="flbl">Insurance Company</label><input class="finput" id="pay-method" placeholder="e.g. Star Health, New India"/><label class="flbl">Policy Number</label><input class="finput" id="pay-policy" placeholder="Enter policy number"/>',
+    'finance': '<label class="flbl">Finance Company / Bank</label><input class="finput" id="pay-method" placeholder="e.g. Bajaj Finance, SBI"/><label class="flbl">Loan / EMI Reference</label><input class="finput" id="pay-policy" placeholder="Loan reference number"/>',
+    'ayushman': '<div class="note-box note-blue" style="font-size:11px;margin-bottom:10px">For Ayushman Bharat claims, verify on pmjay.gov.in. This records the claim amount internally.</div><label class="flbl">Beneficiary / Card ID</label><input class="finput" id="pay-method" placeholder="Enter beneficiary ID"/>'
+  };
+  var titleEl  = document.getElementById('pay-form-title');
+  var fieldsEl = document.getElementById('pay-mode-fields');
+  var form     = document.getElementById('pay-detail-form');
+  if(titleEl)  titleEl.innerHTML  = titles[mode] || 'Payment Details';
+  if(fieldsEl) fieldsEl.innerHTML = extraFields[mode] || '';
+  if(form)     form.style.display = 'block';
+}
+
+async function savePaymentRecord(){
+  if(!_bpAdmId){ showToast('No active admission'); return; }
+  var amt  = parseFloat((document.getElementById('pay-amount')||{value:0}).value)||0;
+  var txn  = ((document.getElementById('pay-txn')||{value:''}).value||'').trim();
+  var notes = ((document.getElementById('pay-notes')||{value:''}).value||'').trim();
+  var methodEl = document.getElementById('pay-method');
+  var method = _payMode === 'self'
+    ? (methodEl ? methodEl.value : 'Cash')
+    : (_payMode==='insurance'?'Insurance':_payMode==='finance'?'Finance':'Ayushman Bharat')
+      + (methodEl&&methodEl.value?' — '+methodEl.value:'');
+  var errEl = document.getElementById('pay-err');
+  if(errEl) errEl.style.display='none';
+  if(!_payMode){ if(errEl){errEl.textContent='Select a payment type above';errEl.style.display='block';} return; }
+  if(amt<=0){ if(errEl){errEl.textContent='Enter the amount paid';errEl.style.display='block';} return; }
+  var today = new Date().toISOString().slice(0,10);
+  var r = await _supa.from('nh_payments').insert({
+    clinic_id:_clinicId, admission_id:_bpAdmId,
+    amount:amt, method:method, txn_id:txn||null,
+    payment_date:today, notes:notes||null, recorded_by:_myUid
+  });
+  if(r.error){ if(errEl){errEl.textContent='Error: '+r.error.message;errEl.style.display='block';} return; }
+  await _supa.from('nh_audit_log').insert({
+    clinic_id:_clinicId, actor_id:_myUid, action:'payment_recorded',
+    target_table:'nh_payments', target_id:_bpAdmId,
+    details:{amount:amt, method:method}
+  });
+  closeModal('mod-payment-options');
+  showToast('&#8377;'+amt.toLocaleString('en-IN')+' payment recorded');
+  loadBpExpenses();
+  if(_pid) loadBilling(_pid);
+}
+
 </script>
+
+<!-- PAYMENT OPTIONS MODAL -->
+<div class="mod-ov" id="mod-payment-options">
+  <div class="modal">
+    <div class="mh">
+      <div class="mtitle">&#128176; Record Payment</div>
+      <button class="mclose" onclick="closeModal('mod-payment-options')">&#10005;</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:14px">Select how the patient is paying</p>
+      <!-- 4 Payment option cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div onclick="selectPaymentMode('self')" class="pay-opt-card" id="pay-opt-self">
+          <div style="font-size:24px;margin-bottom:6px">&#128176;</div>
+          <div style="font-weight:700;font-size:13px">Self Payment</div>
+          <div style="font-size:10.5px;color:var(--text-tertiary)">Cash / UPI / Card</div>
+        </div>
+        <div onclick="selectPaymentMode('insurance')" class="pay-opt-card" id="pay-opt-insurance">
+          <div style="font-size:24px;margin-bottom:6px">&#127759;</div>
+          <div style="font-weight:700;font-size:13px">Insurance</div>
+          <div style="font-size:10.5px;color:var(--text-tertiary)">Health insurance claim</div>
+        </div>
+        <div onclick="selectPaymentMode('finance')" class="pay-opt-card" id="pay-opt-finance">
+          <div style="font-size:24px;margin-bottom:6px">&#128200;</div>
+          <div style="font-weight:700;font-size:13px">Finance / EMI</div>
+          <div style="font-size:10.5px;color:var(--text-tertiary)">Loan or instalment</div>
+        </div>
+        <div onclick="selectPaymentMode('ayushman')" class="pay-opt-card" id="pay-opt-ayushman">
+          <div style="font-size:24px;margin-bottom:6px">&#129309;</div>
+          <div style="font-weight:700;font-size:13px">Ayushman Bharat</div>
+          <div style="font-size:10.5px;color:var(--text-tertiary)">PM-JAY government scheme</div>
+        </div>
+      </div>
+      <!-- Payment details form (shown after selecting mode) -->
+      <div id="pay-detail-form" style="display:none;border:1px solid var(--border);border-radius:var(--r-md);padding:14px;background:var(--bg)">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:10px" id="pay-form-title">Payment Details</div>
+        <div id="pay-mode-fields"></div>
+        <label class="flbl">Amount (&#8377;) *</label>
+        <input class="finput" id="pay-amount" type="number" placeholder="Enter amount paid"/>
+        <label class="flbl">Reference / Transaction ID</label>
+        <input class="finput" id="pay-txn" placeholder="UPI ref, cheque no, policy no..."/>
+        <label class="flbl">Notes</label>
+        <input class="finput" id="pay-notes" placeholder="Any additional details"/>
+        <div id="pay-err" style="color:var(--red);font-size:11.5px;display:none"></div>
+        <button class="msub" onclick="savePaymentRecord()" style="margin-top:8px">&#10003; Save Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
