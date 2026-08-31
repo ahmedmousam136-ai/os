@@ -1828,7 +1828,10 @@ async function loadBeds(){
       var cls     = isOcc ? 'occupied' : b.status==='Cleaning' ? 'cleaning' : b.status==='Reserved' ? 'occupied' : b.status==='Critical' ? 'critical' : '';
       var inact   = b.is_active===false ? ' bed-card-inactive' : '';
       var rate    = b.daily_rate ? '₹'+Number(b.daily_rate).toLocaleString('en-IN')+'/d' : '';
-      var _oc='openEditBed('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(ward)+','+(b.daily_rate||0)+','+JSON.stringify(b.status)+','+(b.is_active!==false)+')'; return '<div class="bed-card '+cls+inact+'" onclick="'+_oc.replace(/"/g,"&quot;")+'">' 
+      var _oc = isOcc && adm && adm.patient_id
+        ? 'openPatientFromBed('+JSON.stringify(adm.patient_id)+','+JSON.stringify(adm.patient_name||'')+','+JSON.stringify(b.bed_number||'')+','+JSON.stringify(ward||'')+')'
+        : 'openEditBed('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(ward)+','+(b.daily_rate||0)+','+JSON.stringify(b.status)+','+(b.is_active!==false)+')';
+      return '<div class="bed-card '+cls+inact+'" onclick="'+_oc+'">' 
         +'<div class="bed-edit-btn" title="Edit bed">✏</div>'
         +'<div class="bed-num">'+esc(b.bed_number)+'</div>'
         +'<div class="bed-ward">'+esc(ward)+'</div>'
@@ -2914,6 +2917,63 @@ async function doPasswordReset(){
   setTimeout(function(){
     window.location.replace('nh.html');
   }, 2000);
+}
+
+/* ── OPEN PATIENT PROFILE FROM BED (owner view) ── */
+async function openPatientFromBed(patientId, patientName, bedNum, ward){
+  if(!patientId){ showToast('No patient linked to this bed'); return; }
+  var p = await _supa.from('nh_patients').select('*').eq('id', patientId).single();
+  var adms = await _supa.from('admissions').select('*').eq('patient_id', patientId).eq('status','Active').limit(1);
+  var pd = p.data || {};
+  var adm = adms.data && adms.data.length ? adms.data[0] : null;
+  var days = adm ? Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1 : 0;
+  /* Get charges */
+  var chRes = adm ? await _supa.from('admission_charges').select('*').eq('admission_id',adm.id).order('created_at',{ascending:false}) : {data:[]};
+  var pyRes = adm ? await _supa.from('nh_payments').select('amount').eq('admission_id',adm.id) : {data:[]};
+  var charges = chRes.data || [];
+  var total = charges.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var paid = (pyRes.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+  var due = total - paid;
+
+  /* Show in the existing patient profile modal */
+  var title = document.getElementById('pp-title');
+  if(title) title.textContent = (patientName||'Patient') + ' — Bed ' + bedNum;
+
+  /* Build content */
+  var overview = document.getElementById('pp-overview');
+  if(overview){
+    overview.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px;background:var(--green-bg);border-radius:var(--r-md);border:1px solid var(--green-border)">'
+      +'<div style="font-size:28px">🛏️</div>'
+      +'<div><div style="font-weight:700;font-size:13px">Bed '+esc(bedNum)+' — '+esc(ward)+'</div>'
+      +'<div style="font-size:11px;color:var(--text-tertiary)">Day '+days+(adm?' · Admitted '+new Date(adm.admission_date).toLocaleDateString('en-GB'):'')+'</div>'
+      +(adm?'<div style="font-size:11px;color:var(--text-secondary)">Dr. '+esc(adm.admitting_doctor||'—')+(adm.admission_diagnosis?' · '+esc(adm.admission_diagnosis):'')+'</div>':'')
+      +'</div></div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px">'
+      +'<div class="ir"><span class="il">Name</span><span class="iv">'+esc(pd.full_name||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">Age / Gender</span><span class="iv">'+(pd.age||'—')+' / '+(pd.gender||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">Phone</span><span class="iv">'+(pd.phone||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">Guardian</span><span class="iv">'+(pd.guardian||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">Address</span><span class="iv">'+(pd.address||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">UHID</span><span class="iv">'+(pd.uhid||'—')+'</span></div>'
+      +'</div>'
+      +'<div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">'
+      +'<div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary)">Billing Summary</div>'
+      +'<div style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+      +'<div style="text-align:center"><div style="font-size:10px;color:var(--text-tertiary)">Billed</div><div style="font-weight:700;font-size:15px">₹'+total.toLocaleString('en-IN')+'</div></div>'
+      +'<div style="text-align:center"><div style="font-size:10px;color:var(--text-tertiary)">Paid</div><div style="font-weight:700;font-size:15px;color:var(--green)">₹'+paid.toLocaleString('en-IN')+'</div></div>'
+      +'<div style="text-align:center"><div style="font-size:10px;color:var(--text-tertiary)">Due</div><div style="font-weight:700;font-size:15px;color:'+(due>0?'var(--red)':'var(--green)')+'">₹'+due.toLocaleString('en-IN')+'</div></div>'
+      +'</div>'
+      +(charges.length?'<div style="padding:0 14px 12px">'
+        +charges.slice(0,5).map(function(c){return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(228,224,216,.4);font-size:11.5px"><span>'+esc(c.description||c.charge_type)+'</span><span style="font-weight:600">₹'+Number(c.total_price).toLocaleString('en-IN')+'</span></div>';}).join('')
+        +(charges.length>5?'<div style="font-size:10.5px;color:var(--text-tertiary);margin-top:4px">+'+( charges.length-5)+' more charges</div>':'')
+        +'</div>':'')
+      +'</div>';
+  }
+
+  switchPatientTab('overview', document.querySelector('.patient-tab[data-pt="overview"]'));
+  openModal('mod-patient-profile');
+  if(typeof loadPatientDocuments==='function' && patientId) loadPatientDocuments(patientId);
 }
 
 </script>
