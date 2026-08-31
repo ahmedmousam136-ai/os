@@ -1012,8 +1012,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
     <div class="mb">
       <div class="patient-tabs">
         <div class="patient-tab active" data-pt="overview" onclick="switchPatientTab('overview',this)">Overview</div>
-        <div class="patient-tab" data-pt="documents" onclick="switchPatientTab('documents',this)">Documents</div>
-        <div class="patient-tab" data-pt="notes" onclick="switchPatientTab('notes',this)">Notes</div>
         <div class="patient-tab hide-owner" data-pt="ayushman" onclick="switchPatientTab('ayushman',this)">Ayushman</div>
       </div>
       <div class="ptab-panel active" id="pp-overview"></div>
@@ -2536,15 +2534,7 @@ async function openPatientProfile(id,name){
     +'<div><b>Name:</b> '+(pd.full_name||'')+'</div>'
     +'<div><b>Age / Gender:</b> '+(pd.age||'—')+' / '+(pd.gender||'—')+'</div>'
     +'<div><b>Phone:</b> '+(pd.phone||'—')+'</div>'
-    +'<div style="margin-top:10px;padding:10px;background:var(--bg);border-radius:8px"><b>Patient Portal Access Code:</b><br>'
-    +'<span id="pp-access-code" style="font-family:monospace;font-size:14px">'+(pd.access_code||'Not generated yet')+'</span> '
-    +'<button class="qbtn" style="margin-left:6px" onclick="generateAccessCode(\''+id+'\')">'+(pd.access_code?'Regenerate':'Generate')+'</button>'
-    +'<p class="ss" style="margin-top:4px">Share this code with the patient so they can view their own records at patient-portal.html</p></div>'
-    +'<div style="margin-top:8px;font-weight:700">Visit History</div>'
-    +((adms.data||[]).length?(adms.data||[]).map(function(a){
-        return '<div class="note-row"><div class="note-text">'+(a.status==='Active'?'🟢 Active':'✅ Discharged')+' · '+new Date(a.admission_date).toLocaleDateString('en-GB')+(a.discharge_date?' → '+new Date(a.discharge_date).toLocaleDateString('en-GB'):'')+'</div><div class="note-text">Dr. '+(a.admitting_doctor||'—')+' · '+(a.admission_diagnosis||'No diagnosis recorded')+'</div></div>';
-      }).join(''):'<p class="ss">No visit history yet.</p>')
-    +'</div>';
+    ;
   openModal('mod-patient-profile');
   loadPatientDocuments(id);
   loadPatientNotesTab(id);
