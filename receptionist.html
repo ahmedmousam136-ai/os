@@ -1283,7 +1283,7 @@ async function openProfile(id,name){
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
     +'<button class="qbtn" onclick="openRegisterModal()">+ New Admission</button>'
-    +'<button class="msub" style="flex:1;font-size:11.5px;min-height:38px;padding:8px 12px" data-assign-pid="'+id+'" data-assign-name="'+esc(pd.full_name||'')+'">🛏️ Assign Bed &amp; Admit</button>'
+    +'<button class="msub" style="flex:1;font-size:11.5px;min-height:38px;padding:8px 12px" data-assign-pid="'+id+'" data-assign-name="'+esc(d.full_name||'')+'">&#128703;&#65039; Assign Bed &amp; Admit</button>'
     +'</div>';
   loadHistory(id);loadDocs(id);loadBilling(id);loadFinancing(id);loadAyushman(id);loadVoiceNotes(id);
 }
