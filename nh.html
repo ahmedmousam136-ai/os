@@ -253,6 +253,9 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 body[data-role="doctor"] .owner-only,body[data-role="doctor"] .reception-only{display:none!important}
 body[data-role="receptionist"] .owner-only,body[data-role="receptionist"] .doctor-only{display:none!important}
 body:not([data-role="owner"]) .owner-only{display:none!important}
+body[data-role="owner"] .reception-only{display:none!important}
+body[data-role="owner"] .doctor-only{display:none!important}
+body[data-role="owner"] .hide-owner{display:none!important}
 .mic-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:var(--r-sm);border:1.5px solid var(--red-border);background:var(--red-bg);color:var(--red);font-weight:700;font-size:13px}
 .doctor-home-only,.reception-home-only{display:none}
 body[data-role="doctor"] .doctor-home-only{display:flex}
@@ -433,11 +436,11 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         Bed Management
         <span class="nb-badge" id="nav-occupied-count">0</span>
       </button>
-      <button class="nb" onclick="nav('admissions',this)">
+      <button class="nb reception-only" onclick="nav('admissions',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
         Admissions
       </button>
-      <button class="nb" onclick="nav('rounds',this)">
+      <button class="nb reception-only" onclick="nav('rounds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
         Progress Notes
       </button>
@@ -457,7 +460,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <button class="nb owner-only" onclick="nav('audit',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Activity Audit
       </button>
-      <button class="nb" onclick="nav('ayushman',this)">
+      <button class="nb reception-only" onclick="nav('ayushman',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
         Ayushman / PM-JAY
       </button>
@@ -1011,7 +1014,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="patient-tab active" data-pt="overview" onclick="switchPatientTab('overview',this)">Overview</div>
         <div class="patient-tab" data-pt="documents" onclick="switchPatientTab('documents',this)">Documents</div>
         <div class="patient-tab" data-pt="notes" onclick="switchPatientTab('notes',this)">Notes</div>
-        <div class="patient-tab" data-pt="ayushman" onclick="switchPatientTab('ayushman',this)">Ayushman</div>
+        <div class="patient-tab hide-owner" data-pt="ayushman" onclick="switchPatientTab('ayushman',this)">Ayushman</div>
       </div>
       <div class="ptab-panel active" id="pp-overview"></div>
       <div class="ptab-panel" id="pp-documents">
@@ -2407,6 +2410,81 @@ async function loadFinance(){
     div.onclick = (function(id,nm){ return function(){ openProfile(id,nm); }; })(a.id, a.patient_name||'');
     el.appendChild(div);
   });
+}
+
+async function loadBedwiseFinance(){
+  if(!_clinicId) return;
+  var el = document.getElementById('fin-bed-list');
+  if(!el) return;
+  /* Get all beds with active or recent admissions */
+  var [beds, adms, charges, payments] = await Promise.all([
+    _supa.from('beds').select('id,bed_number,ward,status,daily_rate').eq('clinic_id',_clinicId).order('ward').order('bed_number'),
+    _supa.from('admissions').select('id,bed_id,patient_name,admission_date,discharge_date,status,daily_rate').eq('clinic_id',_clinicId).order('admission_date',{ascending:false}),
+    _supa.from('admission_charges').select('admission_id,total_price').eq('clinic_id',_clinicId),
+    _supa.from('nh_payments').select('admission_id,amount').eq('clinic_id',_clinicId)
+  ]);
+  var allBeds   = beds.data || [];
+  var allAdms   = adms.data || [];
+  var allCh     = charges.data || [];
+  var allPy     = payments.data || [];
+  
+  if(!allBeds.length){ el.innerHTML='<div class="empty" style="padding:20px"><p class="empty-t">No beds configured</p></div>'; return; }
+  
+  /* Build maps */
+  var chMap={}, pyMap={};
+  allCh.forEach(function(c){ chMap[c.admission_id]=(chMap[c.admission_id]||0)+(c.total_price||0); });
+  allPy.forEach(function(p){ pyMap[p.admission_id]=(pyMap[p.admission_id]||0)+(p.amount||0); });
+  
+  /* Per-bed stats */
+  el.innerHTML = '';
+  allBeds.forEach(function(bed){
+    var bedAdms = allAdms.filter(function(a){ return a.bed_id === bed.id; });
+    var bedTotal = 0, bedPaid = 0;
+    bedAdms.forEach(function(a){
+      bedTotal += (chMap[a.id]||0);
+      bedPaid  += (pyMap[a.id]||0);
+    });
+    var bedDue = Math.max(0, bedTotal-bedPaid);
+    var activeAdm = bedAdms.find(function(a){ return a.status==='Active'; });
+    var days = activeAdm ? Math.floor((Date.now()-new Date(activeAdm.admission_date))/86400000)+1 : 0;
+    var bedRate = (activeAdm && activeAdm.daily_rate) || bed.daily_rate || 0;
+    var expectedBedCharge = days * bedRate;
+
+    var row = document.createElement('div');
+    row.className = 'adm-row';
+    row.style.cursor = 'pointer';
+    row.style.borderBottom = '1px solid rgba(228,224,216,.5)';
+    row.innerHTML = '<div class="adm-av" style="background:var(--'+(bed.status==='Occupied'?'green':'bg')+'-bg)">'
+      + esc(bed.bed_number||'?')+'</div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div class="adm-name">Bed '+esc(bed.bed_number||'')+' — '+esc(bed.ward||'')+'</div>'
+        + '<div class="adm-meta">'+(activeAdm?esc(activeAdm.patient_name||'')+' · Day '+days+(bedRate?' · ₹'+bedRate+'/d':''): 'Vacant')+'</div>'
+        + (expectedBedCharge>0?'<div style="font-size:10px;color:var(--green)">Expected bed: ₹'+expectedBedCharge.toLocaleString('en-IN')+'</div>':'')
+      + '</div>'
+      + '<div style="text-align:right">'
+        + '<div style="font-weight:700;font-size:13px">₹'+bedTotal.toLocaleString('en-IN')+'</div>'
+        + '<div style="font-size:10px;color:'+(bedDue>0?'var(--red)':'var(--green)')+'">₹'+bedDue.toLocaleString('en-IN')+(bedDue>0?' due':' settled')+'</div>'
+      + '</div>';
+    /* Click opens per-bed detail */
+    row.onclick = (function(b, badms, bch, bpy, brate, bdays){
+      return function(){
+        openBedFinanceDetail(b, badms, bch, bpy, brate, bdays);
+      };
+    })(bed, bedAdms, chMap, pyMap, bedRate, days);
+    el.appendChild(row);
+  });
+}
+
+async function openBedFinanceDetail(bed, bedAdms, chMap, pyMap, rate, days){
+  /* Show a modal with this bed's full billing */
+  var bedTotal=0, bedPaid=0;
+  bedAdms.forEach(function(a){bedTotal+=(chMap[a.id]||0);bedPaid+=(pyMap[a.id]||0);});
+  var due = Math.max(0,bedTotal-bedPaid);
+  var activeAdm = bedAdms.find(function(a){return a.status==='Active';});
+  var msg = 'BED '+bed.bed_number+' — '+bed.ward+'\n\n'
+    + (activeAdm ? 'Patient: '+activeAdm.patient_name+'\nAdmission: '+new Date(activeAdm.admission_date).toLocaleDateString('en-GB')+'\nDays: '+days+'\nRate: ₹'+rate+'/day\nExpected bed charge: ₹'+(days*rate).toLocaleString('en-IN')+'\n\n':'')
+    + 'Total Billed: ₹'+bedTotal.toLocaleString('en-IN')+'\nTotal Paid: ₹'+bedPaid.toLocaleString('en-IN')+'\nOutstanding: ₹'+due.toLocaleString('en-IN');
+  alert(msg);
 }
 
 function saveBillingConfig(){
