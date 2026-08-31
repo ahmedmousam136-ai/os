@@ -1431,40 +1431,6 @@ async function saveAyushmanInline(type){
   if(res.error){showToast('Error: '+res.error.message);return;}
   showToast(type==='existing'?'Card linked successfully':'Application record saved');
   loadAyushman(_pid);
-}function loadAyushman(id){
-  _supa.from('nh_ayushman_cases').select('*').eq('patient_id',id).order('updated_at',{ascending:false}).limit(1).then(function(r){
-    var ex=r.data&&r.data.length?r.data[0]:null;
-    var el=document.getElementById('t-ayushman');
-    el.innerHTML='';
-    var notice=document.createElement('div');
-    notice.className='note-box note-amber';
-    notice.style.cssText='margin-bottom:12px;font-size:11px';
-    notice.textContent='Internal record only. Verify actual status on pmjay.gov.in.';
-    el.appendChild(notice);
-    if(ex){
-      var cd=document.createElement('div');
-      cd.style.marginBottom='12px';
-      cd.innerHTML='<div class="ir"><span class="il">Status</span><span class="iv">'+ex.status.replace(/_/g,' ')+'</span></div>'
-        +'<div class="ir"><span class="il">Beneficiary ID</span><span class="iv">'+(ex.beneficiary_id||'&#8212;')+'</span></div>'
-        +'<div class="ir"><span class="il">Claim Amount</span><span class="iv">&#8377;'+Number(ex.claim_amount||0).toLocaleString('en-IN')+'</span></div>';
-      el.appendChild(cd);
-    }
-    var opts=document.createElement('div');
-    opts.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px';
-    var opt1=document.createElement('div');
-    opt1.style.cssText='border:1.5px solid var(--green-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--green-bg)';
-    opt1.innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div><div style="font-weight:700;font-size:12px;margin-bottom:3px">Has Ayushman Card</div><div style="font-size:10.5px;color:var(--text-tertiary)">Enter beneficiary number to link</div>';
-    opt1.onclick=function(){showAyushmanExistingForm(ex);};
-    var opt2=document.createElement('div');
-    opt2.style.cssText='border:1.5px solid var(--blue-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--blue-bg)';
-
-    el.appendChild(opt2);
-    el.appendChild(opts);
-    var fd=document.createElement('div');
-    fd.id='ay-inline-form';
-    fd.style.marginTop='14px';
-    el.appendChild(fd);
-  });
 }
 
 /* ── CHARGE PRESETS (used by smart charge modal) ── */
@@ -1632,6 +1598,33 @@ async function generateAccessCode(patientId){
 function loadVoiceNotes(id){
   /* Voice Notes tab removed from patient profile — voice is now in billing tab */
 }
+
+
+/* ── AUTO-VACANT CHECK on page load ── */
+(async function checkAutoVacant(){
+  if(typeof _supa === 'undefined') return;
+  var prefix = 'autovacant_';
+  var keys = Object.keys(localStorage).filter(function(k){ return k.startsWith(prefix); });
+  for(var i=0;i<keys.length;i++){
+    var vacantAt = parseInt(localStorage.getItem(keys[i])||'0');
+    var bedId = keys[i].split('_').pop();
+    if(!bedId || !vacantAt) continue;
+    if(Date.now() >= vacantAt){
+      await _supa.from('beds').update({status:'Vacant'}).eq('id',bedId);
+      localStorage.removeItem(keys[i]);
+    } else {
+      var remaining = vacantAt - Date.now();
+      (function(id,k){
+        setTimeout(async function(){
+          await _supa.from('beds').update({status:'Vacant'}).eq('id',id);
+          localStorage.removeItem(k);
+        }, remaining);
+      })(bedId, keys[i]);
+    }
+  }
+})();
+
+init();
 
 </script>
 </body>
