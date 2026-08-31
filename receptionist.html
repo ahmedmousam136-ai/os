@@ -1291,14 +1291,38 @@ async function openProfile(id,name){
 }
 async function loadHistory(id){
   var r=await _supa.from('admissions').select('*').eq('patient_id',id).order('admission_date',{ascending:false});
-  document.getElementById('t-history').innerHTML=(r.data&&r.data.length)?r.data.map(function(a){
-    var days=Math.floor((Date.now()-new Date(a.admission_date))/86400000);
-    return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:12px;margin-bottom:10px;font-size:12.5px">'
-      +'<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span class="chip '+(a.status==='Active'?'ch-act':'ch-dis')+'">'+a.status+'</span><span style="font-size:10.5px;color:var(--text-tertiary)">'+new Date(a.admission_date).toLocaleDateString('en-GB')+'</span></div>'
-      +'<div><b>Doctor:</b> '+(a.admitting_doctor||'—')+'</div>'
-      +'<div><b>Diagnosis:</b> '+(a.admission_diagnosis||'Not recorded')+'</div>'
-      +(a.status==='Active'?'<div><b>Duration:</b> '+(days+1)+' day(s)</div>':'')+'</div>';
-  }).join(''):'<div class="empty"><div class="empty-ic">📋</div><p class="empty-t">No visit history</p></div>';
+  var el=document.getElementById('t-history');
+  if(!r.data||!r.data.length){el.innerHTML='<div class="empty"><div class="empty-ic">📋</div><p class="empty-t">No visit history</p></div>';return;}
+  el.innerHTML='';
+  r.data.forEach(function(a){
+    var admDate=new Date(a.admission_date);
+    var disDate=a.discharge_date?new Date(a.discharge_date):null;
+    var days=disDate?Math.floor((disDate-admDate)/86400000)+1:Math.floor((Date.now()-admDate)/86400000)+1;
+    var admStr=admDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    var admTime=admDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    var disStr=disDate?disDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'Present';
+    var disTime=disDate?disDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—';
+    var isActive=a.status==='Active';
+    var div=document.createElement('div');
+    div.style.cssText='border:1px solid '+(isActive?'var(--green-border)':'var(--border)')+';border-radius:var(--r-md);margin-bottom:10px;overflow:hidden';
+    div.innerHTML='<div style="background:'+(isActive?'var(--green-bg)':'var(--bg)')+';padding:10px 14px;display:flex;justify-content:space-between;align-items:center">'
+      +'<span class="chip '+(isActive?'ch-act':'ch-dis')+'">'+a.status+'</span>'
+      +'<span style="font-size:11px;font-weight:700;color:var(--text-tertiary)">'+days+' day(s)</span></div>'
+      +'<div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px">'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+          +'<div style="background:var(--bg);border-radius:6px;padding:8px 10px">'
+            +'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-tertiary);margin-bottom:2px">Admitted</div>'
+            +'<div style="font-weight:700;font-size:12px;color:var(--green)">'+admStr+'</div>'
+            +'<div style="font-size:10.5px;color:var(--text-tertiary)">&#128336; '+admTime+'</div></div>'
+          +'<div style="background:var(--bg);border-radius:6px;padding:8px 10px">'
+            +'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-tertiary);margin-bottom:2px">'+(isActive?'Since':'Discharged')+'</div>'
+            +'<div style="font-weight:700;font-size:12px;color:'+(isActive?'var(--text-primary)':'var(--blue)')+'">'+disStr+'</div>'
+            +'<div style="font-size:10.5px;color:var(--text-tertiary)">&#128336; '+disTime+'</div></div></div>'
+        +'<div class="ir"><span class="il">Doctor</span><span class="iv">'+(a.admitting_doctor||'&#8212;')+'</span></div>'
+        +'<div class="ir"><span class="il">Diagnosis</span><span class="iv">'+(a.admission_diagnosis||'Not recorded')+'</span></div>'
+      +'</div>';
+    el.appendChild(div);
+  });
 }
 async function loadDocs(id){
   if(typeof loadPatientDocumentsInto==='function')loadPatientDocumentsInto(id,'doc-list',true);
@@ -1346,401 +1370,120 @@ async function saveFinancing(){showToast('Financing record saved (demo)');await 
 function loadAyushman(id){
   _supa.from('nh_ayushman_cases').select('*').eq('patient_id',id).order('updated_at',{ascending:false}).limit(1).then(function(r){
     var ex=r.data&&r.data.length?r.data[0]:null;
-    document.getElementById('t-ayushman').innerHTML='<div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);padding:14px;margin-bottom:12px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">Ayushman Bharat</div><p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px">AuraScale is not a government authority. Actual authorisation must follow the official government process. Use this tab to track your application status.</p><button class="qbtn" onclick="showToast(\'Onboarding request noted — team will follow up\')">📋 Start Onboarding Request</button></div>'
-      +'<div class="note-box note-amber" style="margin-bottom:10px;font-size:11px">Internal record only. Verify actual status on pmjay.gov.in or with your authorised provider.</div>'
-      +(ex?'<div style="font-size:12.5px;display:flex;flex-direction:column;gap:4px"><div class="ir"><span class="il">Status</span><span class="iv">'+ex.status.replace(/_/g,' ')+'</span></div><div class="ir"><span class="il">Beneficiary ID</span><span class="iv">'+(ex.beneficiary_id||'—')+'</span></div><div class="ir"><span class="il">Claim Amount</span><span class="iv">₹'+Number(ex.claim_amount||0).toLocaleString('en-IN')+'</span></div></div>':'<p style="font-size:12px;color:var(--text-tertiary);margin-top:8px">No case recorded yet.</p>')
-      +'<button class="add-btn" style="margin-top:10px;background:var(--green);font-size:12px" onclick="openAyushmanModal(\''+esc(ex?ex.beneficiary_id||'':'')+'\')"> '+(ex?'Update':'+ Start Ayushman Case')+'</button>';
-  });
-}
-function openAyushmanModal(b){document.getElementById('ay-bid').value=b||'';document.getElementById('ay-abha').value='';document.getElementById('ay-notes').value='';document.getElementById('ay-amount').value='';openModal('mod-ayushman');}
-async function saveAyushman(){
-  if(!_pid){showToast('No patient selected');return;}
-  var p={clinic_id:_clinicId,patient_id:_pid,beneficiary_id:(document.getElementById('ay-bid').value||'').trim(),abha_id:(document.getElementById('ay-abha').value||'').trim(),status:document.getElementById('ay-status').value,claim_amount:parseFloat(document.getElementById('ay-amount').value)||0,notes:(document.getElementById('ay-notes').value||'').trim(),created_by:_myUid,updated_at:new Date().toISOString()};
-  var ex=await _supa.from('nh_ayushman_cases').select('id').eq('patient_id',_pid).limit(1);
-  var res=ex.data&&ex.data.length?await _supa.from('nh_ayushman_cases').update(p).eq('id',ex.data[0].id):await _supa.from('nh_ayushman_cases').insert(p);
-  if(res.error){showToast('Error: '+res.error.message);return;}
-  closeModal('mod-ayushman');showToast('Ayushman record saved');loadAyushman(_pid);
-}
-function switchTab(tab,el){
-  document.querySelectorAll('.patient-tab').forEach(function(t){t.classList.remove('active')});
-  document.querySelectorAll('.ptab').forEach(function(p){p.classList.remove('active')});
-  if(el)el.classList.add('active');
-  var panel=document.getElementById('t-'+tab);if(panel)panel.classList.add('active');
-}
-function uploadDoc(evt){
-  var f=evt.target.files[0];if(!f)return;
-  uploadPatientDocument(f,_pid,function(){loadDocs(_pid);});
-  evt.target.value='';
-}
-async function sendForReview(){
-  if(!_pid){showToast('Open a patient first');return;}
-  await _supa.from('nh_patients').update({needs_review:true}).eq('id',_pid);
-  showToast('Sent to assigned doctor for review');
-}
-
-/* ── BEDS — Ward-grouped overview + rich Bed Profile ─────────────────────── */
-var _bpBedId=null,_bpAdmId=null,_bpPatientId=null,_bpVoiceRec=false,_bpVoiceText='';
-var _expBillFile=null;
-
-async function loadBeds(){
-  var [bedsRes,admsRes]=await Promise.all([
-    _supa.from('beds').select('*').eq('clinic_id',_clinicId).order('ward').order('bed_number'),
-    _supa.from('admissions').select('id,bed_id,patient_id,patient_name,admission_date,admitting_doctor,admission_diagnosis').eq('clinic_id',_clinicId).eq('status','Active')
-  ]);
-  _cachedBeds=bedsRes.data||[];
-  var am={};(admsRes.data||[]).forEach(function(a){am[a.bed_id]=a;});
-  var container=document.getElementById('beds-by-ward');
-  if(!_cachedBeds.length){
-    container.innerHTML='<div class="panel"><div class="empty"><div class="empty-ic">🛏️</div><p class="empty-t">No beds configured</p><p class="empty-s">The owner can add beds in the Owner Portal</p></div></div>';
-    return;
-  }
-  var wards={};
-  _cachedBeds.forEach(function(b){var w=b.ward||'General';if(!wards[w])wards[w]=[];wards[w].push(b);});
-  var totalOcc=0,totalVac=0;
-  container.innerHTML=Object.keys(wards).map(function(w){
-    var beds=wards[w];
-    var occ=beds.filter(function(b){return am[b.id]||b.status==='Occupied';}).length;
-    var vac=beds.filter(function(b){return !am[b.id]&&(b.status||'').toLowerCase()==='vacant';}).length;
-    var cln=beds.filter(function(b){return(b.status||'').toLowerCase()==='cleaning';}).length;
-    totalOcc+=occ;totalVac+=vac;
-    var isFemale=w==='Female';
-    var hdrStyle=isFemale?'background:#FDF0F7;border-bottom:1px solid #F0B8DC':'';
-    return '<div class="ward-sec">'
-      +'<div class="ward-hd" style="'+hdrStyle+'">'
-        +'<div style="display:flex;align-items:center;gap:8px"><span class="ward-nm">'+esc(w)+'</span>'+(isFemale?'<span class="female-badge">♀ Female</span>':'')+'</div>'
-        +'<div class="ward-st"><span><b>'+occ+'</b> occupied</span><span><b>'+vac+'</b> vacant</span>'+(cln?'<span><b>'+cln+'</b> cleaning</span>':'')+'<span style="color:var(--text-tertiary)">'+beds.length+' total</span></div>'
-      +'</div>'
-      +'<div class="bed-ov-grid">'
-      +beds.map(function(b){
-        var adm=am[b.id];
-        var s=(b.status||'vacant').toLowerCase();
-        var isOcc=!!(adm&&adm.patient_name)||s==='occupied';
-        var cls=isOcc?'occupied':s==='cleaning'?'cleaning':s==='reserved'?'reserved':s==='critical'?'critical':'';
-        var inact=b.is_active===false?' inactive':'';
-        var days=adm?Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1:0;
-        var _oc='openBedProfile('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(esc(w))+','+JSON.stringify(s)+','+(adm?JSON.stringify(adm.id):JSON.stringify(''))+','+(adm?JSON.stringify(adm.patient_id||''):JSON.stringify(''))+','+(adm?JSON.stringify(esc(adm.patient_name||'')):JSON.stringify(''))+','+days+')';
-        return '<div class="bov '+cls+inact+'" onclick="'+_oc.replace(/"/g,"&quot;")+'">'
-          +'<div class="bov-num">'+esc(b.bed_number)+'</div>'
-          +'<div class="bov-ward">'+esc(w)+'</div>'
-          +(adm?'<div class="bov-pt">'+esc(adm.patient_name||'')+'</div><div class="bov-day">Day '+days+'</div>':'<div class="bov-day">'+(b.is_active===false?'Deactivated':cls||'vacant')+'</div>')
-          +'</div>';
-      }).join('')
-      +'</div></div>';
-  }).join('');
-  /* Summary pill */
-  var sp=document.getElementById('beds-summary-pill');
-  if(sp)sp.textContent=totalOcc+' occupied · '+totalVac+' vacant';
-  renderBedMini();
-}
-
-async function openBedProfile(bedId,num,ward,status,admId,patientId,patientName,days){
-  _bpBedId=bedId;
-  _bpAdmId=admId||null;
-  _bpPatientId=patientId||null;
-  document.getElementById('bp-title').textContent='Bed '+num+' — '+ward;
-  document.getElementById('bp-subtitle').textContent=ward+' Ward'+(status?' · '+status.charAt(0).toUpperCase()+status.slice(1):'');
-  ['bp-vacant-panel','bp-occupied-panel','bp-other-panel'].forEach(function(id){document.getElementById(id).style.display='none';});
-  var s=status.toLowerCase();
-  if(s==='vacant'||!admId){
-    document.getElementById('bp-vacant-panel').style.display='block';
-  } else if(s==='occupied'||admId){
-    document.getElementById('bp-occupied-panel').style.display='block';
-    /* Fill patient bar */
-    document.getElementById('bp-av').textContent=(patientName||'?').charAt(0).toUpperCase();
-    document.getElementById('bp-pt-name').textContent=patientName||'Patient';
-    document.getElementById('bp-days').textContent=days||'—';
-    /* Load admission details */
-    var adm=await _supa.from('admissions').select('*').eq('id',admId).single();
-    var d=adm.data||{};
-    document.getElementById('bp-pt-meta').textContent=(d.patient_age?d.patient_age+'y ':'')+(d.patient_gender||'')+(d.admitting_doctor?' · Dr. '+d.admitting_doctor:'');
-    document.getElementById('bp-adm-info').innerHTML=
-      '<div class="ir"><span class="il">Diagnosis</span><span class="iv">'+esc(d.admission_diagnosis||'—')+'</span></div>'
-      +'<div class="ir"><span class="il">Admitted</span><span class="iv">'+new Date(d.admission_date).toLocaleDateString('en-GB')+'</span></div>'
-      +'<div class="ir"><span class="il">Doctor</span><span class="iv">'+esc(d.admitting_doctor||'—')+'</span></div>'
-      +'<div class="ir"><span class="il">Ward / Bed</span><span class="iv">'+esc(ward)+' / '+esc(num)+'</span></div>'
-      +'<div class="ir"><span class="il">Duration</span><span class="iv">'+days+' day(s)</span></div>'
-      +(d.daily_rate?'<div class="ir"><span class="il">Daily Rate</span><span class="iv">₹'+Number(d.daily_rate).toLocaleString('en-IN')+'</span></div>':'');
-    /* Switch to info tab */
-    bpTab('info',document.querySelector('.bp-tab'));
-    /* Pre-load expenses and docs */
-    loadBpExpenses();
-    loadBpDocs();
-    loadBpVoiceNotes();
-  } else {
-    document.getElementById('bp-occupied-panel').style.display='none';
-    document.getElementById('bp-other-panel').style.display='block';
-    document.getElementById('bp-other-status').textContent=status;
-  }
-  openModal('mod-bed-profile');
-}
-
-function bpTab(tab,el){
-  document.querySelectorAll('.bp-tab').forEach(function(t){t.classList.remove('on')});
-  document.querySelectorAll('.bp-pnl').forEach(function(p){p.classList.remove('on')});
-  if(el)el.classList.add('on');
-  var p=document.getElementById('bp-pnl-'+tab);if(p)p.classList.add('on');
-  if(tab==='expenses')loadBpExpenses();
-  if(tab==='documents')loadBpDocs();
-  if(tab==='voice')loadBpVoiceNotes();
-}
-
-async function updateBpStatus(s){
-  if(!_bpBedId)return;
-  await _supa.from('beds').update({status:s}).eq('id',_bpBedId);
-  closeModal('mod-bed-profile');showToast('Bed status → '+s);loadBeds();
-}
-
-async function doDischargeFromProfile(){
-  if(!_bpAdmId||!_bpBedId){showToast('No active admission');return;}
-  if(!confirm('Discharge this patient? The bed will be set to Cleaning.'))return;
-  await _supa.from('admissions').update({status:'Discharged',discharge_date:new Date().toISOString()}).eq('id',_bpAdmId);
-  var bedIdForAutoVacant = _bpBedId;
-  var bedIdForAutoVacant = _bpBedId;
-  await _supa.from('beds').update({status:'cleaning'}).eq('id',_bpBedId);
-  closeModal('mod-bed-profile');
-  showToast('Patient discharged · Bed cleaning (auto-vacant in 30 min)');
-  /* Schedule auto-vacant */
-  if(bedIdForAutoVacant){
-    var vacantAt = Date.now() + 30*60*1000;
-    var key = 'autovacant_'+_clinicId+'_'+bedIdForAutoVacant;
-    localStorage.setItem(key, vacantAt.toString());
-    setTimeout(async function(){
-      await _supa.from('beds').update({status:'Vacant'}).eq('id',bedIdForAutoVacant);
-      localStorage.removeItem(key);
-      showToast('🟢 Bed auto-set to Vacant — ready for next patient');
-      loadBeds();
-    }, 30*60*1000);
-  }
-  loadHome();loadBeds();
-}
-
-/* ── EXPENSES ── */
-async function loadBpExpenses(){
-  if(!_bpAdmId){document.getElementById('bp-expenses-list').innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No active admission.</p>';return;}
-  var [ch,pay]=await Promise.all([
-    _supa.from('admission_charges').select('*').eq('admission_id',_bpAdmId).order('created_at',{ascending:false}),
-    _supa.from('nh_payments').select('amount').eq('admission_id',_bpAdmId)
-  ]);
-  var charges=ch.data||[];
-  var total=charges.reduce(function(s,c){return s+(c.total_price||0);},0);
-  var paid=(pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
-  var due=total-paid;
-  var el=document.getElementById('bp-expenses-list');
-  if(!charges.length){el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">💳</div><p class="empty-t">No expenses yet</p><p class="empty-s">Tap "+ Add Expense" to record a charge</p></div>';return;}
-  el.innerHTML='<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total</div><div class="bill-amt">₹'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">₹'+due.toLocaleString('en-IN')+'</div></div></div>'
-    +charges.map(function(c){
-      return '<div class="exp-card">'
-        +'<div class="exp-ic">💳</div>'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="font-weight:600;font-size:12px">'+esc(c.description||c.charge_type)+'</div>'
-          +'<div style="font-size:10px;color:var(--text-tertiary)">'+c.charge_type+' · '+new Date(c.created_at).toLocaleDateString('en-GB')+'</div>'
-          +(c.notes?'<div style="font-size:10.5px;color:var(--text-secondary);margin-top:3px">'+esc(c.notes)+'</div>':'')
-          +(c.bill_path?'<button class="qbtn" style="margin-top:6px" data-billpath="'+c.bill_path.replace(/"/g,"&quot;")+'">📎 View Bill</button>':'')
+    var el=document.getElementById('t-ayushman');
+    el.innerHTML='<div class="note-box note-amber" style="margin-bottom:12px;font-size:11px">Internal record only. Verify actual status on pmjay.gov.in.</div>'
+      +(ex?'<div class="ir"><span class="il">Status</span><span class="iv">'+ex.status.replace(/_/g,' ')+'</span></div><div class="ir"><span class="il">Beneficiary ID</span><span class="iv">'+(ex.beneficiary_id||'&mdash;')+'</span></div>'  :'')
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">'
+        +'<div onclick="showAyushmanExistingForm()" style="border:1.5px solid var(--green-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--green-bg)">'
+          +'<div style="font-size:22px;margin-bottom:6px">&#9989;</div>'
+          +'<div style="font-weight:700;font-size:12px;margin-bottom:3px">Has Ayushman Card</div>'
+          +'<div style="font-size:10.5px;color:var(--text-tertiary)">Enter beneficiary number</div>'
         +'</div>'
-        +'<div class="exp-amt">₹'+Number(c.total_price).toLocaleString('en-IN')+'</div>'
-        +'</div>';
-    }).join('');
-}
-
-function openExpenseModal(){
-  if(!_bpAdmId){showToast('No active admission');return;}
-  ['exp-desc','exp-notes','exp-total'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('exp-qty').value=1;
-  document.getElementById('exp-price').value='';
-  document.getElementById('exp-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('exp-err').style.display='none';
-  document.getElementById('exp-bill-preview').style.display='none';
-  document.getElementById('exp-bill-img').style.display='none';
-  _expBillFile=null;
-  openModal('mod-expense');
-}
-function calcExp(){
-  var q=parseFloat(document.getElementById('exp-qty').value)||1;
-  var p=parseFloat(document.getElementById('exp-price').value)||0;
-  document.getElementById('exp-total').value='₹'+(q*p).toLocaleString('en-IN');
-}
-function previewExpBill(evt){
-  var f=evt.target.files[0];if(!f)return;
-  _expBillFile=f;
-  var prev=document.getElementById('exp-bill-preview');prev.style.display='block';
-  document.getElementById('exp-bill-name').textContent=f.name+' ('+Math.round(f.size/1024)+' KB)';
-  var img=document.getElementById('exp-bill-img');
-  if(f.type.startsWith('image/')){
-    var r=new FileReader();r.onload=function(e){img.src=e.target.result;img.style.display='block';};r.readAsDataURL(f);
-  } else {img.style.display='none';}
-  evt.target.value='';
-}
-async function saveExpense(){
-  if(!_bpAdmId){showToast('No active admission');return;}
-  var type=document.getElementById('exp-type').value;
-  var desc=(document.getElementById('exp-desc').value||'').trim();
-  var qty=parseFloat(document.getElementById('exp-qty').value)||1;
-  var price=parseFloat(document.getElementById('exp-price').value)||0;
-  var notes=(document.getElementById('exp-notes').value||'').trim();
-  var expDate=document.getElementById('exp-date').value;
-  var err=document.getElementById('exp-err');err.style.display='none';
-  if(!desc){err.textContent='Description required';err.style.display='block';return;}
-  if(price<=0){err.textContent='Enter a price';err.style.display='block';return;}
-  /* Upload bill image if present */
-  var billPath=null;
-  if(_expBillFile&&_bpPatientId){
-    var safeName=_expBillFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    billPath=_clinicId+'/'+_bpPatientId+'/bill_'+Date.now()+'_'+safeName;
-    var up=await _supa.storage.from('nh-documents').upload(billPath,_expBillFile,{upsert:true});
-    if(up.error){showToast('Bill upload failed: '+up.error.message);billPath=null;}
-    else{
-      await _supa.from('nh_patient_documents').insert({clinic_id:_clinicId,patient_id:_bpPatientId,file_path:billPath,file_name:_expBillFile.name,doc_type:_expBillFile.type,uploaded_by:_myUid,document_type:'Bill / Receipt'});
-    }
-  }
-  var r=await _supa.from('admission_charges').insert({
-    clinic_id:_clinicId,admission_id:_bpAdmId,charge_type:type,description:desc,
-    quantity:qty,unit_price:price,total_price:qty*price,
-    notes:notes,bill_path:billPath,charge_date:expDate,added_by:_myUid
+        +'<div onclick="showAyushmanApplyForm()" style="border:1.5px solid var(--blue-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--blue-bg)">'
+          +'<div style="font-size:22px;margin-bottom:6px">&#128221;</div>'
+          +'<div style="font-weight:700;font-size:12px;margin-bottom:3px">No Card &mdash; Apply</div>'
+          +'<div style="font-size:10.5px;color:var(--text-tertiary)">Start PM-JAY application</div>'
+        +'</div>'
+      +'</div>'
+      +'<div id="ay-inline-form" style="margin-top:14px"></div>';
   });
-  if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
-  closeModal('mod-expense');
-  showToast('Expense added'+(billPath?' · bill uploaded':''));
-  loadBpExpenses();
 }
-async function handleBillUpload(evt){
-  var f=evt.target.files[0];if(!f||!_bpPatientId)return;
-  showToast('Uploading bill…');
-  var path=_clinicId+'/'+_bpPatientId+'/bill_'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-  var up=await _supa.storage.from('nh-documents').upload(path,f,{upsert:true});
-  if(up.error){showToast('Upload failed: '+up.error.message);evt.target.value='';return;}
-  await _supa.from('nh_patient_documents').insert({clinic_id:_clinicId,patient_id:_bpPatientId,file_path:path,file_name:f.name,doc_type:f.type,uploaded_by:_myUid,document_type:'Bill / Receipt'});
-  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'bill_uploaded',target_table:'nh_patient_documents',target_id:_bpPatientId,details:{file_name:f.name}});
-  showToast('Bill uploaded — appears in Expenses tab');
-  loadBpDocs();evt.target.value='';
+function showAyushmanExistingForm(){
+  var el=document.getElementById('ay-inline-form');
+  if(!el)return;
+  el.innerHTML='<div style="border:1px solid var(--green-border);border-radius:var(--r-md);padding:14px;background:var(--green-bg);margin-top:4px">'
+    +'<div style="font-weight:700;font-size:12.5px;margin-bottom:10px">Link Existing Card</div>'
+    +'<label class="flbl">Beneficiary ID *</label><input class="finput" id="ay-bid-in"/>'
+    +'<label class="flbl">ABHA ID (optional)</label><input class="finput" id="ay-abha-in"/>'
+    +'<label class="flbl">Claim Amount</label><input class="finput" id="ay-amt-in" type="number"/>'
+    +'<label class="flbl">Status</label><select class="finput" id="ay-stat-in"><option>Active</option><option>pending_verification</option><option>claim_submitted</option><option>claim_approved</option><option>claim_rejected</option></select>'
+    +'<button class="msub" style="margin-top:8px" onclick="saveAyushmanInline(\'existing\')">Save Card Details</button></div>';
 }
-async function viewBillOriginal(path){
-  var r=await _supa.storage.from('nh-documents').createSignedUrl(path,300);
-  if(r.error||!r.data){showToast('Could not open: '+(r.error?r.error.message:'unknown'));return;}
-  window.open(r.data.signedUrl,'_blank');
+function showAyushmanApplyForm(){
+  var el=document.getElementById('ay-inline-form');
+  if(!el)return;
+  el.innerHTML='<div style="border:1px solid var(--blue-border);border-radius:var(--r-md);padding:14px;background:var(--blue-bg);margin-top:4px">'
+    +'<div style="font-weight:700;font-size:12.5px;margin-bottom:4px">Apply for PM-JAY</div>'
+    +'<div class="note-box note-blue" style="margin-bottom:10px;font-size:11px">Records intent only. Official application at pmjay.gov.in or nearest CSC.</div>'
+    +'<label class="flbl">Patient Full Name *</label><input class="finput" id="ay-name-ap"/>'
+    +'<label class="flbl">Date of Birth</label><input class="finput" id="ay-dob-ap" type="date"/>'
+    +'<label class="flbl">Aadhaar Last 4 Digits</label><input class="finput" id="ay-aad-ap" maxlength="4" placeholder="XXXX"/>'
+    +'<label class="flbl">Ration Card / HH ID</label><input class="finput" id="ay-hh-ap"/>'
+    +'<label class="flbl">Mobile Number</label><input class="finput" id="ay-mob-ap" type="tel"/>'
+    +'<label class="flbl">District</label><input class="finput" id="ay-dist-ap"/>'
+    +'<button class="msub" style="margin-top:8px;background:var(--blue)" onclick="saveAyushmanInline(\'apply\')">Submit Application Record</button></div>';
 }
-
-/* ── DOCUMENTS IN BED PROFILE ── */
-async function loadBpDocs(){
-  if(!_bpPatientId){document.getElementById('bp-doc-list').innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No patient linked.</p>';return;}
-  var r=await _supa.from('nh_patient_documents').select('*').eq('patient_id',_bpPatientId).order('created_at',{ascending:false});
-  var el=document.getElementById('bp-doc-list');
-  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No documents uploaded yet.</p>';return;}
-  el.innerHTML=r.data.map(function(d){
-    var icon=d.doc_type==='application/pdf'?'📄':d.doc_type&&d.doc_type.startsWith('image/')?'🖼️':'📎';
-    return '<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:7px;background:var(--surface)">'
-      +'<div style="width:28px;height:28px;border-radius:7px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+icon+'</div>'
-      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(d.file_name||d.document_type||'Document')+'</div>'
-      +'<div style="font-size:10px;color:var(--text-tertiary)">'+new Date(d.created_at).toLocaleDateString('en-GB')+(d.document_type?' · '+d.document_type:'')+'</div></div>'
-      +'<button class="qbtn" data-billpath="'+d.file_path.replace(/"/g,"&quot;")+'">View</button>'
-      +'</div>';
-  }).join('');
-}
-function handleBpDocUpload(evt){
-  var f=evt.target.files[0];if(!f||!_bpPatientId)return;
-  uploadPatientDocument(f,_bpPatientId,function(){loadBpDocs();});
-  evt.target.value='';
-}
-
-/* ── VOICE NOTES IN BED PROFILE ── */
-function toggleBpVoice(){_bpVoiceRec?stopBpVoice():startBpVoice();}
-function startBpVoice(){
-  var ok=NHSpeech.start({lang:'en-IN',onResult:function(t){_bpVoiceText=t;document.getElementById('bp-voice-box').textContent=t;},onError:function(e){showToast('Mic: '+(e||'not supported'));stopBpVoice();},onEnd:function(){if(_bpVoiceRec)stopBpVoice();}});
-  if(!ok){showToast('Voice not supported');return;}
-  _bpVoiceRec=true;document.getElementById('bp-voice-btn').classList.add('rec');document.getElementById('bp-voice-btn').textContent='⏹️';document.getElementById('bp-voice-status').textContent='Recording… tap to stop';document.getElementById('bp-voice-box').textContent='Listening…';
-}
-function stopBpVoice(){NHSpeech.stop();_bpVoiceRec=false;document.getElementById('bp-voice-btn').classList.remove('rec');document.getElementById('bp-voice-btn').textContent='🎙️';document.getElementById('bp-voice-status').textContent='Review and save';}
-function clearBpVoice(){_bpVoiceText='';document.getElementById('bp-voice-box').textContent='Nothing recorded yet.';document.getElementById('bp-voice-status').textContent='Tap mic to record';}
-async function saveBpVoice(){
-  if(!_bpVoiceText||!_bpPatientId){showToast('Nothing to save');return;}
-  var r=await _supa.from('nh_voice_notes').insert({clinic_id:_clinicId,patient_id:_bpPatientId,note_text:_bpVoiceText,created_by:_myUid});
-  if(r.error){showToast('Error: '+r.error.message);return;}
-  showToast('Voice note saved');clearBpVoice();loadBpVoiceNotes();
-}
-async function loadBpVoiceNotes(){
-  if(!_bpPatientId){return;}
-  var r=await _supa.from('nh_voice_notes').select('*').eq('patient_id',_bpPatientId).order('created_at',{ascending:false}).limit(10);
-  var el=document.getElementById('bp-voice-saved');if(!el)return;
-  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No notes yet.</p>';return;}
-  el.innerHTML=r.data.map(function(n){return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;margin-bottom:8px;font-size:12.5px"><div style="font-size:10px;color:var(--text-tertiary);margin-bottom:3px">'+new Date(n.created_at).toLocaleString('en-GB')+'</div>'+esc(n.note_text||'')+'</div>';}).join('');
-}
-
-/* ── BED STATUS QUICK UPDATE ── */
-async function saveBedStatus(){
-  if(!_bpBedId)return;
-  var s=document.getElementById('bst-sel').value;
-  await _supa.from('beds').update({status:s}).eq('id',_bpBedId);
-  closeModal('mod-bed-status');showToast('Bed → '+s);loadBeds();
-}
-
-async function loadDischarge(){
-  var r=await _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admission_diagnosis').eq('clinic_id',_clinicId).eq('status','Active');
-  var el=document.getElementById('discharge-list');
-  if(!r.data||!r.data.length){el.innerHTML='<div class="empty"><div class="empty-ic">✅</div><p class="empty-t">No active admissions</p></div>';return;}
-  el.innerHTML=r.data.map(function(a){
-    var days=Math.floor((Date.now()-new Date(a.admission_date))/86400000);
-    return '<div class="adm-row"><div class="adm-av">'+(a.patient_name||'?').charAt(0)+'</div>'
-      +'<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'')+'</div><div class="adm-meta">Since '+new Date(a.admission_date).toLocaleDateString('en-GB')+' · Day '+(days+1)+'<br>'+(a.admission_diagnosis||'')+'</div></div>'
-      +'<button class="qbtn" onclick="doDischarge(\''+a.id+'\',\''+a.bed_id+'\')">Discharge</button></div>';
-  }).join('');
-}
-async function doDischarge(admId,bedId){
-  if(!confirm('Discharge this patient and release the bed?'))return;
-  await _supa.from('admissions').update({status:'Discharged',discharge_date:new Date().toISOString()}).eq('id',admId);
-  await _supa.from('beds').update({status:'cleaning'}).eq('id',bedId);
-  showToast('Patient discharged · Bed set to Cleaning');loadDischarge();loadHome();
-}
-
-/* ── BILLING LIST ── */
-async function loadBilling(){
-  var el=document.getElementById('billing-list');
-  if(el===null)return;
-  var adms=await _supa.from('admissions').select('id,patient_name,patient_id').eq('clinic_id',_clinicId).eq('status','Active');
-  if(!adms.data||!adms.data.length){el.innerHTML='<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No active patients</p></div>';return;}
-  var html='';
-  for(var i=0;i<adms.data.length;i++){
-    var a=adms.data[i];
-    var [ch,pay]=await Promise.all([_supa.from('admission_charges').select('total_price').eq('admission_id',a.id),_supa.from('nh_payments').select('amount').eq('admission_id',a.id)]);
-    var total=(ch.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
-    var paid=(pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);var due=total-paid;
-    html+='<div class="panel" style="margin-bottom:12px"><div class="ph"><div class="pt">'+esc(a.patient_name||'')+'</div><span class="chip '+(due>0?'ch-crit':'ch-act')+'">₹'+due.toLocaleString('en-IN')+' due</span></div>'
-      +'<div style="padding:12px 15px;display:flex;gap:8px;flex-wrap:wrap"><button class="qbtn" onclick="openChargeFor(\''+a.id+'\')">+ Add Charge</button><button class="qbtn" onclick="openPaymentFor(\''+a.id+'\')">💰 Record Payment</button></div></div>';
+async function saveAyushmanInline(type){
+  if(!_pid){showToast('No patient selected');return;}
+  var p={clinic_id:_clinicId,patient_id:_pid,created_by:_myUid,updated_at:new Date().toISOString()};
+  if(type==='existing'){
+    p.beneficiary_id=(document.getElementById('ay-bid-in').value||'').trim();
+    p.abha_id=(document.getElementById('ay-abha-in').value||'').trim();
+    p.claim_amount=parseFloat(document.getElementById('ay-amt-in').value)||0;
+    p.status=document.getElementById('ay-stat-in').value;
+    p.notes='';
+  }else{
+    p.beneficiary_id='';p.abha_id='';p.status='application_started';p.claim_amount=0;
+    p.notes='Name:'+(document.getElementById('ay-name-ap').value||'')+'|DOB:'+(document.getElementById('ay-dob-ap').value||'')+'|Aadh4:'+(document.getElementById('ay-aad-ap').value||'')+'|HH:'+(document.getElementById('ay-hh-ap').value||'')+'|Mob:'+(document.getElementById('ay-mob-ap').value||'')+'|Dist:'+(document.getElementById('ay-dist-ap').value||'');
   }
-  el.innerHTML=html;
-}
-/* ══════════════════════════════════════════════════════════════
-   SMART CHARGE SYSTEM — Click → Select → Confirm → Done
-══════════════════════════════════════════════════════════════ */
+  var ex2=await _supa.from('nh_ayushman_cases').select('id').eq('patient_id',_pid).limit(1);
+  var res=ex2.data&&ex2.data.length?await _supa.from('nh_ayushman_cases').update(p).eq('id',ex2.data[0].id):await _supa.from('nh_ayushman_cases').insert(p);
+  if(res.error){showToast('Error: '+res.error.message);return;}
+  showToast(type==='existing'?'Card linked successfully':'Application record saved');
+  loadAyushman(_pid);
+}function loadAyushman(id){
+  _supa.from('nh_ayushman_cases').select('*').eq('patient_id',id).order('updated_at',{ascending:false}).limit(1).then(function(r){
+    var ex=r.data&&r.data.length?r.data[0]:null;
+    var el=document.getElementById('t-ayushman');
+    el.innerHTML='';
+    var notice=document.createElement('div');
+    notice.className='note-box note-amber';
+    notice.style.cssText='margin-bottom:12px;font-size:11px';
+    notice.textContent='Internal record only. Verify actual status on pmjay.gov.in.';
+    el.appendChild(notice);
+    if(ex){
+      var cd=document.createElement('div');
+      cd.style.marginBottom='12px';
+      cd.innerHTML='<div class="ir"><span class="il">Status</span><span class="iv">'+ex.status.replace(/_/g,' ')+'</span></div>'
+        +'<div class="ir"><span class="il">Beneficiary ID</span><span class="iv">'+(ex.beneficiary_id||'&#8212;')+'</span></div>'
+        +'<div class="ir"><span class="il">Claim Amount</span><span class="iv">&#8377;'+Number(ex.claim_amount||0).toLocaleString('en-IN')+'</span></div>';
+      el.appendChild(cd);
+    }
+    var opts=document.createElement('div');
+    opts.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px';
+    var opt1=document.createElement('div');
+    opt1.style.cssText='border:1.5px solid var(--green-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--green-bg)';
+    opt1.innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div><div style="font-weight:700;font-size:12px;margin-bottom:3px">Has Ayushman Card</div><div style="font-size:10.5px;color:var(--text-tertiary)">Enter beneficiary number to link</div>';
+    opt1.onclick=function(){showAyushmanExistingForm(ex);};
+    var opt2=document.createElement('div');
+    opt2.style.cssText='border:1.5px solid var(--blue-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--blue-bg)';
 
-/* Preset charge items per category */
+    el.appendChild(opt2);
+    el.appendChild(opts);
+    var fd=document.createElement('div');
+    fd.id='ay-inline-form';
+    fd.style.marginTop='14px';
+    el.appendChild(fd);
+  });
+}
+
+/* ── CHARGE PRESETS (used by smart charge modal) ── */
 var CHARGE_PRESETS = {
   'Bed Charge':  [{n:'Daily Bed Charge',p:500},{n:'ICU Bed Charge',p:1500},{n:'Private Room',p:1000},{n:'Semi-Private',p:700}],
   'Doctor Fee':  [{n:'Doctor Visit',p:300},{n:'Specialist Consultation',p:500},{n:'Emergency Consultation',p:800}],
   'Injection':   [{n:'Ceftriaxone',p:150},{n:'Amoxicillin',p:80},{n:'Tramadol',p:100},{n:'Ondansetron',p:60},{n:'Ranitidine',p:40},{n:'Metronidazole',p:70}],
   'Medicine':    [{n:'Paracetamol',p:20},{n:'Ibuprofen',p:30},{n:'Omeprazole',p:40},{n:'Pantoprazole',p:35},{n:'Amoxicillin Capsule',p:15},{n:'Metformin',p:10}],
-  'Lab Test':    [{n:'CBC (Complete Blood Count)',p:250},{n:'Blood Sugar',p:80},{n:'Urine Routine',p:100},{n:'HbA1c',p:350},{n:'Liver Function Test',p:400},{n:'Kidney Function Test',p:400},{n:'Lipid Profile',p:500}],
+  'Lab Test':    [{n:'CBC (Complete Blood Count)',p:250},{n:'Blood Sugar',p:80},{n:'Urine Routine',p:100},{n:'HbA1c',p:350},{n:'Liver Function Test',p:400},{n:'Kidney Function Test',p:400}],
   'Diagnostic':  [{n:'X-Ray',p:300},{n:'ECG',p:200},{n:'Ultrasound',p:800},{n:'CT Scan',p:3000},{n:'MRI',p:5000},{n:'2D Echo',p:1500}],
   'Procedure':   [{n:'Dressing',p:150},{n:'IV Cannula',p:80},{n:'Catheterisation',p:200},{n:'Suturing',p:300},{n:'Nebulisation',p:100}],
   'Nursing':     [{n:'Nursing Charges (Day)',p:300},{n:'Night Nursing',p:400},{n:'Special Nursing',p:600}],
   'Other':       [{n:'Oxygen',p:200},{n:'Ambulance',p:500},{n:'Miscellaneous',p:100}]
 };
 
-var _chSelectedItem = null, _chQty = 1, _chCat = 'Bed Charge';
-
-function selectCat(cat, el){
-  _chCat = cat;
-  _chSelectedItem = null;
-  document.getElementById('ch-type').value = cat;
-  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('sel')});
-  if(el) el.classList.add('sel');
-  renderPresets(cat);
-  document.getElementById('ch-desc').value = '';
-  document.getElementById('ch-price').value = '';
-  calcCharge();
-}
-
 function renderPresets(cat){
   var items = CHARGE_PRESETS[cat] || [];
   var el = document.getElementById('ch-preset-list');
+  if(!el) return;
   el.innerHTML = '';
   items.forEach(function(item, i){
     var d = document.createElement('div');
@@ -1752,286 +1495,144 @@ function renderPresets(cat){
   });
 }
 
-function selectPreset(i, cat){
-  var item = CHARGE_PRESETS[cat][i];
-  _chSelectedItem = item;
-  document.querySelectorAll('.preset-item').forEach(function(p){p.classList.remove('sel')});
-  var el = document.getElementById('preset-'+i);
-  if(el) el.classList.add('sel');
-  document.getElementById('ch-desc').value  = item.n;
-  document.getElementById('ch-price').value = item.p;
-  calcCharge();
-}
-
-function ch_customDesc(){
-  _chSelectedItem = null;
-  document.querySelectorAll('.preset-item').forEach(function(p){p.classList.remove('sel')});
-  calcCharge();
-}
-
-function changeQty(delta){
-  _chQty = Math.max(1, _chQty + delta);
-  document.getElementById('ch-qty').value         = _chQty;
-  document.getElementById('ch-qty-display').textContent = _chQty;
-  calcCharge();
-}
-
-function calcCharge(){
-  var q = _chQty || 1;
-  var p = parseFloat(document.getElementById('ch-price').value) || 0;
-  document.getElementById('ch-total').textContent = '₹'+(q*p).toLocaleString('en-IN');
-}
-
-function openCharge(){openChargeFor(_admId);}
-function openChargeFor(id){
-  _admId = id;
-  _chQty = 1; _chCat = 'Bed Charge'; _chSelectedItem = null;
-  document.getElementById('ch-qty').value = 1;
-  document.getElementById('ch-qty-display').textContent = '1';
-  document.getElementById('ch-desc').value  = '';
-  document.getElementById('ch-price').value = '';
-  document.getElementById('ch-total').textContent = '₹0';
-  document.getElementById('ch-err').style.display = 'none';
-  document.getElementById('ch-type').value = 'Bed Charge';
-  /* Find patient name */
-  var pname = document.getElementById('bpp-name') ? document.getElementById('bpp-name').textContent : '';
-  document.getElementById('ch-patient-name').textContent = pname || 'Select item → set quantity → confirm';
-  /* Reset categories */
-  document.querySelectorAll('.cat-btn').forEach(function(b,i){b.classList.toggle('sel',i===0)});
-  renderPresets('Bed Charge');
-  openModal('mod-charge');
-}
-
-async function addCharge(){
-  var type  = document.getElementById('ch-type').value;
-  var desc  = (document.getElementById('ch-desc').value||'').trim();
-  var qty   = _chQty || 1;
-  var price = parseFloat(document.getElementById('ch-price').value)||0;
-  var err   = document.getElementById('ch-err'); err.style.display='none';
-  if(!desc){ err.textContent='Select or type an item name.'; err.style.display='block'; return; }
-  if(price<=0){ err.textContent='Enter a price.'; err.style.display='block'; return; }
-  /* Get bed_id for audit */
-  var bedId = _bppBedId || null;
-  var r = await _supa.from('admission_charges').insert({
-    clinic_id:_clinicId, admission_id:_admId,
-    charge_type:type, description:desc,
-    quantity:qty, unit_price:price, total_price:qty*price,
-    added_by:_myUid, charge_date:new Date().toISOString().slice(0,10),
-    notes: bedId ? 'Bed: '+bedId : null
+/* ── BED PROFILE (click occupied bed) ── */
+async function openBedProfile(bedId,num,ward,status,admId,patientId,patientName,days){
+  _bpBedId = bedId;
+  _bpAdmId = admId || null;
+  _bpPatientId = patientId || null;
+  _selectedBedId = bedId;
+  document.getElementById('bp-title').textContent = 'Bed ' + num + ' — ' + ward;
+  document.getElementById('bp-subtitle').textContent = ward + ' Ward' + (status ? ' · ' + status.charAt(0).toUpperCase() + status.slice(1) : '');
+  ['bp-vacant-panel','bp-occupied-panel','bp-other-panel'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.style.display = 'none';
   });
-  if(r.error){ err.textContent=r.error.message; err.style.display='block'; return; }
-  /* Audit log */
-  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'charge_added',target_table:'admission_charges',target_id:_admId,details:{type:type,desc:desc,qty:qty,price:price,total:qty*price}});
-  closeModal('mod-charge');
-  showToast(desc+' — ₹'+(qty*price).toLocaleString('en-IN')+' added');
-  if(_pid) loadBilling(_pid); else loadBilling();
-  if(_bppAdmId === _admId) loadBpExpenses();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   VOICE → STRUCTURED CHARGES
-══════════════════════════════════════════════════════════════ */
-var _voiceParsed = [];
-var _vcVoiceActive = false;
-
-function openVoiceCharge(){
-  if(!_admId){ showToast('Select a patient from billing first'); return; }
-  _voiceParsed = [];
-  document.getElementById('voice-parsed-list').innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:12px">Tap the mic and speak. Example:<br/><b>"One injection ceftriaxone and CBC test"</b></div>';
-  document.getElementById('vc-err').style.display = 'none';
-  openModal('mod-voice-charge');
-}
-
-/* Simple keyword parser — no API needed */
-function parseVoiceToCharges(text){
-  var t = text.toLowerCase();
-  var found = [];
-  /* Check every preset item across all categories */
-  Object.keys(CHARGE_PRESETS).forEach(function(cat){
-    CHARGE_PRESETS[cat].forEach(function(item){
-      var name = item.n.toLowerCase();
-      var keywords = name.split(/[\s\/,]+/);
-      /* Check if main keyword appears in text */
-      var match = keywords.some(function(kw){ return kw.length > 3 && t.includes(kw); });
-      if(match && !found.find(function(f){return f.n===item.n;})){
-        /* Try to parse quantity */
-        var qtyMatch = t.match(/(\d+)\s*(injection|tablet|tab|capsule|test|dose|ml|unit|vial)?/);
-        var qty = (qtyMatch && parseInt(qtyMatch[1]) <= 20) ? parseInt(qtyMatch[1]) : 1;
-        found.push({n:item.n, p:item.p, qty:qty, cat:cat});
-      }
-    });
-  });
-  /* Fallback: extract any number + word as a custom charge */
-  if(!found.length){
-    found.push({n:text.charAt(0).toUpperCase()+text.slice(1).substring(0,50), p:0, qty:1, cat:'Other'});
+  var s = status.toLowerCase();
+  if(s === 'vacant' || !admId){
+    var vp = document.getElementById('bp-vacant-panel');
+    if(vp) vp.style.display = 'block';
+  } else if(admId){
+    var op = document.getElementById('bp-occupied-panel');
+    if(op) op.style.display = 'block';
+    var avEl = document.getElementById('bp-av');
+    if(avEl) avEl.textContent = (patientName||'?').charAt(0).toUpperCase();
+    var pnEl = document.getElementById('bp-pt-name');
+    if(pnEl) pnEl.textContent = patientName || 'Patient';
+    var dEl = document.getElementById('bp-days');
+    if(dEl) dEl.textContent = days || '—';
+    var adm = await _supa.from('admissions').select('*').eq('id',admId).single();
+    var d = adm.data || {};
+    var metaEl = document.getElementById('bp-pt-meta');
+    if(metaEl) metaEl.textContent = (d.patient_age?d.patient_age+'y ':'') + (d.patient_gender||'') + (d.admitting_doctor?' · Dr. '+d.admitting_doctor:'');
+    var aiEl = document.getElementById('bp-adm-info');
+    if(aiEl) aiEl.innerHTML =
+      '<div class="ir"><span class="il">Diagnosis</span><span class="iv">' + esc(d.admission_diagnosis||'—') + '</span></div>'
+      + '<div class="ir"><span class="il">Admitted</span><span class="iv">' + new Date(d.admission_date).toLocaleDateString('en-GB') + '</span></div>'
+      + '<div class="ir"><span class="il">Doctor</span><span class="iv">' + esc(d.admitting_doctor||'—') + '</span></div>'
+      + '<div class="ir"><span class="il">Duration</span><span class="iv">' + days + ' day(s)</span></div>'
+      + (d.daily_rate ? '<div class="ir"><span class="il">Daily Rate</span><span class="iv">&#8377;' + Number(d.daily_rate).toLocaleString('en-IN') + '</span></div>' : '');
+    var firstTab = document.querySelector('.bp-tab');
+    if(firstTab) bpTab('info', firstTab);
+    loadBpExpenses();
+    loadBpDocs();
+    loadBpVoiceNotes();
   }
-  return found;
+  openModal('mod-bed-profile');
 }
 
-function renderParsedCharges(){
-  var el = document.getElementById('voice-parsed-list');
-  if(!_voiceParsed.length){ el.innerHTML='<div style="padding:12px;color:var(--text-tertiary);font-size:12px">Nothing detected yet.</div>'; return; }
-  el.innerHTML = _voiceParsed.map(function(item,i){
-    return '<div class="voice-parsed-item" id="vpi-'+i+'">'
-      +'<div><div class="vpi-name">'+esc(item.n)+'</div>'
-      +'<div style="font-size:10.5px;color:var(--text-tertiary)">'+item.cat+' · Qty: '+item.qty+(item.p?' · ₹'+item.p.toLocaleString('en-IN'):'')+'</div></div>'
-      +'<div style="display:flex;align-items:center;gap:8px">'
-      +(item.p===0?'<input type="number" placeholder="₹Price" style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text-primary)" onchange="_voiceParsed['+i+'].p=parseFloat(this.value)||0"/>':'')
-      +'<span class="vpi-remove" onclick="removeVoiceParsed('+i+')">✕</span>'
-      +'</div></div>';
+function bpTab(tab,el){
+  document.querySelectorAll('.bp-tab').forEach(function(t){t.classList.remove('on')});
+  document.querySelectorAll('.bp-pnl').forEach(function(p){p.classList.remove('on')});
+  if(el) el.classList.add('on');
+  var p = document.getElementById('bp-pnl-'+tab);
+  if(p) p.classList.add('on');
+  if(tab==='expenses') loadBpExpenses();
+  if(tab==='documents') loadBpDocs();
+  if(tab==='voice') loadBpVoiceNotes();
+}
+
+async function updateBpStatus(s){
+  if(!_bpBedId) return;
+  await _supa.from('beds').update({status:s}).eq('id',_bpBedId);
+  closeModal('mod-bed-profile');
+  showToast('Bed status → '+s);
+  loadBeds();
+}
+
+async function loadBpExpenses(){
+  var el = document.getElementById('bp-expenses-list');
+  if(!el || !_bpAdmId){ if(el) el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No active admission.</p>'; return; }
+  var [ch,pay] = await Promise.all([
+    _supa.from('admission_charges').select('*').eq('admission_id',_bpAdmId).order('created_at',{ascending:false}),
+    _supa.from('nh_payments').select('amount').eq('admission_id',_bpAdmId)
+  ]);
+  var charges = ch.data || [];
+  var total = charges.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var paid = (pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+  var due = total - paid;
+  if(!charges.length){ el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">&#128179;</div><p class="empty-t">No expenses yet</p></div>'; return; }
+  el.innerHTML = '<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total</div><div class="bill-amt">&#8377;'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">&#8377;'+due.toLocaleString('en-IN')+'</div></div></div>'
+    + '<div style="display:flex;gap:8px;margin-bottom:12px"><button class="qbtn" onclick="openCharge()">+ Add Charge</button><button class="qbtn" onclick="openPayment()">&#128176; Payment</button><button class="qbtn" onclick="openVoiceCharge()" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#127899; Voice</button></div>'
+    + charges.map(function(c){
+        return '<div class="exp-card">'
+          + '<div class="exp-ic">&#128179;</div>'
+          + '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px">' + esc(c.description||c.charge_type) + '</div>'
+          + '<div style="font-size:10px;color:var(--text-tertiary)">' + c.charge_type + ' · ' + new Date(c.created_at).toLocaleDateString('en-GB') + '</div>'
+          + (c.bill_path ? '<button class="qbtn" style="margin-top:5px" data-bill-path="'+(c.bill_path||'')+'">&#128206; View Bill</button>' : '')
+          + '</div><div class="exp-amt">&#8377;' + Number(c.total_price).toLocaleString('en-IN') + '</div></div>';
+      }).join('');
+}
+
+async function loadBpDocs(){
+  var el = document.getElementById('bp-doc-list');
+  if(!el || !_bpPatientId){ if(el) el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No patient linked.</p>'; return; }
+  var r = await _supa.from('nh_patient_documents').select('*').eq('patient_id',_bpPatientId).order('created_at',{ascending:false});
+  if(!r.data||!r.data.length){ el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No documents uploaded yet.</p>'; return; }
+  el.innerHTML = r.data.map(function(d){
+    var icon = d.doc_type==='application/pdf' ? '&#128196;' : d.doc_type&&d.doc_type.startsWith('image/') ? '&#128247;' : '&#128206;';
+    return '<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:7px;background:var(--surface)">'
+      + '<div style="width:28px;height:28px;border-radius:7px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">' + icon + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(d.file_name||d.document_type||'Document') + '</div>'
+      + '<div style="font-size:10px;color:var(--text-tertiary)">' + new Date(d.created_at).toLocaleDateString('en-GB') + (d.document_type?' · '+d.document_type:'') + '</div></div>'
+      + '<button class="qbtn" data-bill-path="'+(d.file_path||'')+'">View</button>'
+      + '</div>';
   }).join('');
 }
 
-function removeVoiceParsed(i){
-  _voiceParsed.splice(i,1);
-  renderParsedCharges();
-}
-
-async function confirmVoiceCharges(){
-  var err = document.getElementById('vc-err'); err.style.display='none';
-  var unprice = _voiceParsed.filter(function(i){return !i.p;});
-  if(unprice.length){ err.textContent='Please enter a price for: '+unprice.map(function(i){return i.n;}).join(', '); err.style.display='block'; return; }
-  if(!_voiceParsed.length){ err.textContent='Nothing to save.'; err.style.display='block'; return; }
-  var inserts = _voiceParsed.map(function(item){
-    return {clinic_id:_clinicId,admission_id:_admId,charge_type:item.cat,description:item.n,quantity:item.qty,unit_price:item.p,total_price:item.qty*item.p,added_by:_myUid,charge_date:new Date().toISOString().slice(0,10)};
-  });
-  var r = await _supa.from('admission_charges').insert(inserts);
-  if(r.error){ err.textContent=r.error.message; err.style.display='block'; return; }
-  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'voice_charges_added',target_table:'admission_charges',target_id:_admId,details:{count:inserts.length,items:_voiceParsed.map(function(i){return i.n;})}});
-  closeModal('mod-voice-charge');
-  showToast(_voiceParsed.length+' charge(s) added to bill');
-  _voiceParsed = [];
-  if(_pid) loadBilling(_pid); else loadBilling();
-  if(_bppAdmId === _admId) loadBpExpenses();
-}
-
-/* Quick inline mic on voice-charge modal — uses existing NHSpeech */
-var _vcRec = false;
-function toggleVcMic(){
-  if(_vcRec){ stopVcMic(); return; }
-  var ok = NHSpeech.start({lang:'en-IN',
-    onResult: function(t){
-      var parsed = parseVoiceToCharges(t);
-      parsed.forEach(function(p){ if(!_voiceParsed.find(function(x){return x.n===p.n;})) _voiceParsed.push(p); });
-      renderParsedCharges();
-      stopVcMic();
-    },
-    onError: function(e){ showToast('Mic error: '+e); stopVcMic(); },
-    onEnd:   function(){ if(_vcRec) stopVcMic(); }
-  });
-  if(!ok){ showToast('Voice not supported on this browser'); return; }
-  _vcRec = true;
-  var btn = document.getElementById('vc-mic-btn');
-  if(btn){ btn.classList.add('rec'); btn.textContent='⏹️ Stop'; }
-}
-function stopVcMic(){
-  NHSpeech.stop(); _vcRec=false;
-  var btn=document.getElementById('vc-mic-btn');
-  if(btn){ btn.classList.remove('rec'); btn.textContent='🎙️ Speak Charges'; }
-}
-
-function openPayment(){openPaymentFor(_admId);}
-function openPaymentFor(id){_admId=id;['pay-amount','pay-upi','pay-txn','pay-notes'].forEach(function(x){document.getElementById(x).value='';});document.getElementById('pay-date').value=new Date().toISOString().slice(0,10);document.getElementById('pay-method').value='Cash';openModal('mod-payment');}
-async function savePayment(){
-  var method=document.getElementById('pay-method').value;
-  var amount=parseFloat(document.getElementById('pay-amount').value)||0;
-  if(amount<=0){showToast('Enter a valid amount');return;}
-  var r=await _supa.from('nh_payments').insert({clinic_id:_clinicId,admission_id:_admId,method:method,amount:amount,upi_id:(document.getElementById('pay-upi').value||'').trim(),txn_id:(document.getElementById('pay-txn').value||'').trim(),payment_date:document.getElementById('pay-date').value,notes:(document.getElementById('pay-notes').value||'').trim(),recorded_by:_myUid});
-  if(r.error){showToast('Error: '+r.error.message);return;}
-  closeModal('mod-payment');showToast('Payment of ₹'+amount.toLocaleString('en-IN')+' recorded');
-  if(_pid)loadBilling(_pid);else loadBilling();
-}
-
-/* ── VOICE ── */
-function toggleVoice(){_voiceRec?stopVoice():startVoice();}
-function startVoice(){
-  var ok=NHSpeech.start({lang:'en-IN',onResult:function(t){_voiceText=t;document.getElementById('voice-box').textContent=t;},onError:function(e){showToast('Mic error: '+(e||'not supported'));stopVoice();},onEnd:function(){if(_voiceRec)stopVoice();}});
-  if(!ok){showToast('Voice not supported in this browser');return;}
-  _voiceRec=true;document.getElementById('voice-btn').classList.add('rec');document.getElementById('voice-btn').textContent='⏹️';document.getElementById('voice-status').textContent='Recording… tap to stop';document.getElementById('voice-box').textContent='Listening…';
-}
-function stopVoice(){NHSpeech.stop();_voiceRec=false;document.getElementById('voice-btn').classList.remove('rec');document.getElementById('voice-btn').textContent='🎙️';document.getElementById('voice-status').textContent='Review and save';}
-function clearVoice(){_voiceText='';document.getElementById('voice-box').textContent='Nothing recorded yet.';document.getElementById('voice-status').textContent='Tap mic to record';}
-async function saveVoice(){
-  if(!_voiceText||!_pid){showToast('Nothing to save');return;}
-  var r=await _supa.from('nh_voice_notes').insert({clinic_id:_clinicId,patient_id:_pid,note_text:_voiceText,created_by:_myUid});
-  if(r.error){showToast('Error: '+r.error.message);return;}
-  showToast('Voice note saved');clearVoice();loadVoiceNotes(_pid);
-}
-async function loadVoiceNotes(id){
-  var r=await _supa.from('nh_voice_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}).limit(10);
-  var el=document.getElementById('voice-saved');if(!el)return;
-  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No voice notes yet</p>';return;}
-  el.innerHTML=r.data.map(function(n){return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px"><div style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px">'+new Date(n.created_at).toLocaleString('en-GB')+'</div><div>'+esc(n.note_text||'')+'</div></div>';}).join('');
-}
-
-/* ── ASSIGN BED FOR EXISTING PATIENT ── */
-async function assignBedForPatient(patientId, patientName){
-  /* Pre-load patient data */
-  var p = await _supa.from('nh_patients').select('*').eq('id', patientId).single();
-  var pd = p.data || {};
-  closeModal('mod-profile');
-  /* Reset wizard */
-  _selectedBedId = null; _selBedRate = 0; _existingPatientId = null;
-  _imgs = {front:null, back:null}; _idType = 'manual';
-  /* Pre-fill step 3 form with existing patient data */
-  document.getElementById('reg-name').value = pd.full_name || '';
-  document.getElementById('reg-phone').value = pd.phone || '';
-  document.getElementById('reg-age').value = pd.age || '';
-  document.getElementById('reg-gender').value = pd.gender || 'Male';
-  document.getElementById('reg-address').value = pd.address || '';
-  document.getElementById('reg-guardian').value = pd.guardian || '';
-  document.getElementById('reg-uhid').value = pd.uhid || '';
-  document.getElementById('reg-date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('reg-err').style.display = 'none';
-  /* Load doctors */
-  var docs = await _supa.from('nh_staff').select('id,full_name').eq('clinic_id',_clinicId).eq('role','doctor').eq('is_active',true);
-  var ds = document.getElementById('reg-doc-login');
-  ds.innerHTML = '<option value="">— None —</option>' + (docs.data||[]).map(function(d){
-    return '<option value="'+d.id+'">'+esc(d.full_name||'Doctor')+'</option>';
+async function loadBpVoiceNotes(){
+  var el = document.getElementById('bp-voice-saved');
+  if(!el||!_bpPatientId){ return; }
+  var r = await _supa.from('nh_voice_notes').select('*').eq('patient_id',_bpPatientId).order('created_at',{ascending:false}).limit(10);
+  if(!r.data||!r.data.length){ el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No notes yet.</p>'; return; }
+  el.innerHTML = r.data.map(function(n){
+    return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;margin-bottom:8px;font-size:12.5px">'
+      + '<div style="font-size:10px;color:var(--text-tertiary);margin-bottom:3px">' + new Date(n.created_at).toLocaleString('en-GB') + '</div>'
+      + esc(n.note_text||'') + '</div>';
   }).join('');
-  /* Store patient ID so we reuse it instead of creating a new patient */
-  _existingPatientId = patientId;
-  /* Jump straight to step 4 — bed selection */
-  openModal('mod-register');
-  wizGo(4);
-  showToast('Select a bed to admit '+patientName);
 }
 
-/* ── UTILS ── */
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+async function viewBillOriginal(path){
+  if(!path){showToast('No file path');return;}
+  var r = await _supa.storage.from('nh-documents').createSignedUrl(path, 300);
+  if(r.error||!r.data){ showToast('Could not open: '+(r.error?r.error.message:'unknown')); return; }
+  window.open(r.data.signedUrl, '_blank');
+}
 
-init();
+/* ── GENERATE PATIENT ACCESS CODE ── */
+async function generateAccessCode(patientId){
+  var code = 'NH-' + Math.random().toString(36).slice(2,8).toUpperCase();
+  var r = await _supa.from('nh_patients').update({access_code:code}).eq('id',patientId);
+  if(r.error){ showToast('Error: '+r.error.message); return; }
+  var el = document.getElementById('pp-access-code');
+  if(el) el.textContent = code;
+  showToast('Access code generated — share with patient');
+}
 
-/* ── AUTO-VACANT CHECK on load ── */
-(async function checkAutoVacant(){
-  var keys = Object.keys(localStorage).filter(function(k){ return k.startsWith('autovacant_'+(_clinicId||'')); });
-  for(var i=0;i<keys.length;i++){
-    var vacantAt = parseInt(localStorage.getItem(keys[i])||'0');
-    var bedId = keys[i].split('_').pop();
-    if(Date.now() >= vacantAt){
-      await _supa.from('beds').update({status:'Vacant'}).eq('id',bedId);
-      localStorage.removeItem(keys[i]);
-    } else {
-      /* Still in cleaning window — set timer for remaining time */
-      var remaining = vacantAt - Date.now();
-      (function(id,k){
-        setTimeout(async function(){
-          await _supa.from('beds').update({status:'Vacant'}).eq('id',id);
-          localStorage.removeItem(k);
-          loadBeds();
-        }, remaining);
-      })(bedId, keys[i]);
-    }
-  }
-})();
+/* ── VOICE NOTES stub (tab removed, keep for bed profile) ── */
+function loadVoiceNotes(id){
+  /* Voice Notes tab removed from patient profile — voice is now in billing tab */
+}
 
-/* ── BILL VIEW EVENT DELEGATION ── */
-document.addEventListener('click', function(e){
-  var btn = e.target.closest('[data-billpath]');
-  if(btn){ viewBillOriginal(btn.getAttribute('data-billpath')); }
-  var abtn = e.target.closest('[data-assign-pid]');
-  if(abtn){ assignBedForPatient(abtn.getAttribute('data-assign-pid'), abtn.getAttribute('data-assign-name')); }
-});
 </script>
 </body>
 </html>
