@@ -603,7 +603,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div class="patient-tab" onclick="switchTab('billing',this)">Billing</div>
         <div class="patient-tab" onclick="switchTab('financing',this)">Financing</div>
         <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
-        <div class="patient-tab" onclick="switchTab('voice',this)">Voice Notes</div>
+
       </div>
     </div>
     <div class="mb" style="padding-top:0">
@@ -627,24 +627,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div id="fin-area"></div>
       </div>
       <div class="ptab" id="t-ayushman"></div>
-      <div class="ptab" id="t-voice">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">🎙️</button>
-          <div>
-            <div style="font-size:12.5px;font-weight:600" id="voice-status">Tap mic to record</div>
-            <div style="font-size:10.5px;color:var(--text-tertiary)">Converts to text — review before saving</div>
-          </div>
-        </div>
-        <div class="voice-box" id="voice-box">Nothing recorded yet.</div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="qbtn" onclick="clearVoice()">✕ Clear</button>
-          <button class="msub" style="flex:1" onclick="saveVoice()">✓ Save Note</button>
-        </div>
-        <div style="margin-top:16px">
-          <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Saved Notes</div>
-          <div id="voice-saved"></div>
-        </div>
-      </div>
+
     </div>
   </div>
 </div>
@@ -1511,9 +1494,23 @@ async function doDischargeFromProfile(){
   if(!_bpAdmId||!_bpBedId){showToast('No active admission');return;}
   if(!confirm('Discharge this patient? The bed will be set to Cleaning.'))return;
   await _supa.from('admissions').update({status:'Discharged',discharge_date:new Date().toISOString()}).eq('id',_bpAdmId);
+  var bedIdForAutoVacant = _bpBedId;
+  var bedIdForAutoVacant = _bpBedId;
   await _supa.from('beds').update({status:'cleaning'}).eq('id',_bpBedId);
   closeModal('mod-bed-profile');
-  showToast('Patient discharged · Bed set to Cleaning');
+  showToast('Patient discharged · Bed cleaning (auto-vacant in 30 min)');
+  /* Schedule auto-vacant */
+  if(bedIdForAutoVacant){
+    var vacantAt = Date.now() + 30*60*1000;
+    var key = 'autovacant_'+_clinicId+'_'+bedIdForAutoVacant;
+    localStorage.setItem(key, vacantAt.toString());
+    setTimeout(async function(){
+      await _supa.from('beds').update({status:'Vacant'}).eq('id',bedIdForAutoVacant);
+      localStorage.removeItem(key);
+      showToast('🟢 Bed auto-set to Vacant — ready for next patient');
+      loadBeds();
+    }, 30*60*1000);
+  }
   loadHome();loadBeds();
 }
 
@@ -2004,6 +2001,29 @@ async function assignBedForPatient(patientId, patientName){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 init();
+
+/* ── AUTO-VACANT CHECK on load ── */
+(async function checkAutoVacant(){
+  var keys = Object.keys(localStorage).filter(function(k){ return k.startsWith('autovacant_'+(_clinicId||'')); });
+  for(var i=0;i<keys.length;i++){
+    var vacantAt = parseInt(localStorage.getItem(keys[i])||'0');
+    var bedId = keys[i].split('_').pop();
+    if(Date.now() >= vacantAt){
+      await _supa.from('beds').update({status:'Vacant'}).eq('id',bedId);
+      localStorage.removeItem(keys[i]);
+    } else {
+      /* Still in cleaning window — set timer for remaining time */
+      var remaining = vacantAt - Date.now();
+      (function(id,k){
+        setTimeout(async function(){
+          await _supa.from('beds').update({status:'Vacant'}).eq('id',id);
+          localStorage.removeItem(k);
+          loadBeds();
+        }, remaining);
+      })(bedId, keys[i]);
+    }
+  }
+})();
 
 /* ── BILL VIEW EVENT DELEGATION ── */
 document.addEventListener('click', function(e){
