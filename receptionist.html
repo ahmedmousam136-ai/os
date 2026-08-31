@@ -310,9 +310,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <button class="nb" onclick="nav('discharge',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>Discharge
       </button>
-      <button class="nb" onclick="nav('billing',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>Billing
-      </button>
+
     </nav>
     <div class="sb-foot"><div class="sb-out" onclick="handleLogout()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
@@ -1325,7 +1323,29 @@ async function loadHistory(id){
   });
 }
 async function loadDocs(id){
-  if(typeof loadPatientDocumentsInto==='function')loadPatientDocumentsInto(id,'doc-list',true);
+  var el=document.getElementById('doc-list');
+  if(!el)return;
+  var r=await _supa.from('nh_patient_documents').select('*').eq('patient_id',id).order('created_at',{ascending:false});
+  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary);padding:8px 0">No documents uploaded yet.</p>';return;}
+  el.innerHTML='';
+  r.data.forEach(function(d){
+    var icon=d.doc_type==='application/pdf'?'&#128196;':d.doc_type&&d.doc_type.startsWith('image/')?'&#128247;':'&#128206;';
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(228,224,216,.5)';
+    row.innerHTML='<div style="width:30px;height:30px;border-radius:7px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+icon+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(d.file_name||d.document_type||'Document')+'</div>'
+      +'<div style="font-size:10px;color:var(--text-tertiary)">'+new Date(d.created_at).toLocaleDateString('en-GB')+(d.document_type?' &middot; '+d.document_type:'')+'</div></div>'
+      +'<button class="qbtn" style="flex-shrink:0">&#128206; View</button>';
+    var btn=row.querySelector('button');
+    btn.onclick=(function(path){return function(){viewDocFromProfile(path);};})(d.file_path);
+    el.appendChild(row);
+  });
+}
+async function viewDocFromProfile(path){
+  if(!path){showToast('No file');return;}
+  var r=await _supa.storage.from('nh-documents').createSignedUrl(path,300);
+  if(r.error||!r.data){showToast('Could not open: '+(r.error?r.error.message:'error'));return;}
+  window.open(r.data.signedUrl,'_blank');
 }
 async function loadBilling(id){
   var adms=await _supa.from('admissions').select('id,patient_name,status,daily_rate').eq('patient_id',id).eq('status','Active').order('admission_date',{ascending:false}).limit(1);
@@ -1342,7 +1362,7 @@ async function loadBilling(id){
   var paid=(pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
   var due=total-paid;
   el.innerHTML='<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total Billed</div><div class="bill-amt">₹'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">₹'+due.toLocaleString('en-IN')+'</div></div></div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:12px"><button class="qbtn" onclick="openCharge()">+ Add Charge</button><button class="qbtn" onclick="openPayment()">💰 Record Payment</button></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'    +'<button class="qbtn" onclick="openCharge()">+ Add Charge</button>'    +'<button class="qbtn" onclick="openPayment()">&#128176; Record Payment</button>'    +'<button class="qbtn" onclick="openVoiceCharge()" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#127899;&#65039; Voice Charge</button>'    +'</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Charges</div>'
     +(ch.data&&ch.data.length?ch.data.map(function(c){return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.5);font-size:12px"><div><div style="font-weight:500">'+esc(c.description||c.charge_type)+'</div><div style="font-size:10px;color:var(--text-tertiary)">'+c.charge_type+'</div></div><div style="font-weight:700;font-family:\'Instrument Serif\',serif;font-size:14px">₹'+Number(c.total_price).toLocaleString('en-IN')+'</div></div>';}).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No charges yet</p>')
     +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 6px">Payments</div>'
