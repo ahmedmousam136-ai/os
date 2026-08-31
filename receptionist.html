@@ -713,40 +713,20 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 </div>
 
 <!-- VOICE → CHARGE CONFIRM MODAL -->
-<div class="mod-ov" id="mod-voice-charge">
+<div clas<div class="mod-ov" id="mod-voice-charge">
   <div class="modal">
-    <div class="mh"><div class="mtitle">🎙️ Voice Charges — Confirm</div><button class="mclose" onclick="closeModal('mod-voice-charge')">✕</button></div>
+    <div class="mh"><div class="mtitle">&#127899; Voice Charges</div><button class="mclose" onclick="closeModal('mod-voice-charge');stopVcRecording()">&#10005;</button></div>
     <div class="mb">
-      <div class="note-box note-amber" style="font-size:11.5px;margin-bottom:10px">Speak naturally — example: <b>"One injection ceftriaxone and CBC test"</b>. Review before saving.</div>
-      <div style="display:flex;justify-content:center;margin-bottom:14px">
-        <button class="voice-btn" id="vc-mic-btn" onclick="toggleVcMic()" style="width:auto;border-radius:24px;padding:10px 20px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;height:auto">🎙️ Speak Charges</button>
+      <div style="text-align:center;margin-bottom:14px">
+        <button id="vc-mic-btn" onclick="toggleVcMic()" style="border:none;border-radius:50px;padding:14px 28px;font-size:14px;font-weight:700;cursor:pointer;background:var(--green-bg);color:var(--green);border:1.5px solid var(--green-border)">&#127899; Speak Charges</button>
+        <div id="vc-status" style="margin-top:8px;font-size:11.5px;color:var(--text-tertiary)">Tap mic and speak. Works like ChatGPT &#8212; keep talking.</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-tertiary);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:6px;padding:8px 10px;margin-bottom:10px">
+        Example: <b style="color:var(--text-primary)">"One injection ceftriaxone, CBC blood test, doctor fee five hundred"</b>
       </div>
       <div id="voice-parsed-list"></div>
-      <div id="vc-err" style="color:var(--red);font-size:11.5px;display:none"></div>
-      <button class="msub" onclick="confirmVoiceCharges()">✓ Confirm &amp; Add All to Bill</button>
-    </div>
-  </div>
-</div>
-
-<!-- PAYMENT -->
-<div class="mod-ov" id="mod-payment">
-  <div class="modal">
-    <div class="mh"><div class="mtitle">💰 Record Payment</div><button class="mclose" onclick="closeModal('mod-payment')">✕</button></div>
-    <div class="mb">
-      <div><label class="flbl">Payment Method</label>
-        <select class="finput" id="pay-method">
-          <option>Cash</option><option>UPI</option><option>Card</option>
-          <option>Bank Transfer</option><option>Financing</option><option>Other</option>
-        </select>
-      </div>
-      <div><label class="flbl">Amount (₹) *</label><input class="finput" id="pay-amount" type="number" placeholder="0"/></div>
-      <div class="rx-2">
-        <div><label class="flbl">UPI ID / VPA</label><input class="finput" id="pay-upi" placeholder="name@upi"/></div>
-        <div><label class="flbl">Transaction ID</label><input class="finput" id="pay-txn" placeholder="UPI TXN ID"/></div>
-      </div>
-      <div><label class="flbl">Payment Date</label><input class="finput" id="pay-date" type="date"/></div>
-      <div><label class="flbl">Notes</label><input class="finput" id="pay-notes" placeholder="Optional"/></div>
-      <button class="msub green" onclick="savePayment()">✓ Record Payment</button>
+      <div id="vc-err" style="color:var(--red);font-size:11.5px;margin-bottom:8px;display:none"></div>
+      <button class="msub" onclick="confirmVoiceCharges()">&#10003; Confirm &amp; Add All to Bill</button>
     </div>
   </div>
 </div>
@@ -1420,7 +1400,12 @@ async function loadBilling(id){
   var paid=(pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
   var due=total-paid;
   el.innerHTML='<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total Billed</div><div class="bill-amt">₹'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">₹'+due.toLocaleString('en-IN')+'</div></div></div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'    +'<button class="qbtn" onclick="openCharge()">+ Add Charge</button>'    +'<button class="qbtn" onclick="openPayment()">&#128176; Record Payment</button>'    +'<button class="qbtn" onclick="openVoiceCharge()" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#127899;&#65039; Voice Charge</button>'    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+    +'<button class="qbtn" onclick="openCharge()">+ Add Charge</button>'
+    +'<button class="qbtn" onclick="openPayment()">&#128176; Payment</button>'
+    +'<button class="qbtn" onclick="openVoiceCharge()" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#127899; Voice</button>'
+    +'<button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button>'
+    +'</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Charges</div>'
     +(ch.data&&ch.data.length?ch.data.map(function(c){return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.5);font-size:12px"><div><div style="font-weight:500">'+esc(c.description||c.charge_type)+'</div><div style="font-size:10px;color:var(--text-tertiary)">'+c.charge_type+'</div></div><div style="font-weight:700;font-family:\'Instrument Serif\',serif;font-size:14px">₹'+Number(c.total_price).toLocaleString('en-IN')+'</div></div>';}).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No charges yet</p>')
     +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 6px">Payments</div>'
@@ -1703,6 +1688,272 @@ function loadVoiceNotes(id){
 })();
 
 init();
+
+
+/* ══════════════════════════════════════════════════════════════
+   VOICE CHARGE SYSTEM — Long recording like ChatGPT
+   Works with or without NHSpeech from nh-shared.js
+══════════════════════════════════════════════════════════════ */
+var _vcParsed = [], _vcRecording = false, _vcRecognition = null, _vcFullText = '';
+
+function openVoiceCharge(){
+  if(!_admId){
+    showToast('Select a patient first');
+    return;
+  }
+  _vcParsed = [];
+  _vcFullText = '';
+  document.getElementById('voice-parsed-list').innerHTML =
+    '<div style="text-align:center;padding:18px;color:var(--text-tertiary);font-size:12px">Tap the mic and speak naturally.<br/><b style="color:var(--text-primary)">"One injection Ceftriaxone, CBC test, doctor fee"</b></div>';
+  document.getElementById('vc-err').style.display = 'none';
+  var btn = document.getElementById('vc-mic-btn');
+  if(btn){ btn.textContent = '&#127899; Speak Charges'; btn.classList.remove('rec'); }
+  var status = document.getElementById('vc-status');
+  if(status) status.textContent = 'Tap the mic button and speak all charges at once';
+  openModal('mod-voice-charge');
+}
+
+/* Simple keyword parser — no API needed */
+var VOICE_KEYWORDS = {
+  'ceftriaxone':   {n:'Ceftriaxone Injection', cat:'Injection',   p:150},
+  'amoxicillin':   {n:'Amoxicillin',           cat:'Injection',   p:80},
+  'tramadol':      {n:'Tramadol',              cat:'Injection',   p:100},
+  'paracetamol':   {n:'Paracetamol',           cat:'Medicine',    p:20},
+  'cbc':           {n:'CBC (Blood Count)',     cat:'Lab Test',    p:250},
+  'blood sugar':   {n:'Blood Sugar',           cat:'Lab Test',    p:80},
+  'blood count':   {n:'CBC (Blood Count)',     cat:'Lab Test',    p:250},
+  'xray':          {n:'X-Ray',                cat:'Diagnostic',  p:300},
+  'x-ray':         {n:'X-Ray',                cat:'Diagnostic',  p:300},
+  'ecg':           {n:'ECG',                  cat:'Diagnostic',  p:200},
+  'ultrasound':    {n:'Ultrasound',            cat:'Diagnostic',  p:800},
+  'doctor':        {n:'Doctor Visit',          cat:'Doctor Fee',  p:300},
+  'consultation':  {n:'Doctor Consultation',  cat:'Doctor Fee',  p:500},
+  'dressing':      {n:'Dressing',             cat:'Procedure',   p:150},
+  'nebulisation':  {n:'Nebulisation',         cat:'Procedure',   p:100},
+  'nebulization':  {n:'Nebulisation',         cat:'Procedure',   p:100},
+  'oxygen':        {n:'Oxygen',               cat:'Other',       p:200},
+  'nursing':       {n:'Nursing Charges',      cat:'Nursing',     p:300},
+  'bed':           {n:'Daily Bed Charge',     cat:'Bed Charge',  p:500},
+};
+
+function parseVoiceText(text){
+  var t = text.toLowerCase();
+  var found = [];
+  /* Check each keyword */
+  Object.keys(VOICE_KEYWORDS).forEach(function(kw){
+    if(t.includes(kw)){
+      var item = VOICE_KEYWORDS[kw];
+      if(!found.find(function(f){return f.n===item.n;})){
+        /* Try to extract quantity before the keyword */
+        var qtyRe = /(\d+)\s*(?:injection|tablet|tab|test|unit|dose)?/gi;
+        var qty = 1;
+        var match = t.match(new RegExp('(\d+)\s*'+kw.replace('-','\-')));
+        if(match) qty = Math.min(parseInt(match[1])||1, 20);
+        found.push({n:item.n, cat:item.cat, p:item.p, qty:qty});
+      }
+    }
+  });
+  /* Also look for any standalone numbers with price hints like "500 fee" */
+  if(!found.length){
+    /* Fallback — treat the whole text as a custom entry */
+    var shortened = text.slice(0,60).charAt(0).toUpperCase() + text.slice(1,60);
+    found.push({n:shortened, cat:'Other', p:0, qty:1});
+  }
+  return found;
+}
+
+function renderVoiceParsed(){
+  var el = document.getElementById('voice-parsed-list');
+  if(!_vcParsed.length){
+    el.innerHTML = '<div style="padding:12px;color:var(--text-tertiary);font-size:12px">Nothing detected yet — try speaking again.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  _vcParsed.forEach(function(item, i){
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--green-border);border-radius:var(--r-sm);margin-bottom:7px;background:var(--green-bg)';
+    row.innerHTML = '<div><div style="font-size:12.5px;font-weight:600">' + esc(item.n) + '</div>'
+      + '<div style="font-size:10.5px;color:var(--text-tertiary)">' + item.cat + ' &middot; Qty: ' + item.qty
+      + (item.p ? ' &middot; &#8377;' + item.p.toLocaleString('en-IN') : '') + '</div></div>'
+      + '<div style="display:flex;align-items:center;gap:8px">'
+      + (item.p===0 ? '<input type="number" placeholder="&#8377;Price" style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:12px" onchange="(function(idx){return function(e){_vcParsed[idx].p=parseFloat(e.target.value)||0;};})(' + i + ')(event)"/>' : '')
+      + '<span style="font-size:16px;cursor:pointer;color:var(--red);padding:2px 7px;border-radius:4px" onclick="removeVcItem(' + i + ')">&#10005;</span>'
+      + '</div>';
+    el.appendChild(row);
+  });
+}
+
+function removeVcItem(i){ _vcParsed.splice(i,1); renderVoiceParsed(); }
+
+function startVcRecording(){
+  if(_vcRecording) return;
+  /* Use Web Speech API directly for long continuous recording */
+  if(!window.SpeechRecognition && !window.webkitSpeechRecognition){
+    showToast('Voice not supported on this browser. Use Chrome.');
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _vcRecognition = new SR();
+  _vcRecognition.continuous = true;       /* KEY: keeps recording */
+  _vcRecognition.interimResults = true;
+  _vcRecognition.lang = 'en-IN';
+  _vcRecognition.maxAlternatives = 1;
+
+  var statusEl = document.getElementById('vc-status');
+  var btn = document.getElementById('vc-mic-btn');
+
+  _vcRecognition.onstart = function(){
+    _vcRecording = true;
+    if(btn){ btn.innerHTML = '&#9209; Stop'; btn.classList.add('rec'); }
+    if(statusEl) statusEl.textContent = '&#128308; Recording... speak all charges. Tap Stop when done.';
+  };
+
+  var interimText = '';
+  _vcRecognition.onresult = function(event){
+    var interim = '', final = '';
+    for(var i=event.resultIndex;i<event.results.length;i++){
+      if(event.results[i].isFinal){
+        final += event.results[i][0].transcript + ' ';
+      } else {
+        interim += event.results[i][0].transcript;
+      }
+    }
+    if(final){ _vcFullText += final; }
+    /* Show live transcript */
+    var el = document.getElementById('voice-parsed-list');
+    if(interim){
+      el.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--text-tertiary);font-style:italic">Hearing: ' + esc(interim) + '</div>';
+    }
+    if(_vcFullText){
+      if(statusEl) statusEl.textContent = '&#9989; Captured: ' + _vcFullText.slice(0,80) + ((_vcFullText.length>80)?'...':'');
+    }
+  };
+
+  _vcRecognition.onerror = function(event){
+    if(event.error !== 'no-speech'){
+      showToast('Mic error: ' + event.error);
+      stopVcRecording();
+    }
+  };
+
+  _vcRecognition.onend = function(){
+    if(_vcRecording){
+      /* Auto-restart for continuous recording (browser stops after ~60s) */
+      try{ _vcRecognition.start(); } catch(e){ stopVcRecording(); }
+    }
+  };
+
+  try{ _vcRecognition.start(); } catch(e){ showToast('Could not start mic: '+e.message); }
+}
+
+function stopVcRecording(){
+  _vcRecording = false;
+  if(_vcRecognition){ try{ _vcRecognition.stop(); }catch(e){} _vcRecognition = null; }
+  var btn = document.getElementById('vc-mic-btn');
+  if(btn){ btn.innerHTML = '&#127899; Speak Charges'; btn.classList.remove('rec'); }
+  var statusEl = document.getElementById('vc-status');
+  /* Parse the accumulated text */
+  if(_vcFullText.trim()){
+    _vcParsed = parseVoiceText(_vcFullText);
+    renderVoiceParsed();
+    if(statusEl) statusEl.textContent = 'Review the detected charges below. Remove any errors, add prices, then confirm.';
+  } else {
+    if(statusEl) statusEl.textContent = 'Nothing was heard. Try again.';
+  }
+  _vcFullText = '';
+}
+
+function toggleVcMic(){
+  if(_vcRecording){ stopVcRecording(); }
+  else { startVcRecording(); }
+}
+
+async function confirmVoiceCharges(){
+  var err = document.getElementById('vc-err');
+  err.style.display = 'none';
+  if(!_vcParsed.length){ err.textContent='Nothing to save.'; err.style.display='block'; return; }
+  var noPrice = _vcParsed.filter(function(i){return !i.p;});
+  if(noPrice.length){ err.textContent='Enter price for: '+noPrice.map(function(i){return i.n;}).join(', '); err.style.display='block'; return; }
+  if(!_admId){ err.textContent='No patient admission selected.'; err.style.display='block'; return; }
+  var inserts = _vcParsed.map(function(item){
+    return {clinic_id:_clinicId,admission_id:_admId,charge_type:item.cat,
+      description:item.n,quantity:item.qty,unit_price:item.p,
+      total_price:item.qty*item.p,added_by:_myUid,
+      charge_date:new Date().toISOString().slice(0,10)};
+  });
+  var r = await _supa.from('admission_charges').insert(inserts);
+  if(r.error){ err.textContent='Error: '+r.error.message; err.style.display='block'; return; }
+  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,
+    action:'voice_charges_added',target_table:'admission_charges',target_id:_admId,
+    details:{count:inserts.length,items:_vcParsed.map(function(i){return i.n;})}});
+  closeModal('mod-voice-charge');
+  showToast(_vcParsed.length + ' charge(s) added to bill');
+  _vcParsed = [];
+  /* Refresh billing tab if open */
+  if(_pid) loadBilling(_pid);
+  loadBpExpenses();
+}
+
+/* ── PRINT BILL as PDF ── */
+async function printPatientBill(){
+  if(!_pid || !_admId){ showToast('Open a patient first'); return; }
+  var [pt,adm,ch,py] = await Promise.all([
+    _supa.from('nh_patients').select('*').eq('id',_pid).single(),
+    _supa.from('admissions').select('*').eq('id',_admId).single(),
+    _supa.from('admission_charges').select('*').eq('admission_id',_admId).order('created_at',{ascending:false}),
+    _supa.from('nh_payments').select('*').eq('admission_id',_admId)
+  ]);
+  var clinic = await _supa.from('clinics').select('name,phone,address').eq('id',_clinicId).single();
+  var p=pt.data||{}, a=adm.data||{}, charges=ch.data||[], payments=py.data||[];
+  var total=charges.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var paid=payments.reduce(function(s,py){return s+(py.amount||0);},0);
+  var due=total-paid;
+  var cn=(clinic.data||{}).name||'Nursing Home';
+  var days=Math.floor((Date.now()-new Date(a.admission_date))/86400000)+1;
+  var w=window.open('','_blank');
+  w.document.write('<html><head><title>Bill - '+esc(p.full_name||'')+'</title><style>'
+    +'body{font-family:Arial,sans-serif;padding:30px;color:#111;max-width:700px;margin:0 auto}'
+    +'h1{font-size:22px;margin:0}h2{font-size:14px;font-weight:normal;color:#555;margin:4px 0 0}'
+    +'.header{border-bottom:2px solid #000;padding-bottom:14px;margin-bottom:16px}'
+    +'.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:13px}'
+    +'.info-row{display:flex;gap:8px}.info-lbl{color:#888;min-width:90px}'
+    +'table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px}'
+    +'th{background:#f5f5f5;padding:8px;text-align:left;border:1px solid #ddd}'
+    +'td{padding:8px;border:1px solid #ddd}'
+    +'.total-row{font-weight:bold;background:#f9f9f9}'
+    +'.footer{border-top:2px solid #000;padding-top:12px;font-size:11px;color:#888}'
+    +'.due{color:#c00;font-size:16px;font-weight:bold}'
+    +'@media print{button{display:none}}'
+    +'</style></head><body>'
+    +'<div class="header"><h1>'+esc(cn)+'</h1><h2>Patient Bill &amp; Receipt</h2></div>'
+    +'<div class="info-grid">'
+    +'<div><div class="info-row"><span class="info-lbl">Patient</span><b>'+esc(p.full_name||'—')+'</b></div>'
+    +'<div class="info-row"><span class="info-lbl">Age/Gender</span>'+(p.age||'—')+' / '+(p.gender||'—')+'</div>'
+    +'<div class="info-row"><span class="info-lbl">Phone</span>'+(p.phone||'—')+'</div>'
+    +'<div class="info-row"><span class="info-lbl">UHID</span>'+(p.uhid||'Auto')+'</div></div>'
+    +'<div><div class="info-row"><span class="info-lbl">Admitted</span>'+new Date(a.admission_date).toLocaleDateString('en-GB')+'</div>'
+    +(a.discharge_date?'<div class="info-row"><span class="info-lbl">Discharged</span>'+new Date(a.discharge_date).toLocaleDateString('en-GB')+'</div>':'')
+    +'<div class="info-row"><span class="info-lbl">Duration</span>'+days+' day(s)</div>'
+    +'<div class="info-row"><span class="info-lbl">Doctor</span>'+(a.admitting_doctor||'—')+'</div>'
+    +'<div class="info-row"><span class="info-lbl">Diagnosis</span>'+(a.admission_diagnosis||'—')+'</div></div>'
+    +'</div>'
+    +'<table><tr><th>Item</th><th>Category</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>'
+    +charges.map(function(c){
+      return '<tr><td>'+esc(c.description||'')+'</td><td>'+esc(c.charge_type||'')+'</td>'
+        +'<td>'+(c.quantity||1)+'</td><td>&#8377;'+(c.unit_price||0).toLocaleString('en-IN')+'</td>'
+        +'<td>&#8377;'+Number(c.total_price||0).toLocaleString('en-IN')+'</td></tr>';
+    }).join('')
+    +'<tr class="total-row"><td colspan="4" style="text-align:right">Total Charges</td><td>&#8377;'+total.toLocaleString('en-IN')+'</td></tr>'
+    +'<tr class="total-row"><td colspan="4" style="text-align:right">Total Paid</td><td style="color:green">&#8377;'+paid.toLocaleString('en-IN')+'</td></tr>'
+    +'<tr class="total-row"><td colspan="4" style="text-align:right"><b>Balance Due</b></td><td class="due">&#8377;'+due.toLocaleString('en-IN')+'</td></tr>'
+    +'</table>'
+    +(payments.length?'<h3 style="font-size:13px;margin-bottom:8px">Payment History</h3><table><tr><th>Date</th><th>Mode</th><th>Amount</th><th>Ref</th></tr>'
+      +payments.map(function(py){return '<tr><td>'+new Date(py.payment_date||py.created_at).toLocaleDateString('en-GB')+'</td><td>'+(py.method||'—')+'</td><td>&#8377;'+Number(py.amount||0).toLocaleString('en-IN')+'</td><td>'+(py.txn_id||'—')+'</td></tr>';}).join('')+'</table>':'')
+    +'<div class="footer">Generated by AuraScale OS &bull; os.aurascale.in &bull; '+new Date().toLocaleString('en-GB')+'</div>'
+    +'<div style="margin-top:12px"><button onclick="window.print()" style="padding:10px 24px;background:#000;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">Print / Save as PDF</button></div>'
+    +'</body></html>');
+  w.document.close();
+}
 
 </script>
 </body>
