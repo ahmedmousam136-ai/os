@@ -12,24 +12,24 @@
 /* ─── RESET ─── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-/* ══ LIGHT ══ */
+/* ══ LIGHT — OraScale-inspired: flat cream/white, blue accent, tight radii ══ */
 :root,[data-theme="light"]{
-  --bg:#F7F6F3;
+  --bg:#FAFAF9;
   --surface:#FFFFFF;
-  --surface2:#FAFAF8;
-  --border:#E8E5DF;
-  --border-mid:#D2CEC6;
-  --border-strong:#AEA9A0;
-  --text-primary:#18170F;
-  --text-secondary:#64605A;
-  --text-tertiary:#9E9A93;
-  /* Purple = admin brand */
-  --brand:#6D28D9;
-  --brand-light:#7C3AED;
-  --brand-bg:#F5F0FF;
-  --brand-border:#DDD6FE;
-  --brand-hover:#5B21B6;
-  --brand-glow:rgba(109,40,217,.22);
+  --surface2:#F5F4F0;
+  --border:#ECE9E2;
+  --border-mid:#DCD8CF;
+  --border-strong:#B7B2A6;
+  --text-primary:#17160F;
+  --text-secondary:#6E6B62;
+  --text-tertiary:#A29D91;
+  /* Blue = admin brand accent (was purple) */
+  --brand:#2F5FDE;
+  --brand-light:#4C74E8;
+  --brand-bg:#EBF1FE;
+  --brand-border:#C9DAFB;
+  --brand-hover:#1F4FCB;
+  --brand-glow:rgba(47,95,222,.18);
   /* Semantics */
   --blue:#2E63D4;
   --blue-bg:#EDF2FC;
@@ -44,16 +44,16 @@
   --red-bg:#FDF0F0;
   --red-border:#F2B8B8;
   /* Layout */
-  --sidebar-w:236px;
-  --header-h:52px;
-  /* Design tokens */
-  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
-  --sh-xs:0 1px 3px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.04);
-  --sh-sm:0 2px 8px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.04);
-  --sh-md:0 4px 18px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.05);
-  --sh-lg:0 12px 42px rgba(0,0,0,.13),0 4px 14px rgba(0,0,0,.07);
-  --ease:.17s cubic-bezier(.4,0,.2,1);
-  --header-blur:rgba(255,255,255,.94);
+  --sidebar-w:248px;
+  --header-h:60px;
+  /* Design tokens — tighter radii than before, more "product UI" than "card kit" */
+  --r-sm:7px;--r-md:9px;--r-lg:12px;--r-xl:14px;
+  --sh-xs:0 1px 2px rgba(20,18,10,.04);
+  --sh-sm:0 1px 3px rgba(20,18,10,.06),0 1px 2px rgba(20,18,10,.04);
+  --sh-md:0 4px 14px rgba(20,18,10,.07),0 1px 4px rgba(20,18,10,.04);
+  --sh-lg:0 10px 34px rgba(20,18,10,.12),0 3px 10px rgba(20,18,10,.06);
+  --ease:.15s cubic-bezier(.4,0,.2,1);
+  --header-blur:rgba(255,255,255,.96);
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
 }
@@ -69,12 +69,12 @@
   --text-primary:#E8E9EF;
   --text-secondary:#8E96B0;
   --text-tertiary:#525A72;
-  --brand:#8B5CF6;
-  --brand-light:#A78BFA;
-  --brand-bg:#1E1535;
-  --brand-border:#3D2A6A;
-  --brand-hover:#7C3AED;
-  --brand-glow:rgba(139,92,246,.25);
+  --brand:#5C86EE;
+  --brand-light:#7B9EF2;
+  --brand-bg:#161F35;
+  --brand-border:#26345C;
+  --brand-hover:#4A72E0;
+  --brand-glow:rgba(92,134,238,.25);
   --blue:#4D85F0;
   --blue-bg:#1A243D;
   --blue-border:#2A3A5C;
@@ -91,7 +91,7 @@
   --sh-sm:0 2px 8px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.25);
   --sh-md:0 4px 18px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.3);
   --sh-lg:0 12px 42px rgba(0,0,0,.55),0 4px 14px rgba(0,0,0,.35);
-  --header-blur:rgba(23,27,36,.94);
+  --header-blur:rgba(23,27,36,.96);
 }
 
 /* ─── BASE ─── */
@@ -105,7 +105,7 @@ a{color:inherit;text-decoration:none}
 ::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
 
 /* ──────────────────────────────────────────────────────────────────
-   AUTH SCREEN — book-design card, centered, with hero colour bar
+   AUTH SCREEN
 ─────────────────────────────────────────────────────────────────── */
 #auth-screen{
   position:fixed;inset:0;z-index:100;
@@ -122,11 +122,10 @@ a{color:inherit;text-decoration:none}
   border-radius:var(--r-xl);
   overflow:hidden;
   box-shadow:var(--sh-lg);
-  animation:fadeUp .35s cubic-bezier(.4,0,.2,1) both;
+  animation:fadeUp .3s cubic-bezier(.4,0,.2,1) both;
 }
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
-/* Hero strip inside auth card */
 .auth-hero{
   background:linear-gradient(135deg,var(--brand) 0%,var(--brand-hover) 100%);
   padding:28px 28px 22px;
@@ -148,7 +147,6 @@ a{color:inherit;text-decoration:none}
 .auth-badge-dot{width:5px;height:5px;border-radius:50%;background:#a5f3c0;animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-/* Auth form body */
 .auth-body{padding:24px 28px 28px}
 .auth-sub{font-size:12px;color:var(--text-tertiary);margin-bottom:20px;text-align:center;line-height:1.55}
 .auth-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);display:block;margin-bottom:5px}
@@ -171,7 +169,6 @@ a{color:inherit;text-decoration:none}
 .auth-btn:active{transform:scale(.98)}
 .auth-err{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--r-sm);padding:9px 12px;font-size:11.5px;display:none;margin-bottom:10px}
 
-/* Theme toggle on auth screen */
 .auth-theme-btn{
   position:absolute;top:14px;right:14px;
   width:34px;height:34px;background:var(--surface);border:1px solid var(--border);
@@ -186,43 +183,46 @@ a{color:inherit;text-decoration:none}
 #app-shell{display:none;height:100vh;overflow:hidden}
 #app-shell.visible{display:flex}
 
-/* ── SIDEBAR ── */
+/* ── SIDEBAR — OraScale-style: white, grouped sections, icon+label rows ── */
 #sidebar{
   width:var(--sidebar-w);flex-shrink:0;
   background:var(--surface);border-right:1px solid var(--border);
   height:100vh;overflow-y:auto;display:flex;flex-direction:column;
   transition:background .22s ease,border-color .22s ease;
 }
-.sb-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border)}
-.sb-mark{font-family:'Instrument Serif',serif;font-size:19px;letter-spacing:-.01em}
+.sb-logo{padding:18px 18px 14px;display:flex;align-items:center;gap:8px}
+.sb-logo-mark{width:28px;height:28px;border-radius:8px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:16px;flex-shrink:0}
+.sb-mark{font-family:'Instrument Serif',serif;font-size:18px;letter-spacing:-.01em;line-height:1.1}
 .sb-mark .a{color:var(--text-primary)}.sb-mark .s{color:var(--brand)}
-.sb-mark .os{font-size:9px;font-weight:700;color:var(--text-tertiary);letter-spacing:.08em;margin-left:3px;font-family:'DM Sans',sans-serif}
+.sb-mark-sub{font-size:9px;font-weight:700;color:var(--text-tertiary);letter-spacing:.1em;margin-top:1px}
 .sb-badge{
   display:inline-flex;align-items:center;gap:4px;
   background:var(--brand-bg);border:1px solid var(--brand-border);
-  border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700;
-  color:var(--brand);letter-spacing:.06em;margin-top:5px;width:fit-content;
+  border-radius:20px;padding:3px 10px 3px 8px;font-size:10px;font-weight:700;
+  color:var(--brand);letter-spacing:.02em;margin:0 18px 12px;width:fit-content;
 }
-.sb-admin{padding:10px 14px;border-bottom:1px solid var(--border)}
+.sb-admin{padding:0 18px 14px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.sb-admin-row{display:flex;align-items:center;gap:9px}
+.sb-admin-av{width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-secondary);font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sb-admin-name{font-size:12.5px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sb-admin-role{font-size:10px;color:var(--text-tertiary);margin-top:1px}
-.sb-nav{flex:1;padding:8px 8px;display:flex;flex-direction:column;gap:1px}
-.nav-sec{font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);padding:10px 8px 4px;margin:0}
-.nav-sec:first-child{padding-top:4px}
+.sb-admin-role{font-size:10.5px;color:var(--text-tertiary);margin-top:1px}
+.sb-nav{flex:1;padding:4px 10px;display:flex;flex-direction:column;gap:1px}
+.nav-sec{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary);padding:14px 8px 6px;margin:0}
+.nav-sec:first-child{padding-top:6px}
 .nb{
-  width:100%;display:flex;align-items:center;gap:9px;padding:9px 9px;
-  border-radius:var(--r-sm);color:var(--text-secondary);font-size:12.5px;font-weight:500;
-  transition:all var(--ease);cursor:pointer;white-space:nowrap;text-align:left;min-height:40px;
+  width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border-radius:var(--r-sm);color:var(--text-secondary);font-size:13px;font-weight:500;
+  transition:all var(--ease);cursor:pointer;white-space:nowrap;text-align:left;min-height:38px;
 }
 .nb:hover:not(.on){background:var(--surface2);color:var(--text-primary)}
-.nb.on{background:var(--brand-bg);color:var(--brand);font-weight:600}
+.nb.on{background:var(--brand-bg);color:var(--brand);font-weight:700}
 .nb-ic{width:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .nb-badge{
   margin-left:auto;min-width:18px;height:18px;
   background:var(--brand);color:#fff;border-radius:9px;
   font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;
 }
-.sb-foot{padding:12px 14px;border-top:1px solid var(--border)}
+.sb-foot{padding:12px 18px;border-top:1px solid var(--border)}
 .sb-out{
   display:flex;align-items:center;gap:8px;color:var(--text-tertiary);
   font-size:12px;cursor:pointer;transition:color var(--ease);padding:6px 0;
@@ -232,115 +232,153 @@ a{color:inherit;text-decoration:none}
 /* ── MAIN WRAP ── */
 #main{flex:1;overflow:hidden;display:flex;flex-direction:column}
 
-/* ── HEADER ── */
+/* ── HEADER — OraScale-style: search left, actions + avatar right ── */
 header{
   height:var(--header-h);
   background:var(--header-blur);
   border-bottom:1px solid var(--border);
-  padding:0 20px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;
   position:sticky;top:0;z-index:30;
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   transition:background .22s ease,border-color .22s ease;
 }
-.hdr-l{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
-.bc-root{font-family:'Instrument Serif',serif;font-size:15px;color:var(--text-primary)}
-.bc-sep{color:var(--text-tertiary);font-size:12px}
-.bc-page{color:var(--text-secondary);font-size:12.5px;font-weight:500}
-.rt-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;animation:pulse 2s ease-in-out infinite}
-.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-l{display:flex;align-items:center;gap:9px;flex:1;min-width:0;max-width:420px}
+.hdr-search-wrap{position:relative;flex:1;display:flex;align-items:center}
+.hdr-search-ic{position:absolute;left:11px;color:var(--text-tertiary);display:flex;pointer-events:none}
 .hdr-search{
-  background:var(--bg);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:7px 12px;font-size:12.5px;
-  color:var(--text-primary);min-width:200px;
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:8px 46px 8px 34px;font-size:12.5px;
+  color:var(--text-primary);
   transition:border-color var(--ease),background var(--ease),box-shadow var(--ease);
 }
 .hdr-search:focus{border-color:var(--brand);background:var(--surface);box-shadow:0 0 0 3px var(--brand-glow);outline:none}
 .hdr-search::placeholder{color:var(--text-tertiary)}
+.hdr-kbd{position:absolute;right:9px;font-size:10px;color:var(--text-tertiary);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-weight:600;pointer-events:none}
+.bc-context{
+  display:none;
+}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.hdr-status{font-size:10.5px;color:var(--text-tertiary);display:flex;align-items:center;white-space:nowrap;margin-right:2px}
+.rt-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:5px;animation:pulse 2s ease-in-out infinite}
 .topbar-btn{
   width:34px;height:34px;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;
-  color:var(--text-secondary);cursor:pointer;box-shadow:var(--sh-xs);transition:all var(--ease);flex-shrink:0;
+  color:var(--text-secondary);cursor:pointer;box-shadow:var(--sh-xs);transition:all var(--ease);flex-shrink:0;position:relative;
 }
 .topbar-btn:hover{border-color:var(--border-mid);color:var(--text-primary)}
+.topbar-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--red);border:1.5px solid var(--surface)}
+.hdr-new-btn{
+  display:flex;align-items:center;gap:6px;background:var(--brand);color:#fff;font-weight:700;
+  padding:0 14px;height:34px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;
+  box-shadow:0 2px 8px var(--brand-glow);transition:all var(--ease);border:none;white-space:nowrap;
+}
+.hdr-new-btn:hover{background:var(--brand-hover);transform:translateY(-1px)}
+.hdr-user{display:flex;align-items:center;gap:9px;padding:4px 10px 4px 4px;border-radius:var(--r-md);cursor:pointer;transition:background var(--ease)}
+.hdr-user:hover{background:var(--surface2)}
+.hdr-user-av{width:30px;height:30px;border-radius:8px;background:var(--brand-bg);color:var(--brand);border:1px solid var(--brand-border);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-user-info{line-height:1.25;display:none}
+.hdr-user-name{font-size:12px;font-weight:700;color:var(--text-primary);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-user-role{font-size:10px;color:var(--text-tertiary)}
+@media(min-width:760px){.hdr-user-info{display:block}}
 
 /* ── CONTENT ── */
-.content{flex:1;overflow-y:auto;padding:20px}
+.content{flex:1;overflow-y:auto;padding:22px 24px}
 .view{display:none}.view.on{display:block}
 
-/* ── SECTION HEADER ── */
+/* ── SECTION HEADER — flat, sans-serif, OraScale style ── */
 .sh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap}
-.st{font-family:'Instrument Serif',serif;font-size:22px;letter-spacing:-.02em;color:var(--text-primary);line-height:1.2}
-.ss{font-size:12px;color:var(--text-tertiary);margin-top:3px}
+.st{font-family:'DM Sans',sans-serif;font-size:23px;font-weight:700;letter-spacing:-.02em;color:var(--text-primary);line-height:1.2}
+.ss{font-size:12.5px;color:var(--text-tertiary);margin-top:3px}
+.sh-actions{display:flex;align-items:center;gap:8px}
 
-/* ── HERO CARD (dashboard) ── */
-.dash-hero{
-  background:linear-gradient(135deg,var(--brand) 0%,var(--brand-hover) 100%);
-  border-radius:var(--r-lg);padding:22px 22px 18px;color:#fff;
-  box-shadow:0 4px 20px var(--brand-glow);
-  position:relative;overflow:hidden;margin-bottom:16px;
-}
-.dash-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06)}
-.dash-hero::after{content:'';position:absolute;bottom:-30px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04)}
-.dash-hero-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);
-  border-radius:20px;padding:4px 10px;
-  font-size:9.5px;font-weight:700;letter-spacing:.06em;margin-bottom:10px;position:relative;z-index:1;
-}
-.dash-hero-dot{width:5px;height:5px;border-radius:50%;background:#a5f3c0;animation:pulse 2s ease-in-out infinite}
-.dash-hero-title{font-family:'Instrument Serif',serif;font-size:22px;letter-spacing:-.02em;position:relative;z-index:1;margin-bottom:4px}
-.dash-hero-sub{font-size:11.5px;opacity:.8;line-height:1.5;position:relative;z-index:1}
-.dash-hero-meta{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.18);flex-wrap:wrap;position:relative;z-index:1}
-.dash-hero-stat{text-align:center}
-.dash-hero-stat-val{font-family:'Instrument Serif',serif;font-size:24px;letter-spacing:-.02em;font-weight:400}
-.dash-hero-stat-lbl{font-size:9.5px;opacity:.7;font-weight:600;letter-spacing:.04em;margin-top:2px}
-
-/* ── METRIC CARDS ── */
-.mg4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.mg3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+/* ── METRIC CARDS — icon badge top-right, big value, sub with trend ── */
+.mg4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.mg3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
 .mg2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+
+.kpi{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px 17px;box-shadow:var(--sh-xs);
+  transition:background .22s ease,border-color .22s ease,box-shadow var(--ease);
+  position:relative;
+}
+.kpi:hover{box-shadow:var(--sh-sm)}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.kpi-lbl{font-size:12px;font-weight:500;color:var(--text-secondary)}
+.kpi-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-ic.blue{background:var(--blue-bg);color:var(--blue)}
+.kpi-ic.green{background:var(--green-bg);color:var(--green)}
+.kpi-ic.amber{background:var(--amber-bg);color:var(--amber)}
+.kpi-ic.red{background:var(--red-bg);color:var(--red)}
+.kpi-ic.brand{background:var(--brand-bg);color:var(--brand)}
+.kpi-val{font-family:'DM Sans',sans-serif;font-size:27px;font-weight:700;letter-spacing:-.02em;color:var(--text-primary);line-height:1}
+.kpi-val .of{font-size:15px;font-weight:500;color:var(--text-tertiary)}
+.kpi-sub{font-size:11px;color:var(--text-tertiary);margin-top:7px;display:flex;align-items:center;gap:5px}
+.kpi-trend{display:inline-flex;align-items:center;gap:2px;font-weight:700;font-size:10.5px;padding:1px 5px;border-radius:4px}
+.kpi-trend.up{background:var(--green-bg);color:var(--green)}
+.kpi-trend.down{background:var(--red-bg);color:var(--red)}
+.kpi-bar{height:5px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:9px}
+.kpi-bar-fill{height:100%;border-radius:3px;background:var(--brand);transition:width .5s ease}
+
+/* legacy .mc kept for other views, restyled to match kpi look but simpler */
 .mc{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh-xs);
-  transition:background .22s ease,border-color .22s ease;
+  border-radius:var(--r-lg);padding:15px 16px;box-shadow:var(--sh-xs);
+  transition:background .22s ease,border-color .22s ease,box-shadow var(--ease);
 }
-.mc-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--text-tertiary);margin-bottom:8px}
-.mc-val{font-family:'Instrument Serif',serif;font-size:28px;letter-spacing:-.03em;color:var(--text-primary);line-height:1}
-.mc-sub{font-size:10.5px;color:var(--text-tertiary);margin-top:5px}
+.mc:hover{box-shadow:var(--sh-sm)}
+.mc-lbl{font-size:11.5px;font-weight:500;color:var(--text-secondary);margin-bottom:9px}
+.mc-val{font-family:'DM Sans',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--text-primary);line-height:1}
+.mc-sub{font-size:10.5px;color:var(--text-tertiary);margin-top:6px}
 
 /* ── PANELS ── */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);margin-bottom:14px;transition:background .22s ease,border-color .22s ease}
-.ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
-.pt{font-size:13px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:6px}
-.pb{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.pt{font-size:13.5px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:6px}
+.pt-sub{font-size:11px;color:var(--text-tertiary);font-weight:500}
+.pb{display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700}
 .pb-g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .pb-r{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 .pb-a{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .pb-b{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
 .pb-brand{background:var(--brand-bg);color:var(--brand);border:1px solid var(--brand-border)}
+.ph-tabs{display:flex;gap:4px;background:var(--surface2);border-radius:var(--r-sm);padding:2px}
+.ph-tab{padding:5px 11px;font-size:11px;font-weight:600;color:var(--text-tertiary);border-radius:6px;cursor:pointer}
+.ph-tab.on{background:var(--surface);color:var(--text-primary);box-shadow:var(--sh-xs)}
 
 /* ── NH ROWS ── */
-.nh-row{display:flex;align-items:center;gap:12px;padding:12px 15px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--ease)}
+.nh-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--ease)}
 .nh-row:last-child{border-bottom:none}
 .nh-row:hover{background:var(--surface2)}
-.nh-av{width:36px;height:36px;border-radius:var(--r-sm);background:var(--brand-bg);color:var(--brand);font-family:'Instrument Serif',serif;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--brand-border)}
+.nh-av{width:36px;height:36px;border-radius:var(--r-sm);background:var(--brand-bg);color:var(--brand);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--brand-border)}
 .nh-name{font-size:13px;font-weight:700;color:var(--text-primary)}
 .nh-meta{font-size:11px;color:var(--text-tertiary);margin-top:1px}
 
+/* ── DEPT / LIST ROWS with progress bar (OraScale "department overview" style) ── */
+.dept-row{padding:10px 0}
+.dept-row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dept-name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
+.dept-count{font-size:12px;color:var(--text-tertiary);font-weight:600}
+.dept-bar{height:5px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.dept-bar-fill{height:100%;border-radius:3px;background:var(--brand)}
+
 /* ── CHIPS ── */
-.chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:5px;font-size:10px;font-weight:700;white-space:nowrap}
 .ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .ch-pend{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .ch-rej{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 .ch-brand{background:var(--brand-bg);color:var(--brand);border:1px solid var(--brand-border)}
+.ch-off{background:var(--surface2);color:var(--text-tertiary);border:1px solid var(--border)}
 
 /* ── BUTTONS ── */
 .btn-brand{background:var(--brand);color:#fff;font-weight:700;padding:8px 14px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;transition:all var(--ease);display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px var(--brand-glow);border:none}
 .btn-brand:hover{background:var(--brand-hover);transform:translateY(-1px)}
-.btn-ok{background:var(--green);color:#fff;font-weight:700;padding:8px 14px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;transition:background var(--ease);border:none}
-.btn-ok:hover{background:#0f8059}
-.btn-danger{background:var(--red-bg);color:var(--red);font-weight:700;padding:8px 14px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;transition:all var(--ease);border:1px solid var(--red-border)}
-.btn-danger:hover{background:var(--red);color:#fff}
+.btn-ok,.btn-green{background:var(--green);color:#fff;font-weight:700;padding:8px 14px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;transition:background var(--ease);border:none}
+.btn-ok:hover,.btn-green:hover{background:#0f8059}
+.btn-danger,.btn-red{background:var(--red-bg);color:var(--red);font-weight:700;padding:8px 14px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;transition:all var(--ease);border:1px solid var(--red-border)}
+.btn-danger:hover,.btn-red:hover{background:var(--red);color:#fff}
+.btn-ghost{background:var(--surface);color:var(--text-secondary);font-weight:700;padding:8px 14px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;transition:all var(--ease);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border-mid);color:var(--text-primary)}
 .qbtn{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 12px;font-size:11.5px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all var(--ease);display:inline-flex;align-items:center;gap:5px;box-shadow:var(--sh-xs)}
 .qbtn:hover{border-color:var(--border-mid);color:var(--text-primary)}
 
@@ -350,9 +388,9 @@ header{
 .search-bar::placeholder{color:var(--text-tertiary)}
 
 /* ── MODALS ── */
-.mod-ov{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.mod-ov{position:fixed;inset:0;background:rgba(20,18,10,.4);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
 .mod-ov.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);width:100%;max-width:540px;box-shadow:var(--sh-lg);max-height:90vh;overflow-y:auto;animation:fadeUp .22s cubic-bezier(.4,0,.2,1) both}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);width:100%;max-width:540px;box-shadow:var(--sh-lg);max-height:90vh;overflow-y:auto;animation:fadeUp .2s cubic-bezier(.4,0,.2,1) both}
 .mh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1}
 .mtitle{font-size:14px;font-weight:700;color:var(--text-primary)}
 .mclose{width:28px;height:28px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text-tertiary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all var(--ease)}
@@ -368,7 +406,7 @@ header{
 .msub:hover{background:var(--brand-hover)}
 
 /* ── INFO ROWS ── */
-.ir{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(228,224,216,.6);font-size:12.5px}
+.ir{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12.5px}
 .ir:last-child{border-bottom:none}
 .il{color:var(--text-tertiary);font-weight:500;font-size:11.5px}
 .iv{font-weight:600;text-align:right;max-width:60%;color:var(--text-primary)}
@@ -379,9 +417,17 @@ header{
 .tab-btn.on{color:var(--brand);border-bottom-color:var(--brand)}
 .tab-pnl{display:none;padding:16px 15px}.tab-pnl.on{display:block}
 
-/* ── TRUST BAR / FOOTER INFO ── */
-.trust-bar{display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);flex-wrap:wrap;box-shadow:var(--sh-xs);margin-top:8px}
-.trust-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--brand);font-weight:600}
+/* ── STAFF ROWS (used by profile modal sections) ── */
+.staff-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.staff-row:last-child{border-bottom:none}
+.staff-av{width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ward-mini{padding:12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:10px}
+.ward-mini-title{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--text-primary)}
+.ward-mini-stats{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-tertiary);margin-top:4px}
+.stat-block{background:var(--surface2);border-radius:var(--r-md);padding:12px}
+.sb-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px}
+.sb-lbl{color:var(--text-tertiary)}
+.sb-val{font-weight:700;color:var(--text-primary)}
 
 /* ── OCCUPANCY BAR ── */
 .occ-bar{height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-top:6px}
@@ -407,6 +453,7 @@ header{
   .mg4{grid-template-columns:1fr 1fr}
   .mg3{grid-template-columns:1fr 1fr}
   .content{padding:14px}
+  .hdr-l{max-width:none}
 }
 </style>
 </head>
@@ -448,40 +495,49 @@ header{
   <!-- SIDEBAR -->
   <div id="sidebar">
     <div class="sb-logo">
-      <div class="sb-mark"><span class="a">Aura</span><span class="s">Scale</span><span class="os">OS</span></div>
-      <div class="sb-badge"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--brand);margin-right:3px;animation:pulse 2s ease-in-out infinite"></span>Super Admin</div>
+      <div class="sb-logo-mark">A</div>
+      <div>
+        <div class="sb-mark"><span class="a">Aura</span><span class="s">Scale</span></div>
+        <div class="sb-mark-sub">PLATFORM OS</div>
+      </div>
     </div>
+    <div class="sb-badge"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--brand);margin-right:2px;animation:pulse 2s ease-in-out infinite"></span>Super Admin</div>
     <div class="sb-admin">
-      <div class="sb-admin-name" id="sb-admin-name">Platform Admin</div>
-      <div class="sb-admin-role">AuraScale Super Admin</div>
+      <div class="sb-admin-row">
+        <div class="sb-admin-av" id="sb-admin-av">A</div>
+        <div style="min-width:0">
+          <div class="sb-admin-name" id="sb-admin-name">Platform Admin</div>
+          <div class="sb-admin-role">AuraScale Super Admin</div>
+        </div>
+      </div>
     </div>
     <nav class="sb-nav">
       <p class="nav-sec">Platform</p>
       <button class="nb on" onclick="nav('dashboard',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>Dashboard
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>Dashboard
       </button>
       <button class="nb" onclick="nav('homes',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>Nursing Homes
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>Nursing Homes
         <span class="nb-badge" id="nav-pending-badge" style="display:none">0</span>
       </button>
       <p class="nav-sec">Analytics</p>
       <button class="nb" onclick="nav('beds',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/></svg></span>Bed Analytics
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/></svg></span>Bed Analytics
       </button>
       <button class="nb" onclick="nav('patients',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>Patients
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>Patients
       </button>
       <button class="nb" onclick="nav('staff',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Staff &amp; Roles
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Staff &amp; Roles
       </button>
       <p class="nav-sec">Approvals</p>
       <button class="nb" onclick="nav('approvals',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg></span>Pending Approvals
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg></span>Pending Approvals
         <span class="nb-badge" id="nav-approvals-badge" style="display:none">0</span>
       </button>
       <p class="nav-sec">Account</p>
       <button class="nb" onclick="nav('settings',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings
       </button>
     </nav>
     <div class="sb-foot">
@@ -496,16 +552,32 @@ header{
   <div id="main">
     <header>
       <div class="hdr-l">
-        <span class="bc-root">AuraScale</span>
-        <span class="bc-sep">/</span>
-        <span class="bc-page" id="tab-title">Dashboard</span>
+        <div class="hdr-search-wrap">
+          <span class="hdr-search-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input class="hdr-search" id="global-search" placeholder="Search nursing homes…" oninput="filterHomes(this.value)"/>
+          <span class="hdr-kbd">⌘K</span>
+        </div>
       </div>
       <div class="hdr-right">
-        <span style="font-size:10px;color:var(--text-tertiary);display:flex;align-items:center"><span class="rt-dot"></span>Platform Live</span>
-        <input class="hdr-search" id="global-search" placeholder="Search nursing homes…" oninput="filterHomes(this.value)"/>
+        <span class="hdr-status"><span class="rt-dot"></span>Platform Live</span>
+        <button class="topbar-btn" title="Notifications" onclick="nav('approvals',document.querySelectorAll('.nb')[4])">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="topbar-dot" id="hdr-notif-dot" style="display:none"></span>
+        </button>
         <button class="topbar-btn" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark mode">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
+        <button class="hdr-new-btn" onclick="openModal('mod-add-nh')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New
+        </button>
+        <div class="hdr-user" onclick="nav('settings',document.querySelectorAll('.nb')[6])" title="Account settings">
+          <div class="hdr-user-av" id="hdr-user-av">A</div>
+          <div class="hdr-user-info">
+            <div class="hdr-user-name" id="hdr-user-name">Platform Admin</div>
+            <div class="hdr-user-role">Super Admin</div>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -513,39 +585,56 @@ header{
 
       <!-- DASHBOARD -->
       <div id="v-dashboard" class="view on">
-        <!-- Hero -->
-        <div class="dash-hero">
-          <div class="dash-hero-badge"><span class="dash-hero-dot"></span>AuraScale Platform</div>
-          <div class="dash-hero-title">Platform Dashboard</div>
-          <div class="dash-hero-sub">All nursing homes · Real-time overview · <span id="dash-date"></span></div>
-          <div class="dash-hero-meta">
-            <div class="dash-hero-stat"><div class="dash-hero-stat-val" id="dh-nh">—</div><div class="dash-hero-stat-lbl">Nursing Homes</div></div>
-            <div class="dash-hero-stat"><div class="dash-hero-stat-val" id="dh-beds">—</div><div class="dash-hero-stat-lbl">Total Beds</div></div>
-            <div class="dash-hero-stat"><div class="dash-hero-stat-val" id="dh-patients">—</div><div class="dash-hero-stat-lbl">Patients</div></div>
-            <div class="dash-hero-stat"><div class="dash-hero-stat-val" id="dh-pending" style="color:#fbbf24">—</div><div class="dash-hero-stat-lbl">Pending</div></div>
+        <div class="sh">
+          <div><h1 class="st">Dashboard</h1><p class="ss" id="dash-date-wrap">Overview across all nursing homes · <span id="dash-date"></span></p></div>
+          <div class="sh-actions">
+            <button class="qbtn" onclick="loadDashboard()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh
+            </button>
           </div>
         </div>
-        <!-- Metric rows -->
+
+        <!-- Primary KPI row (mirrors the 4-card top row) -->
         <div class="mg4">
-          <div class="mc"><div class="mc-lbl">Total Nursing Homes</div><div class="mc-val" id="d-total-nh">—</div><div class="mc-sub">all facilities</div></div>
-          <div class="mc" style="border-color:var(--green-border)"><div class="mc-lbl">Active NHs</div><div class="mc-val" id="d-active-nh">—</div><div class="mc-sub">approved &amp; live</div></div>
-          <div class="mc" style="border-color:var(--amber-border)"><div class="mc-lbl">Pending Approval</div><div class="mc-val" id="d-pending-nh">—</div><div class="mc-sub">awaiting activation</div></div>
-          <div class="mc" style="border-color:var(--brand-border)"><div class="mc-lbl">Total Staff</div><div class="mc-val" id="d-total-staff">—</div><div class="mc-sub">across all facilities</div></div>
+          <div class="kpi">
+            <div class="kpi-top"><span class="kpi-lbl">Total Nursing Homes</span><span class="kpi-ic brand"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span></div>
+            <div class="kpi-val" id="d-total-nh">—</div>
+            <div class="kpi-sub" id="d-active-nh-sub">— active facilities</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><span class="kpi-lbl">Bed Occupancy</span><span class="kpi-ic amber"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/></svg></span></div>
+            <div class="kpi-val"><span id="d-occ-beds">—</span><span class="of" id="d-occ-of">/—</span></div>
+            <div class="kpi-bar"><div class="kpi-bar-fill" id="d-occ-bar" style="width:0%"></div></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><span class="kpi-lbl">Registered Patients</span><span class="kpi-ic blue"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span></div>
+            <div class="kpi-val" id="d-total-patients">—</div>
+            <div class="kpi-sub" id="d-active-adm-sub">— active admissions</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><span class="kpi-lbl">Pending Approvals</span><span class="kpi-ic red"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span></div>
+            <div class="kpi-val" id="d-pending-nh">—</div>
+            <div class="kpi-sub">awaiting activation</div>
+          </div>
         </div>
+
+        <!-- Secondary row -->
         <div class="mg4">
+          <div class="mc"><div class="mc-lbl">Total Staff</div><div class="mc-val" id="d-total-staff">—</div><div class="mc-sub">across all facilities</div></div>
           <div class="mc"><div class="mc-lbl">Total Beds</div><div class="mc-val" id="d-total-beds">—</div><div class="mc-sub">platform-wide</div></div>
-          <div class="mc" style="border-color:var(--green-border)"><div class="mc-lbl">Occupied Beds</div><div class="mc-val" id="d-occ-beds">—</div><div class="mc-sub">currently in use</div></div>
           <div class="mc"><div class="mc-lbl">Active Admissions</div><div class="mc-val" id="d-active-adm">—</div><div class="mc-sub">inpatients now</div></div>
-          <div class="mc"><div class="mc-lbl">Registered Patients</div><div class="mc-val" id="d-total-patients">—</div><div class="mc-sub">all time</div></div>
+          <div class="mc"><div class="mc-lbl">Documents Uploaded</div><div class="mc-val" id="d-docs">—</div><div class="mc-sub">total platform</div></div>
         </div>
         <div class="mg3">
-          <div class="mc"><div class="mc-lbl">Documents Uploaded</div><div class="mc-val" id="d-docs">—</div><div class="mc-sub">total platform</div></div>
           <div class="mc"><div class="mc-lbl">Billing Records</div><div class="mc-val" id="d-charges">—</div><div class="mc-sub">charges logged</div></div>
           <div class="mc"><div class="mc-lbl">Progress Notes</div><div class="mc-val" id="d-notes">—</div><div class="mc-sub">clinical notes</div></div>
+          <div class="mc"><div class="mc-lbl">Active Facilities</div><div class="mc-val" id="d-active-nh">—</div><div class="mc-sub">approved &amp; live</div></div>
         </div>
+
         <div class="mg2">
           <div class="panel"><div class="ph"><div class="pt">Recent Nursing Homes</div></div><div id="dash-nh-list"></div></div>
-          <div class="panel"><div class="ph"><div class="pt">&#9888;&#65039; Pending Approvals</div></div><div id="dash-pending-list"></div></div>
+          <div class="panel"><div class="ph"><div class="pt">Pending Approvals</div></div><div id="dash-pending-list"></div></div>
         </div>
       </div>
 
@@ -554,7 +643,7 @@ header{
         <div class="sh">
           <div><h1 class="st">Nursing Homes</h1><p class="ss">All registered facilities on the AuraScale platform</p></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <select id="nh-filter-status" class="hdr-search" style="width:auto;min-height:36px" onchange="loadHomes()">
+            <select id="nh-filter-status" class="hdr-search" style="width:auto;min-height:36px;padding:8px 12px" onchange="loadHomes()">
               <option value="">All Status</option><option value="active">Active</option><option value="pending">Pending</option><option value="inactive">Inactive</option>
             </select>
           </div>
@@ -568,9 +657,9 @@ header{
         <div class="sh"><div><h1 class="st">Bed Analytics</h1><p class="ss"><span class="rt-dot"></span>Platform-wide bed occupancy across all facilities</p></div></div>
         <div class="mg4">
           <div class="mc"><div class="mc-lbl">Total Platform Beds</div><div class="mc-val" id="ba-total">—</div></div>
-          <div class="mc" style="border-color:var(--green-border)"><div class="mc-lbl">Occupied</div><div class="mc-val" id="ba-occ">—</div><div class="mc-sub" id="ba-occ-pct"></div></div>
+          <div class="mc"><div class="mc-lbl">Occupied</div><div class="mc-val" id="ba-occ">—</div><div class="mc-sub" id="ba-occ-pct"></div></div>
           <div class="mc"><div class="mc-lbl">Available</div><div class="mc-val" id="ba-vac">—</div></div>
-          <div class="mc" style="border-color:var(--amber-border)"><div class="mc-lbl">Cleaning / Reserved</div><div class="mc-val" id="ba-other">—</div></div>
+          <div class="mc"><div class="mc-lbl">Cleaning / Reserved</div><div class="mc-val" id="ba-other">—</div></div>
         </div>
         <div class="panel"><div class="ph"><div class="pt">Per-Facility Bed Summary</div></div><div id="bed-per-nh"></div></div>
         <div class="panel"><div class="ph"><div class="pt">Ward-wise Platform Totals</div></div><div id="bed-per-ward" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px"></div></div>
@@ -581,7 +670,7 @@ header{
         <div class="sh"><div><h1 class="st">Patient Analytics</h1><p class="ss">Platform-level patient and admission overview</p></div></div>
         <div class="mg4">
           <div class="mc"><div class="mc-lbl">Registered Patients</div><div class="mc-val" id="pa-total">—</div></div>
-          <div class="mc" style="border-color:var(--green-border)"><div class="mc-lbl">Active Admissions</div><div class="mc-val" id="pa-active">—</div></div>
+          <div class="mc"><div class="mc-lbl">Active Admissions</div><div class="mc-val" id="pa-active">—</div></div>
           <div class="mc"><div class="mc-lbl">Total Admissions</div><div class="mc-val" id="pa-adm-total">—</div></div>
           <div class="mc"><div class="mc-lbl">Discharged</div><div class="mc-val" id="pa-discharged">—</div></div>
         </div>
@@ -614,7 +703,7 @@ header{
         <div class="sh"><div><h1 class="st">Settings</h1><p class="ss">Manage your Super Admin account</p></div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div class="panel">
-            <div class="ph"><div class="pt">&#128272; Change Password</div></div>
+            <div class="ph"><div class="pt">Change Password</div></div>
             <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
               <div>
                 <label class="flbl">New Password</label>
@@ -629,7 +718,7 @@ header{
             </div>
           </div>
           <div class="panel">
-            <div class="ph"><div class="pt">&#128100; Admin Account</div></div>
+            <div class="ph"><div class="pt">Admin Account</div></div>
             <div style="padding:16px">
               <div class="ir"><span class="il">Email</span><span class="iv" id="settings-email">—</span></div>
               <div class="ir"><span class="il">Role</span><span class="iv"><span class="chip ch-brand">Super Admin</span></span></div>
@@ -687,6 +776,7 @@ header{
    AuraScale OS — Super Admin Panel
    Platform-level control · All nursing homes · Full analytics
    Uses same Supabase project as all portals
+   (Logic unchanged from original — only the UI was restyled)
 ══════════════════════════════════════════════════════════════ */
 
 const SUPABASE_URL='https://qquyqejqrxfhtmidmgkb.supabase.co';
@@ -701,7 +791,7 @@ var _allHomes=[],_currentNhId=null;
 
 /* ── UTILS ── */
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function showToast(msg){var t=document.getElementById('sa-toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3000);}
+function showToast(msg){var t=document.getElementById('nh-toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3000);}
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function fmtNum(n){return Number(n||0).toLocaleString('en-IN');}
@@ -770,8 +860,7 @@ function nav(id,btn){
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var t={dashboard:'Dashboard',homes:'Nursing Homes',beds:'Bed Analytics',patients:'Patient Analytics',staff:'Staff & Roles',approvals:'Pending Approvals'};
-  document.getElementById('tab-title').textContent=t[id]||id;
+  var t={dashboard:'Dashboard',homes:'Nursing Homes',beds:'Bed Analytics',patients:'Patient Analytics',staff:'Staff & Roles',approvals:'Pending Approvals',settings:'Settings'};
   if(id==='dashboard')loadDashboard();
   if(id==='homes')loadHomes();
   if(id==='beds')loadBedAnalytics();
@@ -779,7 +868,7 @@ function nav(id,btn){
   if(id==='staff')loadAllStaff();
   if(id==='approvals')loadApprovals();
   if(id==='settings'){
-    var emailEl=document.getElementById('set-email-display');
+    var emailEl=document.getElementById('settings-email');
     if(emailEl)emailEl.textContent=_saEmail||'—';
   }
 }
@@ -819,9 +908,16 @@ async function loadDashboard(){
   document.getElementById('d-charges').textContent=fmtNum(charges.count||0);
   document.getElementById('d-notes').textContent=fmtNum(notes.count||0);
 
+  /* OraScale-style KPI extras: sub-labels, bed occupancy bar */
+  var ansub=document.getElementById('d-active-nh-sub');if(ansub)ansub.textContent=active+' active facilities';
+  var aasub=document.getElementById('d-active-adm-sub');if(aasub)aasub.textContent=activeAdm+' active admissions';
+  var occOf=document.getElementById('d-occ-of');if(occOf)occOf.textContent='/'+allBeds.length;
+  var occBar=document.getElementById('d-occ-bar');if(occBar)occBar.style.width=(allBeds.length?Math.round(occ/allBeds.length*100):0)+'%';
+
   /* Update badges */
   var pb=document.getElementById('nav-pending-badge');pb.textContent=pending;pb.style.display=pending>0?'':'none';
   var ab=document.getElementById('nav-approvals-badge');ab.textContent=pending;ab.style.display=pending>0?'':'none';
+  var nd=document.getElementById('hdr-notif-dot');if(nd)nd.style.display=pending>0?'block':'none';
 
   /* Build admission map for per-NH stats */
   var admByNH={},bedsByNH={};
@@ -900,156 +996,102 @@ function filterHomes(q){
   }
 }
 
-/* ── NH PROFILE MODAL ── */
+/* ── NH PROFILE (uses mod-nh modal) ── */
 async function openNHProfile(nhId){
   _currentNhId=nhId;
   var h=_allHomes.find(function(x){return x.id===nhId;})||{};
-  document.getElementById('nhp-title').textContent=h.name||'Nursing Home';
-  document.getElementById('nhp-sub').textContent='ID: '+nhId.slice(0,8)+'… · Registered '+new Date(h.created_at||Date.now()).toLocaleDateString('en-GB');
-  document.getElementById('nhp-status-chip').innerHTML='<span class="chip '+(h.is_approved?'ch-act':'ch-pend')+'">'+(h.is_approved?'Active':'Pending')+'</span>';
-  nhpTab('overview',document.querySelector('.np-tab'));
-  openModal('mod-nh-profile');
-  /* Load all tabs */
-  loadNHPOverview(nhId,h);
-  loadNHPStaff(nhId);
-  loadNHPBeds(nhId);
-  loadNHPAdmissions(nhId);
-  loadNHPUsage(nhId);
+  document.getElementById('nh-modal-title').textContent=h.name||'Nursing Home';
+  nhTab('overview',document.querySelector('.tab-btn'));
+  openModal('mod-nh');
+  loadNHOverview(nhId,h);
+  loadNHStaff(nhId);
+  loadNHBeds(nhId);
+  loadNHBilling(nhId);
 }
 
-function nhpTab(tab,el){
-  document.querySelectorAll('.np-tab').forEach(function(t){t.classList.remove('on')});
-  document.querySelectorAll('.np-pnl').forEach(function(p){p.classList.remove('on')});
+function nhTab(tab,el){
+  document.querySelectorAll('.tab-btn').forEach(function(t){t.classList.remove('on')});
+  document.querySelectorAll('.tab-pnl').forEach(function(p){p.classList.remove('on')});
   if(el)el.classList.add('on');
-  var p=document.getElementById('nhp-pnl-'+tab);if(p)p.classList.add('on');
+  var p=document.getElementById('nht-'+tab);if(p)p.classList.add('on');
 }
 
-async function loadNHPOverview(nhId,h){
-  document.getElementById('nhp-overview-content').innerHTML=
-    '<div style="display:flex;flex-direction:column;gap:3px">'
+async function loadNHOverview(nhId,h){
+  document.getElementById('nh-detail-overview').innerHTML=
+    '<div style="display:flex;flex-direction:column;gap:2px">'
     +'<div class="ir"><span class="il">Facility Name</span><span class="iv">'+esc(h.name||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Owner / Admin</span><span class="iv">'+esc(h.doctor_name||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Phone</span><span class="iv">'+(h.phone||'—')+'</span></div>'
-    +'<div class="ir"><span class="il">Facility Type</span><span class="iv">'+esc(h.facility_type||'—')+'</span></div>'
-    +'<div class="ir"><span class="il">Status</span><span class="iv">'+(h.is_approved?'✅ Active':'⏳ Pending Approval')+'</span></div>'
-    +'<div class="ir"><span class="il">Plan</span><span class="iv">'+(h.plan||'pending')+'</span></div>'
+    +'<div class="ir"><span class="il">Status</span><span class="iv">'+(h.is_approved?'Active':'Pending Approval')+'</span></div>'
     +'<div class="ir"><span class="il">Registered</span><span class="iv">'+new Date(h.created_at||Date.now()).toLocaleDateString('en-GB')+'</span></div>'
     +'</div>';
-  var acts=document.getElementById('nhp-actions');
-  acts.innerHTML='';
-  if(!h.is_approved){
-    acts.innerHTML+='<button class="btn-green" onclick="approveNH(\''+nhId+'\',\''+esc(h.name||'')+'\')">✓ Approve Nursing Home</button>';
-  }else{
-    acts.innerHTML+='<button class="btn-red" onclick="deactivateNH(\''+nhId+'\',\''+esc(h.name||'')+'\')">⊘ Deactivate</button>';
-  }
-  acts.innerHTML+='<button class="btn-ghost" onclick="copyText(\''+nhId+'\')">Copy ID</button>';
+  var appBtn=document.getElementById('nh-approve-btn');
+  var rejBtn=document.getElementById('nh-reject-btn');
+  if(appBtn)appBtn.style.display=h.is_approved?'none':'inline-flex';
+  if(rejBtn)rejBtn.style.display=h.is_approved?'none':'inline-flex';
 }
-
-async function loadNHPStaff(nhId){
-  var r=await _supa.from('nh_staff').select('id,full_name,role,is_active,created_at').eq('clinic_id',nhId).order('role');
-  var el=document.getElementById('nhp-staff-content');
-  if(!r.data||!r.data.length){el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">👥</div><p class="empty-t">No staff records</p></div>';return;}
-  var roleIcons={owner:'👑',doctor:'🩺',receptionist:'🏥'};
+async function loadNHStaff(nhId){
+  var r=await _supa.from('nh_staff').select('id,full_name,role,is_active').eq('clinic_id',nhId).order('role');
+  var el=document.getElementById('nh-detail-staff');
+  if(!r.data||!r.data.length){el.innerHTML='<div class="empty" style="padding:24px"><p class="empty-t">No staff records</p></div>';return;}
   el.innerHTML=r.data.map(function(s){
-    var icon=roleIcons[s.role]||'👤';
-    return '<div class="staff-row">'
-      +'<div class="staff-av">'+icon+'</div>'
+    return '<div class="staff-row"><div class="staff-av">'+esc((s.full_name||'?').charAt(0))+'</div>'
       +'<div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:var(--text-primary)">'+esc(s.full_name||'Unnamed')+'</div>'
-      +'<div style="font-size:10.5px;color:var(--text-secondary)">'+s.role+(s.is_active===false?' · ⊘ Deactivated':' · Active')+'</div></div>'
-      +'<span class="chip '+(s.is_active!==false?'ch-act':'ch-off')+'">'+s.role+'</span>'
-      +'</div>';
+      +'<div style="font-size:10.5px;color:var(--text-secondary)">'+s.role+'</div></div>'
+      +'<span class="chip ch-brand">'+s.role+'</span></div>';
   }).join('');
 }
-
-async function loadNHPBeds(nhId){
-  var [beds,adms]=await Promise.all([
-    _supa.from('beds').select('*').eq('clinic_id',nhId).order('ward').order('bed_number'),
-    _supa.from('admissions').select('bed_id,patient_name,admission_date').eq('clinic_id',nhId).eq('status','Active')
-  ]);
-  var el=document.getElementById('nhp-beds-content');
-  var allBeds=beds.data||[];
-  var am={};(adms.data||[]).forEach(function(a){am[a.bed_id]=a;});
-  if(!allBeds.length){el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">🛏️</div><p class="empty-t">No beds configured</p></div>';return;}
-  /* Ward grouping */
-  var wards={};
-  allBeds.forEach(function(b){var w=b.ward||'General';if(!wards[w])wards[w]=[];wards[w].push(b);});
-  el.innerHTML=Object.keys(wards).map(function(w){
-    var wBeds=wards[w];
-    var occ=wBeds.filter(function(b){return am[b.id];}).length;
-    var vac=wBeds.length-occ;
-    return '<div class="ward-mini"><div class="ward-mini-title"><span>'+esc(w)+'</span><span style="font-size:10px;color:var(--text-tertiary)">'+wBeds.length+' beds</span></div>'
-      +'<div class="ward-mini-stats"><span>🟢 '+occ+' occupied</span><span>⬜ '+vac+' vacant</span></div>'
-      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px;margin-top:8px">'
-      +wBeds.map(function(b){
-        var a=am[b.id];
-        var s=(b.status||'vacant').toLowerCase();
-        var col=a?'var(--green)':s==='cleaning'?'var(--amber)':s==='reserved'?'var(--blue)':'var(--border)';
-        return '<div title="Bed '+esc(b.bed_number)+(a?' — '+esc(a.patient_name||''):' — '+s)+'" style="background:'+col+';border-radius:5px;padding:4px;text-align:center;font-size:9.5px;font-weight:700;color:#fff;opacity:0.85">'+esc(b.bed_number)+'</div>';
-      }).join('')
-      +'</div></div>';
-  }).join('');
+async function loadNHBeds(nhId){
+  var r=await _supa.from('beds').select('*').eq('clinic_id',nhId);
+  var el=document.getElementById('nh-detail-beds');
+  var allBeds=r.data||[];
+  if(!allBeds.length){el.innerHTML='<div class="empty" style="padding:24px"><p class="empty-t">No beds configured</p></div>';return;}
+  var occ=allBeds.filter(function(b){return b.status==='Occupied';}).length;
+  el.innerHTML='<div class="stat-block"><div class="sb-row"><span class="sb-lbl">Total Beds</span><span class="sb-val">'+allBeds.length+'</span></div><div class="sb-row"><span class="sb-lbl">Occupied</span><span class="sb-val">'+occ+'</span></div><div class="sb-row"><span class="sb-lbl">Available</span><span class="sb-val">'+(allBeds.length-occ)+'</span></div></div>';
+}
+async function loadNHBilling(nhId){
+  var r=await _supa.from('admission_charges').select('total_price').eq('clinic_id',nhId);
+  var el=document.getElementById('nh-detail-billing');
+  var total=(r.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+  el.innerHTML='<div class="stat-block"><div class="sb-row"><span class="sb-lbl">Billing Records</span><span class="sb-val">'+(r.data||[]).length+'</span></div><div class="sb-row"><span class="sb-lbl">Total Billed</span><span class="sb-val" style="color:var(--green)">₹'+fmtNum(total)+'</span></div></div>';
 }
 
-async function loadNHPAdmissions(nhId){
-  var r=await _supa.from('admissions').select('*').eq('clinic_id',nhId).order('admission_date',{ascending:false}).limit(20);
-  var el=document.getElementById('nhp-adm-content');
-  var adms=r.data||[];
-  var active=adms.filter(function(a){return a.status==='Active';}).length;
-  el.innerHTML='<div style="display:flex;gap:10px;margin-bottom:12px">'
-    +'<div class="stat-block" style="flex:1"><div class="sb-row"><span class="sb-lbl">Total (last 20)</span><span class="sb-val">'+adms.length+'</span></div><div class="sb-row"><span class="sb-lbl">Active</span><span class="sb-val" style="color:var(--green)">'+active+'</span></div><div class="sb-row"><span class="sb-lbl">Discharged</span><span class="sb-val">'+(adms.length-active)+'</span></div></div>'
-    +'</div>'
-    +(adms.length?adms.map(function(a){
-      var days=Math.floor((Date.now()-new Date(a.admission_date))/86400000)+1;
-      return '<div class="staff-row">'
-        +'<div class="staff-av" style="font-size:10px">'+days+'d</div>'
-        +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--text-primary)">'+esc(a.patient_name||'—')+'</div>'
-        +'<div style="font-size:10px;color:var(--text-secondary)">'+new Date(a.admission_date).toLocaleDateString('en-GB')+(a.admitting_doctor?' · Dr. '+esc(a.admitting_doctor):'')+(a.admission_diagnosis?' · '+esc(a.admission_diagnosis):'')+'</div></div>'
-        +'<span class="chip '+(a.status==='Active'?'ch-act':'ch-off')+'">'+a.status+'</span>'
-        +'</div>';
-    }).join(''):'<p style="font-size:12px;color:var(--text-tertiary);padding:12px">No admissions.</p>');
-}
-
-async function loadNHPUsage(nhId){
-  var [patients,docs,charges,notes,staff]=await Promise.all([
-    _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',nhId),
-    _supa.from('nh_patient_documents').select('id',{count:'exact',head:true}).eq('clinic_id',nhId),
-    _supa.from('admission_charges').select('total_price').eq('clinic_id',nhId),
-    _supa.from('progress_notes').select('id',{count:'exact',head:true}).eq('clinic_id',nhId),
-    _supa.from('nh_staff').select('id',{count:'exact',head:true}).eq('clinic_id',nhId)
-  ]);
-  var totalBilled=(charges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
-  document.getElementById('nhp-usage-content').innerHTML=
-    '<div class="stat-block">'
-    +'<div class="sb-row"><span class="sb-lbl">Registered Patients</span><span class="sb-val">'+fmtNum(patients.count||0)+'</span></div>'
-    +'<div class="sb-row"><span class="sb-lbl">Documents Uploaded</span><span class="sb-val">'+fmtNum(docs.count||0)+'</span></div>'
-    +'<div class="sb-row"><span class="sb-lbl">Billing Records</span><span class="sb-val">'+fmtNum((charges.data||[]).length)+'</span></div>'
-    +'<div class="sb-row"><span class="sb-lbl">Total Billed (All Time)</span><span class="sb-val" style="color:var(--green)">₹'+fmtNum(totalBilled)+'</span></div>'
-    +'<div class="sb-row"><span class="sb-lbl">Progress Notes</span><span class="sb-val">'+fmtNum(notes.count||0)+'</span></div>'
-    +'<div class="sb-row"><span class="sb-lbl">Staff Accounts</span><span class="sb-val">'+fmtNum(staff.count||0)+'</span></div>'
-    +'</div>';
-}
-
-/* ── APPROVE / DEACTIVATE ── */
+/* ── APPROVE / REJECT / TOGGLE ── */
 async function approveNH(nhId,name){
+  nhId=nhId||_currentNhId;
+  var h=_allHomes.find(function(x){return x.id===nhId;});
+  name=name||(h?h.name:'this facility');
   if(!confirm('Approve "'+name+'"? This will activate their account immediately.'))return;
   var r=await _supa.from('clinics').update({is_approved:true}).eq('id',nhId);
   if(r.error){showToast('Error: '+r.error.message);return;}
-  /* Update local cache */
-  var h=_allHomes.find(function(x){return x.id===nhId;});
   if(h)h.is_approved=true;
   showToast('✓ '+name+' approved and activated');
   loadDashboard();
-  if(document.getElementById('mod-nh-profile').classList.contains('open'))openNHProfile(nhId);
+  if(document.getElementById('mod-nh').classList.contains('open'))openNHProfile(nhId);
 }
-async function deactivateNH(nhId,name){
-  if(!confirm('Deactivate "'+name+'"? Their staff will be unable to log in.'))return;
-  var r=await _supa.from('clinics').update({is_approved:false}).eq('id',nhId);
-  if(r.error){showToast('Error: '+r.error.message);return;}
+async function rejectNH(nhId,name){
+  nhId=nhId||_currentNhId;
   var h=_allHomes.find(function(x){return x.id===nhId;});
-  if(h)h.is_approved=false;
-  showToast('⊘ '+name+' deactivated');
+  name=name||(h?h.name:'this facility');
+  if(!confirm('Reject and permanently delete "'+name+'"? This cannot be undone.'))return;
+  await _supa.from('clinics').delete().eq('id',nhId);
+  _allHomes=_allHomes.filter(function(x){return x.id!==nhId;});
+  showToast('Rejected and removed: '+name);
+  closeModal('mod-nh');
+  loadApprovals();loadDashboard();
+}
+async function toggleNHActive(){
+  var nhId=_currentNhId;
+  var h=_allHomes.find(function(x){return x.id===nhId;});
+  if(!h)return;
+  var newState=!h.is_approved;
+  if(!confirm((newState?'Activate':'Deactivate')+' "'+h.name+'"?'))return;
+  var r=await _supa.from('clinics').update({is_approved:newState}).eq('id',nhId);
+  if(r.error){showToast('Error: '+r.error.message);return;}
+  h.is_approved=newState;
+  showToast((newState?'✓ Activated ':'⊘ Deactivated ')+h.name);
   loadDashboard();
-  if(document.getElementById('mod-nh-profile').classList.contains('open'))openNHProfile(nhId);
+  openNHProfile(nhId);
 }
 
 /* ── BED ANALYTICS ── */
@@ -1078,7 +1120,7 @@ async function loadBedAnalytics(){
     return '<div class="staff-row" style="cursor:pointer" onclick="openNHProfile(\''+nhId+'\')">'
       +'<div class="nh-av" style="width:30px;height:30px;font-size:12px">'+name.charAt(0)+'</div>'
       +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--text-primary)">'+esc(name)+'</div>'
-      +'<div style="margin-top:4px;background:var(--surface2);border-radius:3px;height:4px;width:100%"><div style="background:var(--green);border-radius:3px;height:4px;width:'+pct+'%"></div></div></div>'
+      +'<div class="dept-bar" style="margin-top:5px"><div class="dept-bar-fill" style="width:'+pct+'%"></div></div></div>'
       +'<div style="text-align:right;min-width:80px"><div style="font-weight:700;font-size:12px;color:var(--text-primary)">'+s.occ+'/'+s.total+'</div><div style="font-size:10px;color:var(--text-tertiary)">'+pct+'% occ.</div></div>'
       +'</div>';
   }).join('');
@@ -1088,8 +1130,8 @@ async function loadBedAnalytics(){
   document.getElementById('bed-per-ward').innerHTML=Object.keys(byWard).map(function(w){
     var s=byWard[w];var pct=s.total?Math.round(s.occ/s.total*100):0;
     return '<div class="ward-mini"><div class="ward-mini-title"><span>'+esc(w)+'</span></div>'
-      +'<div class="ward-mini-stats"><span>'+s.occ+' occ / '+s.total+' total</span><span style="color:var(--brand-light)">'+pct+'%</span></div>'
-      +'<div style="margin-top:6px;background:var(--surface2);border-radius:3px;height:5px"><div style="background:var(--green);border-radius:3px;height:5px;width:'+pct+'%"></div></div>'
+      +'<div class="ward-mini-stats"><span>'+s.occ+' occ / '+s.total+' total</span><span style="color:var(--brand)">'+pct+'%</span></div>'
+      +'<div class="dept-bar" style="margin-top:6px;height:5px"><div class="dept-bar-fill" style="width:'+pct+'%"></div></div>'
       +'</div>';
   }).join('');
 }
@@ -1146,12 +1188,11 @@ async function loadAllStaff(){
   document.getElementById('sr-owners').textContent=owners;
   document.getElementById('sr-doctors').textContent=doctors;
   document.getElementById('sr-reception').textContent=recep;
-  var roleIcons={owner:'👑',doctor:'🩺',receptionist:'🏥'};
   var el=document.getElementById('staff-list');
   el.innerHTML=allStaff.length?allStaff.map(function(s){
-    var nhName=nhMap[s.clinic_id]||s.clinic_id.slice(0,8)+'…';
-    return '<div class="staff-row">'
-      +'<div class="staff-av">'+(roleIcons[s.role]||'👤')+'</div>'
+    var nhName=nhMap[s.clinic_id]||(s.clinic_id?s.clinic_id.slice(0,8)+'…':'—');
+    return '<div class="staff-row" style="padding:12px 16px">'
+      +'<div class="staff-av">'+esc((s.full_name||'?').charAt(0))+'</div>'
       +'<div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:var(--text-primary)">'+esc(s.full_name||'Unnamed')+'</div>'
       +'<div style="font-size:10px;color:var(--text-secondary)">'+esc(nhName)+'</div></div>'
       +'<div style="display:flex;align-items:center;gap:7px">'
@@ -1181,30 +1222,47 @@ async function loadApprovals(){
       +'</div></div>';
   }).join('');
 }
-async function rejectNH(nhId,name){
-  if(!confirm('Reject and permanently delete "'+name+'"? This cannot be undone.'))return;
-  await _supa.from('clinics').delete().eq('id',nhId);
-  _allHomes=_allHomes.filter(function(h){return h.id!==nhId;});
-  showToast('Rejected and removed: '+name);
-  loadApprovals();loadDashboard();
-}
 
 /* ── CHANGE PASSWORD ── */
 async function changeAdminPassword(){
-  var np=(document.getElementById('set-new-pass').value||'').trim();
-  var cp=(document.getElementById('set-confirm-pass').value||'').trim();
-  var err=document.getElementById('pass-err');
-  var ok=document.getElementById('pass-ok');
-  err.style.display='none';ok.style.display='none';
+  var np=(document.getElementById('sa-newpass').value||'').trim();
+  var cp=(document.getElementById('sa-confpass').value||'').trim();
+  var err=document.getElementById('sa-pass-err');
+  err.style.display='none';
   if(!np){err.textContent='Enter a new password.';err.style.display='block';return;}
   if(np.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
   if(np!==cp){err.textContent='Passwords do not match.';err.style.display='block';return;}
   var r=await _supa.auth.updateUser({password:np});
   if(r.error){err.textContent='Error: '+r.error.message;err.style.display='block';return;}
-  document.getElementById('set-new-pass').value='';
-  document.getElementById('set-confirm-pass').value='';
-  ok.style.display='block';
+  document.getElementById('sa-newpass').value='';
+  document.getElementById('sa-confpass').value='';
   showToast('Password changed successfully');
+}
+
+/* ── ADD NURSING HOME ── */
+async function addNH(){
+  var name=(document.getElementById('add-nh-name').value||'').trim();
+  var email=(document.getElementById('add-nh-email').value||'').trim().toLowerCase();
+  var pass=(document.getElementById('add-nh-pass').value||'').trim();
+  var phone=(document.getElementById('add-nh-phone').value||'').trim();
+  var addr=(document.getElementById('add-nh-addr').value||'').trim();
+  var err=document.getElementById('add-nh-err');
+  err.style.display='none';
+  if(!name||!email||!pass){err.textContent='Facility name, owner email, and password are required.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  var signUp=await _supa.auth.signUp({email,password:pass});
+  if(signUp.error){err.textContent=signUp.error.message;err.style.display='block';return;}
+  var ins=await _supa.from('clinics').insert({name,doctor_name:name,phone,address:addr,facility_type:'nursing_home',is_approved:true,owner_id:signUp.data.user?signUp.data.user.id:null}).select().single();
+  if(ins.error){err.textContent=ins.error.message;err.style.display='block';return;}
+  document.getElementById('add-nh-name').value='';
+  document.getElementById('add-nh-email').value='';
+  document.getElementById('add-nh-pass').value='';
+  document.getElementById('add-nh-phone').value='';
+  document.getElementById('add-nh-addr').value='';
+  closeModal('mod-add-nh');
+  showToast('✓ '+name+' created');
+  loadDashboard();
+  if(document.getElementById('v-homes').classList.contains('on'))loadHomes();
 }
 
 /* ── HELPERS ── */
@@ -1227,16 +1285,20 @@ function toggleTheme(){
   var mc=document.getElementById('meta-tc');
   if(mc)mc.content=t==='dark'?'#171B24':'#ffffff';
 })();
-/* Wire hero stats from dashboard data */
-var _origLoadDash = typeof loadDashboard === 'function' ? loadDashboard : null;
-function updateHeroStats(){
-  var nh=document.getElementById('d-total-nh'),beds=document.getElementById('d-total-beds'),pat=document.getElementById('d-total-patients'),pend=document.getElementById('d-pending-nh');
-  if(document.getElementById('dh-nh')&&nh)document.getElementById('dh-nh').textContent=nh.textContent;
-  if(document.getElementById('dh-beds')&&beds)document.getElementById('dh-beds').textContent=beds.textContent;
-  if(document.getElementById('dh-patients')&&pat)document.getElementById('dh-patients').textContent=pat.textContent;
-  if(document.getElementById('dh-pending')&&pend)document.getElementById('dh-pending').textContent=pend.textContent;
+
+/* Sync the header user chip + sidebar avatar initial from the admin email,
+   following the same lightweight polling pattern already used in this file. */
+function syncHeaderIdentity(){
+  var nameEl=document.getElementById('sb-admin-name');
+  if(!nameEl)return;
+  var email=nameEl.textContent||'';
+  if(!email||email==='Platform Admin')return;
+  var initial=email.charAt(0).toUpperCase();
+  var hu=document.getElementById('hdr-user-name');if(hu)hu.textContent=email;
+  var hav=document.getElementById('hdr-user-av');if(hav)hav.textContent=initial;
+  var sav=document.getElementById('sb-admin-av');if(sav)sav.textContent=initial;
 }
-setInterval(updateHeroStats, 2000);
+setInterval(syncHeaderIdentity, 1500);
 </script>
 </body>
 </html>
