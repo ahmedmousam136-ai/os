@@ -1,0 +1,289 @@
+/* ══════════════════════════════════════════════════════════════════
+   AuraScale — Premium Corporate Design System
+   One shared stylesheet, linked last in every page, so it wins the
+   cascade and re-themes admin / clinic / nh / doctor / receptionist
+   consistently without touching any markup or JavaScript.
+
+   Direction: calm, light, high-trust "corporate SaaS" — the kind of
+   clean, unhurried interface a doctor can scan in two seconds.
+   Inspired by the restrained, whitespace-first dashboards clinicians
+   already trust (Epic MyChart, Notion, Linear, Stripe).
+══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ── 1. TYPOGRAPHY — one clean corporate sans everywhere ── */
+*,button,input,textarea,select,
+.sb-mark,.sb-mark .a,.sb-mark .s,.sb-mark .os,
+h1,h2,h3,.st,.mc-val,.kpi-val,.brand,.auth-hero-brand{
+  font-family:'Inter',system-ui,-apple-system,sans-serif !important;
+}
+.sb-mark .a,.sb-mark .s,.brand .a,.brand .s,.auth-hero-brand .a,.auth-hero-brand .s{
+  font-weight:800 !important;letter-spacing:-.03em !important;
+}
+
+/* ── 2. CORE TOKENS — light, corporate, one unified accent ── */
+:root,[data-theme="light"]{
+  --bg:#F8F9FB;
+  --surface:#FFFFFF;
+  --surface2:#F3F4F6;
+  --border:#E6E8EC;
+  --border-mid:#D6D9E0;
+  --border-strong:#B4B9C4;
+  --text-primary:#12141A;
+  --text-secondary:#5B6270;
+  --text-tertiary:#969BA6;
+
+  --blue:#2554E0;--blue-light:#3D6BF0;--blue-bg:#EEF2FE;--blue-border:#C7D4FB;--blue-hover:#1B3FB8;
+  --brand:#2554E0;--brand-light:#3D6BF0;--brand-bg:#EEF2FE;--brand-border:#C7D4FB;--brand-hover:#1B3FB8;--brand-glow:rgba(37,84,224,.16);
+
+  --green:#0E9F6E;--green-bg:#EAFBF3;--green-border:#B7EED6;
+  --amber:#B9770E;--amber-bg:#FEF6E7;--amber-border:#F5DFA6;
+  --red:#D23C3C;--red-bg:#FDECEC;--red-border:#F6C2C2;
+  --purple:#6D5CD6;--purple-bg:#F1EEFC;--purple-border:#D9D1F5;
+
+  --r-sm:7px;--r-md:9px;--r-lg:12px;--r-xl:16px;
+
+  --sh-xs:0 1px 2px rgba(15,17,23,.04);
+  --sh-sm:0 1px 3px rgba(15,17,23,.06),0 1px 2px rgba(15,17,23,.04);
+  --sh-md:0 6px 18px rgba(15,17,23,.08),0 2px 6px rgba(15,17,23,.05);
+  --sh-lg:0 16px 40px rgba(15,17,23,.13),0 4px 12px rgba(15,17,23,.06);
+
+  --header-blur:rgba(255,255,255,.92);
+  --toggle-track:#E6E8EC;--toggle-knob:#FFFFFF;
+
+  /* Sidebar — a hair off-white from the page, never black/inverted */
+  --sidebar-bg:#FCFCFD;
+  --sidebar-text:#12141A;
+  --sidebar-text-secondary:#6B7180;
+  --sidebar-text-tertiary:#9CA1AC;
+  --sidebar-border:#EDEEF2;
+  --sidebar-hover-bg:#F1F3F7;
+  --sidebar-active-bg:var(--blue-bg);
+}
+
+[data-theme="dark"]{
+  --bg:#0C0E14;
+  --surface:#141720;
+  --surface2:#191D28;
+  --border:#242835;
+  --border-mid:#2E3341;
+  --border-strong:#3C4152;
+  --text-primary:#EDEFF4;
+  --text-secondary:#9AA0AF;
+  --text-tertiary:#5F6473;
+
+  --blue:#6E93FF;--blue-light:#8AA8FF;--blue-bg:#161E36;--blue-border:#28345C;--blue-hover:#84A2FF;
+  --brand:#6E93FF;--brand-light:#8AA8FF;--brand-bg:#161E36;--brand-border:#28345C;--brand-hover:#84A2FF;--brand-glow:rgba(110,147,255,.22);
+
+  --green:#33C98F;--green-bg:#0E251C;--green-border:#1C4433;
+  --amber:#E3A542;--amber-bg:#271F0E;--amber-border:#453510;
+  --red:#F0666A;--red-bg:#2A1417;--red-border:#4A2126;
+  --purple:#9C8CF0;--purple-bg:#1D1A33;--purple-border:#382F5C;
+
+  --sh-xs:0 1px 2px rgba(0,0,0,.3);
+  --sh-sm:0 2px 6px rgba(0,0,0,.32),0 1px 3px rgba(0,0,0,.22);
+  --sh-md:0 6px 18px rgba(0,0,0,.36),0 2px 6px rgba(0,0,0,.24);
+  --sh-lg:0 18px 44px rgba(0,0,0,.48),0 4px 14px rgba(0,0,0,.3);
+
+  --header-blur:rgba(20,23,32,.92);
+  --toggle-track:#2E3341;--toggle-knob:#EDEFF4;
+
+  /* Sidebar stays part of the same dark family — just a hair darker */
+  --sidebar-bg:#0F1219;
+  --sidebar-text:#EDEFF4;
+  --sidebar-text-secondary:#9AA0AF;
+  --sidebar-text-tertiary:#5F6473;
+  --sidebar-border:#1E222D;
+  --sidebar-hover-bg:#171A24;
+  --sidebar-active-bg:var(--blue-bg);
+}
+
+html{background:var(--bg) !important}
+body{background:var(--bg) !important;color:var(--text-primary) !important;-webkit-font-smoothing:antialiased;letter-spacing:-.006em}
+
+/* ── 3. SIDEBAR — cohesive, quiet, single accent for the active item ── */
+#sidebar{background:var(--sidebar-bg) !important;border-right:1px solid var(--sidebar-border) !important;box-shadow:none !important}
+.sb-logo,.sb-admin,.sb-facility,.sb-doc,.sb-foot{border-color:var(--sidebar-border) !important}
+.sb-mark .a,.sb-admin-name,.sb-doc-name,.sb-fac-name{color:var(--sidebar-text) !important}
+.sb-mark .s{color:var(--brand) !important}
+.sb-mark .os,.sb-tag,.sb-admin-role,.nav-sec,.sb-comp{color:var(--sidebar-text-tertiary) !important}
+.sb-out{color:var(--sidebar-text-tertiary) !important}
+.sb-out:hover{color:var(--red) !important}
+
+.nb{color:var(--sidebar-text-secondary) !important;font-weight:500 !important;border-radius:var(--r-sm) !important}
+.nb:hover:not(.on){background:var(--sidebar-hover-bg) !important;color:var(--sidebar-text) !important}
+.nb.on{background:var(--sidebar-active-bg) !important;color:var(--brand) !important;font-weight:700 !important}
+.nb.on::before{background:var(--brand) !important}
+.nb-badge{background:var(--red) !important;color:#fff !important;border:none !important}
+
+.sb-admin-av,.sb-doc-name,.hdr-user-av{background:var(--brand-bg) !important;color:var(--brand) !important;border-color:var(--brand-border) !important}
+.sb-logo-mark{background:var(--brand) !important}
+.sb-badge{background:var(--brand-bg) !important;color:var(--brand) !important;border-color:var(--brand-border) !important}
+
+.theme-toggle,.lang-toggle{background:var(--sidebar-hover-bg) !important;border-color:var(--sidebar-border) !important;color:var(--sidebar-text-secondary) !important}
+.theme-toggle:hover,.lang-toggle:hover{border-color:var(--sidebar-text-tertiary) !important;color:var(--sidebar-text) !important}
+
+.sb-location-pill{background:var(--sidebar-hover-bg) !important;border-color:var(--sidebar-border) !important;color:var(--sidebar-text-secondary) !important}
+
+/* ── 4. HEADER ── */
+header{background:var(--header-blur) !important;border-bottom:1px solid var(--border) !important;box-shadow:none !important}
+.hdr-search,.search-bar{background:var(--surface2) !important;border:1px solid var(--border) !important;border-radius:var(--r-md) !important}
+.hdr-search:focus,.search-bar:focus{border-color:var(--brand) !important;box-shadow:0 0 0 3px var(--brand-glow) !important;background:var(--surface) !important}
+.topbar-btn{background:var(--surface) !important;border:1px solid var(--border) !important;box-shadow:none !important}
+.topbar-btn:hover{border-color:var(--border-strong) !important}
+.hdr-new-btn,.btn-brand{background:var(--brand) !important;box-shadow:none !important}
+.hdr-new-btn:hover,.btn-brand:hover{background:var(--brand-hover) !important;transform:none !important}
+
+/* ── 5. CARDS / PANELS — flat by default, a touch of lift on hover ── */
+.mc,.kpi,.panel,.card{
+  background:var(--surface) !important;border:1px solid var(--border) !important;
+  border-radius:var(--r-lg) !important;box-shadow:none !important;
+  transition:box-shadow .15s ease,border-color .15s ease !important;
+}
+.mc:hover,.kpi:hover,.panel:hover{box-shadow:var(--sh-sm) !important;border-color:var(--border-mid) !important}
+.mc-val,.kpi-val{color:var(--text-primary) !important;font-weight:700 !important;letter-spacing:-.02em !important}
+.mc-lbl,.kpi-lbl{color:var(--text-secondary) !important;font-weight:500 !important}
+.ph{border-bottom:1px solid var(--border) !important}
+.pt{color:var(--text-primary) !important;font-weight:700 !important}
+
+.kpi-ic.blue,.kpi-ic.brand{background:var(--blue-bg) !important;color:var(--blue) !important}
+.kpi-ic.green{background:var(--green-bg) !important;color:var(--green) !important}
+.kpi-ic.amber{background:var(--amber-bg) !important;color:var(--amber) !important}
+.kpi-ic.red{background:var(--red-bg) !important;color:var(--red) !important}
+.kpi-bar-fill,.dept-bar-fill,.occ-fill{background:var(--brand) !important}
+
+/* ── 6. BUTTONS — one confident primary, quiet secondaries ── */
+button{border-radius:var(--r-sm) !important}
+.btn-ok,.btn-green{background:var(--green) !important}
+.btn-ok:hover,.btn-green:hover{background:#0B8058 !important}
+.btn-danger,.btn-red{background:var(--red-bg) !important;color:var(--red) !important;border:1px solid var(--red-border) !important}
+.btn-danger:hover,.btn-red:hover{background:var(--red) !important;color:#fff !important}
+.btn-ghost,.qbtn{background:var(--surface) !important;border:1px solid var(--border) !important;color:var(--text-secondary) !important;box-shadow:none !important}
+.btn-ghost:hover,.qbtn:hover{border-color:var(--border-strong) !important;color:var(--text-primary) !important}
+.msub,.auth-btn{background:var(--brand) !important;box-shadow:none !important}
+.msub:hover,.auth-btn:hover{background:var(--brand-hover) !important;transform:none !important}
+
+/* ── 7. INPUTS / FORMS ── */
+.finput,.auth-input,input,textarea,select{
+  border-radius:var(--r-sm) !important;border:1px solid var(--border) !important;background:var(--bg) !important;
+}
+.finput:focus,.auth-input:focus,input:focus,textarea:focus,select:focus{
+  border-color:var(--brand) !important;box-shadow:0 0 0 3px var(--brand-glow) !important;background:var(--surface) !important;
+}
+
+/* ── 8. CHIPS / BADGES — soft pastel, never loud ── */
+.chip,.pb,.ch-act,.ch-pend,.ch-rej,.ch-brand,.ch-off,.pb-g,.pb-a,.pb-r,.pb-b,.pb-brand{
+  border-radius:6px !important;font-weight:700 !important;
+}
+
+/* ── 9. MODALS ── */
+.modal{border-radius:var(--r-xl) !important;box-shadow:var(--sh-lg) !important;border:1px solid var(--border) !important}
+.mod-ov{background:rgba(15,17,23,.42) !important;backdrop-filter:blur(3px) !important}
+
+/* ── 10. AUTH / LANDING SCREENS — bring them into the same light,
+   corporate family instead of the old dark-navy space theme ── */
+#auth-screen,#auth-screen::before,#auth-screen::after,
+html body::before,html body::after{
+  background:var(--bg) !important;
+}
+.auth-card,.card[class*="auth"]{background:var(--surface) !important;border:1px solid var(--border) !important;box-shadow:var(--sh-lg) !important}
+.auth-hero{background:var(--brand) !important;background-image:none !important}
+.auth-hero-badge{background:rgba(255,255,255,.16) !important;border-color:rgba(255,255,255,.24) !important}
+
+/* index.html / reset-password.html hero glow blobs — soften to the brand blue */
+body::before{background:radial-gradient(ellipse,rgba(37,84,224,.10) 0%,transparent 68%) !important}
+body::after{background:radial-gradient(ellipse,rgba(14,159,110,.08) 0%,transparent 68%) !important}
+
+/* ── 11. SCROLLBAR + SELECTION — small premium touches ── */
+::-webkit-scrollbar-thumb{background:var(--border-mid) !important}
+::selection{background:var(--brand-bg);color:var(--text-primary)}
+
+/* ── 16. UNIFY THE THREE LOGIN SCREENS (admin / clinic / nh) ──
+   Each portal built its login screen independently — a colored
+   gradient hero on admin & clinic, a plain header on nh, an underline
+   tab style on clinic vs a segmented-pill tab style on nh. This makes
+   all three converge on one calm, consistent pattern: plain white
+   header, segmented-pill tabs, identical labels/inputs/buttons. */
+
+.auth-card{max-width:400px !important;width:100% !important}
+
+/* Kill the colored gradient hero bands — go plain & quiet like nh.html */
+.auth-hero,.auth-brand{
+  background:var(--surface) !important;background-image:none !important;
+  padding:30px 28px 10px !important;text-align:center !important;
+}
+.auth-hero::before,.auth-hero::after{display:none !important}
+.auth-hero-brand,.auth-brand-mark{color:var(--text-primary) !important;font-size:26px !important;font-weight:800 !important}
+.auth-hero-brand .a,.auth-brand-mark .a,.auth-logo .a{color:var(--text-primary) !important}
+.auth-hero-brand .s,.auth-brand-mark .s,.auth-logo .s{color:var(--brand) !important}
+.auth-brand-mark .os{color:var(--text-tertiary) !important}
+.auth-brand-sub,.auth-sub{color:var(--text-tertiary) !important;font-size:11.5px !important;margin-top:6px !important}
+.auth-hero-badge{
+  background:var(--brand-bg) !important;border:1px solid var(--brand-border) !important;color:var(--brand) !important;
+  margin:10px auto 0 !important;
+}
+.auth-badge-dot{background:var(--green) !important}
+.auth-theme-btn{background:var(--surface) !important;border:1px solid var(--border) !important;color:var(--text-secondary) !important}
+
+/* Segmented-pill tabs everywhere (was underline-style on clinic.html) */
+.auth-tabs{
+  display:flex !important;gap:4px !important;
+  background:var(--surface2) !important;border-bottom:none !important;
+  border-radius:var(--r-sm) !important;padding:3px !important;
+  margin:0 22px 18px !important;
+}
+.auth-tab{
+  flex:1 !important;padding:8px 6px !important;text-align:center !important;
+  border-radius:6px !important;font-size:12px !important;font-weight:600 !important;
+  color:var(--text-tertiary) !important;border:none !important;
+  border-bottom:none !important;margin-bottom:0 !important;background:none !important;
+}
+.auth-tab.active,.auth-tab-active{
+  background:var(--surface) !important;color:var(--text-primary) !important;
+  box-shadow:var(--sh-xs) !important;border-bottom-color:transparent !important;
+}
+
+/* One label style for auth-lbl / auth-label / bare <label> inside auth-field */
+.auth-lbl,.auth-label,.auth-field label{
+  font-size:9px !important;text-transform:uppercase !important;letter-spacing:.12em !important;
+  font-weight:700 !important;color:var(--text-tertiary) !important;
+  display:block !important;margin-bottom:5px !important;
+}
+
+.auth-forgot{color:var(--brand) !important}
+.auth-forgot:hover{color:var(--brand-hover) !important}
+.auth-footer-note span,.auth-footer-note a{color:var(--brand) !important}
+.auth-country-btn:hover,.auth-country-btn.selected{border-color:var(--brand-border) !important;background:var(--brand-bg) !important;color:var(--brand) !important}
+
+html,body{background:var(--bg) !important}
+.a{color:var(--text-primary) !important}
+.s{color:var(--brand) !important}
+.sub{color:var(--text-tertiary) !important}
+.card{background:var(--surface) !important;border:1px solid var(--border) !important}
+.card:hover{background:var(--surface2) !important;box-shadow:var(--sh-sm) !important}
+.icon-c{background:var(--blue-bg) !important}
+.icon-c svg{stroke:var(--blue) !important}
+.icon-n{background:var(--green-bg) !important}
+.icon-n svg{stroke:var(--green) !important}
+.card-title{color:var(--text-primary) !important}
+.card-sub{color:var(--text-tertiary) !important}
+.arr{color:var(--text-tertiary) !important}
+.foot{color:var(--text-tertiary) !important}
+
+/* ── 14. reset-password.html ── */
+.logo-sub{color:var(--text-tertiary) !important}
+h2{color:var(--text-primary) !important}
+.flbl{color:var(--text-tertiary) !important}
+.btn{background:var(--brand) !important}
+.btn:hover{background:var(--brand-hover) !important}
+.btn:disabled{background:var(--border-mid) !important;color:var(--text-tertiary) !important}
+.msg-err{background:var(--red-bg) !important;border-color:var(--red-border) !important;color:var(--red) !important}
+.msg-ok{background:var(--green-bg) !important;border-color:var(--green-border) !important;color:var(--green) !important}
+.back{color:var(--text-tertiary) !important}
+.back:hover{color:var(--brand) !important}
+.spin{border-color:var(--border) !important;border-top-color:var(--brand) !important}
+
+/* ── 15. patient-portal.html ── */
+.note{background:var(--amber-bg) !important;border-color:var(--amber-border) !important;color:var(--text-secondary) !important}
+.err{color:var(--red) !important}
