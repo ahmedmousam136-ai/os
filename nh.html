@@ -132,7 +132,7 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 /* ── VIEWS ── */
 .view{display:none;flex-direction:column;gap:18px}.view.on{display:flex}
 .sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.st{font-family:'Instrument Serif',serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
+.st{font-family:'DM Sans',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
 .ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
 
 /* ── METRICS ── */
@@ -141,22 +141,29 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 .mc:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
 .mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
-.mc-icon{width:27px;height:27px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
-.mc-val{font-family:'Instrument Serif',serif;font-size:28px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mc-icon{width:30px;height:30px;border-radius:9px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
+.mc-icon-green{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.mc-icon-blue{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+.mc-icon-amber{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
+.mc-icon-red{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.mc-val{font-family:'DM Sans',sans-serif;font-weight:800;font-size:26px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
 .mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:5px}
+.mc-delta{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-top:6px}
+.mc-delta-up{background:var(--green-bg);color:var(--green)}
+.mc-delta-down{background:var(--red-bg);color:var(--red)}
 
 /* ── PANELS ── */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
 .ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
 .pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
-.pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em}
+.pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:999px;font-weight:700;letter-spacing:.05em}
 .pb-b{color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-border)}
 .pb-g{color:var(--green);background:var(--green-bg);border:1px solid var(--green-border)}
 .pb-r{color:var(--red);background:var(--red-bg);border:1px solid var(--red-border)}
 .pb-a{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
 
 /* ── CHIPS ── */
-.chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .ch-dis{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
 .ch-vac{background:var(--bg);color:var(--text-secondary);border:1px solid var(--border)}
@@ -180,11 +187,28 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 .bed-card.critical .bed-status-dot{background:var(--red)}
 .bed-card.cleaning .bed-status-dot{background:var(--amber)}
 
+/* ── WARD-GROUPED BED MANAGEMENT (fixes previously-missing styles) ── */
+.ward-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);margin-bottom:14px}
+.ward-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.ward-title{font-family:'DM Sans',sans-serif;font-weight:800;font-size:13px;color:var(--text-primary);letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px}
+.female-ward-badge{font-size:9px;font-weight:700;letter-spacing:.04em;color:#C0398A;background:#FDF0F7;border:1px solid #F0B8DC;padding:2px 7px;border-radius:999px}
+.ward-stats{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ward-stat{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text-secondary);font-weight:600}
+.ward-stat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.bed-grid-ward{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;padding:16px}
+.bed-card{position:relative}
+.bed-card-rate{font-size:9px;font-weight:700;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:2px 7px;margin-top:5px;display:inline-block}
+.bed-edit-btn{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-tertiary);opacity:0;transition:opacity var(--ease),background var(--ease)}
+.bed-card:hover .bed-edit-btn{opacity:1;background:rgba(0,0,0,.05)}
+.bed-card-inactive{opacity:.5}
+.bed-card-inactive::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent,transparent 6px,rgba(0,0,0,.04) 6px,rgba(0,0,0,.04) 7px);border-radius:inherit;pointer-events:none}
+@media(max-width:600px){.bed-grid-ward{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}}
+
 /* ── ADMISSION ROW ── */
 .adm-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
 .adm-row:hover{background:var(--bg)}
 .adm-row:last-child{border-bottom:none}
-.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
+.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:800;font-family:'DM Sans',sans-serif;flex-shrink:0}
 .adm-name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
 .adm-meta{font-size:10.5px;color:var(--text-secondary);margin-top:1px}
 .adm-actions{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
@@ -529,17 +553,17 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         </div>
         <!-- Row 1: Bed & Admission metrics -->
         <div class="mg6">
-          <div class="mc mc-green"><div class="mc-lbl">Occupied Beds</div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">of <span id="dm-total-beds">—</span> total</div></div>
-          <div class="mc"><div class="mc-lbl">Available Beds</div><div class="mc-val" id="dm-available">—</div><div class="mc-sub">ready to admit</div></div>
-          <div class="mc"><div class="mc-lbl">Today Admissions</div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new today</div></div>
-          <div class="mc"><div class="mc-lbl">Today Discharges</div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Occupied Beds</div><div class="mc-icon mc-icon-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/><path d="M12 14v-3"/></svg></div></div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">of <span id="dm-total-beds">—</span> total</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Available Beds</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/><path d="M12 14v-3"/></svg></div></div><div class="mc-val" id="dm-available">—</div><div class="mc-sub">ready to admit</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Today Admissions</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div></div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new today</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Today Discharges</div><div class="mc-icon mc-icon-amber"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div></div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
         </div>
         <!-- Row 2: Financial metrics -->
         <div class="mg6">
-          <div class="mc mc-green"><div class="mc-lbl">Today Revenue</div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">charges today</div></div>
-          <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="dm-outstanding">—</div><div class="mc-sub">unpaid balance</div></div>
-          <div class="mc mc-blue"><div class="mc-lbl">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub">active admissions total</div></div>
-          <div class="mc"><div class="mc-lbl">Total Patients</div><div class="mc-val" id="dm-total-patients">—</div><div class="mc-sub">all time</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Today Revenue</div><div class="mc-icon mc-icon-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">charges today</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Outstanding Due</div><div class="mc-icon mc-icon-red"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="mc-val" id="dm-outstanding">—</div><div class="mc-sub">unpaid balance</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Current Billing</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub">active admissions total</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Total Patients</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div><div class="mc-val" id="dm-total-patients">—</div><div class="mc-sub">all time</div></div>
         </div>
         <!-- Row 3: Active patients + Activity feed + Bed map -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -704,10 +728,10 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         </div>
         <!-- Summary metrics -->
         <div class="mg">
-          <div class="mc mc-green"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
-          <div class="mc mc-blue"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
-          <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Total Charged</div><div class="mc-icon mc-icon-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div><div class="mc-val" id="fin-charged">₹0</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Total Paid</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div><div class="mc-val" id="fin-paid">₹0</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Outstanding Due</div><div class="mc-icon mc-icon-red"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="mc-val" id="fin-due">₹0</div></div>
+          <div class="mc"><div class="mc-top"><div class="mc-lbl">Period Revenue</div><div class="mc-icon mc-icon-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="mc-val" id="fin-month">₹0</div></div>
         </div>
         <!-- Category breakdown -->
         <div class="two-col">
