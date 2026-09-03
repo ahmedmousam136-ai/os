@@ -17,6 +17,7 @@ var _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 var _clinicId = null;
 var _myUid    = null;
 var _myRole   = null;
+var _myName   = null;
 
 /* ── AUTH GUARD ─────────────────────────────────────────────────────
    Call at the top of every portal init().
@@ -55,6 +56,7 @@ async function nhAuthGuard(requiredRole) {
     if (staffRow.data && staffRow.data.clinic_id) {
       clinicId  = staffRow.data.clinic_id;
       _myRole   = staffRow.data.role || 'owner';
+      _myName   = staffRow.data.full_name || null;
       if (staffRow.data.is_active === false) {
         await _supa.auth.signOut();
         window.location.href = 'nh.html';
@@ -73,7 +75,8 @@ async function nhAuthGuard(requiredRole) {
       if (legacy.data) {
         clinicId = legacy.data.id;
         _myRole  = 'owner';
-        await _supa.from('nh_staff').upsert({ id: user.id, clinic_id: clinicId, role: 'owner' });
+        _myName  = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || null;
+        await _supa.from('nh_staff').upsert({ id: user.id, clinic_id: clinicId, role: 'owner', full_name: _myName });
       }
     }
 
@@ -100,6 +103,11 @@ async function nhAuthGuard(requiredRole) {
 
     _clinicId = cl.data.id;
 
+    /* Final fallback so the UI always has something sensible to show */
+    if (!_myName) {
+      _myName = (user.email ? user.email.split('@')[0] : 'User');
+    }
+
     /* Set role on body for CSS visibility rules */
     document.body.setAttribute('data-role', _myRole);
 
@@ -107,7 +115,8 @@ async function nhAuthGuard(requiredRole) {
       facilityName : cl.data.name || 'Nursing Home',
       role         : _myRole,
       uid          : _myUid,
-      clinicId     : _clinicId
+      clinicId     : _clinicId,
+      name         : _myName
     };
 
   } catch (e) {
