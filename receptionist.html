@@ -507,7 +507,19 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <div class="mc"><div class="mc-lbl">Total Discharged</div><div class="mc-val" id="dis-total-count">—</div></div>
         </div>
         <input class="finput" id="discharge-search" placeholder="Search discharged patients…" oninput="loadDischarge()"/>
-        <div class="panel"><div id="discharge-list"></div></div>
+        <div class="panel" style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border);text-align:left">
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Patient</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Admission</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Discharge</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Visit History</th>
+              </tr>
+            </thead>
+            <tbody id="discharge-tbody"></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- DISCHARGE DETAIL — minimal, single-purpose page (not the full Patient Profile) -->
@@ -1626,12 +1638,14 @@ async function openProfile(id,name){
   document.getElementById('pp-uhid').textContent='';
   switchTab('overview',document.querySelector('.patient-tab'));
   showPatientDetailView();
-  var [p,admRes]=await Promise.all([
+  var [p,activeAdmRes,lastAdmRes]=await Promise.all([
     _supa.from('nh_patients').select('*').eq('id',id).single(),
-    _supa.from('admissions').select('*').eq('patient_id',id).eq('status','Active').order('admission_date',{ascending:false}).limit(1)
+    _supa.from('admissions').select('*').eq('patient_id',id).eq('status','Active').order('admission_date',{ascending:false}).limit(1),
+    _supa.from('admissions').select('*').eq('patient_id',id).order('admission_date',{ascending:false}).limit(1)
   ]);
   var d=p.data||{};
-  var adm=(admRes.data&&admRes.data.length)?admRes.data[0]:null;
+  var adm=(activeAdmRes.data&&activeAdmRes.data.length)?activeAdmRes.data[0]:null;
+  var lastAdm=(lastAdmRes.data&&lastAdmRes.data.length)?lastAdmRes.data[0]:null;
   if(d.uhid)document.getElementById('pp-uhid').textContent='UHID: '+d.uhid;
 
   var admBlock='';
@@ -1649,6 +1663,8 @@ async function openProfile(id,name){
       +'<div class="ir"><span class="il">Admission Date</span><span class="iv">'+new Date(adm.admission_date).toLocaleDateString('en-GB')+'</span></div>'
       +'<div class="ir"><span class="il">Duration of Stay</span><span class="iv">'+days+' day(s)</span></div>'
       +'<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--green-bg);color:var(--green)">Admitted</span></span></div>';
+  } else if(lastAdm && lastAdm.status==='Discharged'){
+    admBlock='<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--blue-bg);color:var(--blue)">Discharged</span></span></div>';
   } else {
     admBlock='<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--surface2);color:var(--text-tertiary)">Not Admitted</span></span></div>';
   }
@@ -1662,10 +1678,6 @@ async function openProfile(id,name){
     +admBlock
     +'<div class="ir"><span class="il">Address</span><span class="iv">'+(d.address||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Guardian / Emergency</span><span class="iv">'+(d.guardian||'—')+'</span></div>'
-    +'</div>'
-    +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
-    +'<button class="qbtn" onclick="openRegisterModal()">+ New Admission</button>'
-    +'<button class="msub" style="flex:1;font-size:11.5px;min-height:38px;padding:8px 12px" data-assign-pid="'+id+'" data-assign-name="'+esc(d.full_name||'')+'">&#128703;&#65039; Assign Bed &amp; Admit</button>'
     +'</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 6px">Visit History</div>'
     +'<div id="t-history"></div>';
@@ -2076,11 +2088,13 @@ async function openDischargeDetail(admissionId){
 /* Generates a printable Visit History (opens the browser print dialog,
    from which "Save as PDF" produces the actual PDF — same pattern
    already used by printPatientBill for consistency). */
-async function printVisitHistory(){
-  if(!_ddPatientId){ showToast('Open a discharge record first'); return; }
+async function printVisitHistory(patientId, patientName){
+  patientId = patientId || _ddPatientId;
+  patientName = patientName || _ddPatientName;
+  if(!patientId){ showToast('Open a discharge record first'); return; }
   var [ptRes, admRes, clinicRes] = await Promise.all([
-    _supa.from('nh_patients').select('*').eq('id',_ddPatientId).single(),
-    _supa.from('admissions').select('*').eq('patient_id',_ddPatientId).order('admission_date',{ascending:false}),
+    _supa.from('nh_patients').select('*').eq('id',patientId).single(),
+    _supa.from('admissions').select('*').eq('patient_id',patientId).order('admission_date',{ascending:false}),
     _supa.from('clinics').select('name').eq('id',_clinicId).single()
   ]);
   var p = ptRes.data || {};
@@ -2088,7 +2102,7 @@ async function printVisitHistory(){
   var cn = (clinicRes.data||{}).name || 'Nursing Home';
 
   var w = window.open('','_blank');
-  w.document.write('<html><head><title>Visit History - '+esc(p.full_name||_ddPatientName||'')+'</title><style>'
+  w.document.write('<html><head><title>Visit History - '+esc(p.full_name||patientName||'')+'</title><style>'
     +'body{font-family:Arial,sans-serif;padding:30px;color:#111;max-width:700px;margin:0 auto}'
     +'h1{font-size:22px;margin:0}h2{font-size:14px;font-weight:normal;color:#555;margin:4px 0 0}'
     +'.header{border-bottom:2px solid #000;padding-bottom:14px;margin-bottom:16px}'
@@ -2100,7 +2114,7 @@ async function printVisitHistory(){
     +'@media print{button{display:none}}'
     +'</style></head><body>'
     +'<div class="header"><h1>'+esc(cn)+'</h1><h2>Patient Visit History</h2></div>'
-    +'<div class="info-row"><span class="info-lbl">Patient</span><b>'+esc(p.full_name||_ddPatientName||'—')+'</b></div>'
+    +'<div class="info-row"><span class="info-lbl">Patient</span><b>'+esc(p.full_name||patientName||'—')+'</b></div>'
     +'<div class="info-row"><span class="info-lbl">Age/Gender</span>'+(p.age||'—')+' / '+(p.gender||'—')+'</div>'
     +'<div class="info-row"><span class="info-lbl">Phone</span>'+(p.phone||'—')+'</div>'
     +'<div class="info-row"><span class="info-lbl">UHID</span>'+(p.uhid||'—')+'</div>'
@@ -2117,9 +2131,9 @@ async function printVisitHistory(){
 }
 
 async function loadDischarge(){
-  var listEl = document.getElementById('discharge-list');
-  if(!listEl) return;
-  listEl.innerHTML = '<div class="empty" style="padding:24px"><p class="empty-t">Loading…</p></div>';
+  var tbody = document.getElementById('discharge-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:12px">Loading…</td></tr>';
 
   var q = (document.getElementById('discharge-search') ? document.getElementById('discharge-search').value : '').trim().toLowerCase();
 
@@ -2143,42 +2157,23 @@ async function loadDischarge(){
   }
 
   if(!discharged.length){
-    listEl.innerHTML = '<div class="empty" style="padding:28px"><div class="empty-ic">📋</div><p class="empty-t">No discharged patients found</p></div>';
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:12px">No discharged patients found</td></tr>';
     return;
   }
 
-  /* Pull bed numbers + outstanding balance for each row (parallel, capped list) */
-  var bedIds = discharged.map(function(a){return a.bed_id;}).filter(Boolean);
-  var bedsRes = bedIds.length ? await _supa.from('beds').select('id,bed_number').in('id',bedIds) : {data:[]};
-  var bedMap = {};
-  (bedsRes.data||[]).forEach(function(b){ bedMap[b.id] = b.bed_number; });
-
-  var rows = await Promise.all(discharged.map(async function(a){
-    var [ch,pay] = await Promise.all([
-      _supa.from('admission_charges').select('total_price').eq('admission_id',a.id),
-      _supa.from('nh_payments').select('amount').eq('admission_id',a.id)
-    ]);
-    var total = (ch.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
-    var paid  = (pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
-    return { a:a, total:total, paid:paid, due: total-paid };
-  }));
-
-  listEl.innerHTML = rows.map(function(row){
-    var a = row.a;
-    var bedLbl = a.bed_id ? (bedMap[a.bed_id] || '—') : 'OPD';
-    var admStr = a.admission_date ? new Date(a.admission_date).toLocaleDateString('en-GB') : '—';
-    var disStr = a.discharge_date ? new Date(a.discharge_date).toLocaleDateString('en-GB') : '—';
-    return '<div class="adm-row" style="cursor:pointer" onclick="openDischargeDetail(\''+a.id+'\')">'
-      + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
-      + '<div style="flex:1;min-width:0">'
-        + '<div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
-        + '<div class="adm-meta">Bed '+esc(bedLbl)+' · Dr. '+esc(a.admitting_doctor||'—')+' · Admitted '+admStr+' · Discharged '+disStr+'</div>'
-      + '</div>'
-      + '<div style="text-align:right;flex-shrink:0">'
-        + '<div style="font-weight:700;font-size:12.5px;color:'+(row.due>0?'var(--red)':'var(--green)')+'">'+(row.due>0?'₹'+row.due.toLocaleString('en-IN')+' due':'Settled')+'</div>'
-        + '<div style="font-size:10px;color:var(--text-tertiary)">Total ₹'+row.total.toLocaleString('en-IN')+'</div>'
-      + '</div>'
-    + '</div>';
+  tbody.innerHTML = discharged.map(function(a){
+    var admDate = a.admission_date ? new Date(a.admission_date) : null;
+    var disDate = a.discharge_date ? new Date(a.discharge_date) : null;
+    var admDateStr = admDate ? admDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    var admTimeStr = admDate ? admDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
+    var disDateStr = disDate ? disDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    var disTimeStr = disDate ? disDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:10px 14px;cursor:pointer" onclick="openProfile(\''+a.patient_id+'\',\''+esc(a.patient_name||'')+'\')"><span style="font-weight:700;color:var(--text-primary)">'+esc(a.patient_name||'—')+'</span></td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+admDateStr+'<div style="font-size:10.5px;color:var(--text-tertiary)">'+admTimeStr+'</div></td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+disDateStr+'<div style="font-size:10.5px;color:var(--text-tertiary)">'+disTimeStr+'</div></td>'
+      + '<td style="padding:10px 14px;text-align:right"><button class="txn-pay-btn" onclick="printVisitHistory(\''+a.patient_id+'\',\''+esc(a.patient_name||'')+'\')">&#128196; PDF</button></td>'
+    + '</tr>';
   }).join('');
 }
 
