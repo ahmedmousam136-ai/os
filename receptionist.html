@@ -410,6 +410,59 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div id="patients-list"></div>
       </div>
 
+      <!-- PATIENT DETAIL — inline page, not a popup/modal, matching the Billing page pattern -->
+      <div id="v-patient-detail" class="view">
+        <div class="sh">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="qbtn" onclick="backToPatients()">&#8592; Back to Patients</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div class="adm-av" id="pp-av" style="width:44px;height:44px;border-radius:10px;font-size:17px;flex-shrink:0">?</div>
+          <div><h1 class="st" id="pp-name" style="font-size:20px">Patient</h1><p class="ss" id="pp-uhid"></p></div>
+        </div>
+        <div class="patient-tabs" style="width:fit-content">
+          <div class="patient-tab active" onclick="switchTab('overview',this)">Overview</div>
+          <div class="patient-tab" onclick="switchTab('documents',this)">Documents</div>
+          <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
+          <div class="patient-tab" onclick="switchTab('notes',this)">Notes</div>
+        </div>
+        <div class="panel" style="padding:18px">
+          <div class="ptab active" id="t-overview"></div>
+          <div class="ptab" id="t-charges">
+            <div id="t-charges-inner"></div>
+          </div>
+          <div class="ptab" id="t-documents">
+            <div class="note-box note-blue" style="margin-bottom:10px">📎 Digital copies for record-keeping only. Not a substitute for original documents.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+              <button class="qbtn" onclick="document.getElementById('doc-cam').click()">📷 Take Photo</button>
+              <button class="qbtn" onclick="document.getElementById('doc-file').click()">📎 Upload Document</button>
+              <button class="qbtn" onclick="sendForReview()">✉️ Send to Doctor</button>
+            </div>
+            <input type="file" id="doc-cam" accept="image/*" capture="environment" style="display:none" onchange="uploadDoc(event)"/>
+            <input type="file" id="doc-file" accept="application/pdf,image/*" style="display:none" onchange="uploadDoc(event)"/>
+            <div id="doc-list"></div>
+          </div>
+          <div class="ptab" id="t-notes">
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <input class="finput" id="note-input" placeholder="Add an operational note…" style="margin-bottom:0"/>
+              <button class="msub" style="width:auto;padding:0 18px" onclick="saveNote()">Add</button>
+            </div>
+            <div id="notes-list"></div>
+          </div>
+          <div class="ptab" id="t-billing"></div>
+          <div class="ptab" id="t-financing">
+            <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:4px;padding:3px 8px;font-size:9px;font-weight:700;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;display:inline-block;margin-bottom:10px">DEMO — Configurable</div>
+            <div class="note-box note-amber" style="margin-bottom:12px">Financing partner configuration tool. Figures shown are for demonstration only and do not represent actual lender terms.</div>
+            <div id="fin-area"></div>
+          </div>
+          <div class="ptab" id="t-ayushman"></div>
+          <div class="ptab" id="t-discharge">
+            <div id="t-discharge-inner"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- BEDS -->
       <div id="v-beds" class="view">
         <div class="sh">
@@ -736,62 +789,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 </div>
 
 <!-- PATIENT PROFILE -->
-<div class="mod-ov" id="mod-profile">
-  <div class="modal modal-wide">
-    <div class="mh">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="adm-av" id="pp-av" style="width:40px;height:40px;border-radius:10px;font-size:16px">?</div>
-        <div><div class="mtitle" id="pp-name">Patient</div><div style="font-size:10px;color:var(--text-tertiary)" id="pp-uhid"></div></div>
-      </div>
-      <button class="mclose" onclick="closeModal('mod-profile')">✕</button>
-    </div>
-    <div style="padding:0 17px">
-      <div class="patient-tabs">
-        <div class="patient-tab active" onclick="switchTab('overview',this)">Overview</div>
-        <div class="patient-tab" onclick="switchTab('documents',this)">Documents</div>
-        <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
-        <div class="patient-tab" onclick="switchTab('notes',this)">Notes</div>
-
-      </div>
-    </div>
-    <div class="mb" style="padding-top:0">
-      <div class="ptab active" id="t-overview"></div>
-      <div class="ptab" id="t-charges">
-        <div id="t-charges-inner"></div>
-      </div>
-      <div class="ptab" id="t-documents">
-        <div class="note-box note-blue" style="margin-bottom:10px">📎 Digital copies for record-keeping only. Not a substitute for original documents.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
-          <button class="qbtn" onclick="document.getElementById('doc-cam').click()">📷 Take Photo</button>
-          <button class="qbtn" onclick="document.getElementById('doc-file').click()">📎 Upload Document</button>
-          <button class="qbtn" onclick="sendForReview()">✉️ Send to Doctor</button>
-        </div>
-        <input type="file" id="doc-cam" accept="image/*" capture="environment" style="display:none" onchange="uploadDoc(event)"/>
-        <input type="file" id="doc-file" accept="application/pdf,image/*" style="display:none" onchange="uploadDoc(event)"/>
-        <div id="doc-list"></div>
-      </div>
-      <div class="ptab" id="t-notes">
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <input class="finput" id="note-input" placeholder="Add an operational note…" style="margin-bottom:0"/>
-          <button class="msub" style="width:auto;padding:0 18px" onclick="saveNote()">Add</button>
-        </div>
-        <div id="notes-list"></div>
-      </div>
-      <div class="ptab" id="t-billing"></div>
-      <div class="ptab" id="t-financing">
-        <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:4px;padding:3px 8px;font-size:9px;font-weight:700;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;display:inline-block;margin-bottom:10px">DEMO — Configurable</div>
-        <div class="note-box note-amber" style="margin-bottom:12px">Financing partner configuration tool. Figures shown are for demonstration only and do not represent actual lender terms.</div>
-        <div id="fin-area"></div>
-      </div>
-      <div class="ptab" id="t-ayushman"></div>
-      <div class="ptab" id="t-discharge">
-        <div id="t-discharge-inner"></div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
 <!-- AYUSHMAN -->
 <div class="mod-ov" id="mod-ayushman">
   <div class="modal">
@@ -1591,7 +1588,7 @@ async function openProfile(id,name){
   document.getElementById('pp-av').textContent=(name||'?').charAt(0).toUpperCase();
   document.getElementById('pp-uhid').textContent='';
   switchTab('overview',document.querySelector('.patient-tab'));
-  openModal('mod-profile');
+  showPatientDetailView();
   var [p,admRes]=await Promise.all([
     _supa.from('nh_patients').select('*').eq('id',id).single(),
     _supa.from('admissions').select('*').eq('patient_id',id).eq('status','Active').order('admission_date',{ascending:false}).limit(1)
@@ -1831,6 +1828,22 @@ function toggleFinancingPanel(){
   if(!el) return;
   el.classList.toggle('active');
   if(el.classList.contains('active')) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+/* Patient Profile used to be a modal popup. It's now an inline page
+   (v-patient-detail), shown/hidden the same way the sidebar pages are,
+   so opening a patient behaves exactly like clicking Billing/Discharge —
+   no overlay, no popup, just a full view swap. */
+function showPatientDetailView(){
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('on'); });
+  var v = document.getElementById('v-patient-detail');
+  if(v) v.classList.add('on');
+  var t = document.getElementById('tab-title');
+  if(t) t.textContent = 'Patient Profile';
+}
+function backToPatients(){
+  var btn = document.querySelector('.nb[onclick*=patients]');
+  nav('patients', btn);
 }
 
 function switchTab(tab, el){
