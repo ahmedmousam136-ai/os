@@ -748,27 +748,37 @@ main.content{flex:1;padding:20px;overflow-y:auto}
     <div style="padding:0 17px">
       <div class="patient-tabs">
         <div class="patient-tab active" onclick="switchTab('overview',this)">Overview</div>
-        <div class="patient-tab" onclick="switchTab('history',this)">Visit History</div>
+        <div class="patient-tab" onclick="switchTab('charges',this)">Charges</div>
         <div class="patient-tab" onclick="switchTab('documents',this)">Documents</div>
-        <div class="patient-tab" onclick="switchTab('billing',this)">Billing</div>
-        <div class="patient-tab" onclick="switchTab('financing',this)">Financing</div>
         <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
+        <div class="patient-tab" onclick="switchTab('notes',this)">Notes</div>
+        <div class="patient-tab" onclick="switchTab('billing',this)">Billing</div>
+        <div class="patient-tab" onclick="switchTab('discharge',this)">Discharge</div>
 
       </div>
     </div>
     <div class="mb" style="padding-top:0">
       <div class="ptab active" id="t-overview"></div>
-      <div class="ptab" id="t-history"></div>
+      <div class="ptab" id="t-charges">
+        <div id="t-charges-inner"></div>
+      </div>
       <div class="ptab" id="t-documents">
         <div class="note-box note-blue" style="margin-bottom:10px">📎 Digital copies for record-keeping only. Not a substitute for original documents.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
           <button class="qbtn" onclick="document.getElementById('doc-cam').click()">📷 Take Photo</button>
-          <button class="qbtn" onclick="document.getElementById('doc-file').click()">📎 Upload</button>
+          <button class="qbtn" onclick="document.getElementById('doc-file').click()">📎 Upload Document</button>
           <button class="qbtn" onclick="sendForReview()">✉️ Send to Doctor</button>
         </div>
         <input type="file" id="doc-cam" accept="image/*" capture="environment" style="display:none" onchange="uploadDoc(event)"/>
         <input type="file" id="doc-file" accept="application/pdf,image/*" style="display:none" onchange="uploadDoc(event)"/>
         <div id="doc-list"></div>
+      </div>
+      <div class="ptab" id="t-notes">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input class="finput" id="note-input" placeholder="Add an operational note…" style="margin-bottom:0"/>
+          <button class="msub" style="width:auto;padding:0 18px" onclick="saveNote()">Add</button>
+        </div>
+        <div id="notes-list"></div>
       </div>
       <div class="ptab" id="t-billing"></div>
       <div class="ptab" id="t-financing">
@@ -777,6 +787,9 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div id="fin-area"></div>
       </div>
       <div class="ptab" id="t-ayushman"></div>
+      <div class="ptab" id="t-discharge">
+        <div id="t-discharge-inner"></div>
+      </div>
 
     </div>
   </div>
@@ -924,8 +937,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div class="bp-tabs">
           <div class="bp-tab on" onclick="bpTab('info',this)">&#128203; Info</div>
           <div class="bp-tab" onclick="bpTab('expenses',this)">&#128179; Charges</div>
-          <div class="bp-tab" onclick="bpTab('documents',this)">&#128206; Docs</div>
-          <div class="bp-tab" onclick="bpTab('ayushman',this)">&#129309; Ayushman</div>
           <div class="bp-tab" onclick="bpTab('voice',this)">&#127899; Notes</div>
         </div>
       </div>
@@ -939,70 +950,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div class="bp-pnl" id="bp-pnl-expenses">
 
           <div id="bp-expenses-list"></div>
-        </div>
-        <!-- DOCUMENTS TAB -->
-        <div class="bp-pnl" id="bp-pnl-documents">
-          <div class="note-box note-blue" style="margin-bottom:10px;font-size:11px">Documents uploaded for this patient. Tap View to open originals.</div>
-          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-            <button class="qbtn" onclick="document.getElementById('bp-doc-cam').click()">📷 Take Photo</button>
-            <button class="qbtn" onclick="document.getElementById('bp-doc-file').click()">📎 Upload</button>
-          </div>
-          <input type="file" id="bp-doc-cam" accept="image/*" capture="environment" style="display:none" onchange="handleBpDocUpload(event)"/>
-          <input type="file" id="bp-doc-file" accept="application/pdf,image/*" style="display:none" onchange="handleBpDocUpload(event)"/>
-          <div id="bp-doc-list"></div>
-        </div>
-        <!-- VOICE NOTES TAB -->
-        <div class="bp-pnl" id="bp-pnl-ayushman">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-            <div onclick="bpShowAyushmanExisting()" style="border:1.5px solid var(--green-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--green-bg)">
-              <div style="font-size:22px;margin-bottom:5px">&#9989;</div>
-              <div style="font-weight:700;font-size:12px;margin-bottom:3px">Has Ayushman Card</div>
-              <div style="font-size:10.5px;color:var(--text-tertiary)">Enter card / beneficiary number</div>
-            </div>
-            <div onclick="bpShowAyushmanApply()" style="border:1.5px solid var(--blue-border);border-radius:var(--r-md);padding:14px;cursor:pointer;background:var(--blue-bg)">
-              <div style="font-size:22px;margin-bottom:5px">&#128221;</div>
-              <div style="font-weight:700;font-size:12px;margin-bottom:3px">No Card &#8212; Apply</div>
-              <div style="font-size:10.5px;color:var(--text-tertiary)">Start PM-JAY application</div>
-            </div>
-          </div>
-          <div class="note-box note-amber" style="font-size:11px;margin-bottom:10px">
-            &#9888; Internal record only. Verify actual status on <b>pmjay.gov.in</b> or authorised CSC centre. AuraScale is not a government authority.
-          </div>
-          <div id="bp-ay-existing" style="display:none;border:1px solid var(--green-border);border-radius:var(--r-md);padding:14px;background:var(--green-bg)">
-            <div style="font-weight:700;font-size:12.5px;margin-bottom:10px">Link Existing Ayushman Card</div>
-            <label class="flbl">Beneficiary ID / Card Number *</label>
-            <input class="finput" id="bp-ay-bid" placeholder="Enter beneficiary number"/>
-            <label class="flbl">ABHA ID (optional)</label>
-            <input class="finput" id="bp-ay-abha" placeholder="Enter ABHA ID"/>
-            <label class="flbl">Claim Amount (&#8377;)</label>
-            <input class="finput" id="bp-ay-amt" type="number" placeholder="0"/>
-            <label class="flbl">Status</label>
-            <select class="finput" id="bp-ay-status">
-              <option value="Active">Active</option>
-              <option value="pending_verification">Pending Verification</option>
-              <option value="claim_submitted">Claim Submitted</option>
-              <option value="claim_approved">Claim Approved</option>
-              <option value="claim_rejected">Claim Rejected</option>
-            </select>
-            <button class="msub" onclick="saveBpAyushman('existing')">Save Card Details</button>
-          </div>
-          <div id="bp-ay-apply" style="display:none;border:1px solid var(--blue-border);border-radius:var(--r-md);padding:14px;background:var(--blue-bg)">
-            <div style="font-weight:700;font-size:12.5px;margin-bottom:4px">Apply for PM-JAY (Ayushman Bharat)</div>
-            <div style="font-size:10.5px;color:var(--text-tertiary);margin-bottom:10px">Records the application intent. For official application visit pmjay.gov.in or nearest Common Service Centre (CSC).</div>
-            <label class="flbl">Patient Full Name *</label>
-            <input class="finput" id="bp-ay-name"/>
-            <label class="flbl">Date of Birth</label>
-            <input class="finput" id="bp-ay-dob" type="date"/>
-            <label class="flbl">Aadhaar Last 4 Digits (for records only)</label>
-            <input class="finput" id="bp-ay-aadh" maxlength="4" placeholder="XXXX"/>
-            <label class="flbl">Ration Card / HH ID (if available)</label>
-            <input class="finput" id="bp-ay-hh"/>
-            <label class="flbl">Mobile Number</label>
-            <input class="finput" id="bp-ay-mob" type="tel"/>
-            <label class="flbl">District</label>
-            <input class="finput" id="bp-ay-dist"/>
-            <button class="msub" style="background:var(--blue);color:#fff" onclick="saveBpAyushman('apply')">Submit Application Record</button>
-          </div>
         </div>
         <div class="bp-pnl" id="bp-pnl-voice">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
@@ -1648,23 +1595,50 @@ async function openProfile(id,name){
   document.getElementById('pp-uhid').textContent='';
   switchTab('overview',document.querySelector('.patient-tab'));
   openModal('mod-profile');
-  var p=await _supa.from('nh_patients').select('*').eq('id',id).single();
+  var [p,admRes]=await Promise.all([
+    _supa.from('nh_patients').select('*').eq('id',id).single(),
+    _supa.from('admissions').select('*').eq('patient_id',id).eq('status','Active').order('admission_date',{ascending:false}).limit(1)
+  ]);
   var d=p.data||{};
+  var adm=(admRes.data&&admRes.data.length)?admRes.data[0]:null;
   if(d.uhid)document.getElementById('pp-uhid').textContent='UHID: '+d.uhid;
+
+  var admBlock='';
+  if(adm){
+    var days=Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1;
+    var bedLbl='—', deptLbl='—';
+    if(adm.bed_id){
+      var bedRes=await _supa.from('beds').select('bed_number,ward').eq('id',adm.bed_id).single();
+      if(bedRes.data){ bedLbl=bedRes.data.bed_number||'—'; deptLbl=bedRes.data.ward||'—'; }
+    }
+    admBlock='<div class="ir"><span class="il">Bed Number</span><span class="iv">'+esc(bedLbl)+'</span></div>'
+      +'<div class="ir"><span class="il">Department</span><span class="iv">'+esc(deptLbl)+'</span></div>'
+      +'<div class="ir"><span class="il">Doctor</span><span class="iv">'+esc(adm.admitting_doctor||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">Diagnosis</span><span class="iv">'+esc(adm.admission_diagnosis||'—')+'</span></div>'
+      +'<div class="ir"><span class="il">Admission Date</span><span class="iv">'+new Date(adm.admission_date).toLocaleDateString('en-GB')+'</span></div>'
+      +'<div class="ir"><span class="il">Duration of Stay</span><span class="iv">'+days+' day(s)</span></div>'
+      +'<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--green-bg);color:var(--green)">Admitted</span></span></div>';
+  } else {
+    admBlock='<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--surface2);color:var(--text-tertiary)">Not Admitted</span></span></div>';
+  }
+
   document.getElementById('t-overview').innerHTML=
     '<div style="display:flex;flex-direction:column;gap:4px">'
     +'<div class="ir"><span class="il">Name</span><span class="iv">'+esc(d.full_name||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Patient ID</span><span class="iv">'+esc(d.uhid||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Age / Gender</span><span class="iv">'+(d.age||'—')+' / '+(d.gender||'—')+'</span></div>'
-    +'<div class="ir"><span class="il">Phone</span><span class="iv">'+(d.phone||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Mobile</span><span class="iv">'+(d.phone||'—')+'</span></div>'
+    +admBlock
     +'<div class="ir"><span class="il">Address</span><span class="iv">'+(d.address||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Guardian / Emergency</span><span class="iv">'+(d.guardian||'—')+'</span></div>'
-    +'<div class="ir"><span class="il">Visit Type</span><span class="iv">'+(d.visit_type||'—')+'</span></div>'
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
     +'<button class="qbtn" onclick="openRegisterModal()">+ New Admission</button>'
     +'<button class="msub" style="flex:1;font-size:11.5px;min-height:38px;padding:8px 12px" data-assign-pid="'+id+'" data-assign-name="'+esc(d.full_name||'')+'">&#128703;&#65039; Assign Bed &amp; Admit</button>'
-    +'</div>';
-  loadHistory(id);loadDocs(id);loadBilling(id);loadFinancing(id);loadAyushman(id);loadVoiceNotes(id);
+    +'</div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 6px">Visit History</div>'
+    +'<div id="t-history"></div>';
+  loadHistory(id);loadDocs(id);loadBilling(id);loadFinancing(id);loadAyushman(id);loadNotesTab(id);
 }
 async function loadHistory(id){
   var r=await _supa.from('admissions').select('*').eq('patient_id',id).order('admission_date',{ascending:false});
@@ -1701,6 +1675,21 @@ async function loadHistory(id){
     el.appendChild(div);
   });
 }
+/* Take Photo / Upload in the Documents tab were wired to uploadDoc(event)
+   but that function never existed — clicking either button silently did
+   nothing. Fixed using the shared uploadPatientDocument() helper from
+   nh-shared.js, which writes to the same nh_patient_documents table the
+   Doctor Portal already reads from (loadPatientDocumentsInto), so there
+   is exactly one document record — no receptionist-only or doctor-only
+   duplicate copies, and nothing extra needs to be "sent" to the doctor. */
+function uploadDoc(event){
+  var file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if(!file){ return; }
+  if(!_pid){ showToast('Open a patient first'); return; }
+  uploadPatientDocument(file, _pid, function(){ loadDocs(_pid); });
+}
+
 async function loadDocs(id){
   var el=document.getElementById('doc-list');
   if(!el)return;
@@ -1733,6 +1722,7 @@ async function loadBilling(id){
     el.innerHTML='<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No active admission</p><p class="empty-s">Billing is available for active inpatients</p><button class="qbtn" style="margin-top:8px" onclick="openRegisterModal()">+ Admit this Patient</button></div>';return;
   }
   _admId=adms.data[0].id;
+  var patientName = adms.data[0].patient_name || (document.getElementById('pp-name')?document.getElementById('pp-name').textContent:'');
   var [ch,pay]=await Promise.all([
     _supa.from('admission_charges').select('*').eq('admission_id',_admId).order('created_at',{ascending:false}),
     _supa.from('nh_payments').select('*').eq('admission_id',_admId).order('created_at',{ascending:false}).limit(20)
@@ -1742,17 +1732,125 @@ async function loadBilling(id){
   var due=total-paid;
   el.innerHTML='<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total Billed</div><div class="bill-amt">₹'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">₹'+due.toLocaleString('en-IN')+'</div></div></div>'
     +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
-    +'<button class="qbtn" onclick="openCharge()">+ Add Charge</button>'
-    +'<button class="qbtn" onclick="openPayment()">&#128176; Payment</button>'
-    +'<button class="qbtn" onclick="openVoiceCharge()" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#127899; Voice</button>'
-    +'<button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button>'
-    +'<button class="qbtn" onclick="dischargeFromPatientProfile()" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)">📄 Discharge Patient</button>'
+    +'<button class="qbtn" onclick="openTransactionPayment(\''+_admId+'\',\''+esc(patientName)+'\',\'Payment\',\'Billing\')" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#128176; Receive Payment</button>'
+    +'<button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Generate Bill / View Invoice</button>'
+    +'<button class="qbtn" onclick="toggleFinancingPanel()">&#128179; Financing Options</button>'
     +'</div>'
-    +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Charges</div>'
-    +(ch.data&&ch.data.length?ch.data.map(function(c){return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.5);font-size:12px"><div><div style="font-weight:500">'+esc(c.description||c.charge_type)+'</div><div style="font-size:10px;color:var(--text-tertiary)">'+c.charge_type+'</div></div><div style="font-weight:700;font-family:\'Instrument Serif\',serif;font-size:14px">₹'+Number(c.total_price).toLocaleString('en-IN')+'</div></div>';}).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No charges yet</p>')
-    +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 6px">Payments</div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Payment History</div>'
     +(pay.data&&pay.data.length?pay.data.map(function(p){return '<div style="display:flex;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.4);font-size:12px"><div style="flex:1"><b>'+p.method+'</b> — ₹'+Number(p.amount).toLocaleString('en-IN')+' · '+new Date(p.payment_date||p.created_at).toLocaleDateString('en-GB')+(p.txn_id?' · TXN:'+p.txn_id:'')+'</div></div>';}).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No payments recorded</p>');
+
+  /* Keep the Charges tab in sync whenever Billing is loaded, since they
+     share the same underlying admission/charges data (single source of truth). */
+  renderChargesTab(ch.data||[], due);
+  renderDischargeTab(adms.data[0], due);
 }
+
+/* ── CHARGES TAB (Patient Profile) — line items + Add Charge only.
+   Payment/invoice actions live in the Billing tab; discharge lives in
+   its own Discharge tab, per the required 7-tab structure. ── */
+async function loadChargesTab(id){
+  if(!_admId){ await loadBilling(id); return; }
+  var ch = await _supa.from('admission_charges').select('*').eq('admission_id',_admId).order('created_at',{ascending:false});
+  var [payRes] = await Promise.all([ _supa.from('nh_payments').select('amount').eq('admission_id',_admId) ]);
+  var total=(ch.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+  var paid=(payRes.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+  renderChargesTab(ch.data||[], total-paid);
+}
+function renderChargesTab(charges, due){
+  var el = document.getElementById('t-charges-inner');
+  if(!el) return;
+  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em">Charges</div>'
+    + '<button class="qbtn" onclick="openCharge()">+ Add Charge</button>'
+    + '</div>'
+    + (charges.length ? charges.map(function(c){
+        return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:12.5px">'
+          + '<div><div style="font-weight:600">'+esc(c.description||c.charge_type)+'</div>'
+          + '<div style="font-size:10px;color:var(--text-tertiary)">'+esc(c.charge_type||'')+' · '+new Date(c.created_at).toLocaleDateString('en-GB')+'</div></div>'
+          + '<div style="font-weight:700">₹'+Number(c.total_price||0).toLocaleString('en-IN')+'</div>'
+        + '</div>';
+      }).join('') : '<p style="font-size:12px;color:var(--text-tertiary);padding:8px 0">No charges yet</p>');
+}
+
+/* ── DISCHARGE TAB (Patient Profile) — status + the actual discharge action ── */
+function renderDischargeTab(adm, due){
+  var el = document.getElementById('t-discharge-inner');
+  if(!el) return;
+  var isActive = adm && adm.status==='Active';
+  if(!isActive){
+    el.innerHTML = '<div class="empty" style="padding:24px"><div class="empty-ic">📄</div><p class="empty-t">No active admission to discharge</p></div>';
+    return;
+  }
+  el.innerHTML = '<div class="ir"><span class="il">Status</span><span class="iv"><span class="chip" style="background:var(--green-bg);color:var(--green)">Admitted</span></span></div>'
+    + '<div class="ir"><span class="il">Outstanding Balance</span><span class="iv" style="color:'+(due>0?'var(--red)':'var(--green)')+';font-weight:700">₹'+Math.max(due,0).toLocaleString('en-IN')+'</span></div>'
+    + '<button class="msub" style="margin-top:14px;background:var(--red)" onclick="dischargeFromPatientProfile()">📄 Discharge This Patient</button>';
+}
+
+/* ── NOTES TAB (Patient Profile) — reuses nh_voice_notes, the same table
+   the Bed Profile's Notes tab already uses, so there is one note history
+   per patient rather than a separate duplicate notes system. ── */
+async function loadNotesTab(id){
+  var el = document.getElementById('notes-list');
+  if(!el) return;
+  el.innerHTML = '<p style="font-size:12px;color:var(--text-tertiary)">Loading…</p>';
+  var r = await _supa.from('nh_voice_notes').select('*').eq('patient_id',id).order('created_at',{ascending:false}).limit(30);
+  var rows = r.data || [];
+  if(!rows.length){ el.innerHTML = '<p style="font-size:12px;color:var(--text-tertiary)">No notes yet.</p>'; return; }
+  el.innerHTML = rows.map(function(n){
+    return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;font-size:12.5px">'
+      + esc(n.note_text||'')
+      + '<div style="font-size:10px;color:var(--text-tertiary);margin-top:5px">'+new Date(n.created_at).toLocaleString('en-GB')+'</div>'
+    + '</div>';
+  }).join('');
+}
+async function saveNote(){
+  var input = document.getElementById('note-input');
+  var text = (input.value||'').trim();
+  if(!text){ showToast('Enter a note first'); return; }
+  if(!_pid){ showToast('Open a patient first'); return; }
+  var r = await _supa.from('nh_voice_notes').insert({ clinic_id:_clinicId, patient_id:_pid, note_text:text, created_by:_myUid });
+  if(r.error){ showToast('Error: '+r.error.message); return; }
+  input.value='';
+  loadNotesTab(_pid);
+}
+
+/* ── PATIENT PROFILE TAB SWITCHER — was called by every tab
+   (switchTab('overview',...), switchTab('billing',...) etc.) but was
+   never defined anywhere, so no tab besides the hardcoded default
+   "Overview" could ever be opened. This is the fix. ── */
+/* Patient Profile's "+ Add Charge" reuses the same Add Charge modal/save
+   logic as the Bed Profile (openExpenseModal/saveExpense) rather than a
+   second, disconnected charge system. Those functions read _bpAdmId /
+   _bpPatientId, so this bridges the patient-profile context into them. */
+function openCharge(){
+  if(!_admId){ showToast('No active admission for this patient'); return; }
+  _bpAdmId = _admId;
+  _bpPatientId = _pid;
+  openExpenseModal();
+}
+
+function toggleFinancingPanel(){
+  var el = document.getElementById('t-financing');
+  if(!el) return;
+  el.classList.toggle('active');
+  if(el.classList.contains('active')) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function switchTab(tab, el){
+  document.querySelectorAll('.patient-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.ptab').forEach(function(p){ p.classList.remove('active'); });
+  if(el) el.classList.add('active');
+  var p = document.getElementById('t-'+tab);
+  if(p) p.classList.add('active');
+  if(!_pid) return;
+  if(tab==='charges') loadChargesTab(_pid);
+  if(tab==='documents') loadDocs(_pid);
+  if(tab==='ayushman') loadAyushman(_pid);
+  if(tab==='notes') loadNotesTab(_pid);
+  if(tab==='billing') loadBilling(_pid);
+  if(tab==='discharge') loadBilling(_pid); /* refreshes both due-amount and the discharge panel */
+}
+
 
 /* ══════════════════════════════════════════════════════════════
    DISCHARGE WORKFLOW — shared by the Patient Profile (Billing tab)
@@ -2390,7 +2488,6 @@ async function openBedProfile(bedId,num,ward,status,admId,patientId,patientName,
     var firstTab = document.querySelector('.bp-tab');
     if(firstTab) bpTab('info', firstTab);
     loadBpExpenses();
-    loadBpDocs();
     loadBpVoiceNotes();
   }
   openModal('mod-bed-profile');
@@ -2403,12 +2500,7 @@ function bpTab(tab,el){
   var p = document.getElementById('bp-pnl-'+tab);
   if(p) p.classList.add('on');
   if(tab==='expenses') loadBpExpenses();
-  if(tab==='documents') loadBpDocs();
   if(tab==='voice') loadBpVoiceNotes();
-  if(tab==='ayushman'){
-    document.getElementById('bp-ay-existing').style.display='none';
-    document.getElementById('bp-ay-apply').style.display='none';
-  }
 }
 
 async function updateBpStatus(s){
