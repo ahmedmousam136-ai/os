@@ -748,12 +748,9 @@ main.content{flex:1;padding:20px;overflow-y:auto}
     <div style="padding:0 17px">
       <div class="patient-tabs">
         <div class="patient-tab active" onclick="switchTab('overview',this)">Overview</div>
-        <div class="patient-tab" onclick="switchTab('charges',this)">Charges</div>
         <div class="patient-tab" onclick="switchTab('documents',this)">Documents</div>
         <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
         <div class="patient-tab" onclick="switchTab('notes',this)">Notes</div>
-        <div class="patient-tab" onclick="switchTab('billing',this)">Billing</div>
-        <div class="patient-tab" onclick="switchTab('discharge',this)">Discharge</div>
 
       </div>
     </div>
@@ -2524,7 +2521,7 @@ async function loadBpExpenses(){
   var due = total - paid;
   if(!charges.length){ el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">&#128179;</div><p class="empty-t">No charges yet</p></div>'; return; }
   el.innerHTML = '<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total</div><div class="bill-amt">&#8377;'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">&#8377;'+due.toLocaleString('en-IN')+'</div></div></div>'
-    + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="qbtn" onclick="openExpenseModal()">+ Add Charge</button><button class="qbtn" onclick="openPayment()">&#128176; Payment</button><button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button></div>'
+    + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="qbtn" onclick="openExpenseModal()">+ Add Charge</button><button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button></div>'
     + charges.map(function(c){
         return '<div class="exp-card">'
           + '<div class="exp-ic">&#128179;</div>'
