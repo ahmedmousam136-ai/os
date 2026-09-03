@@ -26,6 +26,20 @@
   --sidebar-text-secondary:rgba(255,255,255,.56);--sidebar-text-tertiary:rgba(255,255,255,.38);
   --sidebar-border:rgba(255,255,255,.09);--sidebar-hover-bg:rgba(255,255,255,.07);--sidebar-active-bg:rgba(255,255,255,.13);
 }
+[data-theme="dark"]{
+  --bg:#0F1117;--surface:#171B24;--surface2:#1C2130;
+  --border:#252A38;--border-mid:#2E3448;
+  --text-primary:#E8E9EF;--text-secondary:#8E96B0;--text-tertiary:#525A72;
+  --blue:#4D85F0;--blue-light:#6E9AF5;--blue-bg:#1A243D;--blue-border:#2A3A5C;
+  --green:#1BB880;--green-bg:#0E2A1F;--green-border:#1A4A35;
+  --amber:#E09940;--amber-bg:#271E0E;--amber-border:#3D2E10;
+  --red:#E05050;--red-bg:#250F0F;--red-border:#3D1A1A;
+  --sh-xs:0 1px 3px rgba(0,0,0,.3);--sh-sm:0 2px 8px rgba(0,0,0,.35);--sh-lg:0 12px 42px rgba(0,0,0,.55);
+  /* Sidebar inverts to white when the theme is toggled */
+  --sidebar-bg:#FFFFFF;--sidebar-text:#18170F;
+  --sidebar-text-secondary:#64605A;--sidebar-text-tertiary:#9E9A93;
+  --sidebar-border:#E8E5DF;--sidebar-hover-bg:#F7F6F3;--sidebar-active-bg:#E8E5DF;
+}
 html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.55;-webkit-tap-highlight-color:transparent}
 button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;outline:none}
@@ -78,13 +92,13 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .view{display:none;flex-direction:column;gap:18px}.view.on{display:flex}
 .sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .st{font-family:'Instrument Serif',serif;font-size:23px;letter-spacing:-.02em;line-height:1.25}
-.ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
+.ss{color:var(--text-secondary);font-size:13.5px;margin-top:4px;line-height:1.5;font-weight:500}
 .mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
 .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh-xs);transition:all var(--ease)}
 .mc:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
-.mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary);margin-bottom:10px}
+.mc-lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--text-secondary);margin-bottom:10px}
 .mc-val{font-family:'Instrument Serif',serif;font-size:28px;letter-spacing:-.02em}
-.mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:4px}
+.mc-sub{font-size:11.5px;color:var(--text-secondary);margin-top:4px;font-weight:500}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
 .ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
 .pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
@@ -106,8 +120,8 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .adm-row:hover{background:var(--bg)}
 .adm-row:last-child{border-bottom:none}
 .adm-av{width:36px;height:36px;border-radius:9px;background:var(--blue-bg);border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:14px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
-.adm-name{font-size:12.5px;font-weight:600}
-.adm-meta{font-size:10.5px;color:var(--text-secondary);margin-top:1px}
+.adm-name{font-size:14.5px;font-weight:700}
+.adm-meta{font-size:12.5px;color:var(--text-secondary);margin-top:2px;font-weight:500}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .bed-card{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px 10px;text-align:center;cursor:pointer;transition:all var(--ease)}
 .bed-card:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
@@ -148,7 +162,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .ocr-spin.on{display:flex}
 .ocr-spin .spin{width:30px;height:30px}
 /* BED SELECTION IN MODAL */
-.ward-hdr{font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.ward-hdr{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .bed-sel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:14px}
 .bsc{border:1.5px solid var(--border);border-radius:var(--r-md);padding:9px 7px;text-align:center;cursor:pointer;transition:all var(--ease);background:var(--surface)}
 .bsc:hover:not(.bsc-dis){border-color:var(--blue);background:var(--blue-bg)}
@@ -233,8 +247,8 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .ward-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);margin-bottom:14px}
 .ward-hd{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--border);background:var(--surface2)}
 .ward-nm{font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-.01em}
-.ward-st{display:flex;gap:10px;font-size:10.5px;color:var(--text-secondary)}
-.ward-st b{font-weight:700}
+.ward-st{display:flex;gap:10px;font-size:12px;color:var(--text-secondary);font-weight:500}
+.ward-st b{font-weight:700;color:var(--text-primary)}
 .bed-ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:14px}
 .bov{border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 9px;text-align:center;cursor:pointer;transition:all var(--ease);background:var(--bg);position:relative}
 .bov:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
@@ -243,10 +257,10 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .bov.reserved{border-color:var(--blue-border);background:var(--blue-bg)}
 .bov.critical{border-color:var(--red-border);background:var(--red-bg)}
 .bov.inactive{opacity:.4;filter:grayscale(.5)}
-.bov-num{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.02em}
-.bov-ward{font-size:8.5px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px}
-.bov-pt{font-size:10px;font-weight:600;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bov-day{font-size:8.5px;color:var(--text-tertiary);margin-top:2px}
+.bov-num{font-family:'DM Sans',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.02em}
+.bov-ward{font-size:10px;color:var(--text-secondary);text-transform:uppercase;margin-top:2px;font-weight:600}
+.bov-pt{font-size:11.5px;font-weight:700;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bov-day{font-size:10px;color:var(--text-secondary);margin-top:2px;font-weight:600}
 /* BED PROFILE MODAL TABS */
 .bp-tabs{display:flex;gap:3px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:12px;overflow-x:auto}
 .bp-tab{padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;color:var(--text-tertiary);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all var(--ease)}
@@ -330,7 +344,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       </button>
       <p class="nav-sec" style="margin-top:10px;border-top:1px solid var(--sidebar-border);padding-top:14px"></p>
       <button class="nb" onclick="nav('notifications',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>Notifications
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>Activity Log
         <span class="nb-badge" id="nav-notif-count" style="display:none">0</span>
       </button>
       <button class="nb" onclick="nav('help',this)">
@@ -365,6 +379,9 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <span class="bc-page" id="tab-title">Home</span>
       </div>
       <div class="hdr-r">
+        <button class="qbtn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light/dark mode" style="min-width:36px;display:flex;align-items:center;justify-content:center;padding:8px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
         <input class="hdr-search" id="global-search" placeholder="Search patient, phone, UHID…" oninput="globalSearch(this.value)"/>
         <button class="add-btn" onclick="openRegisterModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Register / Admit
@@ -493,6 +510,26 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div class="panel"><div id="discharge-list"></div></div>
       </div>
 
+      <!-- DISCHARGE DETAIL — minimal, single-purpose page (not the full Patient Profile) -->
+      <div id="v-discharge-detail" class="view">
+        <div class="sh">
+          <div><button class="qbtn" onclick="backToDischarge()">&#8592; Back to Discharge</button></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+          <div class="adm-av" id="dd-av" style="width:44px;height:44px;border-radius:10px;font-size:17px;flex-shrink:0">?</div>
+          <div><h1 class="st" id="dd-name" style="font-size:20px">Patient</h1><p class="ss" id="dd-uhid"></p></div>
+        </div>
+        <div class="panel" style="padding:18px;max-width:480px">
+          <div style="font-size:11.5px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Admission</div>
+          <div class="ir"><span class="il">Admitted Date</span><span class="iv" id="dd-adm-date">—</span></div>
+          <div class="ir"><span class="il">Admitted Time</span><span class="iv" id="dd-adm-time">—</span></div>
+          <div style="font-size:11.5px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 6px">Discharge</div>
+          <div class="ir"><span class="il">Discharged Date</span><span class="iv" id="dd-dis-date">—</span></div>
+          <div class="ir"><span class="il">Discharged Time</span><span class="iv" id="dd-dis-time">—</span></div>
+          <button class="msub" style="margin-top:18px" onclick="printVisitHistory()">&#128196; Visit History (PDF)</button>
+        </div>
+      </div>
+
       <!-- BILLING -->
       <div id="v-billing" class="view">
         <div class="sh">
@@ -567,7 +604,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 
       <!-- NOTIFICATIONS -->
       <div id="v-notifications" class="view">
-        <div class="sh"><div><h1 class="st">Notifications</h1><p class="ss">Recent activity on your account</p></div></div>
+        <div class="sh"><div><h1 class="st">Activity Log</h1><p class="ss">Recent activity on your account</p></div></div>
         <div class="panel"><div id="notifications-list"></div></div>
       </div>
 
@@ -1240,7 +1277,7 @@ function nav(id,btn){
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var t={home:'Home',patients:'Patients',beds:'Bed Management',discharge:'Discharge',billing:'Billing',notifications:'Notifications',help:'Help & Support',settings:'Profile / Settings'};
+  var t={home:'Home',patients:'Patients',beds:'Bed Management',discharge:'Discharge',billing:'Billing',notifications:'Activity Log',help:'Help & Support',settings:'Profile / Settings'};
   document.getElementById('tab-title').textContent=t[id]||id;
   if(id==='home')loadHome();
   if(id==='patients')loadPatients();
@@ -1995,6 +2032,90 @@ async function confirmDischarge(){
 /* ── DISCHARGE LIST PAGE (sidebar "Discharge") ──
    Was referenced by nav() and the discharge-confirm refresh step but
    never defined, so the sidebar page rendered permanently blank. */
+/* ── DISCHARGE DETAIL — minimal single-purpose page. Deliberately does
+   NOT reuse the full Patient Profile (openProfile/v-patient-detail);
+   this only shows admission/discharge timestamps plus a Visit History
+   export, per the specific request that Discharge not open the same
+   tabbed profile that Patients does. ── */
+var _ddPatientId = null, _ddPatientName = null;
+
+function showDischargeDetailView(){
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('on'); });
+  var v = document.getElementById('v-discharge-detail');
+  if(v) v.classList.add('on');
+  var t = document.getElementById('tab-title');
+  if(t) t.textContent = 'Discharge Detail';
+}
+function backToDischarge(){
+  var btn = document.querySelector('.nb[onclick*=discharge]');
+  nav('discharge', btn);
+}
+
+async function openDischargeDetail(admissionId){
+  if(!admissionId){ showToast('Missing record'); return; }
+  var r = await _supa.from('admissions').select('*').eq('id',admissionId).single();
+  if(r.error || !r.data){ showToast('Could not load this record'); return; }
+  var a = r.data;
+  _ddPatientId = a.patient_id;
+  _ddPatientName = a.patient_name;
+
+  document.getElementById('dd-name').textContent = a.patient_name || 'Patient';
+  document.getElementById('dd-av').textContent = (a.patient_name||'?').charAt(0).toUpperCase();
+  document.getElementById('dd-uhid').textContent = a.uhid ? ('UHID: '+a.uhid) : '';
+
+  var admDate = a.admission_date ? new Date(a.admission_date) : null;
+  var disDate = a.discharge_date ? new Date(a.discharge_date) : null;
+  document.getElementById('dd-adm-date').textContent = admDate ? admDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+  document.getElementById('dd-adm-time').textContent = admDate ? admDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
+  document.getElementById('dd-dis-date').textContent = disDate ? disDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+  document.getElementById('dd-dis-time').textContent = disDate ? disDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
+
+  showDischargeDetailView();
+}
+
+/* Generates a printable Visit History (opens the browser print dialog,
+   from which "Save as PDF" produces the actual PDF — same pattern
+   already used by printPatientBill for consistency). */
+async function printVisitHistory(){
+  if(!_ddPatientId){ showToast('Open a discharge record first'); return; }
+  var [ptRes, admRes, clinicRes] = await Promise.all([
+    _supa.from('nh_patients').select('*').eq('id',_ddPatientId).single(),
+    _supa.from('admissions').select('*').eq('patient_id',_ddPatientId).order('admission_date',{ascending:false}),
+    _supa.from('clinics').select('name').eq('id',_clinicId).single()
+  ]);
+  var p = ptRes.data || {};
+  var visits = admRes.data || [];
+  var cn = (clinicRes.data||{}).name || 'Nursing Home';
+
+  var w = window.open('','_blank');
+  w.document.write('<html><head><title>Visit History - '+esc(p.full_name||_ddPatientName||'')+'</title><style>'
+    +'body{font-family:Arial,sans-serif;padding:30px;color:#111;max-width:700px;margin:0 auto}'
+    +'h1{font-size:22px;margin:0}h2{font-size:14px;font-weight:normal;color:#555;margin:4px 0 0}'
+    +'.header{border-bottom:2px solid #000;padding-bottom:14px;margin-bottom:16px}'
+    +'.info-row{display:flex;gap:8px;font-size:13px;margin-bottom:4px}.info-lbl{color:#888;min-width:90px}'
+    +'table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:16px}'
+    +'th{background:#f5f5f5;padding:8px;text-align:left;border:1px solid #ddd}'
+    +'td{padding:8px;border:1px solid #ddd;vertical-align:top}'
+    +'.status{font-weight:bold}'
+    +'@media print{button{display:none}}'
+    +'</style></head><body>'
+    +'<div class="header"><h1>'+esc(cn)+'</h1><h2>Patient Visit History</h2></div>'
+    +'<div class="info-row"><span class="info-lbl">Patient</span><b>'+esc(p.full_name||_ddPatientName||'—')+'</b></div>'
+    +'<div class="info-row"><span class="info-lbl">Age/Gender</span>'+(p.age||'—')+' / '+(p.gender||'—')+'</div>'
+    +'<div class="info-row"><span class="info-lbl">Phone</span>'+(p.phone||'—')+'</div>'
+    +'<div class="info-row"><span class="info-lbl">UHID</span>'+(p.uhid||'—')+'</div>'
+    +'<table><tr><th>Admitted</th><th>Discharged</th><th>Status</th><th>Doctor</th><th>Reason / Diagnosis</th></tr>'
+    +(visits.length ? visits.map(function(v){
+        var ad = v.admission_date ? new Date(v.admission_date).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+        var dd = v.discharge_date ? new Date(v.discharge_date).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+        return '<tr><td>'+ad+'</td><td>'+dd+'</td><td class="status">'+esc(v.status||'—')+'</td><td>'+esc(v.admitting_doctor||'—')+'</td><td>'+esc(v.admission_diagnosis||'Not recorded')+'</td></tr>';
+      }).join('') : '<tr><td colspan="5" style="text-align:center;color:#888">No visit records found</td></tr>')
+    +'</table>'
+    +'<button onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#2554E0;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer">Print / Save as PDF</button>'
+    +'</body></html>');
+  w.document.close();
+}
+
 async function loadDischarge(){
   var listEl = document.getElementById('discharge-list');
   if(!listEl) return;
@@ -2047,7 +2168,7 @@ async function loadDischarge(){
     var bedLbl = a.bed_id ? (bedMap[a.bed_id] || '—') : 'OPD';
     var admStr = a.admission_date ? new Date(a.admission_date).toLocaleDateString('en-GB') : '—';
     var disStr = a.discharge_date ? new Date(a.discharge_date).toLocaleDateString('en-GB') : '—';
-    return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+a.patient_id+'\',\''+esc(a.patient_name||'')+'\')">'
+    return '<div class="adm-row" style="cursor:pointer" onclick="openDischargeDetail(\''+a.id+'\')">'
       + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
       + '<div style="flex:1;min-width:0">'
         + '<div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
