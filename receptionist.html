@@ -403,7 +403,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <div class="mc" style="cursor:pointer" onclick="openKpiDetail('active')"><div class="mc-lbl">Active Patients</div><div class="mc-val" id="h-active">—</div><div class="mc-sub">currently admitted</div></div>
           <div class="mc" style="cursor:pointer" onclick="openKpiDetail('vacant')"><div class="mc-lbl">Vacant Beds</div><div class="mc-val" id="h-vacant">—</div><div class="mc-sub">ready for admission</div></div>
           <div class="mc" style="cursor:pointer" onclick="openKpiDetail('today')"><div class="mc-lbl">Today Admissions</div><div class="mc-val" id="h-today">—</div><div class="mc-sub">admitted today</div></div>
-          <div class="mc" style="cursor:pointer" onclick="openKpiDetail('pending')"><div class="mc-lbl">Pending Review</div><div class="mc-val" id="h-pending">—</div><div class="mc-sub">sent to doctor</div></div>
+          <div class="mc" style="cursor:pointer" onclick="openKpiDetail('pending')"><div class="mc-lbl">Review</div><div class="mc-val" id="h-pending">—</div><div class="mc-sub">sent to doctor</div></div>
         </div>
         <div class="two-col">
           <div class="panel">
@@ -1383,7 +1383,7 @@ async function loadHome(){
 /* ── HOME KPI DETAIL MODAL — Active Patients / Vacant Beds / Today
    Admissions / Pending Review, each opens the exact underlying records. ── */
 async function openKpiDetail(type){
-  var titles = {active:'Active Patients', vacant:'Vacant Beds', today:"Today's Admissions", pending:'Pending Review'};
+  var titles = {active:'Active Patients', vacant:'Vacant Beds', today:"Today's Admissions", pending:'Review'};
   document.getElementById('kpi-detail-title').textContent = titles[type] || 'Details';
   var body = document.getElementById('kpi-detail-body');
   body.innerHTML = '<div class="empty" style="padding:20px"><p class="empty-t">Loading…</p></div>';
@@ -1406,11 +1406,11 @@ async function openKpiDetail(type){
     var bedsRes = bedIds.length ? await _supa.from('beds').select('id,bed_number').in('id',bedIds) : {data:[]};
     var bedMap = {}; (bedsRes.data||[]).forEach(function(b){ bedMap[b.id]=b.bed_number; });
     body.innerHTML = rows.map(function(a){
-      return '<button type="button" class="adm-row" style="width:100%;text-align:left;border:none;background:none;cursor:pointer" onclick="closeModal(\'mod-kpi-detail\');openProfile(\''+a.patient_id+'\',\''+esc(a.patient_name||'')+'\')">'
+      return '<div class="adm-row">'
         + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
         + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
         + '<div class="adm-meta">Bed '+esc(a.bed_id?(bedMap[a.bed_id]||'—'):'OPD')+' · Dr. '+esc(a.admitting_doctor||'—')+'</div></div>'
-      + '</button>';
+      + '</div>';
     }).join('');
     return;
   }
@@ -1424,11 +1424,11 @@ async function openKpiDetail(type){
     var bedMap2 = {}; (bedsRes2.data||[]).forEach(function(b){ bedMap2[b.id]=b.bed_number; });
     body.innerHTML = rows2.map(function(a){
       var t = a.admission_date ? new Date(a.admission_date).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
-      return '<button type="button" class="adm-row" style="width:100%;text-align:left;border:none;background:none;cursor:pointer" onclick="closeModal(\'mod-kpi-detail\');openProfile(\''+a.patient_id+'\',\''+esc(a.patient_name||'')+'\')">'
+      return '<div class="adm-row">'
         + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
         + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
         + '<div class="adm-meta">Bed '+esc(a.bed_id?(bedMap2[a.bed_id]||'—'):'OPD')+' · '+t+'</div></div>'
-      + '</button>';
+      + '</div>';
     }).join('');
     return;
   }
@@ -1438,12 +1438,12 @@ async function openKpiDetail(type){
     var rows3 = r3.data || [];
     if(!rows3.length){ body.innerHTML='<div class="empty" style="padding:20px"><div class="empty-ic">✅</div><p class="empty-t">Nothing pending review</p></div>'; return; }
     body.innerHTML = rows3.map(function(p){
-      return '<button type="button" class="adm-row" style="width:100%;text-align:left;border:none;background:none;cursor:pointer" onclick="closeModal(\'mod-kpi-detail\');openProfile(\''+p.id+'\',\''+esc(p.full_name||'')+'\')">'
+      return '<div class="adm-row">'
         + '<div class="adm-av">'+esc((p.full_name||'?').charAt(0).toUpperCase())+'</div>'
         + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(p.full_name||'—')+'</div>'
         + '<div class="adm-meta">'+(p.phone||'No phone')+'</div></div>'
         + '<span class="chip ch-wait">With Dr.</span>'
-      + '</button>';
+      + '</div>';
     }).join('');
     return;
   }
