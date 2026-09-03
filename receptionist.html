@@ -91,6 +91,12 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700}
 .pb-g{color:var(--green);background:var(--green-bg);border:1px solid var(--green-border)}
 .chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.bl-tab-btn{padding:6px 13px;font-size:11.5px;font-weight:600;color:var(--text-tertiary);border-radius:6px;cursor:pointer;border:none;background:none;white-space:nowrap}
+.bl-tab-btn.on{background:var(--surface);color:var(--text-primary);box-shadow:var(--sh-xs)}
+.txn-pay-btn{background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;border:none;cursor:pointer}
+.txn-pay-btn:hover{background:var(--blue-hover,var(--blue))}
+.txn-view-btn{background:var(--surface);color:var(--text-secondary);font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer}
+.txn-view-btn:hover{border-color:var(--border-strong);color:var(--text-primary)}
 .ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .ch-wait{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .ch-dis{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
@@ -316,16 +322,27 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <button class="nb" onclick="nav('beds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/></svg></span>Beds
       </button>
+      <button class="nb" onclick="nav('billing',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>Billing
+      </button>
       <button class="nb" onclick="nav('discharge',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>Discharge
       </button>
-      <button class="nb" onclick="nav('billing',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>Billing
+      <p class="nav-sec" style="margin-top:10px;border-top:1px solid var(--sidebar-border);padding-top:14px"></p>
+      <button class="nb" onclick="nav('notifications',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>Notifications
+        <span class="nb-badge" id="nav-notif-count" style="display:none">0</span>
+      </button>
+      <button class="nb" onclick="nav('help',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>Help &amp; Support
+      </button>
+      <button class="nb" onclick="nav('settings',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Profile / Settings
       </button>
 
     </nav>
     <div class="sb-foot">
-      <div class="sb-profile" id="sb-profile" style="display:flex;align-items:center;gap:9px;padding:8px 6px;border-radius:var(--r-sm);margin-bottom:8px">
+      <div class="sb-profile" id="sb-profile" onclick="nav('settings',this)" style="display:flex;align-items:center;gap:9px;padding:8px 6px;border-radius:var(--r-sm);cursor:pointer;margin-bottom:8px;transition:background var(--ease)">
         <div id="sb-profile-av" style="width:32px;height:32px;border-radius:8px;background:var(--brand-bg);color:var(--brand);border:1px solid var(--brand-border);font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0">—</div>
         <div style="flex:1;min-width:0">
           <div id="sb-profile-name" style="font-size:12.5px;font-weight:700;color:var(--sidebar-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Loading…</div>
@@ -429,13 +446,116 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <div><h1 class="st">Billing</h1><p class="ss">Add charges · record payments</p></div>
           <button class="qbtn" onclick="openVoiceCharge()" style="gap:6px"><span style="font-size:16px">🎙️</span> Voice Charge</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-          <div class="mc"><div class="mc-lbl">Active Admissions</div><div class="mc-val" id="bl-active-count">—</div></div>
-          <div class="mc"><div class="mc-lbl">Total Outstanding</div><div class="mc-val" id="bl-total-due" style="color:var(--red)">—</div></div>
-          <div class="mc"><div class="mc-lbl">Fully Settled</div><div class="mc-val" id="bl-settled-count">—</div></div>
+        <div class="tabs-row" style="display:flex;gap:4px;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin-bottom:14px;width:fit-content;flex-wrap:wrap">
+          <button class="bl-tab-btn on" data-bltab="txns" onclick="blTab('txns',this)">Recent Transactions</button>
+          <button class="bl-tab-btn" data-bltab="pending" onclick="blTab('pending',this)">Pending Bills</button>
+          <button class="bl-tab-btn" data-bltab="payments" onclick="blTab('payments',this)">Payments</button>
+          <button class="bl-tab-btn" data-bltab="invoices" onclick="blTab('invoices',this)">Invoices</button>
+          <button class="bl-tab-btn" data-bltab="outstanding" onclick="blTab('outstanding',this)">Outstanding</button>
         </div>
-        <input class="finput" id="billing-search" placeholder="Search patient…" oninput="loadBillingList()"/>
-        <div id="billing-list"></div>
+
+        <!-- RECENT TRANSACTIONS (default) -->
+        <div class="bl-pnl on" id="bl-pnl-txns">
+          <div class="panel" style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border);text-align:left">
+                  <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Patient</th>
+                  <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Time</th>
+                  <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
+                  <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Amount</th>
+                  <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Status</th>
+                  <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Payment</th>
+                </tr>
+              </thead>
+              <tbody id="txn-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PENDING BILLS -->
+        <div class="bl-pnl" id="bl-pnl-pending" style="display:none">
+          <div class="panel" style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px">
+              <thead><tr style="border-bottom:1px solid var(--border);text-align:left">
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Patient</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Time</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Amount</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Status</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Payment</th>
+              </tr></thead>
+              <tbody id="pending-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PAYMENTS -->
+        <div class="bl-pnl" id="bl-pnl-payments" style="display:none">
+          <div class="panel"><div id="payments-list"></div></div>
+        </div>
+
+        <!-- INVOICES -->
+        <div class="bl-pnl" id="bl-pnl-invoices" style="display:none">
+          <div class="panel"><div id="invoices-list"></div></div>
+        </div>
+
+        <!-- OUTSTANDING -->
+        <div class="bl-pnl" id="bl-pnl-outstanding" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+            <div class="mc"><div class="mc-lbl">Active Admissions</div><div class="mc-val" id="bl-active-count">—</div></div>
+            <div class="mc"><div class="mc-lbl">Total Outstanding</div><div class="mc-val" id="bl-total-due" style="color:var(--red)">—</div></div>
+            <div class="mc"><div class="mc-lbl">Fully Settled</div><div class="mc-val" id="bl-settled-count">—</div></div>
+          </div>
+          <input class="finput" id="billing-search" placeholder="Search patient…" oninput="loadBillingList()"/>
+          <div class="panel"><div id="billing-list"></div></div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div id="v-notifications" class="view">
+        <div class="sh"><div><h1 class="st">Notifications</h1><p class="ss">Recent activity on your account</p></div></div>
+        <div class="panel"><div id="notifications-list"></div></div>
+      </div>
+
+      <!-- HELP & SUPPORT -->
+      <div id="v-help" class="view">
+        <div class="sh"><div><h1 class="st">Help &amp; Support</h1><p class="ss">Get assistance with AuraScale</p></div></div>
+        <div class="panel" style="padding:20px">
+          <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">Need help with registration, billing, discharge, or anything else in AuraScale? Reach out and we'll respond as quickly as we can.</p>
+          <a href="https://wa.me/919330660325?text=Hi, I need help with AuraScale." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:11px 20px;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px">📲 WhatsApp Support</a>
+        </div>
+        <div class="panel" style="padding:20px;margin-top:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Quick Tips</div>
+          <div class="ir"><span class="il">Register a patient</span><span class="iv">Home → Register / Admit</span></div>
+          <div class="ir"><span class="il">Add a charge</span><span class="iv">Patient Profile → Billing → + Add Charge</span></div>
+          <div class="ir"><span class="il">Discharge a patient</span><span class="iv">Open their bed → Discharge This Patient</span></div>
+          <div class="ir"><span class="il">Collect a payment</span><span class="iv">Billing → Recent Transactions → Pay</span></div>
+        </div>
+      </div>
+
+      <!-- PROFILE / SETTINGS -->
+      <div id="v-settings" class="view">
+        <div class="sh"><div><h1 class="st">Profile / Settings</h1><p class="ss">Your account details</p></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="panel">
+            <div class="ph"><div class="pt">Account</div></div>
+            <div style="padding:16px">
+              <div class="ir"><span class="il">Name</span><span class="iv" id="set-name">—</span></div>
+              <div class="ir"><span class="il">Role</span><span class="iv" id="set-role">—</span></div>
+              <div class="ir"><span class="il">Facility</span><span class="iv" id="set-facility">—</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ph"><div class="pt">Change Password</div></div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+              <div><label class="flbl">New Password</label><input class="finput" id="set-newpass" type="password" placeholder="Min 6 characters"/></div>
+              <div><label class="flbl">Confirm Password</label><input class="finput" id="set-confpass" type="password" placeholder="Type again"/></div>
+              <div id="set-pass-err" style="color:var(--red);font-size:11.5px;display:none"></div>
+              <button class="msub" onclick="changeReceptionistPassword()">Update Password</button>
+            </div>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -803,7 +923,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         </div>
         <div class="bp-tabs">
           <div class="bp-tab on" onclick="bpTab('info',this)">&#128203; Info</div>
-          <div class="bp-tab" onclick="bpTab('expenses',this)">&#128179; Expenses</div>
+          <div class="bp-tab" onclick="bpTab('expenses',this)">&#128179; Charges</div>
           <div class="bp-tab" onclick="bpTab('documents',this)">&#128206; Docs</div>
           <div class="bp-tab" onclick="bpTab('ayushman',this)">&#129309; Ayushman</div>
           <div class="bp-tab" onclick="bpTab('voice',this)">&#127899; Notes</div>
@@ -914,6 +1034,38 @@ main.content{flex:1;padding:20px;overflow-y:auto}
   </div>
 </div>
 
+<!-- RECEIVE PAYMENT MODAL — used by Recent Transactions / Pending Bills "Pay" buttons -->
+<div class="mod-ov" id="mod-transaction-payment">
+  <div class="modal" style="max-width:400px">
+    <div class="mh">
+      <div class="mtitle">Receive Payment</div>
+      <button class="mclose" onclick="closeModal('mod-transaction-payment')">✕</button>
+    </div>
+    <div class="mb">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;display:flex;flex-direction:column;gap:3px;margin-bottom:14px">
+        <div class="ir"><span class="il">Patient Name</span><span class="iv" id="tp-patient-name">—</span></div>
+        <div class="ir"><span class="il">Charge Type</span><span class="iv" id="tp-charge-type">—</span></div>
+        <div class="ir"><span class="il">Department</span><span class="iv" id="tp-department">—</span></div>
+        <div class="ir"><span class="il">Amount Due</span><span class="iv" id="tp-due" style="font-weight:700;color:var(--red)">—</span></div>
+      </div>
+      <label class="flbl">Payment Amount (₹)</label>
+      <input class="finput" id="tp-amount" type="number" placeholder="0"/>
+      <label class="flbl" style="margin-top:10px">Payment Method</label>
+      <select class="finput" id="tp-method">
+        <option>Cash</option>
+        <option>UPI</option>
+        <option>Card</option>
+        <option>Bank Transfer</option>
+      </select>
+      <div id="tp-err" style="color:var(--red);font-size:12px;display:none;margin-top:10px"></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="qbtn" style="flex:1;justify-content:center" onclick="closeModal('mod-transaction-payment')">Cancel</button>
+        <button class="msub" id="tp-confirm-btn" style="flex:1" onclick="confirmTransactionPayment()">Confirm Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- DISCHARGE CONFIRMATION MODAL — shared by patient profile & bed profile -->
 <div class="mod-ov" id="mod-discharge-confirm">
   <div class="modal" style="max-width:400px">
@@ -942,7 +1094,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 <div class="mod-ov" id="mod-expense">
   <div class="modal">
     <div class="mh">
-      <div><div class="mtitle">&#128179; Add Expense</div>
+      <div><div class="mtitle">&#128179; Add Charge</div>
         <div style="display:flex;gap:6px;margin-top:6px">
           <button id="exp-mode-type" onclick="setExpMode('type')" style="border:1.5px solid var(--green);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;cursor:pointer;background:var(--green);color:#fff">&#9000; Type</button>
           <button id="exp-mode-voice" onclick="setExpMode('voice')" style="border:1.5px solid var(--border);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;cursor:pointer;background:var(--surface);color:var(--text-secondary)">&#127899; Voice</button>
@@ -996,7 +1148,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <button class="qbtn" onclick="applyVoiceToExpense()">&#8594; Apply to form above</button>
       </div>
       <div id="exp-err" style="color:var(--red);font-size:11.5px;margin-top:8px;display:none"></div>
-      <button class="msub" onclick="saveExpense()" style="margin-top:10px">&#10003; Save Expense</button>
+      <button class="msub" onclick="saveExpense()" style="margin-top:10px">&#10003; Save Charge</button>
     </div>
   </div>
 </div>
@@ -1026,7 +1178,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 /* AuraScale NH — Receptionist Portal v2
    Multi-step wizard · ID capture · AI OCR · Ward-grouped beds · Supabase Realtime */
 
-var _pid=null,_admId=null,_bedId=null,_selBedId=null,_selBedRate=0,_existingPatientId=null;
+var _pid=null,_admId=null,_bedId=null,_selBedId=null,_selBedRate=0,_existingPatientId=null,_authInfo=null;
 var _imgs={front:null,back:null};
 var _idType=null,_wizStep=1;
 var _voiceRec=false,_voiceText='';
@@ -1056,6 +1208,7 @@ async function init(){
     return;
   }
   var g=await nhAuthGuard('receptionist');if(!g)return;
+  _authInfo = g;
   document.getElementById('sb-fac-name').textContent=g.facilityName;
   var pname = g.name || 'Receptionist';
   var proleMap = {receptionist:'Front Desk', owner:'Owner', doctor:'Doctor'};
@@ -1084,6 +1237,58 @@ function startRealtime(){
   }catch(e){console.warn('Realtime unavailable',e);}
 }
 
+/* ── NOTIFICATIONS — real recent activity from the audit log, not mock data ── */
+async function loadNotifications(){
+  var el = document.getElementById('notifications-list');
+  if(!el) return;
+  el.innerHTML = '<div class="empty" style="padding:24px"><p class="empty-t">Loading…</p></div>';
+  var r = await _supa.from('nh_audit_log').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(40);
+  var rows = r.data || [];
+  var badge = document.getElementById('nav-notif-count');
+  if(badge){ badge.style.display='none'; } /* no unread-tracking column exists yet, so hide the counter rather than fake a number */
+  if(!rows.length){
+    el.innerHTML = '<div class="empty" style="padding:28px"><div class="empty-ic">🔔</div><p class="empty-t">No recent activity</p></div>';
+    return;
+  }
+  var actionLabels = {
+    patient_registered:'Patient registered', payment_recorded:'Payment recorded',
+    patient_discharged:'Patient discharged', document_upload:'Document uploaded',
+    financing_record_updated:'Financing record updated'
+  };
+  el.innerHTML = rows.map(function(a){
+    var label = actionLabels[a.action] || (a.action||'Activity').replace(/_/g,' ');
+    return '<div class="adm-row">'
+      + '<div class="adm-av">🔔</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name" style="text-transform:capitalize">'+esc(label)+'</div>'
+      + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div>'
+    + '</div>';
+  }).join('');
+}
+
+/* ── PROFILE / SETTINGS ── */
+function loadSettingsView(){
+  var g = _authInfo || {};
+  var proleMap = {receptionist:'Front Desk', owner:'Owner', doctor:'Doctor'};
+  document.getElementById('set-name').textContent = g.name || '—';
+  document.getElementById('set-role').textContent = proleMap[g.role] || g.role || '—';
+  document.getElementById('set-facility').textContent = g.facilityName || '—';
+}
+
+async function changeReceptionistPassword(){
+  var np = (document.getElementById('set-newpass').value||'').trim();
+  var cp = (document.getElementById('set-confpass').value||'').trim();
+  var err = document.getElementById('set-pass-err');
+  err.style.display='none';
+  if(!np){ err.textContent='Enter a new password.'; err.style.display='block'; return; }
+  if(np.length<6){ err.textContent='Password must be at least 6 characters.'; err.style.display='block'; return; }
+  if(np!==cp){ err.textContent='Passwords do not match.'; err.style.display='block'; return; }
+  var r = await _supa.auth.updateUser({ password: np });
+  if(r.error){ err.textContent='Error: '+r.error.message; err.style.display='block'; return; }
+  document.getElementById('set-newpass').value='';
+  document.getElementById('set-confpass').value='';
+  showToast('Password updated successfully');
+}
+
 /* ── NAV ── */
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
@@ -1094,13 +1299,15 @@ function nav(id,btn){
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var t={home:'Home',patients:'Patients',beds:'Bed Management',discharge:'Discharge',billing:'Billing'};
+  var t={home:'Home',patients:'Patients',beds:'Bed Management',discharge:'Discharge',billing:'Billing',notifications:'Notifications',help:'Help & Support',settings:'Profile / Settings'};
   document.getElementById('tab-title').textContent=t[id]||id;
   if(id==='home')loadHome();
   if(id==='patients')loadPatients();
   if(id==='beds')loadBeds();
   if(id==='discharge')loadDischarge();
-  if(id==='billing')loadBillingList();
+  if(id==='billing')loadBillingPage();
+  if(id==='notifications')loadNotifications();
+  if(id==='settings')loadSettingsView();
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
 function openModal(id){document.getElementById(id).classList.add('open')}
@@ -1135,7 +1342,8 @@ function renderBedMini(){
   m.innerHTML=_cachedBeds.map(function(b){
     var s=(b.status||'vacant').toLowerCase();
     var c=s==='occupied'?'var(--green)':s==='cleaning'?'var(--amber)':s==='reserved'?'var(--blue)':s==='critical'?'var(--red)':'var(--border)';
-    return '<div title="Bed '+esc(b.bed_number)+' — '+s+'" style="aspect-ratio:1;background:'+c+';border-radius:6px;opacity:.75"></div>';
+    var txt=s==='vacant'?'var(--text-secondary)':'#fff';
+    return '<div title="Bed '+esc(b.bed_number)+' — '+s+'" style="aspect-ratio:1;background:'+c+';border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+txt+'">'+esc(b.bed_number)+'</div>';
   }).join('');
 }
 
@@ -1749,6 +1957,221 @@ async function loadDischarge(){
    Was silently calling loadBilling() with no patient id — which only
    ever touches the (hidden) patient-profile billing tab, not this
    page — so #billing-list was never actually populated. */
+/* ══════════════════════════════════════════════════════════════
+   BILLING PAGE — tabs: Recent Transactions (default) / Pending Bills
+   / Payments / Invoices / Outstanding. All data is real, pulled from
+   admission_charges / nh_payments / admissions — nothing mocked.
+══════════════════════════════════════════════════════════════ */
+function loadBillingPage(){
+  blTab('txns', document.querySelector('.bl-tab-btn[data-bltab="txns"]'));
+}
+
+function blTab(tab, el){
+  document.querySelectorAll('.bl-tab-btn').forEach(function(b){ b.classList.remove('on'); });
+  document.querySelectorAll('.bl-pnl').forEach(function(p){ p.style.display='none'; });
+  if(el) el.classList.add('on');
+  var pnl = document.getElementById('bl-pnl-'+tab);
+  if(pnl) pnl.style.display='block';
+  if(tab==='txns') loadRecentTransactions();
+  if(tab==='pending') loadRecentTransactions('pending');
+  if(tab==='payments') loadPaymentsTab();
+  if(tab==='invoices') loadInvoicesTab();
+  if(tab==='outstanding') loadBillingList();
+}
+
+/* Status badge helper — shared by Recent Transactions & Pending Bills */
+function billingStatusChip(status){
+  if(status==='Paid') return '<span class="chip" style="background:var(--green-bg);color:var(--green)">Paid</span>';
+  if(status==='Overdue') return '<span class="chip" style="background:var(--red-bg);color:var(--red)">Overdue</span>';
+  return '<span class="chip" style="background:var(--amber-bg);color:var(--amber)">Pending</span>';
+}
+
+/* Pulls the most recent charge line-items across the whole clinic, joins
+   them to their admission + bed for Patient/Department, and determines
+   Paid/Pending/Overdue from the admission's real outstanding balance. */
+async function loadRecentTransactions(filter){
+  var tbody = document.getElementById(filter==='pending' ? 'pending-tbody' : 'txn-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:12px">Loading…</td></tr>';
+
+  var chRes = await _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(60);
+  var charges = chRes.data || [];
+  if(!charges.length){
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:12px">No transactions yet</td></tr>';
+    return;
+  }
+
+  var admIds = Array.from(new Set(charges.map(function(c){return c.admission_id;}).filter(Boolean)));
+  var admRes = admIds.length ? await _supa.from('admissions').select('id,patient_id,patient_name,bed_id,admission_date').in('id',admIds) : {data:[]};
+  var admMap = {};
+  (admRes.data||[]).forEach(function(a){ admMap[a.id]=a; });
+
+  var bedIds = Array.from(new Set((admRes.data||[]).map(function(a){return a.bed_id;}).filter(Boolean)));
+  var bedRes = bedIds.length ? await _supa.from('beds').select('id,ward').in('id',bedIds) : {data:[]};
+  var bedMap = {};
+  (bedRes.data||[]).forEach(function(b){ bedMap[b.id]=b.ward; });
+
+  /* Outstanding balance per admission (drives Paid/Pending/Overdue) */
+  var balances = {};
+  await Promise.all(admIds.map(async function(admId){
+    var [c,p] = await Promise.all([
+      _supa.from('admission_charges').select('total_price').eq('admission_id',admId),
+      _supa.from('nh_payments').select('amount').eq('admission_id',admId)
+    ]);
+    var total=(c.data||[]).reduce(function(s,x){return s+(x.total_price||0);},0);
+    var paid=(p.data||[]).reduce(function(s,x){return s+(x.amount||0);},0);
+    balances[admId] = { total:total, paid:paid, due: total-paid };
+  }));
+
+  var rows = charges.map(function(c){
+    var a = admMap[c.admission_id] || {};
+    var bal = balances[c.admission_id] || {due:0};
+    var status = 'Paid';
+    if(bal.due > 0){
+      var ageDays = a.admission_date ? Math.floor((Date.now()-new Date(a.admission_date))/86400000) : 0;
+      status = ageDays >= 2 ? 'Overdue' : 'Pending';
+    }
+    return { charge:c, adm:a, dept: a.bed_id ? (bedMap[a.bed_id]||c.charge_type) : c.charge_type, status:status, due: bal.due };
+  });
+
+  if(filter==='pending') rows = rows.filter(function(r){ return r.status!=='Paid'; });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:12px">Nothing here right now</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function(r){
+    var c=r.charge, a=r.adm;
+    var time = c.created_at ? new Date(c.created_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—';
+    var payCell = r.status==='Paid'
+      ? '<button class="txn-view-btn" onclick="openProfile(\''+(a.patient_id||'')+'\',\''+esc(a.patient_name||'')+'\')">View</button>'
+      : '<button class="txn-pay-btn" onclick="openTransactionPayment(\''+c.admission_id+'\',\''+esc(a.patient_name||'')+'\',\''+esc(c.charge_type||'')+'\',\''+esc(r.dept||'')+'\')">Pay</button>';
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:10px 14px;cursor:pointer" onclick="openProfile(\''+(a.patient_id||'')+'\',\''+esc(a.patient_name||'')+'\')"><span style="font-weight:600;color:var(--text-primary)">'+esc(a.patient_name||'—')+'</span></td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+time+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+esc(r.dept||'—')+'</td>'
+      + '<td style="padding:10px 14px;font-weight:700">₹'+Number(c.total_price||0).toLocaleString('en-IN')+'</td>'
+      + '<td style="padding:10px 14px">'+billingStatusChip(r.status)+'</td>'
+      + '<td style="padding:10px 14px;text-align:right">'+payCell+'</td>'
+    + '</tr>';
+  }).join('');
+}
+
+async function loadPaymentsTab(){
+  var el = document.getElementById('payments-list');
+  if(!el) return;
+  el.innerHTML = '<div class="empty" style="padding:24px"><p class="empty-t">Loading…</p></div>';
+  var r = await _supa.from('nh_payments').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(60);
+  var pays = r.data || [];
+  if(!pays.length){ el.innerHTML = '<div class="empty" style="padding:28px"><div class="empty-ic">💳</div><p class="empty-t">No payments recorded yet</p></div>'; return; }
+
+  var admIds = Array.from(new Set(pays.map(function(p){return p.admission_id;}).filter(Boolean)));
+  var admRes = admIds.length ? await _supa.from('admissions').select('id,patient_id,patient_name').in('id',admIds) : {data:[]};
+  var admMap = {}; (admRes.data||[]).forEach(function(a){ admMap[a.id]=a; });
+
+  el.innerHTML = pays.map(function(p){
+    var a = admMap[p.admission_id] || {};
+    return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+(a.patient_id||'')+'\',\''+esc(a.patient_name||'')+'\')">'
+      + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
+      + '<div class="adm-meta">'+esc(p.method||'—')+(p.txn_id?' · TXN '+esc(p.txn_id):'')+' · '+new Date(p.payment_date||p.created_at).toLocaleDateString('en-GB')+'</div></div>'
+      + '<div style="font-weight:700;color:var(--green)">₹'+Number(p.amount||0).toLocaleString('en-IN')+'</div>'
+    + '</div>';
+  }).join('');
+}
+
+async function loadInvoicesTab(){
+  var el = document.getElementById('invoices-list');
+  if(!el) return;
+  el.innerHTML = '<div class="empty" style="padding:24px"><p class="empty-t">Loading…</p></div>';
+  var r = await _supa.from('admissions').select('*').eq('clinic_id',_clinicId).order('admission_date',{ascending:false}).limit(60);
+  var adms = r.data || [];
+  if(!adms.length){ el.innerHTML = '<div class="empty" style="padding:28px"><div class="empty-ic">🧾</div><p class="empty-t">No admissions to invoice yet</p></div>'; return; }
+
+  el.innerHTML = adms.map(function(a){
+    var isActive = a.status==='Active';
+    return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+(a.patient_id||'')+'\',\''+esc(a.patient_name||'')+'\')">'
+      + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
+      + '<div class="adm-meta">Admitted '+(a.admission_date?new Date(a.admission_date).toLocaleDateString('en-GB'):'—')+' · '+(isActive?'Active':'Discharged')+'</div></div>'
+      + '<button class="txn-view-btn" onclick="event.stopPropagation();openProfile(\''+(a.patient_id||'')+'\',\''+esc(a.patient_name||'')+'\')">Open Bill</button>'
+    + '</div>';
+  }).join('');
+}
+
+/* ── RECEIVE PAYMENT modal (triggered from the Pay button in the tables) ── */
+var _tpAdmId = null, _tpInProgress = false;
+async function openTransactionPayment(admissionId, patientName, chargeType, department){
+  if(!admissionId){ showToast('Missing admission reference'); return; }
+  _tpAdmId = admissionId;
+  document.getElementById('tp-patient-name').textContent = patientName || '—';
+  document.getElementById('tp-charge-type').textContent = chargeType || '—';
+  document.getElementById('tp-department').textContent = department || '—';
+  document.getElementById('tp-due').textContent = '…';
+  document.getElementById('tp-amount').value = '';
+  document.getElementById('tp-method').value = 'Cash';
+  document.getElementById('tp-err').style.display = 'none';
+  var btn = document.getElementById('tp-confirm-btn');
+  btn.disabled = false; btn.textContent = 'Confirm Payment';
+  openModal('mod-transaction-payment');
+
+  var [c,p] = await Promise.all([
+    _supa.from('admission_charges').select('total_price').eq('admission_id',admissionId),
+    _supa.from('nh_payments').select('amount').eq('admission_id',admissionId)
+  ]);
+  var total=(c.data||[]).reduce(function(s,x){return s+(x.total_price||0);},0);
+  var paid=(p.data||[]).reduce(function(s,x){return s+(x.amount||0);},0);
+  var due = Math.max(total-paid,0);
+  document.getElementById('tp-due').textContent = '₹'+due.toLocaleString('en-IN');
+  document.getElementById('tp-amount').value = due>0 ? due : '';
+}
+
+async function confirmTransactionPayment(){
+  if(_tpInProgress) return;
+  if(!_tpAdmId){ showToast('Missing admission reference'); return; }
+  var amtEl = document.getElementById('tp-amount');
+  var amt = parseFloat(amtEl.value)||0;
+  var method = document.getElementById('tp-method').value;
+  var errEl = document.getElementById('tp-err');
+  errEl.style.display='none';
+  if(amt<=0){ errEl.textContent='Enter a valid payment amount.'; errEl.style.display='block'; return; }
+
+  _tpInProgress = true;
+  var btn = document.getElementById('tp-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Processing…';
+
+  try{
+    var today = new Date().toISOString().slice(0,10);
+    var r = await _supa.from('nh_payments').insert({
+      clinic_id:_clinicId, admission_id:_tpAdmId,
+      amount:amt, method:method, payment_date:today, recorded_by:_myUid
+    });
+    if(r.error) throw new Error(r.error.message);
+
+    _supa.from('nh_audit_log').insert({
+      clinic_id:_clinicId, actor_id:_myUid, action:'payment_recorded',
+      target_table:'nh_payments', target_id:_tpAdmId, details:{amount:amt, method:method}
+    });
+
+    showToast('₹'+amt.toLocaleString('en-IN')+' payment recorded');
+    closeModal('mod-transaction-payment');
+
+    /* Refresh whichever billing tab is currently visible */
+    var activeTab = document.querySelector('.bl-tab-btn.on');
+    var tabId = activeTab ? activeTab.getAttribute('data-bltab') : 'txns';
+    blTab(tabId, activeTab);
+    if(_pid) loadBilling(_pid);
+
+  }catch(e){
+    errEl.textContent = e.message || 'Payment failed. Please try again.';
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent='Confirm Payment';
+  } finally {
+    _tpInProgress = false;
+  }
+}
+
 async function loadBillingList(){
   var listEl = document.getElementById('billing-list');
   if(!listEl) return;
@@ -2007,9 +2430,9 @@ async function loadBpExpenses(){
   var total = charges.reduce(function(s,c){return s+(c.total_price||0);},0);
   var paid = (pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
   var due = total - paid;
-  if(!charges.length){ el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">&#128179;</div><p class="empty-t">No expenses yet</p></div>'; return; }
+  if(!charges.length){ el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">&#128179;</div><p class="empty-t">No charges yet</p></div>'; return; }
   el.innerHTML = '<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total</div><div class="bill-amt">&#8377;'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">&#8377;'+due.toLocaleString('en-IN')+'</div></div></div>'
-    + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="qbtn" onclick="openExpenseModal()">+ Add Expense</button><button class="qbtn" onclick="openPayment()">&#128176; Payment</button><button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button></div>'
+    + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="qbtn" onclick="openExpenseModal()">+ Add Charge</button><button class="qbtn" onclick="openPayment()">&#128176; Payment</button><button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button></div>'
     + charges.map(function(c){
         return '<div class="exp-card">'
           + '<div class="exp-ic">&#128179;</div>'
