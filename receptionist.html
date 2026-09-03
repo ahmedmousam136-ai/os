@@ -442,7 +442,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <div class="patient-tab active" onclick="switchTab('overview',this)">Overview</div>
           <div class="patient-tab" onclick="switchTab('documents',this)">Documents</div>
           <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
-          <div class="patient-tab" onclick="switchTab('notes',this)">Notes</div>
         </div>
         <div class="panel" style="padding:18px">
           <div class="ptab active" id="t-overview"></div>
@@ -455,17 +454,18 @@ main.content{flex:1;padding:20px;overflow-y:auto}
               <button class="qbtn" onclick="document.getElementById('doc-cam').click()">📷 Take Photo</button>
               <button class="qbtn" onclick="document.getElementById('doc-file').click()">📎 Upload Document</button>
               <button class="qbtn" onclick="sendForReview()">✉️ Send to Doctor</button>
+              <button class="qbtn" onclick="toggleNoteBox()">📝 Add Note</button>
             </div>
             <input type="file" id="doc-cam" accept="image/*" capture="environment" style="display:none" onchange="uploadDoc(event)"/>
             <input type="file" id="doc-file" accept="application/pdf,image/*" style="display:none" onchange="uploadDoc(event)"/>
-            <div id="doc-list"></div>
-          </div>
-          <div class="ptab" id="t-notes">
-            <div style="display:flex;gap:8px;margin-bottom:10px">
-              <input class="finput" id="note-input" placeholder="Add an operational note…" style="margin-bottom:0"/>
-              <button class="msub" style="width:auto;padding:0 18px" onclick="saveNote()">Add</button>
+            <div id="note-box" style="display:none;margin-bottom:14px">
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <input class="finput" id="note-input" placeholder="Add an operational note…" style="margin-bottom:0"/>
+                <button class="msub" style="width:auto;padding:0 18px" onclick="saveNote()">Add</button>
+              </div>
+              <div id="notes-list"></div>
             </div>
-            <div id="notes-list"></div>
+            <div id="doc-list"></div>
           </div>
           <div class="ptab" id="t-billing"></div>
           <div class="ptab" id="t-financing">
@@ -1649,6 +1649,7 @@ async function openProfile(id,name){
   if(d.uhid)document.getElementById('pp-uhid').textContent='UHID: '+d.uhid;
 
   var admBlock='';
+  var admDtBlock='';
   if(adm){
     var days=Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1;
     var bedLbl='—', deptLbl='—';
@@ -1662,11 +1663,20 @@ async function openProfile(id,name){
       +'<div class="ir"><span class="il">Diagnosis</span><span class="iv">'+esc(adm.admission_diagnosis||'—')+'</span></div>'
       +'<div class="ir"><span class="il">Admission Date</span><span class="iv">'+new Date(adm.admission_date).toLocaleDateString('en-GB')+'</span></div>'
       +'<div class="ir"><span class="il">Duration of Stay</span><span class="iv">'+days+' day(s)</span></div>'
-      +'<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--green-bg);color:var(--green)">Admitted</span></span></div>';
+      +'<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--green-bg);color:var(--green)">Active</span></span></div>';
+    var admDT=new Date(adm.admission_date);
+    admDtBlock='<div class="ir"><span class="il">Admitted</span><span class="iv">'+admDT.toLocaleDateString('en-GB')+' · '+admDT.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span></div>'
+      +'<div class="ir"><span class="il">Discharged</span><span class="iv">—</span></div>';
   } else if(lastAdm && lastAdm.status==='Discharged'){
     admBlock='<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--blue-bg);color:var(--blue)">Discharged</span></span></div>';
+    var lastAdmDT=new Date(lastAdm.admission_date);
+    var lastDisDT=lastAdm.discharge_date?new Date(lastAdm.discharge_date):null;
+    admDtBlock='<div class="ir"><span class="il">Admitted</span><span class="iv">'+lastAdmDT.toLocaleDateString('en-GB')+' · '+lastAdmDT.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span></div>'
+      +'<div class="ir"><span class="il">Discharged</span><span class="iv">'+(lastDisDT?lastDisDT.toLocaleDateString('en-GB')+' · '+lastDisDT.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—')+'</span></div>';
   } else {
     admBlock='<div class="ir"><span class="il">Current Status</span><span class="iv"><span class="chip" style="background:var(--surface2);color:var(--text-tertiary)">Not Admitted</span></span></div>';
+    admDtBlock='<div class="ir"><span class="il">Admitted</span><span class="iv">—</span></div>'
+      +'<div class="ir"><span class="il">Discharged</span><span class="iv">—</span></div>';
   }
 
   document.getElementById('t-overview').innerHTML=
@@ -1678,10 +1688,9 @@ async function openProfile(id,name){
     +admBlock
     +'<div class="ir"><span class="il">Address</span><span class="iv">'+(d.address||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Guardian / Emergency</span><span class="iv">'+(d.guardian||'—')+'</span></div>'
-    +'</div>'
-    +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 6px">Visit History</div>'
-    +'<div id="t-history"></div>';
-  loadHistory(id);loadDocs(id);loadBilling(id);loadFinancing(id);loadAyushman(id);loadNotesTab(id);
+    +admDtBlock
+    +'</div>';
+  loadDocs(id);loadBilling(id);loadFinancing(id);loadAyushman(id);loadNotesTab(id);
 }
 async function loadHistory(id){
   var r=await _supa.from('admissions').select('*').eq('patient_id',id).order('admission_date',{ascending:false});
@@ -1846,6 +1855,16 @@ async function loadNotesTab(id){
     + '</div>';
   }).join('');
 }
+/* Notes used to be its own tab; now it lives inline in Documents,
+   revealed via the "Add Note" button beside Send to Doctor. */
+function toggleNoteBox(){
+  var box = document.getElementById('note-box');
+  if(!box) return;
+  var show = box.style.display === 'none';
+  box.style.display = show ? 'block' : 'none';
+  if(show && _pid) loadNotesTab(_pid);
+}
+
 async function saveNote(){
   var input = document.getElementById('note-input');
   var text = (input.value||'').trim();
@@ -1903,9 +1922,8 @@ function switchTab(tab, el){
   if(p) p.classList.add('active');
   if(!_pid) return;
   if(tab==='charges') loadChargesTab(_pid);
-  if(tab==='documents') loadDocs(_pid);
+  if(tab==='documents'){ loadDocs(_pid); loadNotesTab(_pid); }
   if(tab==='ayushman') loadAyushman(_pid);
-  if(tab==='notes') loadNotesTab(_pid);
   if(tab==='billing') loadBilling(_pid);
   if(tab==='discharge') loadBilling(_pid); /* refreshes both due-amount and the discharge panel */
 }
