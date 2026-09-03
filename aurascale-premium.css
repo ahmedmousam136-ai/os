@@ -12,15 +12,19 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* ── 1. TYPOGRAPHY — one clean corporate sans everywhere ── */
+/* ── 1. TYPOGRAPHY — one clean corporate sans everywhere, except the
+   sidebar brand wordmark, which keeps its original Instrument Serif
+   treatment (that font is already loaded by every page's <head>) ── */
 *,button,input,textarea,select,
-.sb-mark,.sb-mark .a,.sb-mark .s,.sb-mark .os,
-h1,h2,h3,.st,.mc-val,.kpi-val,.brand,.auth-hero-brand{
+h1,h2,h3,.st,.mc-val,.kpi-val{
   font-family:'Inter',system-ui,-apple-system,sans-serif !important;
 }
-.sb-mark .a,.sb-mark .s,.brand .a,.brand .s,.auth-hero-brand .a,.auth-hero-brand .s{
-  font-weight:800 !important;letter-spacing:-.03em !important;
+.sb-mark .a,.sb-mark .s,.brand .a,.brand .s,.auth-hero-brand .a,.auth-hero-brand .s,
+.auth-brand-mark .a,.auth-brand-mark .s,.auth-logo .a,.auth-logo .s{
+  font-family:'Instrument Serif',Georgia,serif !important;
+  font-weight:400 !important;letter-spacing:-.01em !important;
 }
+.sb-mark .os{font-family:'Inter',sans-serif !important;font-weight:700 !important}
 
 /* ── 2. CORE TOKENS — light, corporate, one unified accent ── */
 :root,[data-theme="light"]{
