@@ -52,14 +52,14 @@ h1,h2,h3,.st,.mc-val,.kpi-val,.brand,.auth-hero-brand{
   --header-blur:rgba(255,255,255,.92);
   --toggle-track:#E6E8EC;--toggle-knob:#FFFFFF;
 
-  /* Sidebar — a hair off-white from the page, never black/inverted */
-  --sidebar-bg:#FCFCFD;
-  --sidebar-text:#12141A;
-  --sidebar-text-secondary:#6B7180;
-  --sidebar-text-tertiary:#9CA1AC;
-  --sidebar-border:#EDEEF2;
-  --sidebar-hover-bg:#F1F3F7;
-  --sidebar-active-bg:var(--blue-bg);
+  /* Sidebar — black in light mode, matching the reference screenshot exactly */
+  --sidebar-bg:#111214;
+  --sidebar-text:#FFFFFF;
+  --sidebar-text-secondary:rgba(255,255,255,.56);
+  --sidebar-text-tertiary:rgba(255,255,255,.38);
+  --sidebar-border:rgba(255,255,255,.09);
+  --sidebar-hover-bg:rgba(255,255,255,.07);
+  --sidebar-active-bg:rgba(255,255,255,.13);
 }
 
 [data-theme="dark"]{
@@ -89,14 +89,14 @@ h1,h2,h3,.st,.mc-val,.kpi-val,.brand,.auth-hero-brand{
   --header-blur:rgba(20,23,32,.92);
   --toggle-track:#2E3341;--toggle-knob:#EDEFF4;
 
-  /* Sidebar stays part of the same dark family — just a hair darker */
-  --sidebar-bg:#0F1219;
-  --sidebar-text:#EDEFF4;
-  --sidebar-text-secondary:#9AA0AF;
-  --sidebar-text-tertiary:#5F6473;
-  --sidebar-border:#1E222D;
-  --sidebar-hover-bg:#171A24;
-  --sidebar-active-bg:var(--blue-bg);
+  /* Sidebar — inverts to white when the theme is toggled */
+  --sidebar-bg:#FFFFFF;
+  --sidebar-text:#18170F;
+  --sidebar-text-secondary:#64605A;
+  --sidebar-text-tertiary:#9E9A93;
+  --sidebar-border:#E8E5DF;
+  --sidebar-hover-bg:#F7F6F3;
+  --sidebar-active-bg:#E8E5DF;
 }
 
 html{background:var(--bg) !important}
@@ -113,8 +113,8 @@ body{background:var(--bg) !important;color:var(--text-primary) !important;-webki
 
 .nb{color:var(--sidebar-text-secondary) !important;font-weight:500 !important;border-radius:var(--r-sm) !important}
 .nb:hover:not(.on){background:var(--sidebar-hover-bg) !important;color:var(--sidebar-text) !important}
-.nb.on{background:var(--sidebar-active-bg) !important;color:var(--brand) !important;font-weight:700 !important}
-.nb.on::before{background:var(--brand) !important}
+.nb.on{background:var(--sidebar-active-bg) !important;color:var(--sidebar-text) !important;font-weight:700 !important}
+.nb.on::before{background:var(--sidebar-text) !important}
 .nb-badge{background:var(--red) !important;color:#fff !important;border:none !important}
 
 .sb-admin-av,.sb-doc-name,.hdr-user-av{background:var(--brand-bg) !important;color:var(--brand) !important;border-color:var(--brand-border) !important}
