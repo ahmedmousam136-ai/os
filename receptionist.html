@@ -319,9 +319,20 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <button class="nb" onclick="nav('discharge',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>Discharge
       </button>
+      <button class="nb" onclick="nav('billing',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>Billing
+      </button>
 
     </nav>
-    <div class="sb-foot"><div class="sb-out" onclick="handleLogout()">
+    <div class="sb-foot">
+      <div class="sb-profile" id="sb-profile" style="display:flex;align-items:center;gap:9px;padding:8px 6px;border-radius:var(--r-sm);margin-bottom:8px">
+        <div id="sb-profile-av" style="width:32px;height:32px;border-radius:8px;background:var(--brand-bg);color:var(--brand);border:1px solid var(--brand-border);font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0">—</div>
+        <div style="flex:1;min-width:0">
+          <div id="sb-profile-name" style="font-size:12.5px;font-weight:700;color:var(--sidebar-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Loading…</div>
+          <div id="sb-profile-role" style="font-size:10.5px;color:var(--sidebar-text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+        </div>
+      </div>
+      <div class="sb-out" onclick="handleLogout()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
     </div></div>
   </div>
@@ -403,6 +414,12 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <!-- DISCHARGE -->
       <div id="v-discharge" class="view">
         <div class="sh"><div><h1 class="st">Discharge</h1><p class="ss">Release bed · generate summary</p></div></div>
+        <div class="mg3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+          <div class="mc"><div class="mc-lbl">Currently Admitted</div><div class="mc-val" id="dis-active-count">—</div></div>
+          <div class="mc"><div class="mc-lbl">Discharged Today</div><div class="mc-val" id="dis-today-count">—</div></div>
+          <div class="mc"><div class="mc-lbl">Total Discharged</div><div class="mc-val" id="dis-total-count">—</div></div>
+        </div>
+        <input class="finput" id="discharge-search" placeholder="Search discharged patients…" oninput="loadDischarge()"/>
         <div class="panel"><div id="discharge-list"></div></div>
       </div>
 
@@ -412,6 +429,12 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <div><h1 class="st">Billing</h1><p class="ss">Add charges · record payments</p></div>
           <button class="qbtn" onclick="openVoiceCharge()" style="gap:6px"><span style="font-size:16px">🎙️</span> Voice Charge</button>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+          <div class="mc"><div class="mc-lbl">Active Admissions</div><div class="mc-val" id="bl-active-count">—</div></div>
+          <div class="mc"><div class="mc-lbl">Total Outstanding</div><div class="mc-val" id="bl-total-due" style="color:var(--red)">—</div></div>
+          <div class="mc"><div class="mc-lbl">Fully Settled</div><div class="mc-val" id="bl-settled-count">—</div></div>
+        </div>
+        <input class="finput" id="billing-search" placeholder="Search patient…" oninput="loadBillingList()"/>
         <div id="billing-list"></div>
       </div>
 
@@ -790,7 +813,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <div class="mb" style="padding-top:0">
         <div class="bp-pnl on" id="bp-pnl-info">
           <div id="bp-adm-info" style="display:flex;flex-direction:column;gap:3px"></div>
-          <button class="qbtn" style="margin-top:10px;width:100%;justify-content:center" onclick="doDischargeFromProfile()">📄 Discharge This Patient</button>
+          <button class="qbtn" style="margin-top:10px;width:100%;justify-content:center;color:var(--red);border-color:var(--red-border)" onclick="doDischargeFromProfile()">📄 Discharge This Patient</button>
         </div>
         <!-- EXPENSES TAB -->
         <div class="bp-pnl" id="bp-pnl-expenses">
@@ -890,6 +913,30 @@ main.content{flex:1;padding:20px;overflow-y:auto}
     </div>
   </div>
 </div>
+
+<!-- DISCHARGE CONFIRMATION MODAL — shared by patient profile & bed profile -->
+<div class="mod-ov" id="mod-discharge-confirm">
+  <div class="modal" style="max-width:400px">
+    <div class="mh">
+      <div class="mtitle">Discharge Patient?</div>
+      <button class="mclose" onclick="closeModal('mod-discharge-confirm')">✕</button>
+    </div>
+    <div class="mb">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;display:flex;flex-direction:column;gap:3px">
+        <div class="ir"><span class="il">Patient</span><span class="iv" id="dc-patient-name">—</span></div>
+        <div class="ir"><span class="il">Bed</span><span class="iv" id="dc-bed">—</span></div>
+        <div class="ir"><span class="il">Admission</span><span class="iv" id="dc-admission-date">—</span></div>
+        <div class="ir"><span class="il">Current Outstanding</span><span class="iv" id="dc-outstanding" style="font-weight:700">—</span></div>
+      </div>
+      <div id="dc-err" style="color:var(--red);font-size:12px;display:none;margin-top:10px"></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="qbtn" style="flex:1;justify-content:center" onclick="closeModal('mod-discharge-confirm')">Cancel</button>
+        <button class="msub" id="dc-confirm-btn" style="flex:1;background:var(--red)" onclick="confirmDischarge()">Confirm Discharge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- ADD EXPENSE MODAL -->
 <div class="mod-ov" id="mod-expense">
@@ -1010,6 +1057,11 @@ async function init(){
   }
   var g=await nhAuthGuard('receptionist');if(!g)return;
   document.getElementById('sb-fac-name').textContent=g.facilityName;
+  var pname = g.name || 'Receptionist';
+  var proleMap = {receptionist:'Front Desk', owner:'Owner', doctor:'Doctor'};
+  document.getElementById('sb-profile-name').textContent = pname;
+  document.getElementById('sb-profile-role').textContent = (proleMap[g.role]||g.role||'Staff') + ' · ' + (g.facilityName||'');
+  document.getElementById('sb-profile-av').textContent = (pname||'?').trim().charAt(0).toUpperCase();
   document.getElementById('home-date-pill').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('loading').style.display='none';
   document.getElementById('app-shell').classList.add('on');
@@ -1048,7 +1100,7 @@ function nav(id,btn){
   if(id==='patients')loadPatients();
   if(id==='beds')loadBeds();
   if(id==='discharge')loadDischarge();
-  if(id==='billing')loadBilling();
+  if(id==='billing')loadBillingList();
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
 function openModal(id){document.getElementById(id).classList.add('open')}
@@ -1486,12 +1538,283 @@ async function loadBilling(id){
     +'<button class="qbtn" onclick="openPayment()">&#128176; Payment</button>'
     +'<button class="qbtn" onclick="openVoiceCharge()" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#127899; Voice</button>'
     +'<button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button>'
+    +'<button class="qbtn" onclick="dischargeFromPatientProfile()" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)">📄 Discharge Patient</button>'
     +'</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Charges</div>'
     +(ch.data&&ch.data.length?ch.data.map(function(c){return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.5);font-size:12px"><div><div style="font-weight:500">'+esc(c.description||c.charge_type)+'</div><div style="font-size:10px;color:var(--text-tertiary)">'+c.charge_type+'</div></div><div style="font-weight:700;font-family:\'Instrument Serif\',serif;font-size:14px">₹'+Number(c.total_price).toLocaleString('en-IN')+'</div></div>';}).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No charges yet</p>')
     +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 6px">Payments</div>'
     +(pay.data&&pay.data.length?pay.data.map(function(p){return '<div style="display:flex;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.4);font-size:12px"><div style="flex:1"><b>'+p.method+'</b> — ₹'+Number(p.amount).toLocaleString('en-IN')+' · '+new Date(p.payment_date||p.created_at).toLocaleDateString('en-GB')+(p.txn_id?' · TXN:'+p.txn_id:'')+'</div></div>';}).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No payments recorded</p>');
 }
+
+/* ══════════════════════════════════════════════════════════════
+   DISCHARGE WORKFLOW — shared by the Patient Profile (Billing tab)
+   and the Bed Profile (Info tab). Fixes the previously-undefined
+   doDischargeFromProfile() button, which threw a silent JS error
+   and did nothing when clicked.
+══════════════════════════════════════════════════════════════ */
+var _dcAdmId = null, _dcBedId = null, _dischargeInProgress = false;
+
+/* Called from the Bed Profile modal's "Discharge This Patient" button */
+function doDischargeFromProfile(){
+  if(!_bpAdmId){ showToast('No active admission found for this bed'); return; }
+  var name = document.getElementById('bp-pt-name') ? document.getElementById('bp-pt-name').textContent : 'Patient';
+  openDischargeConfirm(_bpAdmId, _bpBedId, name);
+}
+
+/* Called from the Patient Profile → Billing tab's "Discharge Patient" button */
+function dischargeFromPatientProfile(){
+  if(!_admId){ showToast('No active admission found for this patient'); return; }
+  var name = document.getElementById('pp-name') ? document.getElementById('pp-name').textContent : 'Patient';
+  openDischargeConfirm(_admId, null, name);
+}
+
+async function openDischargeConfirm(admissionId, bedId, patientName){
+  if(!admissionId){ showToast('No active admission to discharge'); return; }
+  _dcAdmId = admissionId;
+  _dcBedId = bedId || null;
+  document.getElementById('dc-patient-name').textContent = patientName || '—';
+  document.getElementById('dc-bed').textContent = '—';
+  document.getElementById('dc-admission-date').textContent = '—';
+  document.getElementById('dc-outstanding').textContent = '…';
+  document.getElementById('dc-outstanding').style.color = 'var(--text-primary)';
+  document.getElementById('dc-err').style.display = 'none';
+  var btn = document.getElementById('dc-confirm-btn');
+  btn.disabled = false;
+  btn.textContent = 'Confirm Discharge';
+  openModal('mod-discharge-confirm');
+
+  /* Pull fresh admission + bed + billing data so the confirmation numbers
+     can't be stale even if the underlying screen hasn't refreshed. */
+  var admRes = await _supa.from('admissions').select('*').eq('id', admissionId).single();
+  var a = admRes.data || {};
+  if(a.bed_id) _dcBedId = a.bed_id;
+  document.getElementById('dc-admission-date').textContent = a.admission_date ? new Date(a.admission_date).toLocaleDateString('en-GB') : '—';
+
+  if(_dcBedId){
+    var bedRes = await _supa.from('beds').select('bed_number,ward').eq('id',_dcBedId).single();
+    if(bedRes.data) document.getElementById('dc-bed').textContent = (bedRes.data.bed_number||'—') + (bedRes.data.ward?' · '+bedRes.data.ward:'');
+  } else {
+    document.getElementById('dc-bed').textContent = 'OPD (no bed)';
+  }
+
+  var [chRes,payRes] = await Promise.all([
+    _supa.from('admission_charges').select('total_price').eq('admission_id',admissionId),
+    _supa.from('nh_payments').select('amount').eq('admission_id',admissionId)
+  ]);
+  var total = (chRes.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+  var paid  = (payRes.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+  var due   = total - paid;
+  document.getElementById('dc-outstanding').textContent = '₹'+due.toLocaleString('en-IN');
+  document.getElementById('dc-outstanding').style.color = due>0 ? 'var(--red)' : 'var(--green)';
+}
+
+async function confirmDischarge(){
+  if(_dischargeInProgress) return;              /* guard against double-click / double-submit */
+  if(!_dcAdmId){ showToast('Missing admission reference'); return; }
+
+  _dischargeInProgress = true;
+  var btn = document.getElementById('dc-confirm-btn');
+  var errEl = document.getElementById('dc-err');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Discharging…';
+
+  try{
+    /* 1. Re-validate the admission is still Active right before writing —
+       protects against a second tab / second click already discharging it. */
+    var check = await _supa.from('admissions').select('id,status,bed_id').eq('id',_dcAdmId).single();
+    if(check.error || !check.data) throw new Error('Could not verify this admission — please refresh and try again.');
+    if(check.data.status !== 'Active') throw new Error('This patient has already been discharged.');
+
+    var bedId = check.data.bed_id || _dcBedId;
+    var dischargeTime = new Date().toISOString();
+
+    /* 2. Update the admission — conditional on status still being 'Active'
+       so a concurrent discharge request can't both succeed. */
+    var updAdm = await _supa.from('admissions')
+      .update({ status:'Discharged', discharge_date: dischargeTime })
+      .eq('id', _dcAdmId)
+      .eq('status','Active')
+      .select();
+    if(updAdm.error) throw new Error('Failed to update admission: ' + updAdm.error.message);
+    if(!updAdm.data || !updAdm.data.length) throw new Error('This patient has already been discharged (possibly from another tab).');
+
+    /* 3. Release the bed. If this fails, roll the admission back to Active
+       so admission status and bed status never end up inconsistent. */
+    if(bedId){
+      var updBed = await _supa.from('beds').update({ status:'vacant' }).eq('id', bedId);
+      if(updBed.error){
+        await _supa.from('admissions').update({ status:'Active', discharge_date:null }).eq('id', _dcAdmId);
+        throw new Error('Could not release the bed — discharge was not completed. Please try again.');
+      }
+    }
+
+    /* 4. Best-effort audit log — never blocks the discharge itself */
+    _supa.from('nh_audit_log').insert({
+      clinic_id:_clinicId, actor_id:_myUid, action:'patient_discharged',
+      target_table:'admissions', target_id:_dcAdmId, details:{ bed_id:bedId }
+    });
+
+    showToast('Patient discharged successfully.');
+    closeModal('mod-discharge-confirm');
+
+    /* 5. Refresh every screen that could show stale state */
+    var bedModal = document.getElementById('mod-bed-profile');
+    if(bedModal && bedModal.classList.contains('open')) closeModal('mod-bed-profile');
+    if(_pid) openProfile(_pid, document.getElementById('pp-name').textContent);
+    if(document.getElementById('v-beds').classList.contains('on')) loadBeds();
+    if(document.getElementById('v-discharge').classList.contains('on')) loadDischarge();
+    loadHome();
+
+  }catch(e){
+    errEl.textContent = e.message || 'Discharge failed. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Confirm Discharge';
+  } finally {
+    _dischargeInProgress = false;
+  }
+}
+
+/* ── DISCHARGE LIST PAGE (sidebar "Discharge") ──
+   Was referenced by nav() and the discharge-confirm refresh step but
+   never defined, so the sidebar page rendered permanently blank. */
+async function loadDischarge(){
+  var listEl = document.getElementById('discharge-list');
+  if(!listEl) return;
+  listEl.innerHTML = '<div class="empty" style="padding:24px"><p class="empty-t">Loading…</p></div>';
+
+  var q = (document.getElementById('discharge-search') ? document.getElementById('discharge-search').value : '').trim().toLowerCase();
+
+  var [activeRes, dischargedRes] = await Promise.all([
+    _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('status','Active'),
+    _supa.from('admissions').select('*').eq('clinic_id',_clinicId).eq('status','Discharged').order('discharge_date',{ascending:false}).limit(150)
+  ]);
+
+  var discharged = dischargedRes.data || [];
+  var todayStr = new Date().toDateString();
+  var todayCount = discharged.filter(function(a){ return a.discharge_date && new Date(a.discharge_date).toDateString()===todayStr; }).length;
+
+  var acEl = document.getElementById('dis-active-count'); if(acEl) acEl.textContent = (activeRes.count!=null?activeRes.count:'—');
+  var tcEl = document.getElementById('dis-today-count');  if(tcEl) tcEl.textContent = todayCount;
+  var ttEl = document.getElementById('dis-total-count');  if(ttEl) ttEl.textContent = discharged.length;
+
+  if(q){
+    discharged = discharged.filter(function(a){
+      return (a.patient_name||'').toLowerCase().includes(q) || (a.uhid||'').toLowerCase().includes(q) || (a.admitting_doctor||'').toLowerCase().includes(q);
+    });
+  }
+
+  if(!discharged.length){
+    listEl.innerHTML = '<div class="empty" style="padding:28px"><div class="empty-ic">📋</div><p class="empty-t">No discharged patients found</p></div>';
+    return;
+  }
+
+  /* Pull bed numbers + outstanding balance for each row (parallel, capped list) */
+  var bedIds = discharged.map(function(a){return a.bed_id;}).filter(Boolean);
+  var bedsRes = bedIds.length ? await _supa.from('beds').select('id,bed_number').in('id',bedIds) : {data:[]};
+  var bedMap = {};
+  (bedsRes.data||[]).forEach(function(b){ bedMap[b.id] = b.bed_number; });
+
+  var rows = await Promise.all(discharged.map(async function(a){
+    var [ch,pay] = await Promise.all([
+      _supa.from('admission_charges').select('total_price').eq('admission_id',a.id),
+      _supa.from('nh_payments').select('amount').eq('admission_id',a.id)
+    ]);
+    var total = (ch.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+    var paid  = (pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+    return { a:a, total:total, paid:paid, due: total-paid };
+  }));
+
+  listEl.innerHTML = rows.map(function(row){
+    var a = row.a;
+    var bedLbl = a.bed_id ? (bedMap[a.bed_id] || '—') : 'OPD';
+    var admStr = a.admission_date ? new Date(a.admission_date).toLocaleDateString('en-GB') : '—';
+    var disStr = a.discharge_date ? new Date(a.discharge_date).toLocaleDateString('en-GB') : '—';
+    return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+a.patient_id+'\',\''+esc(a.patient_name||'')+'\')">'
+      + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
+        + '<div class="adm-meta">Bed '+esc(bedLbl)+' · Dr. '+esc(a.admitting_doctor||'—')+' · Admitted '+admStr+' · Discharged '+disStr+'</div>'
+      + '</div>'
+      + '<div style="text-align:right;flex-shrink:0">'
+        + '<div style="font-weight:700;font-size:12.5px;color:'+(row.due>0?'var(--red)':'var(--green)')+'">'+(row.due>0?'₹'+row.due.toLocaleString('en-IN')+' due':'Settled')+'</div>'
+        + '<div style="font-size:10px;color:var(--text-tertiary)">Total ₹'+row.total.toLocaleString('en-IN')+'</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+/* ── BILLING LIST PAGE (sidebar "Billing") ──
+   Was silently calling loadBilling() with no patient id — which only
+   ever touches the (hidden) patient-profile billing tab, not this
+   page — so #billing-list was never actually populated. */
+async function loadBillingList(){
+  var listEl = document.getElementById('billing-list');
+  if(!listEl) return;
+  listEl.innerHTML = '<div class="empty" style="padding:24px"><p class="empty-t">Loading…</p></div>';
+
+  var q = (document.getElementById('billing-search') ? document.getElementById('billing-search').value : '').trim().toLowerCase();
+
+  var admRes = await _supa.from('admissions').select('*').eq('clinic_id',_clinicId).eq('status','Active').order('admission_date',{ascending:false});
+  var admissions = admRes.data || [];
+  if(q){
+    admissions = admissions.filter(function(a){
+      return (a.patient_name||'').toLowerCase().includes(q) || (a.uhid||'').toLowerCase().includes(q);
+    });
+  }
+
+  if(!admissions.length){
+    document.getElementById('bl-active-count').textContent = 0;
+    document.getElementById('bl-total-due').textContent = '₹0';
+    document.getElementById('bl-settled-count').textContent = 0;
+    listEl.innerHTML = '<div class="empty" style="padding:28px"><div class="empty-ic">💳</div><p class="empty-t">No active admissions to bill</p></div>';
+    return;
+  }
+
+  var bedIds = admissions.map(function(a){return a.bed_id;}).filter(Boolean);
+  var bedsRes = bedIds.length ? await _supa.from('beds').select('id,bed_number').in('id',bedIds) : {data:[]};
+  var bedMap = {};
+  (bedsRes.data||[]).forEach(function(b){ bedMap[b.id] = b.bed_number; });
+
+  var rows = await Promise.all(admissions.map(async function(a){
+    var [ch,pay] = await Promise.all([
+      _supa.from('admission_charges').select('total_price').eq('admission_id',a.id),
+      _supa.from('nh_payments').select('amount').eq('admission_id',a.id)
+    ]);
+    var total = (ch.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+    var paid  = (pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+    return { a:a, total:total, paid:paid, due: total-paid };
+  }));
+
+  var totalDue = rows.reduce(function(s,r){return s+Math.max(r.due,0);},0);
+  var settledCount = rows.filter(function(r){return r.due<=0;}).length;
+  document.getElementById('bl-active-count').textContent = rows.length;
+  document.getElementById('bl-total-due').textContent = '₹'+totalDue.toLocaleString('en-IN');
+  document.getElementById('bl-settled-count').textContent = settledCount;
+
+  /* Outstanding first, so the receptionist sees what needs collecting */
+  rows.sort(function(x,y){ return y.due - x.due; });
+
+  listEl.innerHTML = rows.map(function(row){
+    var a = row.a;
+    var bedLbl = a.bed_id ? (bedMap[a.bed_id] || '—') : 'OPD';
+    return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+a.patient_id+'\',\''+esc(a.patient_name||'')+'\')">'
+      + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
+        + '<div class="adm-meta">Bed '+esc(bedLbl)+' · Dr. '+esc(a.admitting_doctor||'—')+'</div>'
+      + '</div>'
+      + '<div style="text-align:right;flex-shrink:0">'
+        + '<div style="font-weight:700;font-size:12.5px;color:'+(row.due>0?'var(--red)':'var(--green)')+'">'+(row.due>0?'₹'+row.due.toLocaleString('en-IN')+' due':'Settled')+'</div>'
+        + '<div style="font-size:10px;color:var(--text-tertiary)">Total ₹'+row.total.toLocaleString('en-IN')+' · Paid ₹'+row.paid.toLocaleString('en-IN')+'</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+
+
 function loadFinancing(id){
   document.getElementById('fin-area').innerHTML='<div><label class="flbl">Total Bill Amount (₹)</label><input class="finput" id="fin-total" type="number" placeholder="0" oninput="calcFin()"/></div>'
     +'<div><label class="flbl">Financing Charge (%)</label><input class="finput" id="fin-pct" type="number" value="8" min="0" max="100" oninput="calcFin()"/></div>'
