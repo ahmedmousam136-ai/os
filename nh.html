@@ -269,6 +269,7 @@ body[data-role="doctor"] .doctor-home-only{display:flex}
 body[data-role="receptionist"] .reception-home-only{display:flex}
 .mic-btn.recording{background:var(--red);color:#fff;animation:pulseMic 1.2s infinite}
 @keyframes pulseMic{0%,100%{opacity:1}50%{opacity:.65}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 .doc-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px}
 .doc-card .doc-ic{width:32px;height:32px;border-radius:8px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .patient-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:12px;overflow-x:auto}
@@ -459,14 +460,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
         Discharge
       </button>
-      <button class="nb owner-only" onclick="nav('revenue',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-        Revenue
-      </button>
-      <button class="nb owner-only" onclick="nav('payments',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
-        Payments
-      </button>
       <button class="nb owner-only" onclick="nav('expenses',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/><line x1="12" y1="1" x2="12" y2="23"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>
         Expenses
@@ -565,23 +558,95 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <div class="mc mc-red"><div class="mc-lbl">Expenses</div><div class="mc-val" id="dm-expenses">—</div><div class="mc-sub">this month</div></div>
           <div class="mc"><div class="mc-lbl">Net Revenue</div><div class="mc-val" id="dm-net">—</div><div class="mc-sub">revenue − expenses</div></div>
         </div>
-        <!-- Row 3: Active patients + Activity feed + Bed map -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div>
-            <div class="panel">
-              <div class="ph"><div class="pt">Active Patients</div><span class="pb pb-g" id="active-count">0</span></div>
-              <div id="dash-active-list"></div>
-            </div>
+        <!-- Bed Map -->
+        <div class="panel">
+          <div class="ph"><div class="pt">Bed Map</div></div>
+          <div id="dash-bed-mini" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:5px"></div>
+        </div>
+
+        <!-- ══════════════ PAYMENTS (moved from sidebar onto Dashboard) ══════════════ -->
+        <div class="sh" style="margin-top:26px">
+          <div><h1 class="st">Payments</h1><p class="ss">All payments received across the facility</p></div>
+          <select class="finput" id="pay-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadPaymentsPage()">
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month" selected>This Month</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+        <div class="mg6">
+          <div class="mc mc-green"><div class="mc-lbl">Total Collected</div><div class="mc-val" id="pay-total">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Transactions</div><div class="mc-val" id="pay-count">0</div></div>
+          <div class="mc mc-blue"><div class="mc-lbl">Cash</div><div class="mc-val" id="pay-cash">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Digital (UPI/Card/Bank)</div><div class="mc-val" id="pay-digital">₹0</div></div>
+        </div>
+        <div class="mg6">
+          <div class="mc"><div class="mc-lbl">UPI</div><div class="mc-val" id="pay-upi">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Card</div><div class="mc-val" id="pay-card">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Bank Transfer</div><div class="mc-val" id="pay-bank">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Other</div><div class="mc-val" id="pay-other">₹0</div></div>
+        </div>
+        <div class="panel" style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px">
+            <thead><tr style="border-bottom:1px solid var(--border);text-align:left">
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Patient</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Date &amp; Time</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Method</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Received By</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Amount</th>
+            </tr></thead>
+            <tbody id="pay-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- ══════════════ REVENUE (moved from sidebar onto Dashboard) ══════════════ -->
+        <div class="sh" style="margin-top:26px">
+          <div><h1 class="st">Revenue</h1><p class="ss">Revenue, payments and outstanding dues</p></div>
+          <select class="finput" id="fin-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadRevenue()">
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="week">This Week</option>
+            <option value="month" selected>This Month</option>
+            <option value="lastmonth">Last Month</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Per-Patient Balance</div></div>
+          <div id="fin-list"></div>
+        </div>
+        <div class="mg">
+          <div class="mc mc-green"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
+          <div class="mc mc-blue"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
+          <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><div class="pt">Revenue by Service</div></div>
+            <div id="fin-by-category"></div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:14px">
-            <div class="panel">
-              <div class="ph"><div class="pt">⚡ Recent Activity</div><button class="qbtn" onclick="nav('audit',document.querySelector('.nb[onclick*=audit]'))">View All</button></div>
-              <div id="dash-activity-feed"></div>
+          <div class="panel">
+            <div class="ph"><div class="pt">Revenue by Department</div></div>
+            <div id="rev-by-dept"></div>
+          </div>
+        </div>
+        <div class="panel owner-only">
+          <div class="ph"><div class="pt">⚙️ Billing Method</div></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div><label class="flbl">Billing Method</label>
+              <select class="finput" id="fin-billing-method">
+                <option value="24hr">24-Hour Billing (from admission time)</option>
+                <option value="calendar">Calendar Day (midnight cutoff)</option>
+                <option value="cutoff">Custom Hospital Cutoff</option>
+              </select>
             </div>
-            <div class="panel">
-              <div class="ph"><div class="pt">Bed Map</div></div>
-              <div id="dash-bed-mini" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:5px"></div>
+            <div id="fin-cutoff-wrap" style="display:none">
+              <label class="flbl">Cutoff Time</label>
+              <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
             </div>
+            <button class="qbtn" onclick="saveBillingConfig()">Save Billing Config</button>
           </div>
         </div>
       </div>
@@ -710,95 +775,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="panel">
           <div class="ph"><div class="pt">Ready for Discharge</div><span class="pb pb-g" id="discharge-count">0</span></div>
           <div id="discharge-list"></div>
-        </div>
-      </div>
-
-      <!-- FINANCE (owner only) -->
-      <div id="v-revenue" class="view owner-only">
-        <div class="sh">
-          <div><h1 class="st">Revenue</h1><p class="ss">Revenue, payments and outstanding dues</p></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <select class="finput" id="fin-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadRevenue()">
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="week">This Week</option>
-              <option value="month" selected>This Month</option>
-              <option value="lastmonth">Last Month</option>
-              <option value="all">All Time</option>
-            </select>
-          </div>
-        </div>
-        <!-- Summary metrics -->
-        <div class="mg">
-          <div class="mc mc-green"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
-          <div class="mc mc-blue"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
-          <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
-        </div>
-        <!-- Category / Department breakdown -->
-        <div class="two-col">
-          <div class="panel">
-            <div class="ph"><div class="pt">Revenue by Service</div></div>
-            <div id="fin-by-category"></div>
-          </div>
-          <div class="panel">
-            <div class="ph"><div class="pt">Revenue by Department</div></div>
-            <div id="rev-by-dept"></div>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="ph"><div class="pt">Per-Patient Balance</div></div>
-          <div id="fin-list"></div>
-        </div>
-        <!-- Per-day billing config (owner only) -->
-        <div class="panel owner-only">
-          <div class="ph"><div class="pt">⚙️ Billing Method</div></div>
-          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
-            <div><label class="flbl">Billing Method</label>
-              <select class="finput" id="fin-billing-method">
-                <option value="24hr">24-Hour Billing (from admission time)</option>
-                <option value="calendar">Calendar Day (midnight cutoff)</option>
-                <option value="cutoff">Custom Hospital Cutoff</option>
-              </select>
-            </div>
-            <div id="fin-cutoff-wrap" style="display:none">
-              <label class="flbl">Cutoff Time</label>
-              <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
-            </div>
-            <button class="qbtn" onclick="saveBillingConfig()">Save Billing Config</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAYMENTS (owner) -->
-      <div id="v-payments" class="view owner-only">
-        <div class="sh">
-          <div><h1 class="st">Payments</h1><p class="ss">All payments received across the facility</p></div>
-          <select class="finput" id="pay-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadPaymentsPage()">
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month" selected>This Month</option>
-            <option value="all">All Time</option>
-          </select>
-        </div>
-        <div class="mg">
-          <div class="mc mc-green"><div class="mc-lbl">Total Collected</div><div class="mc-val" id="pay-total">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Transactions</div><div class="mc-val" id="pay-count">0</div></div>
-          <div class="mc mc-blue"><div class="mc-lbl">Cash</div><div class="mc-val" id="pay-cash">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Digital (UPI/Card/Bank)</div><div class="mc-val" id="pay-digital">₹0</div></div>
-        </div>
-        <div class="panel" style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px">
-            <thead><tr style="border-bottom:1px solid var(--border);text-align:left">
-              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Patient</th>
-              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Date &amp; Time</th>
-              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
-              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Method</th>
-              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Received By</th>
-              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Amount</th>
-            </tr></thead>
-            <tbody id="pay-tbody"></tbody>
-          </table>
         </div>
       </div>
 
@@ -1161,7 +1137,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 <!-- PATIENT PROFILE MODAL -->
 <div class="mod-ov" id="mod-patient-profile">
   <div class="modal" style="max-width:560px">
-    <div class="mh"><div class="mtitle" id="pp-title">Patient</div><button class="mclose" onclick="closeModal('mod-patient-profile')">✕</button></div>
+    <div class="mh"><div class="mtitle" id="pp-title">Patient</div><span id="pp-status-dot" style="margin-right:10px"></span><button class="mclose" onclick="closeModal('mod-patient-profile')">✕</button></div>
     <div class="mb">
       <div class="patient-tabs">
         <div class="patient-tab active" data-pt="overview" onclick="switchPatientTab('overview',this)">Overview</div>
@@ -1345,12 +1321,10 @@ function nav(id,btn){
   var v=document.getElementById('v-'+id);
   if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',revenue:'Revenue',payments:'Payments',expenses:'Expenses',reports:'Reports',notifications:'Notifications',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings',audit:'Audit'};
+  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',expenses:'Expenses',reports:'Reports',notifications:'Notifications',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings',audit:'Audit'};
   var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
-  if(id==='revenue')loadRevenue();
-  if(id==='payments')loadPaymentsPage();
   if(id==='expenses')loadExpensesPage();
   if(id==='reports')loadReportsPage();
   if(id==='notifications')loadOwnerNotifications();
@@ -1890,6 +1864,11 @@ async function loadDashboard(){
   /* Header date */
   var d2 = document.getElementById('dash-date2');
   if(d2) d2.textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+
+  /* Payments & Revenue now live directly on the Dashboard (no separate
+     sidebar pages), so refresh them here too. */
+  loadPaymentsPage();
+  loadRevenue();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2637,13 +2616,22 @@ async function loadPaymentsPage(){
   var rows = payRes.data || [];
 
   var total = rows.reduce(function(s,p){return s+(p.amount||0);},0);
-  var cash = rows.filter(function(p){return (p.method||'').toLowerCase()==='cash';}).reduce(function(s,p){return s+(p.amount||0);},0);
+  var byMethod = function(name){ return rows.filter(function(p){return (p.method||'').toLowerCase()===name;}).reduce(function(s,p){return s+(p.amount||0);},0); };
+  var cash = byMethod('cash');
+  var upi = byMethod('upi');
+  var card = byMethod('card');
+  var bank = byMethod('bank transfer');
+  var other = Math.max(0, total - cash - upi - card - bank);
   var digital = total - cash;
   var safe = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
   safe('pay-total','₹'+total.toLocaleString('en-IN'));
   safe('pay-count', rows.length);
   safe('pay-cash','₹'+cash.toLocaleString('en-IN'));
   safe('pay-digital','₹'+digital.toLocaleString('en-IN'));
+  safe('pay-upi','₹'+upi.toLocaleString('en-IN'));
+  safe('pay-card','₹'+card.toLocaleString('en-IN'));
+  safe('pay-bank','₹'+bank.toLocaleString('en-IN'));
+  safe('pay-other','₹'+other.toLocaleString('en-IN'));
 
   var tbody = document.getElementById('pay-tbody');
   if(!tbody) return;
@@ -3072,11 +3060,39 @@ async function openPatientProfile(id,name){
   var p=await _supa.from('nh_patients').select('*').eq('id',id).single();
   var adms=await _supa.from('admissions').select('status,admission_date,discharge_date,admission_diagnosis,admitting_doctor').eq('patient_id',id).order('admission_date',{ascending:false});
   var pd=p.data||{};
+  var admList = adms.data || [];
+  var latestAdm = admList.length ? admList[0] : null;
+
+  var statusHtml = '';
+  var dotHtml = '';
+  if(latestAdm && latestAdm.status==='Active'){
+    var admDate = new Date(latestAdm.admission_date);
+    statusHtml = '<div><b>Status:</b> <span class="chip" style="background:var(--green-bg);color:var(--green)">Admitted</span></div>'
+      +'<div><b>Admitted:</b> '+admDate.toLocaleDateString('en-GB')+'</div>'
+      +'<div><b>Discharged:</b> N/A</div>';
+    dotHtml = '<span title="Active — currently admitted" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--green)"><span style="width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-bg);display:inline-block;animation:pulse 2s ease-in-out infinite"></span>Active</span>';
+  } else if(latestAdm && latestAdm.status==='Discharged'){
+    var admDate2 = new Date(latestAdm.admission_date);
+    var disDate = latestAdm.discharge_date ? new Date(latestAdm.discharge_date) : null;
+    statusHtml = '<div><b>Status:</b> <span class="chip" style="background:var(--surface2);color:var(--text-secondary)">Discharged</span></div>'
+      +'<div><b>Admitted:</b> '+admDate2.toLocaleDateString('en-GB')+'</div>'
+      +'<div><b>Discharged:</b> '+(disDate?disDate.toLocaleDateString('en-GB'):'Nil')+'</div>';
+    dotHtml = '<span title="Discharged" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--text-tertiary)"><span style="width:9px;height:9px;border-radius:50%;background:var(--text-tertiary);display:inline-block"></span>&#10003; Discharged</span>';
+  } else {
+    statusHtml = '<div><b>Status:</b> <span class="chip" style="background:var(--surface2);color:var(--text-tertiary)">Not Admitted</span></div>'
+      +'<div><b>Admitted:</b> N/A</div>'
+      +'<div><b>Discharged:</b> N/A</div>';
+    dotHtml = '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--text-tertiary)"><span style="width:9px;height:9px;border-radius:50%;background:var(--border);display:inline-block"></span>Not Admitted</span>';
+  }
+  var dotEl = document.getElementById('pp-status-dot');
+  if(dotEl) dotEl.innerHTML = dotHtml;
+
   document.getElementById('pp-overview').innerHTML=
     '<div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">'
     +'<div><b>Name:</b> '+(pd.full_name||'')+'</div>'
     +'<div><b>Age / Gender:</b> '+(pd.age||'—')+' / '+(pd.gender||'—')+'</div>'
     +'<div><b>Phone:</b> '+(pd.phone||'—')+'</div>'
+    +statusHtml
     ;
   openModal('mod-patient-profile');
   loadPatientDocuments(id);
