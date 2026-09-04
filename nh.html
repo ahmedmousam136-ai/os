@@ -23,11 +23,11 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root,[data-theme="light"]{
-  --bg:#FFFFFF;--surface:#FFFFFF;--surface2:#FAFAF8;
+  --bg:#F7F6F3;--surface:#FFFFFF;--surface2:#FAFAF8;
   --border:#E8E5DF;--border-mid:#D2CEC6;--border-strong:#AEA9A0;
   --text-primary:#18170F;--text-secondary:#64605A;--text-tertiary:#9E9A93;
   --blue:#2E63D4;--blue-light:#4475E0;--blue-bg:#EDF2FC;--blue-border:#BDD0F7;--blue-hover:#2354C0;
-  --green:#2E63D4;--green-bg:#EDF2FC;--green-border:#BDD0F7;
+  --green:#12976A;--green-bg:#EAFAF3;--green-border:#9ADEC3;
   --amber:#C27820;--amber-bg:#FDF4E6;--amber-border:#F0CEAA;
   --red:#C23838;--red-bg:#FDF0F0;--red-border:#F2B8B8;
   --purple:#6B3FA0;--purple-bg:#F3EDFB;--purple-border:#D4B8F0;
@@ -46,7 +46,7 @@
   --border:#252A38;--border-mid:#2E3448;--border-strong:#3A4160;
   --text-primary:#E8E9EF;--text-secondary:#8E96B0;--text-tertiary:#525A72;
   --blue:#4D85F0;--blue-bg:#1A243D;--blue-border:#2A3A5C;--blue-hover:#5C91F5;
-  --green:#4D85F0;--green-bg:#1A243D;--green-border:#2A3A5C;
+  --green:#1BB880;--green-bg:#0E2A1F;--green-border:#1A4A35;
   --amber:#E09940;--amber-bg:#271E0E;--amber-border:#3D2E10;
   --red:#E05050;--red-bg:#250F0F;--red-border:#3D1A1A;
   --purple:#A07BDB;--purple-bg:#1E1530;--purple-border:#3D2560;
@@ -78,8 +78,8 @@ a{color:inherit;text-decoration:none}
 .auth-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);display:block;margin-bottom:5px}
 .auth-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;min-height:44px;transition:border-color var(--ease)}
 .auth-input:focus{border-color:var(--blue);background:var(--surface)}
-.auth-btn{width:100%;background:var(--green);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease);box-shadow:0 2px 8px rgba(46,99,212,.2)}
-.auth-btn:hover{background:#2354C0}
+.auth-btn{width:100%;background:var(--green);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease);box-shadow:0 2px 8px rgba(18,151,106,.2)}
+.auth-btn:hover{background:#0f8059}
 .auth-error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;display:none}
 
 /* ── APP SHELL ── */
@@ -125,14 +125,14 @@ header{height:var(--header-h);background:rgba(255,255,255,.94);border-bottom:1px
 .bc-page{color:var(--text-secondary);font-size:12.5px;font-weight:500}
 .hdr-r{display:flex;align-items:center;gap:7px}
 .date-pill{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--text-secondary)}
-.add-btn{background:var(--green);border:none;color:#fff;padding:9px 16px;border-radius:var(--r-sm);display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;box-shadow:0 3px 12px rgba(46,99,212,.32);cursor:pointer;white-space:nowrap;min-height:40px}
-.add-btn:hover{background:#2354C0}
+.add-btn{background:var(--green);border:none;color:#fff;padding:9px 16px;border-radius:var(--r-sm);display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;box-shadow:0 3px 12px rgba(18,151,106,.32);cursor:pointer;white-space:nowrap;min-height:40px}
+.add-btn:hover{background:#0f8059}
 main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 
 /* ── VIEWS ── */
 .view{display:none;flex-direction:column;gap:18px}.view.on{display:flex}
 .sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.st{font-family:'DM Sans',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
+.st{font-family:'Instrument Serif',serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
 .ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
 
 /* ── METRICS ── */
@@ -141,29 +141,22 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 .mc:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
 .mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
-.mc-icon{width:30px;height:30px;border-radius:9px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
-.mc-icon-green{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
-.mc-icon-blue{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
-.mc-icon-amber{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
-.mc-icon-red{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
-.mc-val{font-family:'DM Sans',sans-serif;font-weight:800;font-size:26px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mc-icon{width:27px;height:27px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
+.mc-val{font-family:'Instrument Serif',serif;font-size:28px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
 .mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:5px}
-.mc-delta{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-top:6px}
-.mc-delta-up{background:var(--green-bg);color:var(--green)}
-.mc-delta-down{background:var(--red-bg);color:var(--red)}
 
 /* ── PANELS ── */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
 .ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
 .pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
-.pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:999px;font-weight:700;letter-spacing:.05em}
+.pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em}
 .pb-b{color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-border)}
 .pb-g{color:var(--green);background:var(--green-bg);border:1px solid var(--green-border)}
 .pb-r{color:var(--red);background:var(--red-bg);border:1px solid var(--red-border)}
 .pb-a{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
 
 /* ── CHIPS ── */
-.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .ch-dis{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
 .ch-vac{background:var(--bg);color:var(--text-secondary);border:1px solid var(--border)}
@@ -187,28 +180,11 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 .bed-card.critical .bed-status-dot{background:var(--red)}
 .bed-card.cleaning .bed-status-dot{background:var(--amber)}
 
-/* ── WARD-GROUPED BED MANAGEMENT (fixes previously-missing styles) ── */
-.ward-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);margin-bottom:14px}
-.ward-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.ward-title{font-family:'DM Sans',sans-serif;font-weight:800;font-size:13px;color:var(--text-primary);letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px}
-.female-ward-badge{font-size:9px;font-weight:700;letter-spacing:.04em;color:#C0398A;background:#FDF0F7;border:1px solid #F0B8DC;padding:2px 7px;border-radius:999px}
-.ward-stats{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.ward-stat{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text-secondary);font-weight:600}
-.ward-stat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.bed-grid-ward{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;padding:16px}
-.bed-card{position:relative}
-.bed-card-rate{font-size:9px;font-weight:700;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:2px 7px;margin-top:5px;display:inline-block}
-.bed-edit-btn{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-tertiary);opacity:0;transition:opacity var(--ease),background var(--ease)}
-.bed-card:hover .bed-edit-btn{opacity:1;background:rgba(0,0,0,.05)}
-.bed-card-inactive{opacity:.5}
-.bed-card-inactive::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent,transparent 6px,rgba(0,0,0,.04) 6px,rgba(0,0,0,.04) 7px);border-radius:inherit;pointer-events:none}
-@media(max-width:600px){.bed-grid-ward{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}}
-
 /* ── ADMISSION ROW ── */
 .adm-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
 .adm-row:hover{background:var(--bg)}
 .adm-row:last-child{border-bottom:none}
-.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:800;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
 .adm-name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
 .adm-meta{font-size:10.5px;color:var(--text-secondary);margin-top:1px}
 .adm-actions{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
@@ -249,7 +225,7 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 .rx-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .rx-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .msub{width:100%;background:var(--green);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease)}
-.msub:hover{background:#2354C0}
+.msub:hover{background:#0f8059}
 .qbtn{background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-size:10px;padding:6px 10px;border-radius:5px;display:flex;align-items:center;gap:3px;font-weight:600;transition:all var(--ease);cursor:pointer;box-shadow:var(--sh-xs);min-height:32px}
 .qbtn:hover{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
 .empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
@@ -483,13 +459,25 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
         Discharge
       </button>
-      <button class="nb owner-only" onclick="nav('finance',this)">
+      <button class="nb owner-only" onclick="nav('revenue',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-        Finance
+        Revenue
+      </button>
+      <button class="nb owner-only" onclick="nav('payments',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+        Payments
+      </button>
+      <button class="nb owner-only" onclick="nav('expenses',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/><line x1="12" y1="1" x2="12" y2="23"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>
+        Expenses
+      </button>
+      <button class="nb owner-only" onclick="nav('reports',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></span>
+        Reports
       </button>
       <p class="nav-sec">Programs</p>
       <button class="nb owner-only" onclick="nav('audit',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Activity Audit
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Audit
       </button>
       <button class="nb reception-only" onclick="nav('ayushman',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
@@ -501,6 +489,11 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           Staff
         </button>
       </div>
+      <p class="nav-sec owner-only">Account</p>
+      <button class="nb owner-only" onclick="nav('notifications',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+        Notifications
+      </button>
       <p class="nav-sec">Account</p>
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
@@ -553,17 +546,24 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         </div>
         <!-- Row 1: Bed & Admission metrics -->
         <div class="mg6">
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Occupied Beds</div><div class="mc-icon mc-icon-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/><path d="M12 14v-3"/></svg></div></div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">of <span id="dm-total-beds">—</span> total</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Available Beds</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/><path d="M12 14v-3"/></svg></div></div><div class="mc-val" id="dm-available">—</div><div class="mc-sub">ready to admit</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Today Admissions</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div></div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new today</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Today Discharges</div><div class="mc-icon mc-icon-amber"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div></div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
+          <div class="mc mc-green"><div class="mc-lbl">Occupied Beds</div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">of <span id="dm-total-beds">—</span> total</div></div>
+          <div class="mc"><div class="mc-lbl">Available Beds</div><div class="mc-val" id="dm-available">—</div><div class="mc-sub">ready to admit</div></div>
+          <div class="mc"><div class="mc-lbl">Today Admissions</div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new today</div></div>
+          <div class="mc"><div class="mc-lbl">Today Discharges</div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
         </div>
         <!-- Row 2: Financial metrics -->
         <div class="mg6">
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Today Revenue</div><div class="mc-icon mc-icon-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">charges today</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Outstanding Due</div><div class="mc-icon mc-icon-red"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="mc-val" id="dm-outstanding">—</div><div class="mc-sub">unpaid balance</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Current Billing</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub">active admissions total</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Total Patients</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div><div class="mc-val" id="dm-total-patients">—</div><div class="mc-sub">all time</div></div>
+          <div class="mc mc-green"><div class="mc-lbl">Today Revenue</div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">charges today</div></div>
+          <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="dm-outstanding">—</div><div class="mc-sub">unpaid balance</div></div>
+          <div class="mc mc-blue"><div class="mc-lbl">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub">active admissions total</div></div>
+          <div class="mc"><div class="mc-lbl">Total Patients</div><div class="mc-val" id="dm-total-patients">—</div><div class="mc-sub">all time</div></div>
+        </div>
+        <!-- Row 3: Monthly business metrics -->
+        <div class="mg6">
+          <div class="mc mc-green"><div class="mc-lbl">Monthly Revenue</div><div class="mc-val" id="dm-monthly-revenue">—</div><div class="mc-sub">month to date</div></div>
+          <div class="mc mc-blue"><div class="mc-lbl">Total Collection</div><div class="mc-val" id="dm-collection">—</div><div class="mc-sub">payments this month</div></div>
+          <div class="mc mc-red"><div class="mc-lbl">Expenses</div><div class="mc-val" id="dm-expenses">—</div><div class="mc-sub">this month</div></div>
+          <div class="mc"><div class="mc-lbl">Net Revenue</div><div class="mc-val" id="dm-net">—</div><div class="mc-sub">revenue − expenses</div></div>
         </div>
         <!-- Row 3: Active patients + Activity feed + Bed map -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -714,35 +714,41 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       </div>
 
       <!-- FINANCE (owner only) -->
-      <div id="v-finance" class="view owner-only">
+      <div id="v-revenue" class="view owner-only">
         <div class="sh">
-          <div><h1 class="st">Finance</h1><p class="ss">Revenue, payments and outstanding dues</p></div>
+          <div><h1 class="st">Revenue</h1><p class="ss">Revenue, payments and outstanding dues</p></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <select class="finput" id="fin-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadFinance()">
+            <select class="finput" id="fin-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadRevenue()">
               <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
               <option value="week">This Week</option>
               <option value="month" selected>This Month</option>
+              <option value="lastmonth">Last Month</option>
               <option value="all">All Time</option>
             </select>
           </div>
         </div>
         <!-- Summary metrics -->
         <div class="mg">
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Total Charged</div><div class="mc-icon mc-icon-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div><div class="mc-val" id="fin-charged">₹0</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Total Paid</div><div class="mc-icon mc-icon-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div><div class="mc-val" id="fin-paid">₹0</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Outstanding Due</div><div class="mc-icon mc-icon-red"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="mc-val" id="fin-due">₹0</div></div>
-          <div class="mc"><div class="mc-top"><div class="mc-lbl">Period Revenue</div><div class="mc-icon mc-icon-green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="mc-val" id="fin-month">₹0</div></div>
+          <div class="mc mc-green"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
+          <div class="mc mc-blue"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
+          <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
         </div>
-        <!-- Category breakdown -->
+        <!-- Category / Department breakdown -->
         <div class="two-col">
           <div class="panel">
-            <div class="ph"><div class="pt">Revenue by Category</div></div>
+            <div class="ph"><div class="pt">Revenue by Service</div></div>
             <div id="fin-by-category"></div>
           </div>
           <div class="panel">
-            <div class="ph"><div class="pt">Per-Patient Balance</div></div>
-            <div id="fin-list"></div>
+            <div class="ph"><div class="pt">Revenue by Department</div></div>
+            <div id="rev-by-dept"></div>
           </div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Per-Patient Balance</div></div>
+          <div id="fin-list"></div>
         </div>
         <!-- Per-day billing config (owner only) -->
         <div class="panel owner-only">
@@ -763,6 +769,93 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           </div>
         </div>
       </div>
+
+      <!-- PAYMENTS (owner) -->
+      <div id="v-payments" class="view owner-only">
+        <div class="sh">
+          <div><h1 class="st">Payments</h1><p class="ss">All payments received across the facility</p></div>
+          <select class="finput" id="pay-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadPaymentsPage()">
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month" selected>This Month</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+        <div class="mg">
+          <div class="mc mc-green"><div class="mc-lbl">Total Collected</div><div class="mc-val" id="pay-total">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Transactions</div><div class="mc-val" id="pay-count">0</div></div>
+          <div class="mc mc-blue"><div class="mc-lbl">Cash</div><div class="mc-val" id="pay-cash">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Digital (UPI/Card/Bank)</div><div class="mc-val" id="pay-digital">₹0</div></div>
+        </div>
+        <div class="panel" style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px">
+            <thead><tr style="border-bottom:1px solid var(--border);text-align:left">
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Patient</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Date &amp; Time</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Method</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Received By</th>
+              <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Amount</th>
+            </tr></thead>
+            <tbody id="pay-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- EXPENSES (owner) -->
+      <div id="v-expenses" class="view owner-only">
+        <div class="sh">
+          <div><h1 class="st">Expenses</h1><p class="ss">Hospital operating expenses</p></div>
+          <button class="qbtn" style="background:var(--blue);color:#fff;border:none" onclick="openAddExpense()">+ Add Expense</button>
+        </div>
+        <div class="mg">
+          <div class="mc mc-red"><div class="mc-lbl">Total Expenses (Period)</div><div class="mc-val" id="exp-total">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Entries</div><div class="mc-val" id="exp-count">0</div></div>
+          <div class="mc"><div class="mc-lbl">Top Category</div><div class="mc-val" id="exp-top-cat" style="font-size:16px">—</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><div class="pt">Expense Log</div></div>
+            <div id="exp-list"></div>
+          </div>
+          <div class="panel">
+            <div class="ph"><div class="pt">By Category</div></div>
+            <div id="exp-by-cat"></div>
+          </div>
+        </div>
+        <div class="note-box note-amber" style="margin-top:10px;font-size:11px">
+          ⚠️ Expense tracking requires an <code>nh_expenses</code> table in Supabase. If it hasn't been created yet, this page will show a setup notice instead of data — see the note at the bottom of this chat.
+        </div>
+      </div>
+
+      <!-- REPORTS (owner) -->
+      <div id="v-reports" class="view owner-only">
+        <div class="sh"><div><h1 class="st">Reports</h1><p class="ss">Daily and monthly management reports</p></div></div>
+        <div class="mg2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="panel" style="padding:18px">
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px">📄 Daily Owner Report</div>
+            <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Today's revenue, collection, expenses, admissions/discharges and important transactions.</p>
+            <input type="date" class="finput" id="report-daily-date"/>
+            <button class="msub" onclick="generateDailyReport()">Generate &amp; Print</button>
+          </div>
+          <div class="panel" style="padding:18px">
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px">📊 Monthly Management Audit</div>
+            <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Full month revenue, collection, expenses, department/service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</p>
+            <input type="month" class="finput" id="report-monthly-month"/>
+            <button class="msub" onclick="generateMonthlyReport()">Generate &amp; Print</button>
+          </div>
+        </div>
+        <div class="note-box note-blue" style="margin-top:14px;font-size:11px">
+          ℹ️ Reports open as a printable page — use your browser's "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn't wired up, since no messaging/email integration exists in this app yet.
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS (owner) -->
+      <div id="v-notifications" class="view owner-only">
+        <div class="sh"><div><h1 class="st">Notifications</h1><p class="ss">Alerts and recent business activity</p></div></div>
+        <div class="panel"><div id="owner-alerts-list"></div></div>
+      </div>
+
 
       <!-- STAFF AUDIT / ACTIVITY (owner only) -->
       <div id="v-audit" class="view owner-only">
@@ -860,6 +953,35 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 <!-- MODALS -->
 
 <!-- ADMIT PATIENT MODAL -->
+<div class="mod-ov" id="mod-add-expense">
+  <div class="modal" style="max-width:400px">
+    <div class="mh">
+      <div class="mtitle">+ Add Expense</div>
+      <button class="mclose" onclick="closeModal('mod-add-expense')">✕</button>
+    </div>
+    <div class="mb">
+      <label class="flbl">Category</label>
+      <select class="finput" id="exp-category">
+        <option>Staff</option><option>Supplies</option><option>Utilities</option>
+        <option>Maintenance</option><option>Medical Supplies</option><option>Equipment</option>
+        <option>Rent</option><option>Other</option>
+      </select>
+      <label class="flbl">Amount (₹)</label>
+      <input class="finput" id="exp-amount" type="number" placeholder="0"/>
+      <label class="flbl">Date</label>
+      <input class="finput" id="exp-date" type="date"/>
+      <label class="flbl">Payment Method</label>
+      <select class="finput" id="exp-method">
+        <option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option>
+      </select>
+      <label class="flbl">Notes</label>
+      <input class="finput" id="exp-notes" placeholder="Optional details"/>
+      <div id="exp-err" style="color:var(--red);font-size:11.5px;display:none;margin-bottom:8px"></div>
+      <button class="msub" onclick="saveNewExpense()">Save Expense</button>
+    </div>
+  </div>
+</div>
+
 <div class="mod-ov" id="mod-admit">
   <div class="modal">
     <div class="mh">
@@ -1223,11 +1345,15 @@ function nav(id,btn){
   var v=document.getElementById('v-'+id);
   if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',finance:'Finance',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings'};
+  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',revenue:'Revenue',payments:'Payments',expenses:'Expenses',reports:'Reports',notifications:'Notifications',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings',audit:'Audit'};
   var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
-  if(id==='finance')loadFinance();
+  if(id==='revenue')loadRevenue();
+  if(id==='payments')loadPaymentsPage();
+  if(id==='expenses')loadExpensesPage();
+  if(id==='reports')loadReportsPage();
+  if(id==='notifications')loadOwnerNotifications();
   if(id==='audit')loadAudit();
   if(id==='patients')loadPatientsList();
   if(id==='beds')loadBeds();
@@ -1642,7 +1768,7 @@ async function loadDashboard(){
   var today = new Date().toISOString().slice(0,10);
   var monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-  var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients, activity] = await Promise.all([
+  var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients, activity, monthCharges, monthPayments, monthExpenses] = await Promise.all([
     _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admitting_doctor,admission_diagnosis,status').eq('clinic_id',_clinicId).eq('status','Active'),
     _supa.from('beds').select('id,bed_number,ward,status').eq('clinic_id',_clinicId),
     _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00'),
@@ -1651,7 +1777,10 @@ async function loadDashboard(){
     _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId),
     _supa.from('nh_payments').select('amount').eq('clinic_id',_clinicId),
     _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId),
-    _supa.from('nh_audit_log').select('action,details,created_at,actor_id,clinic_id').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(8)
+    _supa.from('nh_audit_log').select('action,details,created_at,actor_id,clinic_id').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(8),
+    _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',monthStart),
+    _supa.from('nh_payments').select('amount').eq('clinic_id',_clinicId).gte('created_at',monthStart),
+    _supa.from('nh_expenses').select('amount').eq('clinic_id',_clinicId).gte('expense_date',monthStart.slice(0,10))
   ]);
 
   var active   = adm.data || [];
@@ -1678,6 +1807,14 @@ async function loadDashboard(){
   safe('nav-occupied-count', occupied);
   safe('sb-occupancy', occupied+'/'+allBeds.length+' beds occupied');
 
+  var monthRev = (monthCharges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+  var monthColl = (monthPayments.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+  var monthExp = monthExpenses.error ? null : (monthExpenses.data||[]).reduce(function(s,e){return s+(e.amount||0);},0);
+  safe('dm-monthly-revenue','₹'+monthRev.toLocaleString('en-IN'));
+  safe('dm-collection','₹'+monthColl.toLocaleString('en-IN'));
+  safe('dm-expenses', monthExp===null ? '—' : '₹'+monthExp.toLocaleString('en-IN'));
+  safe('dm-net', monthExp===null ? 'N/A' : '₹'+(monthRev-monthExp).toLocaleString('en-IN'));
+
   /* Active patients list */
   var list = document.getElementById('dash-active-list');
   if(list){
@@ -1694,7 +1831,7 @@ async function loadDashboard(){
           +'<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'')+'</div>'
           +'<div class="adm-meta">'+esc(a.admitting_doctor||'')+(a.admission_diagnosis?' &middot; '+esc(a.admission_diagnosis):'')+' &middot; Day '+days+'</div></div>'
           +'<span class="chip ch-act">Active</span>';
-        div.onclick = (function(id,nm){ return function(){ openProfile(id,nm); }; })(a.id, a.patient_name||'');
+        div.onclick = (function(id,nm){ return function(){ openPatientProfile(id,nm); }; })(a.id, a.patient_name||'');
         rows.push(div);
       });
       list.innerHTML = '';
@@ -2269,7 +2406,7 @@ async function generateDischarge(){
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({unit:'mm',format:'a4'});
   var W=210,x=16,y=18;
-  doc.setFillColor(46,99,212);doc.rect(0,0,W,30,'F');
+  doc.setFillColor(18,151,106);doc.rect(0,0,W,30,'F');
   doc.setTextColor(255,255,255);
   doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('DISCHARGE SUMMARY',x,12);
   doc.setFont('helvetica','normal');doc.setFontSize(9);
@@ -2358,18 +2495,21 @@ async function loadReceptionHome(){
 }
 
 /* ── FINANCE (owner only) ── */
-async function loadFinance(){
+async function loadRevenue(){
   if(!_clinicId) return;
   var period = document.getElementById('fin-filter-period');
   var p = period ? period.value : 'month';
   var now = new Date();
-  var from = '';
-  if(p==='today') from = now.toISOString().slice(0,10)+'T00:00:00';
+  var from = '', to = '';
+  if(p==='today'){ from = now.toISOString().slice(0,10)+'T00:00:00'; }
+  else if(p==='yesterday'){ var y=new Date(now); y.setDate(y.getDate()-1); from=y.toISOString().slice(0,10)+'T00:00:00'; to=now.toISOString().slice(0,10)+'T00:00:00'; }
   else if(p==='week'){ var d=new Date(now); d.setDate(d.getDate()-7); from=d.toISOString(); }
   else if(p==='month') from = new Date(now.getFullYear(),now.getMonth(),1).toISOString();
+  else if(p==='lastmonth'){ var lm=new Date(now.getFullYear(),now.getMonth()-1,1); var lmEnd=new Date(now.getFullYear(),now.getMonth(),1); from=lm.toISOString(); to=lmEnd.toISOString(); }
 
   var query = _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId);
   if(from) query = query.gte('created_at', from);
+  if(to) query = query.lt('created_at', to);
   var [charges, payments, adms] = await Promise.all([
     query,
     _supa.from('nh_payments').select('amount,admission_id').eq('clinic_id',_clinicId),
@@ -2388,7 +2528,7 @@ async function loadFinance(){
   safe('fin-due','₹'+due.toLocaleString('en-IN'));
   safe('fin-month','₹'+totalCharged.toLocaleString('en-IN'));
 
-  /* Category breakdown */
+  /* Category breakdown (= Revenue by Service) */
   var cats = {};
   ch.forEach(function(c){
     var t = c.charge_type || 'Other';
@@ -2409,6 +2549,40 @@ async function loadFinance(){
         return '<div class="fin-cat-row">'
           +'<div style="flex:1;min-width:0"><div class="fin-cat-name">'+icon+' '+esc(entry[0])+'</div>'
           +'<div style="margin-top:5px;background:var(--border);border-radius:2px;height:4px"><div class="fin-cat-bar" style="width:'+pct+'%;background:var(--green)"></div></div>'
+          +'</div>'
+          +'<div class="fin-cat-amt">₹'+entry[1].toLocaleString('en-IN')+'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+
+  /* Revenue by Department — derived from each charge's admission → bed → ward,
+     since "department" isn't a separate field in the schema; ward is the
+     closest real, existing concept (same approach used elsewhere in the app). */
+  var deptEl = document.getElementById('rev-by-dept');
+  if(deptEl){
+    var admIdsForDept = Array.from(new Set(ch.map(function(c){return c.admission_id;}).filter(Boolean)));
+    var admDeptRes = admIdsForDept.length ? await _supa.from('admissions').select('id,bed_id').in('id',admIdsForDept) : {data:[]};
+    var admToBed = {}; (admDeptRes.data||[]).forEach(function(a){ admToBed[a.id]=a.bed_id; });
+    var bedIdsForDept = Array.from(new Set(Object.values(admToBed).filter(Boolean)));
+    var bedDeptRes = bedIdsForDept.length ? await _supa.from('beds').select('id,ward').in('id',bedIdsForDept) : {data:[]};
+    var bedToWard = {}; (bedDeptRes.data||[]).forEach(function(b){ bedToWard[b.id]=b.ward; });
+    var depts = {};
+    ch.forEach(function(c){
+      var bedId = admToBed[c.admission_id];
+      var dept = (bedId && bedToWard[bedId]) ? bedToWard[bedId] : 'OPD / Other';
+      depts[dept] = (depts[dept]||0) + (c.total_price||0);
+    });
+    var deptEntries = Object.entries(depts).sort(function(a,b){return b[1]-a[1];});
+    var maxDept = deptEntries.length ? deptEntries[0][1] : 1;
+    if(!deptEntries.length){
+      deptEl.innerHTML = '<div class="empty" style="padding:20px"><p class="empty-t">No department-linked charges in this period</p></div>';
+    } else {
+      deptEl.innerHTML = deptEntries.map(function(entry){
+        var pct = maxDept>0 ? Math.round(entry[1]/maxDept*100) : 0;
+        return '<div class="fin-cat-row">'
+          +'<div style="flex:1;min-width:0"><div class="fin-cat-name">🏥 '+esc(entry[0])+'</div>'
+          +'<div style="margin-top:5px;background:var(--border);border-radius:2px;height:4px"><div class="fin-cat-bar" style="width:'+pct+'%;background:var(--blue)"></div></div>'
           +'</div>'
           +'<div class="fin-cat-amt">₹'+entry[1].toLocaleString('en-IN')+'</div>'
           +'</div>';
@@ -2439,9 +2613,344 @@ async function loadFinance(){
       +'<div style="flex:1"><div class="adm-name">'+esc(a.patient_name||'')+'</div>'
       +'<div class="adm-meta">Billed: &#8377;'+tot.toLocaleString('en-IN')+' &middot; Paid: &#8377;'+paid.toLocaleString('en-IN')+'</div></div>'
       +'<span style="font-weight:700;color:'+(due2>0?'var(--red)':'var(--green)')+'">&#8377;'+Math.abs(due2).toLocaleString('en-IN')+(due2>0?' due':' clear')+'</span>';
-    div.onclick = (function(id,nm){ return function(){ openProfile(id,nm); }; })(a.id, a.patient_name||'');
+    div.onclick = (function(id,nm){ return function(){ openPatientProfile(id,nm); }; })(a.id, a.patient_name||'');
     el.appendChild(div);
   });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PAYMENTS PAGE (Owner) — real nh_payments records
+══════════════════════════════════════════════════════════════ */
+async function loadPaymentsPage(){
+  if(!_clinicId) return;
+  var period = document.getElementById('pay-filter-period');
+  var p = period ? period.value : 'month';
+  var now = new Date();
+  var from = '';
+  if(p==='today') from = now.toISOString().slice(0,10)+'T00:00:00';
+  else if(p==='week'){ var d=new Date(now); d.setDate(d.getDate()-7); from=d.toISOString(); }
+  else if(p==='month') from = new Date(now.getFullYear(),now.getMonth(),1).toISOString();
+
+  var query = _supa.from('nh_payments').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(200);
+  if(from) query = query.gte('created_at', from);
+  var payRes = await query;
+  var rows = payRes.data || [];
+
+  var total = rows.reduce(function(s,p){return s+(p.amount||0);},0);
+  var cash = rows.filter(function(p){return (p.method||'').toLowerCase()==='cash';}).reduce(function(s,p){return s+(p.amount||0);},0);
+  var digital = total - cash;
+  var safe = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+  safe('pay-total','₹'+total.toLocaleString('en-IN'));
+  safe('pay-count', rows.length);
+  safe('pay-cash','₹'+cash.toLocaleString('en-IN'));
+  safe('pay-digital','₹'+digital.toLocaleString('en-IN'));
+
+  var tbody = document.getElementById('pay-tbody');
+  if(!tbody) return;
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:12px">No payments in this period</td></tr>'; return; }
+
+  var admIds = Array.from(new Set(rows.map(function(p){return p.admission_id;}).filter(Boolean)));
+  var admRes = admIds.length ? await _supa.from('admissions').select('id,patient_name,bed_id').in('id',admIds) : {data:[]};
+  var admMap = {}; (admRes.data||[]).forEach(function(a){ admMap[a.id]=a; });
+  var bedIds = Array.from(new Set((admRes.data||[]).map(function(a){return a.bed_id;}).filter(Boolean)));
+  var bedRes = bedIds.length ? await _supa.from('beds').select('id,ward').in('id',bedIds) : {data:[]};
+  var bedMap = {}; (bedRes.data||[]).forEach(function(b){ bedMap[b.id]=b.ward; });
+  var staffIds = Array.from(new Set(rows.map(function(p){return p.recorded_by;}).filter(Boolean)));
+  var staffRes = staffIds.length ? await _supa.from('nh_staff').select('id,full_name').in('id',staffIds) : {data:[]};
+  var staffMap = {}; (staffRes.data||[]).forEach(function(s){ staffMap[s.id]=s.full_name; });
+
+  tbody.innerHTML = rows.map(function(p){
+    var adm = admMap[p.admission_id] || {};
+    var dept = adm.bed_id ? (bedMap[adm.bed_id]||'—') : 'OPD';
+    var dt = new Date(p.created_at);
+    return '<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openPatientProfile(\''+(adm.patient_id||'')+'\',\''+esc(adm.patient_name||'')+'\')">'
+      + '<td style="padding:10px 14px;font-weight:600">'+esc(adm.patient_name||'—')+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+dt.toLocaleDateString('en-GB')+' '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+esc(dept)+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+esc(p.method||'—')+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+esc(staffMap[p.recorded_by]||'—')+'</td>'
+      + '<td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green)">₹'+Number(p.amount||0).toLocaleString('en-IN')+'</td>'
+    + '</tr>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EXPENSES PAGE (Owner) — requires an `nh_expenses` table:
+   clinic_id, category, amount, expense_date, payment_method,
+   added_by, notes, created_at. This table did not exist in the
+   inspected schema, so queries below fail gracefully with a setup
+   notice rather than fabricating numbers.
+══════════════════════════════════════════════════════════════ */
+var EXPENSE_CATEGORIES = ['Staff','Supplies','Utilities','Maintenance','Medical Supplies','Equipment','Rent','Other'];
+
+async function loadExpensesPage(){
+  if(!_clinicId) return;
+  var totalEl = document.getElementById('exp-total');
+  var countEl = document.getElementById('exp-count');
+  var topEl = document.getElementById('exp-top-cat');
+  var listEl = document.getElementById('exp-list');
+  var catEl = document.getElementById('exp-by-cat');
+
+  var r = await _supa.from('nh_expenses').select('*').eq('clinic_id',_clinicId).order('expense_date',{ascending:false}).limit(200);
+
+  if(r.error){
+    var msg = '<div class="empty" style="padding:28px"><div class="empty-ic">⚠️</div><p class="empty-t">Expense tracking isn\'t set up yet</p><p class="empty-s">Create an <code>nh_expenses</code> table in Supabase to start recording hospital expenses here.</p></div>';
+    if(listEl) listEl.innerHTML = msg;
+    if(catEl) catEl.innerHTML = '';
+    if(totalEl) totalEl.textContent = '—';
+    if(countEl) countEl.textContent = '—';
+    if(topEl) topEl.textContent = '—';
+    return;
+  }
+
+  var rows = r.data || [];
+  var total = rows.reduce(function(s,e){return s+(e.amount||0);},0);
+  if(totalEl) totalEl.textContent = '₹'+total.toLocaleString('en-IN');
+  if(countEl) countEl.textContent = rows.length;
+
+  var cats = {};
+  rows.forEach(function(e){ var c=e.category||'Other'; cats[c]=(cats[c]||0)+(e.amount||0); });
+  var catEntries = Object.entries(cats).sort(function(a,b){return b[1]-a[1];});
+  if(topEl) topEl.textContent = catEntries.length ? catEntries[0][0] : '—';
+
+  if(catEl){
+    var maxCat = catEntries.length ? catEntries[0][1] : 1;
+    catEl.innerHTML = catEntries.length ? catEntries.map(function(entry){
+      var pct = maxCat>0 ? Math.round(entry[1]/maxCat*100) : 0;
+      return '<div class="fin-cat-row"><div style="flex:1;min-width:0"><div class="fin-cat-name">'+esc(entry[0])+'</div>'
+        +'<div style="margin-top:5px;background:var(--border);border-radius:2px;height:4px"><div class="fin-cat-bar" style="width:'+pct+'%;background:var(--red)"></div></div></div>'
+        +'<div class="fin-cat-amt">₹'+entry[1].toLocaleString('en-IN')+'</div></div>';
+    }).join('') : '<div class="empty" style="padding:16px"><p class="empty-t">No expenses yet</p></div>';
+  }
+
+  if(listEl){
+    listEl.innerHTML = rows.length ? rows.map(function(e){
+      return '<div class="adm-row"><div class="adm-av">💸</div>'
+        + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(e.category||'Other')+(e.notes?' — '+esc(e.notes):'')+'</div>'
+        + '<div class="adm-meta">'+new Date(e.expense_date).toLocaleDateString('en-GB')+' · '+esc(e.payment_method||'—')+'</div></div>'
+        + '<div style="font-weight:700;color:var(--red)">₹'+Number(e.amount||0).toLocaleString('en-IN')+'</div>'
+      + '</div>';
+    }).join('') : '<div class="empty" style="padding:20px"><p class="empty-t">No expenses recorded</p></div>';
+  }
+}
+
+function openAddExpense(){
+  var d = document.getElementById('exp-date');
+  if(d) d.value = new Date().toISOString().slice(0,10);
+  var e = document.getElementById('exp-err');
+  if(e) e.style.display='none';
+  openModal('mod-add-expense');
+}
+async function saveNewExpense(){
+  var cat = document.getElementById('exp-category').value;
+  var amt = parseFloat(document.getElementById('exp-amount').value)||0;
+  var date = document.getElementById('exp-date').value;
+  var method = document.getElementById('exp-method').value;
+  var notes = document.getElementById('exp-notes').value;
+  var errEl = document.getElementById('exp-err');
+  errEl.style.display='none';
+  if(amt<=0){ errEl.textContent='Enter a valid amount.'; errEl.style.display='block'; return; }
+  if(!date){ errEl.textContent='Select a date.'; errEl.style.display='block'; return; }
+
+  var r = await _supa.from('nh_expenses').insert({
+    clinic_id:_clinicId, category:cat, amount:amt, expense_date:date,
+    payment_method:method, notes:notes, added_by:_myUid
+  });
+  if(r.error){ errEl.textContent = 'Could not save — '+r.error.message+(r.error.message.indexOf('does not exist')>-1?' (the nh_expenses table needs to be created in Supabase first)':''); errEl.style.display='block'; return; }
+
+  _supa.from('nh_audit_log').insert({ clinic_id:_clinicId, actor_id:_myUid, action:'expense_added', target_table:'nh_expenses', details:{category:cat, amount:amt} });
+  closeModal('mod-add-expense');
+  showToast('Expense recorded');
+  loadExpensesPage();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REPORTS PAGE (Owner) — Daily/Monthly printable reports.
+   No outbound WhatsApp/email automation exists in this app, so
+   these generate a printable page (Print → Save as PDF / share)
+   rather than faking an automatic send.
+══════════════════════════════════════════════════════════════ */
+function loadReportsPage(){
+  var d = document.getElementById('report-daily-date');
+  if(d && !d.value) d.value = new Date().toISOString().slice(0,10);
+  var m = document.getElementById('report-monthly-month');
+  if(m && !m.value) m.value = new Date().toISOString().slice(0,7);
+}
+
+async function generateDailyReport(){
+  var dateStr = document.getElementById('report-daily-date').value || new Date().toISOString().slice(0,10);
+  var from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
+
+  var [chargesRes, paymentsRes, admRes, disRes, expRes, clinicRes] = await Promise.all([
+    _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId).gte('created_at',from).lte('created_at',to),
+    _supa.from('nh_payments').select('*').eq('clinic_id',_clinicId).gte('created_at',from).lte('created_at',to),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',from).lte('admission_date',to),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',from).lte('discharge_date',to),
+    _supa.from('nh_expenses').select('*').eq('clinic_id',_clinicId).gte('expense_date',dateStr).lte('expense_date',dateStr),
+    _supa.from('clinics').select('name').eq('id',_clinicId).single()
+  ]);
+  var charges = chargesRes.data||[], payments = paymentsRes.data||[], expenses = expRes.error?[]:(expRes.data||[]);
+  var revenue = charges.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var collected = payments.reduce(function(s,p){return s+(p.amount||0);},0);
+  var expTotal = expenses.reduce(function(s,e){return s+(e.amount||0);},0);
+  var net = revenue - expTotal;
+  var occRes = await _supa.from('beds').select('status').eq('clinic_id',_clinicId);
+  var occupied = (occRes.data||[]).filter(function(b){return b.status==='Occupied';}).length;
+  var totalBeds = (occRes.data||[]).length;
+
+  var byType = {};
+  charges.forEach(function(c){ var t=c.charge_type||'Other'; byType[t]=(byType[t]||0)+(c.total_price||0); });
+
+  printReportWindow('Daily Hospital Report', new Date(dateStr).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}), (clinicRes.data||{}).name,
+    [
+      {label:"Today's Revenue", value:'₹'+revenue.toLocaleString('en-IN')},
+      {label:"Today's Collection", value:'₹'+collected.toLocaleString('en-IN')},
+      {label:"Today's Expenses", value:'₹'+expTotal.toLocaleString('en-IN')},
+      {label:'Net Revenue', value:'₹'+net.toLocaleString('en-IN')},
+      {label:'Admissions', value:(admRes.data||[]).length},
+      {label:'Discharges', value:(disRes.data||[]).length},
+      {label:'Occupied Beds', value:occupied+' / '+totalBeds}
+    ],
+    byType
+  );
+}
+
+async function generateMonthlyReport(){
+  var monthStr = document.getElementById('report-monthly-month').value || new Date().toISOString().slice(0,7);
+  var parts = monthStr.split('-');
+  var from = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1);
+  var to = new Date(parseInt(parts[0]), parseInt(parts[1]), 1);
+
+  var [chargesRes, paymentsRes, admRes, disRes, expRes, clinicRes] = await Promise.all([
+    _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId).gte('created_at',from.toISOString()).lt('created_at',to.toISOString()),
+    _supa.from('nh_payments').select('*').eq('clinic_id',_clinicId).gte('created_at',from.toISOString()).lt('created_at',to.toISOString()),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',from.toISOString()).lt('admission_date',to.toISOString()),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',from.toISOString()).lt('discharge_date',to.toISOString()),
+    _supa.from('nh_expenses').select('*').eq('clinic_id',_clinicId).gte('expense_date',from.toISOString().slice(0,10)).lt('expense_date',to.toISOString().slice(0,10)),
+    _supa.from('clinics').select('name').eq('id',_clinicId).single()
+  ]);
+  var charges = chargesRes.data||[], payments = paymentsRes.data||[], expenses = expRes.error?[]:(expRes.data||[]);
+  var revenue = charges.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var collected = payments.reduce(function(s,p){return s+(p.amount||0);},0);
+  var expTotal = expenses.reduce(function(s,e){return s+(e.amount||0);},0);
+  var net = revenue - expTotal;
+
+  var methodBreak = {};
+  payments.forEach(function(p){ var m=p.method||'Other'; methodBreak[m]=(methodBreak[m]||0)+(p.amount||0); });
+  var byType = {};
+  charges.forEach(function(c){ var t=c.charge_type||'Other'; byType[t]=(byType[t]||0)+(c.total_price||0); });
+  Object.keys(methodBreak).forEach(function(k){ byType['Payments via '+k] = methodBreak[k]; });
+
+  var monthLabel = from.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  printReportWindow('Monthly Management Audit', monthLabel, (clinicRes.data||{}).name,
+    [
+      {label:'Total Revenue', value:'₹'+revenue.toLocaleString('en-IN')},
+      {label:'Total Collection', value:'₹'+collected.toLocaleString('en-IN')},
+      {label:'Total Expenses', value:'₹'+expTotal.toLocaleString('en-IN')},
+      {label:'Net Revenue', value:'₹'+net.toLocaleString('en-IN')},
+      {label:'Admissions', value:(admRes.data||[]).length},
+      {label:'Discharges', value:(disRes.data||[]).length}
+    ],
+    byType,
+    'This is a management/operational audit summary, not a substitute for statutory accounting, GST compliance, or professional CA services.'
+  );
+}
+
+function printReportWindow(title, periodLabel, clinicName, summaryRows, breakdown, footnote){
+  var w = window.open('','_blank');
+  var rowsHtml = summaryRows.map(function(r){ return '<tr><td>'+esc(r.label)+'</td><td style="text-align:right;font-weight:700">'+r.value+'</td></tr>'; }).join('');
+  var breakdownHtml = Object.keys(breakdown||{}).length ? Object.entries(breakdown).sort(function(a,b){return b[1]-a[1];}).map(function(e){
+    return '<tr><td>'+esc(e[0])+'</td><td style="text-align:right">₹'+Number(e[1]).toLocaleString('en-IN')+'</td></tr>';
+  }).join('') : '<tr><td colspan="2" style="text-align:center;color:#888">No data</td></tr>';
+
+  w.document.write('<html><head><title>'+esc(title)+'</title><style>'
+    +'body{font-family:Arial,sans-serif;padding:30px;color:#111;max-width:640px;margin:0 auto}'
+    +'h1{font-size:20px;margin:0}h2{font-size:13px;font-weight:normal;color:#555;margin:4px 0 0}'
+    +'.header{border-bottom:2px solid #000;padding-bottom:14px;margin-bottom:16px}'
+    +'table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:14px}'
+    +'th{background:#f5f5f5;padding:8px;text-align:left;border:1px solid #ddd}'
+    +'td{padding:8px;border:1px solid #ddd}'
+    +'.section-title{font-weight:bold;font-size:13px;margin-top:20px;margin-bottom:6px}'
+    +'.footnote{font-size:10.5px;color:#888;margin-top:20px;line-height:1.5}'
+    +'@media print{button{display:none}}'
+    +'</style></head><body>'
+    +'<div class="header"><h1>AURASCALE</h1><h2>'+esc(title)+' — '+esc(clinicName||'')+' · '+esc(periodLabel)+'</h2></div>'
+    +'<table><tr><th colspan="2">Financial Summary</th></tr>'+rowsHtml+'</table>'
+    +'<div class="section-title">Revenue &amp; Payment Breakdown</div>'
+    +'<table><tr><th>Category</th><th style="text-align:right">Amount</th></tr>'+breakdownHtml+'</table>'
+    +(footnote ? '<div class="footnote">'+esc(footnote)+'</div>' : '')
+    +'<button onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#2554E0;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer">Print / Save as PDF</button>'
+    +'</body></html>');
+  w.document.close();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   OWNER NOTIFICATIONS — real, rule-based alerts from existing data
+   plus recent business activity. No fake/random alerts.
+══════════════════════════════════════════════════════════════ */
+async function loadOwnerNotifications(){
+  var el = document.getElementById('owner-alerts-list');
+  if(!el || !_clinicId) return;
+  el.innerHTML = '<div class="empty" style="padding:20px"><p class="empty-t">Loading…</p></div>';
+
+  var [admRes, bedsRes, activityRes] = await Promise.all([
+    _supa.from('admissions').select('id,patient_id,patient_name,admission_date').eq('clinic_id',_clinicId).eq('status','Active'),
+    _supa.from('beds').select('status').eq('clinic_id',_clinicId),
+    _supa.from('nh_audit_log').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20)
+  ]);
+  var admissions = admRes.data || [];
+  var beds = bedsRes.data || [];
+  var alerts = [];
+
+  /* Rule: outstanding balance per active admission */
+  var admIds = admissions.map(function(a){return a.id;});
+  if(admIds.length){
+    var [chRes, pyRes] = await Promise.all([
+      _supa.from('admission_charges').select('admission_id,total_price').in('admission_id',admIds),
+      _supa.from('nh_payments').select('admission_id,amount').in('admission_id',admIds)
+    ]);
+    var chMap={}, pyMap={};
+    (chRes.data||[]).forEach(function(c){ chMap[c.admission_id]=(chMap[c.admission_id]||0)+(c.total_price||0); });
+    (pyRes.data||[]).forEach(function(p){ pyMap[p.admission_id]=(pyMap[p.admission_id]||0)+(p.amount||0); });
+    admissions.forEach(function(a){
+      var due = (chMap[a.id]||0) - (pyMap[a.id]||0);
+      if(due > 20000){
+        alerts.push({icon:'⚠️', title:'High outstanding balance', detail:esc(a.patient_name||'Patient')+' — ₹'+due.toLocaleString('en-IN')+' due', level:'red'});
+      }
+      var days = Math.floor((Date.now()-new Date(a.admission_date))/86400000);
+      if(due > 0 && days >= 5){
+        alerts.push({icon:'⏰', title:'Overdue bill', detail:esc(a.patient_name||'Patient')+' — admitted '+days+' days ago, still unpaid', level:'amber'});
+      }
+    });
+  }
+
+  /* Rule: bed occupancy threshold */
+  if(beds.length){
+    var occ = beds.filter(function(b){return b.status==='Occupied';}).length;
+    var pct = Math.round(occ/beds.length*100);
+    if(pct >= 90){
+      alerts.push({icon:'🛏️', title:'Bed occupancy high', detail:pct+'% occupied ('+occ+'/'+beds.length+') — consider planning for capacity', level:'amber'});
+    }
+  }
+
+  var alertsHtml = alerts.length ? alerts.map(function(a){
+    var bg = a.level==='red' ? 'var(--red-bg)' : 'var(--amber-bg)';
+    var col = a.level==='red' ? 'var(--red)' : 'var(--amber)';
+    return '<div class="adm-row"><div class="adm-av" style="background:'+bg+';color:'+col+'">'+a.icon+'</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.title)+'</div><div class="adm-meta">'+a.detail+'</div></div></div>';
+  }).join('') : '<div class="empty" style="padding:20px"><div class="empty-ic">✅</div><p class="empty-t">No alerts — everything looks normal</p></div>';
+
+  var activityHtml = (activityRes.data||[]).map(function(a){
+    var label = (a.action||'Activity').replace(/_/g,' ');
+    return '<div class="adm-row"><div class="adm-av">📋</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name" style="text-transform:capitalize">'+esc(label)+'</div>'
+      + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="padding:14px 15px 0;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Alerts</div>'
+    + alertsHtml
+    + '<div style="padding:14px 15px 0;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;border-top:1px solid var(--border);margin-top:8px">Recent Activity</div>'
+    + (activityHtml || '<div class="empty" style="padding:20px"><p class="empty-t">No recent activity</p></div>');
 }
 
 async function loadBedwiseFinance(){
