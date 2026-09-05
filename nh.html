@@ -2892,11 +2892,17 @@ async function loadPatientsList(){
   var r=await query;
   var list=document.getElementById('patients-list');
   if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients found</p></div>';return;}
+  var patientIds = r.data.map(function(p){return p.id;});
+  var activeAdms = await _supa.from('admissions').select('patient_id').eq('clinic_id',_clinicId).eq('status','Active').in('patient_id',patientIds);
+  var activeSet = {};
+  (activeAdms.data||[]).forEach(function(a){ activeSet[a.patient_id]=true; });
   list.innerHTML=r.data.map(function(p){
+    var isActive = !!activeSet[p.id];
     return '<div class="adm-row" style="cursor:pointer" onclick="openPatientProfile(\''+p.id+'\',\''+(p.full_name||'').replace(/'/g,"\\'")+'\')">'
       +'<div class="adm-av">'+(p.full_name||'?').charAt(0)+'</div>'
       +'<div style="flex:1"><div class="adm-name">'+p.full_name+'</div>'
       +'<div class="adm-meta">'+(p.age?p.age+'y ':'')+(p.gender||'')+(p.phone?' · '+p.phone:'')+'</div></div>'
+      +(isActive?'<span class="chip ch-act">Active</span>':'')
       +'</div>';
   }).join('');
 }
@@ -2908,11 +2914,30 @@ async function openPatientProfile(id,name){
   var p=await _supa.from('nh_patients').select('*').eq('id',id).single();
   var adms=await _supa.from('admissions').select('status,admission_date,discharge_date,admission_diagnosis,admitting_doctor').eq('patient_id',id).order('admission_date',{ascending:false});
   var pd=p.data||{};
+  var admList=adms.data||[];
+  var current=admList.find(function(a){return a.status==='Active';});
+  var fmt=function(dt){return dt?new Date(dt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';};
+  var statusChip=current?'<span class="chip ch-act">Active</span>':(admList.length?'<span class="chip ch-dis">Discharged</span>':'');
+  var historyHtml=admList.length
+    ? admList.map(function(a){
+        return '<div style="padding:9px 0;border-bottom:1px solid rgba(228,224,216,.5)">'
+          +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">'
+            +'<span class="chip '+(a.status==='Active'?'ch-act':'ch-dis')+'">'+esc(a.status||'')+'</span>'
+            +(a.admitting_doctor?'<span style="font-size:11px;color:var(--text-secondary)">'+esc(a.admitting_doctor)+'</span>':'')
+          +'</div>'
+          +'<div style="font-size:11.5px;color:var(--text-secondary)">Admitted: '+fmt(a.admission_date)+' &middot; Discharged: '+(a.status==='Active'?'—':fmt(a.discharge_date))+'</div>'
+          +(a.admission_diagnosis?'<div style="font-size:11.5px;color:var(--text-tertiary);margin-top:2px">'+esc(a.admission_diagnosis)+'</div>':'')
+        +'</div>';
+      }).join('')
+    : '<p class="ss">No admissions on record.</p>';
   document.getElementById('pp-overview').innerHTML=
-    '<div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">'
-    +'<div><b>Name:</b> '+(pd.full_name||'')+'</div>'
+    '<div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;margin-bottom:14px">'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>Name:</b> '+(pd.full_name||'')+' '+statusChip+'</div>'
     +'<div><b>Age / Gender:</b> '+(pd.age||'—')+' / '+(pd.gender||'—')+'</div>'
     +'<div><b>Phone:</b> '+(pd.phone||'—')+'</div>'
+    +'</div>'
+    +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px">Admission History</div>'
+    +historyHtml
     ;
   openModal('mod-patient-profile');
   loadPatientDocuments(id);
