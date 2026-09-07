@@ -705,6 +705,46 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             </div>
           </div>
         </div>
+
+        <!-- REPORTS -->
+        <div id="dtab-reports" class="dpanel">
+          <div class="report-grid">
+            <div class="report-card">
+              <div class="report-card-title">
+                <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
+                Daily Owner Report
+              </div>
+              <div class="report-card-desc">Today's revenue, collection, admissions/discharges and important transactions.</div>
+              <div style="margin-bottom:12px"><input class="finput" id="rpt-daily-date" type="date"/></div>
+              <button class="msub" onclick="generateDailyReport()" data-i18n="btn_generate_report">Generate Report</button>
+            </div>
+            <div class="report-card">
+              <div class="report-card-title">
+                <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>
+                Monthly Management Audit
+              </div>
+              <div class="report-card-desc">Full month revenue, collection, service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</div>
+              <div style="margin-bottom:12px"><input class="finput" id="rpt-month-date" type="month"/></div>
+              <button class="msub" onclick="generateMonthlyReport()" data-i18n="btn_generate_report">Generate Report</button>
+            </div>
+          </div>
+          <div class="report-note">
+            <span>ℹ️</span>
+            <span>Reports open as a page you can view or print (browser's "Print → Save as PDF" to download or share). Automatic WhatsApp sending isn't wired up yet — set your preference below and it will start working once WhatsApp is connected.</span>
+          </div>
+
+          <div class="panel">
+            <div class="ph"><div class="pt">💬 Automatic Daily Report via WhatsApp</div></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:10px;max-width:420px">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <input type="checkbox" id="rpt-auto-whatsapp" style="width:16px;height:16px;cursor:pointer" onchange="saveReportAutoSendConfig()"/>
+                <span style="font-size:12.5px;font-weight:600">Send the Daily Owner Report to WhatsApp automatically, every day</span>
+              </label>
+              <div><label class="flbl">WhatsApp Number</label><input class="finput" id="rpt-auto-whatsapp-number" type="tel" placeholder="e.g. 9330660325" oninput="saveReportAutoSendConfig()"/></div>
+              <div class="dnote" style="margin-top:0">Not active yet — AuraScale doesn't have a WhatsApp connection configured. This preference is saved and will take effect automatically as soon as WhatsApp sending is enabled for this facility.</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- DOCTOR HOME (distinct landing for doctor role) -->
@@ -832,46 +872,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <div id="discharge-list"></div>
         </div>
       </div>
-
-        <!-- REPORTS -->
-        <div id="dtab-reports" class="dpanel">
-          <div class="report-grid">
-            <div class="report-card">
-              <div class="report-card-title">
-                <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
-                Daily Owner Report
-              </div>
-              <div class="report-card-desc">Today's revenue, collection, admissions/discharges and important transactions.</div>
-              <div style="margin-bottom:12px"><input class="finput" id="rpt-daily-date" type="date"/></div>
-              <button class="msub" onclick="generateDailyReport()" data-i18n="btn_generate_report">Generate Report</button>
-            </div>
-            <div class="report-card">
-              <div class="report-card-title">
-                <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>
-                Monthly Management Audit
-              </div>
-              <div class="report-card-desc">Full month revenue, collection, service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</div>
-              <div style="margin-bottom:12px"><input class="finput" id="rpt-month-date" type="month"/></div>
-              <button class="msub" onclick="generateMonthlyReport()" data-i18n="btn_generate_report">Generate Report</button>
-            </div>
-          </div>
-          <div class="report-note">
-            <span>ℹ️</span>
-            <span>Reports open as a page you can view or print (browser's "Print → Save as PDF" to download or share). Automatic WhatsApp sending isn't wired up yet — set your preference below and it will start working once WhatsApp is connected.</span>
-          </div>
-
-          <div class="panel">
-            <div class="ph"><div class="pt">💬 Automatic Daily Report via WhatsApp</div></div>
-            <div style="padding:14px;display:flex;flex-direction:column;gap:10px;max-width:420px">
-              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="checkbox" id="rpt-auto-whatsapp" style="width:16px;height:16px;cursor:pointer" onchange="saveReportAutoSendConfig()"/>
-                <span style="font-size:12.5px;font-weight:600">Send the Daily Owner Report to WhatsApp automatically, every day</span>
-              </label>
-              <div><label class="flbl">WhatsApp Number</label><input class="finput" id="rpt-auto-whatsapp-number" type="tel" placeholder="e.g. 9330660325" oninput="saveReportAutoSendConfig()"/></div>
-              <div class="dnote" style="margin-top:0">Not active yet — AuraScale doesn't have a WhatsApp connection configured. This preference is saved and will take effect automatically as soon as WhatsApp sending is enabled for this facility.</div>
-            </div>
-          </div>
-        </div>
 
       <!-- STAFF AUDIT / ACTIVITY (owner only) -->
       <div id="v-audit" class="view owner-only">
