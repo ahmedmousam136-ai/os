@@ -117,6 +117,8 @@ nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px}
 .sb-foot{padding:11px 13px;border-top:1px solid var(--sidebar-border);flex-shrink:0}
 .sb-controls{display:flex;align-items:center;gap:6px;margin-bottom:10px}
 .theme-toggle{display:flex;align-items:center;gap:5px;background:var(--sidebar-hover-bg);border:1px solid var(--sidebar-border);border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;transition:all var(--ease);min-height:32px;flex:1;color:var(--sidebar-text-secondary);font-size:10px;font-weight:600}
+.lang-select{background:var(--sidebar-hover-bg);border:1px solid var(--sidebar-border);border-radius:var(--r-sm);padding:5px 6px;min-height:32px;color:var(--sidebar-text-secondary);font-size:10px;font-weight:700;cursor:pointer;width:52px;text-align:center;text-align-last:center}
+.lang-select option{background:var(--sidebar-bg);color:var(--sidebar-text)}
 .sb-out{display:flex;align-items:center;gap:6px;color:var(--sidebar-text-tertiary);font-size:11px;cursor:pointer;transition:color var(--ease);padding:6px 0}
 .sb-out:hover{color:var(--red)}
 
@@ -337,6 +339,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 .dnote{margin-top:4px;padding:12px 14px;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--r-md);font-size:11.5px;color:var(--text-secondary);line-height:1.6}
 @media(max-width:600px){.method-grid{grid-template-columns:1fr 1fr}}
 
+/* ── SEGMENTED TOGGLE (invite channel, etc.) ── */
+.seg-toggle{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:3px}
+.seg-btn{flex:1;text-align:center;padding:8px;border-radius:5px;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.seg-btn.active{background:var(--surface);color:var(--navy);box-shadow:var(--sh-xs)}
+.share-row{display:flex;gap:8px;margin-top:10px}
+.share-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:var(--r-sm);font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text-primary)}
+.share-btn.wa{background:#25D366;border-color:#25D366;color:#fff}
+.share-btn.sms{background:var(--navy);border-color:var(--navy);color:#fff}
+
 /* ── REPORTS ── */
 .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px}
@@ -413,8 +424,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <p class="auth-sub">Nursing Home Operating System</p>
       </div>
       <div class="auth-tabs">
-        <div class="auth-tab active" onclick="switchAuthTab('login',this)">Sign In</div>
-        <div class="auth-tab" onclick="switchAuthTab('signup',this)">Register NH</div>
+        <div class="auth-tab active" onclick="switchAuthTab('login',this)" data-i18n="auth_sign_in">Sign In</div>
+        <div class="auth-tab" onclick="switchAuthTab('signup',this)" data-i18n="auth_register_nh">Register NH</div>
       </div>
       <!-- LOGIN -->
       <div id="auth-panel-login" class="auth-panel active">
@@ -474,94 +485,91 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
   <div id="sidebar">
     <div class="sb-logo">
       <div class="sb-mark"><span class="a">Aura</span><span class="s">Scale</span><span class="os">NH</span></div>
-      <div class="sb-tag">Nursing Home OS</div>
+      <div class="sb-tag" data-i18n="tag_os">Nursing Home OS</div>
     </div>
     <div class="sb-facility">
       <div class="sb-facility-inner">
         <div class="sb-fac-name" id="sb-nh-name">Loading...</div>
-        <div class="sb-fac-type">🏥 Private Nursing Home</div>
+        <div class="sb-fac-type"><span data-i18n="fac_type">🏥 Private Nursing Home</span></div>
         <div class="sb-online"><span class="dot"></span><span id="sb-occupancy">Loading...</span></div>
       </div>
     </div>
     <nav class="sb-nav">
-      <p class="nav-sec">Overview</p>
+      <p class="nav-sec" data-i18n="sec_overview">Overview</p>
       <button class="nb on" onclick="nav('dashboard',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
-        Dashboard
+        <span data-i18n="nav_dashboard">Dashboard</span>
       </button>
-      <p class="nav-sec">Patients</p>
+      <p class="nav-sec" data-i18n="sec_patients">Patients</p>
       <button class="nb doctor-home-only" onclick="nav('doctor-home',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-        My Patients Home
+        <span data-i18n="nav_my_patients">My Patients Home</span>
       </button>
       <button class="nb reception-home-only" onclick="nav('reception-home',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-        Reception Home
+        <span data-i18n="nav_reception_home">Reception Home</span>
       </button>
       <button class="nb" onclick="nav('patients',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-        Patients
+        <span data-i18n="nav_patients">Patients</span>
       </button>
-      <p class="nav-sec">Inpatient</p>
+      <p class="nav-sec" data-i18n="sec_inpatient">Inpatient</p>
       <button class="nb" onclick="nav('beds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/><path d="M12 14v-3"/></svg></span>
-        Bed Management
+        <span data-i18n="nav_beds">Bed Management</span>
         <span class="nb-badge" id="nav-occupied-count">0</span>
       </button>
       <button class="nb reception-only" onclick="nav('admissions',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
-        Admissions
+        <span data-i18n="nav_admissions">Admissions</span>
       </button>
       <button class="nb reception-only" onclick="nav('rounds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
-        Progress Notes
+        <span data-i18n="nav_progress_notes">Progress Notes</span>
       </button>
       <button class="nb reception-only" onclick="nav('billing',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
-        Billing
+        <span data-i18n="nav_billing">Billing</span>
       </button>
       <button class="nb reception-only" onclick="nav('discharge',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
-        Discharge
+        <span data-i18n="nav_discharge">Discharge</span>
       </button>
-      <button class="nb owner-only" onclick="nav('finance',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-        Finance
-      </button>
-      <p class="nav-sec">Programs</p>
+      <p class="nav-sec" data-i18n="sec_programs">Programs</p>
       <button class="nb owner-only" onclick="nav('audit',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Activity Audit
-      </button>
-      <button class="nb owner-only" onclick="nav('reports',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span>
-        Reports
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span data-i18n="nav_audit">Activity Audit</span>
       </button>
       <button class="nb reception-only" onclick="nav('ayushman',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
-        Ayushman / PM-JAY
+        <span data-i18n="nav_ayushman">Ayushman / PM-JAY</span>
       </button>
       <div class="owner-only">
         <button class="nb" onclick="nav('staff',this)">
           <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-          Staff
+          <span data-i18n="nav_staff">Staff</span>
         </button>
       </div>
-      <p class="nav-sec">Account</p>
+      <p class="nav-sec" data-i18n="sec_account">Account</p>
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-        Settings
+        <span data-i18n="nav_settings">Settings</span>
       </button>
     </nav>
     <div class="sb-foot">
       <div class="sb-controls">
         <button class="theme-toggle" onclick="toggleTheme()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          Theme
+          <span data-i18n="theme">Theme</span>
         </button>
+        <select class="lang-select" id="lang-select" onchange="setLanguage(this.value)" title="Language">
+          <option value="en">EN</option>
+          <option value="hi">हिं</option>
+          <option value="bn">বাং</option>
+        </select>
       </div>
       <div class="sb-out" onclick="handleLogout()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Sign Out
+        <span data-i18n="sign_out">Sign Out</span>
       </div>
     </div>
   </div>
@@ -581,7 +589,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <span class="date-pill" id="hdr-date"></span>
         <button class="add-btn reception-only" id="hdr-add-btn" onclick="openAdmitModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Admit Patient
+          <span data-i18n="btn_admit_patient">Admit Patient</span>
         </button>
       </div>
     </header>
@@ -591,16 +599,18 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-dashboard" class="view on">
         <div class="sh">
           <div>
-            <h1 class="st">Owner Dashboard 🏥</h1>
-            <p class="ss">Live facility overview · <span id="dash-date2"></span></p>
+            <h1 class="st"><span data-i18n="dash_title">Owner Dashboard</span> 🏥</h1>
+            <p class="ss"><span data-i18n="dash_sub">Live facility overview</span> · <span id="dash-date2"></span></p>
           </div>
-          <div class="rt-live"><span class="rt-dot"></span>Live</div>
+          <div class="rt-live"><span class="rt-dot"></span><span data-i18n="live">Live</span></div>
         </div>
 
         <div class="dtabs">
-          <div class="dtab active" data-dtab="overview" onclick="switchDashTab('overview',this)">Overview</div>
-          <div class="dtab" data-dtab="payments" onclick="switchDashTab('payments',this)">Payments</div>
-          <div class="dtab" data-dtab="revenue" onclick="switchDashTab('revenue',this)">Revenue</div>
+          <div class="dtab active" data-dtab="overview" onclick="switchDashTab('overview',this)"><span data-i18n="tab_overview">Overview</span></div>
+          <div class="dtab" data-dtab="payments" onclick="switchDashTab('payments',this)"><span data-i18n="tab_payments">Payments</span></div>
+          <div class="dtab" data-dtab="revenue" onclick="switchDashTab('revenue',this)"><span data-i18n="tab_revenue">Revenue</span></div>
+          <div class="dtab" data-dtab="billing" onclick="switchDashTab('billing',this)"><span data-i18n="tab_billing">Billing</span></div>
+          <div class="dtab" data-dtab="reports" onclick="switchDashTab('reports',this)"><span data-i18n="tab_reports">Reports</span></div>
         </div>
 
         <!-- OVERVIEW -->
@@ -635,15 +645,9 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div class="panel">
-              <div class="ph"><div class="pt">Active Patients</div><span class="pb pb-g" id="active-count">0</span></div>
-              <div id="dash-active-list"></div>
-            </div>
-            <div class="panel">
-              <div class="ph"><div class="pt">⚡ Recent Activity</div><button class="qbtn" onclick="nav('audit',document.querySelector('.nb[onclick*=audit]'))">View All</button></div>
-              <div id="dash-activity-feed"></div>
-            </div>
+          <div class="panel">
+            <div class="ph"><div class="pt">Active Patients</div><span class="pb pb-g" id="active-count">0</span></div>
+            <div id="dash-active-list"></div>
           </div>
         </div>
 
@@ -678,13 +682,34 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               <div id="dr-list"></div>
             </div>
           </div>
-          <div class="dnote">Showing this month · for other periods or billing-method settings, open <a href="#" onclick="nav('finance',document.querySelector('.nb[onclick*=finance]'));return false" style="color:var(--navy);font-weight:600">the full Finance page</a>.</div>
+          <div class="dnote">Showing this month · for billing-method settings, see the <a href="#" onclick="switchDashTab('billing',document.querySelector('.dtab[data-dtab=billing]'));return false" style="color:var(--navy);font-weight:600">Billing tab</a>.</div>
+        </div>
+
+        <!-- BILLING -->
+        <div id="dtab-billing" class="dpanel">
+          <div class="panel">
+            <div class="ph"><div class="pt">⚙️ Billing Method</div></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:10px;max-width:420px">
+              <div><label class="flbl">Billing Method</label>
+                <select class="finput" id="fin-billing-method" onchange="toggleCutoffWrap()">
+                  <option value="24hr">24-Hour Billing (from admission time)</option>
+                  <option value="calendar">Calendar Day (midnight cutoff)</option>
+                  <option value="cutoff">Custom Hospital Cutoff</option>
+                </select>
+              </div>
+              <div id="fin-cutoff-wrap" style="display:none">
+                <label class="flbl">Cutoff Time</label>
+                <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
+              </div>
+              <button class="qbtn" onclick="saveBillingConfig()">Save Billing Config</button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- DOCTOR HOME (distinct landing for doctor role) -->
       <div id="v-doctor-home" class="view">
-        <div class="sh"><div><h1 class="st">My Patients</h1><p class="ss">Patients assigned to you</p></div></div>
+        <div class="sh"><div><h1 class="st" data-i18n="doc_home_title">My Patients</h1><p class="ss" data-i18n="doc_home_sub">Patients assigned to you</p></div></div>
         <div class="mg" style="margin-bottom:16px">
           <div class="mc"><div class="mc-lbl">Assigned Patients</div><div class="mc-val" id="dh-assigned-count">0</div></div>
           <div class="mc"><div class="mc-lbl">Needs Review</div><div class="mc-val" id="dh-review-count">0</div></div>
@@ -701,8 +726,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
       <!-- RECEPTIONIST HOME (simple, register-first landing) -->
       <div id="v-reception-home" class="view">
-        <div class="sh"><div><h1 class="st">Reception</h1><p class="ss">Register patients and manage admissions</p></div></div>
-        <button class="add-btn" style="width:100%;padding:16px;font-size:14px;margin-bottom:16px" onclick="openAdmitModal()">+ Register / Admit New Patient</button>
+        <div class="sh"><div><h1 class="st" data-i18n="rec_home_title">Reception</h1><p class="ss" data-i18n="rec_home_sub">Register patients and manage admissions</p></div></div>
+        <button class="add-btn" style="width:100%;padding:16px;font-size:14px;margin-bottom:16px" onclick="openAdmitModal()" data-i18n="btn_register_admit_full">+ Register / Admit New Patient</button>
         <div class="panel">
           <input class="finput" id="rh-search" placeholder="Search patients by name or phone…" oninput="loadReceptionHome()" style="margin-bottom:10px"/>
           <div id="rh-recent-list"></div>
@@ -712,8 +737,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- PATIENTS (persistent profiles) -->
       <div id="v-patients" class="view">
         <div class="sh">
-          <div><h1 class="st">Patients</h1><p class="ss">Persistent patient records · Search by name or phone</p></div>
-          <button class="add-btn reception-only" onclick="openAdmitModal()">+ Register / Admit</button>
+          <div><h1 class="st" data-i18n="patients_title">Patients</h1><p class="ss" data-i18n="patients_sub">Persistent patient records · Search by name or phone</p></div>
+          <button class="add-btn reception-only" onclick="openAdmitModal()" data-i18n="btn_register_admit">+ Register / Admit</button>
         </div>
         <div class="panel">
           <div class="ph"><input class="finput" id="patient-search" placeholder="Search by name or phone…" oninput="loadPatientsList()" style="max-width:320px"/></div>
@@ -725,7 +750,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-beds" class="view">
         <div class="sh">
           <div>
-            <h1 class="st">Bed Management</h1>
+            <h1 class="st" data-i18n="beds_title">Bed Management</h1>
             <p class="ss">Ward-grouped · Real-time occupancy · Owner-only rate configuration</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -733,9 +758,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Occupied
               <span style="width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block;margin-left:6px"></span>Vacant
               <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;margin-left:6px"></span>Cleaning
-              <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;margin-left:6px"></span>Critical
             </span>
-            <button class="add-btn" onclick="openAddBedModal()">+ Add Bed</button>
+            <button class="add-btn" onclick="openAddBedModal()" data-i18n="btn_add_bed">+ Add Bed</button>
           </div>
         </div>
         <!-- Ward-grouped bed panels rendered here by loadBeds() -->
@@ -745,7 +769,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- ADMISSIONS -->
       <div id="v-admissions" class="view">
         <div class="sh">
-          <div><h1 class="st">Admissions</h1><p class="ss">All active inpatients · Admit new patients from header</p></div>
+          <div><h1 class="st" data-i18n="admissions_title">Admissions</h1><p class="ss" data-i18n="admissions_sub">All active inpatients · Admit new patients from header</p></div>
         </div>
         <div class="panel">
           <div class="ph"><div class="pt">Active Admissions</div><span class="pb pb-g" id="adm-count">0</span></div>
@@ -760,7 +784,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- PROGRESS NOTES -->
       <div id="v-rounds" class="view">
         <div class="sh">
-          <div><h1 class="st">Progress Notes</h1><p class="ss">Select a patient to add or view today's notes</p></div>
+          <div><h1 class="st" data-i18n="rounds_title">Progress Notes</h1><p class="ss" data-i18n="rounds_sub">Select a patient to add or view today's notes</p></div>
         </div>
         <div class="two-col">
           <div class="panel">
@@ -777,7 +801,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- BILLING -->
       <div id="v-billing" class="view">
         <div class="sh">
-          <div><h1 class="st">Billing</h1><p class="ss">Track charges · Generate bills · No leakage</p></div>
+          <div><h1 class="st" data-i18n="billing_title">Billing</h1><p class="ss" data-i18n="billing_sub">Track charges · Generate bills · No leakage</p></div>
         </div>
         <div class="two-col">
           <div class="panel">
@@ -801,7 +825,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- DISCHARGE -->
       <div id="v-discharge" class="view">
         <div class="sh">
-          <div><h1 class="st">Discharge</h1><p class="ss">Generate summary · Final bill · WhatsApp to family</p></div>
+          <div><h1 class="st" data-i18n="discharge_title">Discharge</h1><p class="ss" data-i18n="discharge_sub">Generate summary · Final bill · WhatsApp to family</p></div>
         </div>
         <div class="panel">
           <div class="ph"><div class="pt">Ready for Discharge</div><span class="pb pb-g" id="discharge-count">0</span></div>
@@ -809,92 +833,50 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         </div>
       </div>
 
-      <!-- FINANCE (owner only) -->
-      <div id="v-finance" class="view owner-only">
-        <div class="sh">
-          <div><h1 class="st">Finance</h1><p class="ss">Revenue, payments and outstanding dues</p></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <select class="finput" id="fin-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadFinance()">
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month" selected>This Month</option>
-              <option value="all">All Time</option>
-            </select>
-          </div>
-        </div>
-        <!-- Summary metrics -->
-        <div class="mg">
-          <div class="mc"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Outstanding Due</div><div class="mc-val burgundy" id="fin-due">₹0</div></div>
-          <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val forest" id="fin-month">₹0</div></div>
-        </div>
-        <!-- Category breakdown -->
-        <div class="two-col">
-          <div class="panel">
-            <div class="ph"><div class="pt">Revenue by Category</div></div>
-            <div id="fin-by-category"></div>
-          </div>
-          <div class="panel">
-            <div class="ph"><div class="pt">Per-Patient Balance</div></div>
-            <div id="fin-list"></div>
-          </div>
-        </div>
-        <!-- Per-day billing config (owner only) -->
-        <div class="panel owner-only">
-          <div class="ph"><div class="pt">⚙️ Billing Method</div></div>
-          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
-            <div><label class="flbl">Billing Method</label>
-              <select class="finput" id="fin-billing-method">
-                <option value="24hr">24-Hour Billing (from admission time)</option>
-                <option value="calendar">Calendar Day (midnight cutoff)</option>
-                <option value="cutoff">Custom Hospital Cutoff</option>
-              </select>
+        <!-- REPORTS -->
+        <div id="dtab-reports" class="dpanel">
+          <div class="report-grid">
+            <div class="report-card">
+              <div class="report-card-title">
+                <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
+                Daily Owner Report
+              </div>
+              <div class="report-card-desc">Today's revenue, collection, admissions/discharges and important transactions.</div>
+              <div style="margin-bottom:12px"><input class="finput" id="rpt-daily-date" type="date"/></div>
+              <button class="msub" onclick="generateDailyReport()" data-i18n="btn_generate_report">Generate Report</button>
             </div>
-            <div id="fin-cutoff-wrap" style="display:none">
-              <label class="flbl">Cutoff Time</label>
-              <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
+            <div class="report-card">
+              <div class="report-card-title">
+                <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>
+                Monthly Management Audit
+              </div>
+              <div class="report-card-desc">Full month revenue, collection, service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</div>
+              <div style="margin-bottom:12px"><input class="finput" id="rpt-month-date" type="month"/></div>
+              <button class="msub" onclick="generateMonthlyReport()" data-i18n="btn_generate_report">Generate Report</button>
             </div>
-            <button class="qbtn" onclick="saveBillingConfig()">Save Billing Config</button>
           </div>
-        </div>
-      </div>
+          <div class="report-note">
+            <span>ℹ️</span>
+            <span>Reports open as a page you can view or print (browser's "Print → Save as PDF" to download or share). Automatic WhatsApp sending isn't wired up yet — set your preference below and it will start working once WhatsApp is connected.</span>
+          </div>
 
-      <!-- REPORTS (owner only) -->
-      <div id="v-reports" class="view owner-only">
-        <div class="sh">
-          <div><h1 class="st">Reports</h1><p class="ss">Daily and monthly management reports</p></div>
-        </div>
-        <div class="report-grid">
-          <div class="report-card">
-            <div class="report-card-title">
-              <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
-              Daily Owner Report
+          <div class="panel">
+            <div class="ph"><div class="pt">💬 Automatic Daily Report via WhatsApp</div></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:10px;max-width:420px">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <input type="checkbox" id="rpt-auto-whatsapp" style="width:16px;height:16px;cursor:pointer" onchange="saveReportAutoSendConfig()"/>
+                <span style="font-size:12.5px;font-weight:600">Send the Daily Owner Report to WhatsApp automatically, every day</span>
+              </label>
+              <div><label class="flbl">WhatsApp Number</label><input class="finput" id="rpt-auto-whatsapp-number" type="tel" placeholder="e.g. 9330660325" oninput="saveReportAutoSendConfig()"/></div>
+              <div class="dnote" style="margin-top:0">Not active yet — AuraScale doesn't have a WhatsApp connection configured. This preference is saved and will take effect automatically as soon as WhatsApp sending is enabled for this facility.</div>
             </div>
-            <div class="report-card-desc">Today's revenue, collection, admissions/discharges and important transactions.</div>
-            <div style="margin-bottom:12px"><input class="finput" id="rpt-daily-date" type="date"/></div>
-            <button class="msub" onclick="generateDailyReport()">Generate &amp; Print</button>
-          </div>
-          <div class="report-card">
-            <div class="report-card-title">
-              <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>
-              Monthly Management Audit
-            </div>
-            <div class="report-card-desc">Full month revenue, collection, service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</div>
-            <div style="margin-bottom:12px"><input class="finput" id="rpt-month-date" type="month"/></div>
-            <button class="msub" onclick="generateMonthlyReport()">Generate &amp; Print</button>
           </div>
         </div>
-        <div class="report-note">
-          <span>ℹ️</span>
-          <span>Reports open as a printable page — use your browser's "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn't wired up, since no messaging/email integration exists in this app yet.</span>
-        </div>
-      </div>
 
       <!-- STAFF AUDIT / ACTIVITY (owner only) -->
       <div id="v-audit" class="view owner-only">
         <div class="sh">
-          <div><h1 class="st">Activity Audit</h1><p class="ss">Every staff action with patient, bed, time and amount</p></div>
+          <div><h1 class="st" data-i18n="audit_title">Activity Audit</h1><p class="ss" data-i18n="audit_sub">Every staff action with patient, bed, time and amount</p></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <select class="finput" id="audit-filter-role" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadAudit()">
               <option value="">All Roles</option>
@@ -911,7 +893,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- AYUSHMAN / PM-JAY -->
       <div id="v-ayushman" class="view">
         <div class="sh">
-          <div><h1 class="st">Ayushman Bharat / PM-JAY</h1><p class="ss">Internal case tracking — not an official government verification</p></div>
+          <div><h1 class="st" data-i18n="ayushman_title">Ayushman Bharat / PM-JAY</h1><p class="ss" data-i18n="ayushman_sub">Internal case tracking — not an official government verification</p></div>
         </div>
         <div class="extract-box owner-only" id="ayushman-summary" style="background:var(--blue-bg);border-color:var(--blue-border)">Loading summary…</div>
         <div class="panel">
@@ -923,8 +905,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- STAFF (owner only) -->
       <div id="v-staff" class="view owner-only">
         <div class="sh">
-          <div><h1 class="st">Staff</h1><p class="ss">Manage Receptionist and Doctor accounts for this facility</p></div>
-          <button class="add-btn" onclick="openModal('mod-add-staff')">+ Invite Staff</button>
+          <div><h1 class="st" data-i18n="staff_title">Staff</h1><p class="ss" data-i18n="staff_sub">Manage Receptionist and Doctor accounts for this facility</p></div>
+          <button class="add-btn" onclick="openInviteStaffModal()" data-i18n="btn_invite_staff">+ Invite Staff</button>
         </div>
         <div class="panel">
           <div class="ph"><div class="pt">Team</div></div>
@@ -938,7 +920,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
       <!-- SETTINGS (owner only) -->
       <div id="v-settings" class="view owner-only">
-        <div class="sh"><div><h1 class="st">Settings</h1><p class="ss">Manage your account</p></div></div>
+        <div class="sh"><div><h1 class="st" data-i18n="settings_title">Settings</h1><p class="ss" data-i18n="settings_sub">Manage your account</p></div></div>
 
         <div class="panel">
           <div class="ph"><div class="pt">Change Password</div></div>
@@ -1077,7 +1059,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <option value="Occupied">Occupied</option>
           <option value="Cleaning">Cleaning</option>
           <option value="Reserved">Reserved</option>
-          <option value="Critical">Critical</option>
         </select>
       </div>
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm)">
@@ -1221,12 +1202,25 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <select class="finput" id="staff-role"><option value="receptionist">Receptionist</option><option value="doctor">Doctor</option></select>
       </div>
       <div><label class="flbl">Label (optional, for your reference)</label><input class="finput" id="staff-label" placeholder="e.g. Front desk — morning shift"/></div>
+      <div>
+        <label class="flbl">Send Invite Via</label>
+        <div class="seg-toggle">
+          <div class="seg-btn active" id="seg-whatsapp" onclick="setInviteChannel('whatsapp')">💬 WhatsApp</div>
+          <div class="seg-btn" id="seg-sms" onclick="setInviteChannel('sms')">✉️ SMS</div>
+        </div>
+      </div>
+      <div><label class="flbl">Their Mobile Number</label><input class="finput" id="staff-invite-phone" type="tel" placeholder="e.g. 9330660325"/></div>
       <div id="staff-error" class="auth-error"></div>
       <button class="msub" onclick="generateStaffInvite()">+ Generate Invite Code</button>
       <div id="staff-invite-result" style="display:none;margin-top:14px;padding:14px;background:var(--bg);border-radius:var(--r-sm);text-align:center">
         <div class="ss">Invite Code</div>
         <div id="staff-invite-code" style="font-family:monospace;font-size:20px;font-weight:700;margin:6px 0;letter-spacing:1px"></div>
-        <button class="qbtn" onclick="copyInviteCode()">Copy Code</button>
+        <div class="share-row">
+          <button class="qbtn" onclick="copyInviteCode()" style="flex:1">Copy Code</button>
+          <button class="share-btn wa" id="staff-send-wa" onclick="sendInviteViaWhatsApp()" style="display:none">💬 Send via WhatsApp</button>
+          <button class="share-btn sms" id="staff-send-sms" onclick="sendInviteViaSMS()" style="display:none">✉️ Send via SMS</button>
+        </div>
+        <p class="ss" style="margin-top:8px">This opens WhatsApp/your messages app with the code pre-filled — AuraScale doesn't send it automatically yet.</p>
       </div>
     </div>
   </div>
@@ -1337,6 +1331,103 @@ function toggleTheme(){
 }
 (function(){var th=localStorage.getItem('nh-theme')||'light';document.documentElement.setAttribute('data-theme',th);})();
 
+/* ── LANGUAGE (EN / HI / BN) ──
+   Covers static app chrome — sidebar, page headings, tab labels, and
+   common buttons — via data-i18n tags. Patient/doctor names, notes, and
+   other data typed into the app are left as entered, since translating
+   someone's own data isn't something a UI toggle should silently do. */
+var I18N = {
+  en: {
+    tag_os:'Nursing Home OS', fac_type:'🏥 Private Nursing Home',
+    sec_overview:'Overview', sec_patients:'Patients', sec_inpatient:'Inpatient', sec_programs:'Programs', sec_account:'Account',
+    nav_dashboard:'Dashboard', nav_my_patients:'My Patients Home', nav_reception_home:'Reception Home', nav_patients:'Patients',
+    nav_beds:'Bed Management', nav_admissions:'Admissions', nav_progress_notes:'Progress Notes', nav_billing:'Billing',
+    nav_discharge:'Discharge', nav_audit:'Activity Audit', nav_ayushman:'Ayushman / PM-JAY', nav_staff:'Staff', nav_settings:'Settings',
+    theme:'Theme', sign_out:'Sign Out',
+    btn_admit_patient:'Admit Patient', btn_register_admit_full:'+ Register / Admit New Patient', btn_register_admit:'+ Register / Admit',
+    btn_add_bed:'+ Add Bed', btn_invite_staff:'+ Invite Staff', btn_generate_report:'Generate Report',
+    dash_title:'Owner Dashboard', dash_sub:'Live facility overview', live:'Live',
+    tab_overview:'Overview', tab_payments:'Payments', tab_revenue:'Revenue', tab_billing:'Billing', tab_reports:'Reports',
+    doc_home_title:'My Patients', doc_home_sub:'Patients assigned to you',
+    rec_home_title:'Reception', rec_home_sub:'Register patients and manage admissions',
+    patients_title:'Patients', patients_sub:'Persistent patient records · Search by name or phone',
+    beds_title:'Bed Management',
+    admissions_title:'Admissions', admissions_sub:'All active inpatients · Admit new patients from header',
+    rounds_title:'Progress Notes', rounds_sub:"Select a patient to add or view today's notes",
+    billing_title:'Billing', billing_sub:'Track charges · Generate bills · No leakage',
+    discharge_title:'Discharge', discharge_sub:'Generate summary · Final bill · WhatsApp to family',
+    audit_title:'Activity Audit', audit_sub:'Every staff action with patient, bed, time and amount',
+    ayushman_title:'Ayushman Bharat / PM-JAY', ayushman_sub:'Internal case tracking — not an official government verification',
+    staff_title:'Staff', staff_sub:'Manage Receptionist and Doctor accounts for this facility',
+    settings_title:'Settings', settings_sub:'Manage your account',
+    auth_sign_in:'Sign In', auth_register_nh:'Register NH'
+  },
+  hi: {
+    tag_os:'नर्सिंग होम OS', fac_type:'🏥 निजी नर्सिंग होम',
+    sec_overview:'अवलोकन', sec_patients:'मरीज़', sec_inpatient:'भर्ती मरीज़', sec_programs:'कार्यक्रम', sec_account:'खाता',
+    nav_dashboard:'डैशबोर्ड', nav_my_patients:'मेरे मरीज़', nav_reception_home:'रिसेप्शन होम', nav_patients:'मरीज़',
+    nav_beds:'बेड प्रबंधन', nav_admissions:'भर्ती', nav_progress_notes:'प्रगति नोट्स', nav_billing:'बिलिंग',
+    nav_discharge:'छुट्टी', nav_audit:'गतिविधि लेखा', nav_ayushman:'आयुष्मान / PM-JAY', nav_staff:'स्टाफ', nav_settings:'सेटिंग्स',
+    theme:'थीम', sign_out:'साइन आउट',
+    btn_admit_patient:'मरीज़ भर्ती करें', btn_register_admit_full:'+ पंजीकरण / नया मरीज़ भर्ती करें', btn_register_admit:'+ पंजीकरण / भर्ती',
+    btn_add_bed:'+ बेड जोड़ें', btn_invite_staff:'+ स्टाफ आमंत्रित करें', btn_generate_report:'रिपोर्ट बनाएं',
+    dash_title:'मालिक डैशबोर्ड', dash_sub:'लाइव सुविधा अवलोकन', live:'लाइव',
+    tab_overview:'अवलोकन', tab_payments:'भुगतान', tab_revenue:'राजस्व', tab_billing:'बिलिंग', tab_reports:'रिपोर्ट',
+    doc_home_title:'मेरे मरीज़', doc_home_sub:'आपको सौंपे गए मरीज़',
+    rec_home_title:'रिसेप्शन', rec_home_sub:'मरीज़ों को पंजीकृत करें और भर्ती प्रबंधित करें',
+    patients_title:'मरीज़', patients_sub:'स्थायी मरीज़ रिकॉर्ड · नाम या फ़ोन से खोजें',
+    beds_title:'बेड प्रबंधन',
+    admissions_title:'भर्ती', admissions_sub:'सभी सक्रिय भर्ती मरीज़ · ऊपर से नया मरीज़ भर्ती करें',
+    rounds_title:'प्रगति नोट्स', rounds_sub:'नोट्स देखने या जोड़ने के लिए मरीज़ चुनें',
+    billing_title:'बिलिंग', billing_sub:'शुल्क ट्रैक करें · बिल बनाएं',
+    discharge_title:'छुट्टी', discharge_sub:'सारांश तैयार करें · अंतिम बिल · व्हाट्सएप पर भेजें',
+    audit_title:'गतिविधि लेखा', audit_sub:'हर स्टाफ कार्रवाई मरीज़, बेड, समय और राशि सहित',
+    ayushman_title:'आयुष्मान भारत / PM-JAY', ayushman_sub:'आंतरिक रिकॉर्ड — यह सरकारी सत्यापन नहीं है',
+    staff_title:'स्टाफ', staff_sub:'इस सुविधा के रिसेप्शनिस्ट और डॉक्टर खाते प्रबंधित करें',
+    settings_title:'सेटिंग्स', settings_sub:'अपना खाता प्रबंधित करें',
+    auth_sign_in:'साइन इन', auth_register_nh:'नर्सिंग होम पंजीकृत करें'
+  },
+  bn: {
+    tag_os:'নার্সিং হোম OS', fac_type:'🏥 বেসরকারি নার্সিং হোম',
+    sec_overview:'সংক্ষিপ্ত বিবরণ', sec_patients:'রোগী', sec_inpatient:'ভর্তি রোগী', sec_programs:'প্রোগ্রাম', sec_account:'অ্যাকাউন্ট',
+    nav_dashboard:'ড্যাশবোর্ড', nav_my_patients:'আমার রোগীরা', nav_reception_home:'রিসেপশন হোম', nav_patients:'রোগী',
+    nav_beds:'বেড ব্যবস্থাপনা', nav_admissions:'ভর্তি', nav_progress_notes:'অগ্রগতি নোট', nav_billing:'বিলিং',
+    nav_discharge:'ছুটি', nav_audit:'কার্যকলাপ নিরীক্ষা', nav_ayushman:'আয়ুষ্মান / PM-JAY', nav_staff:'স্টাফ', nav_settings:'সেটিংস',
+    theme:'থিম', sign_out:'সাইন আউট',
+    btn_admit_patient:'রোগী ভর্তি করুন', btn_register_admit_full:'+ নিবন্ধন / নতুন রোগী ভর্তি করুন', btn_register_admit:'+ নিবন্ধন / ভর্তি',
+    btn_add_bed:'+ বেড যোগ করুন', btn_invite_staff:'+ স্টাফ আমন্ত্রণ করুন', btn_generate_report:'রিপোর্ট তৈরি করুন',
+    dash_title:'মালিক ড্যাশবোর্ড', dash_sub:'লাইভ প্রতিষ্ঠান সংক্ষিপ্ত বিবরণ', live:'লাইভ',
+    tab_overview:'সংক্ষিপ্ত বিবরণ', tab_payments:'পেমেন্ট', tab_revenue:'রাজস্ব', tab_billing:'বিলিং', tab_reports:'রিপোর্ট',
+    doc_home_title:'আমার রোগীরা', doc_home_sub:'আপনাকে বরাদ্দ করা রোগীরা',
+    rec_home_title:'রিসেপশন', rec_home_sub:'রোগী নিবন্ধন করুন এবং ভর্তি পরিচালনা করুন',
+    patients_title:'রোগী', patients_sub:'স্থায়ী রোগী রেকর্ড · নাম বা ফোন দিয়ে খুঁজুন',
+    beds_title:'বেড ব্যবস্থাপনা',
+    admissions_title:'ভর্তি', admissions_sub:'সব সক্রিয় ভর্তি রোগী · উপর থেকে নতুন রোগী ভর্তি করুন',
+    rounds_title:'অগ্রগতি নোট', rounds_sub:'নোট দেখতে বা যোগ করতে একজন রোগী নির্বাচন করুন',
+    billing_title:'বিলিং', billing_sub:'চার্জ ট্র্যাক করুন · বিল তৈরি করুন',
+    discharge_title:'ছুটি', discharge_sub:'সারাংশ তৈরি করুন · চূড়ান্ত বিল · হোয়াটসঅ্যাপে পাঠান',
+    audit_title:'কার্যকলাপ নিরীক্ষা', audit_sub:'রোগী, বেড, সময় ও পরিমাণসহ প্রতিটি স্টাফ কার্যকলাপ',
+    ayushman_title:'আয়ুষ্মান ভারত / PM-JAY', ayushman_sub:'অভ্যন্তরীণ রেকর্ড — এটি সরকারি যাচাই নয়',
+    staff_title:'স্টাফ', staff_sub:'এই প্রতিষ্ঠানের রিসেপশনিস্ট ও ডাক্তার অ্যাকাউন্ট পরিচালনা করুন',
+    settings_title:'সেটিংস', settings_sub:'আপনার অ্যাকাউন্ট পরিচালনা করুন',
+    auth_sign_in:'সাইন ইন', auth_register_nh:'নার্সিং হোম নিবন্ধন করুন'
+  }
+};
+function setLanguage(lang){
+  if(!I18N[lang]) lang='en';
+  localStorage.setItem('nh-lang', lang);
+  document.documentElement.setAttribute('lang', lang);
+  document.body.style.fontFamily = lang==='bn' ? "'Noto Sans Bengali','IBM Plex Sans',sans-serif" : "'IBM Plex Sans',sans-serif";
+  var dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var key = el.getAttribute('data-i18n');
+    if(dict[key]) el.textContent = dict[key];
+  });
+  var sel = document.getElementById('lang-select');
+  if(sel) sel.value = lang;
+}
+(function(){ setLanguage(localStorage.getItem('nh-lang')||'en'); })();
+
 /* ── MOBILE SIDEBAR ── */
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
@@ -1350,13 +1441,14 @@ function nav(id,btn){
   var v=document.getElementById('v-'+id);
   if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',finance:'Finance',reports:'Reports',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings'};
-  var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
+  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings'};
+  var titleI18nKeys={dashboard:'dash_title','doctor-home':'doc_home_title','reception-home':'rec_home_title',patients:'patients_title',beds:'beds_title',admissions:'admissions_title',rounds:'rounds_title',billing:'billing_title',discharge:'discharge_title',ayushman:'ayushman_title',staff:'staff_title',settings:'settings_title'};
+  var curLang = localStorage.getItem('nh-lang')||'en';
+  var localizedTitles = (I18N[curLang]||{});
+  var t=document.getElementById('tab-title');if(t)t.textContent=(titleI18nKeys[id] && localizedTitles[titleI18nKeys[id]]) || titles[id] || id;
   if(id==='dashboard')loadDashboard();
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
-  if(id==='finance')loadFinance();
-  if(id==='reports')loadReportsView();
   if(id==='audit')loadAudit();
   if(id==='patients')loadPatientsList();
   if(id==='beds')loadBeds();
@@ -1376,6 +1468,8 @@ function nav(id,btn){
    queries as before. */
 var _dashPaymentsLoaded = false;
 var _dashRevenueLoaded = false;
+var _dashBillingLoaded = false;
+var _dashReportsLoaded = false;
 function switchDashTab(tab, el){
   document.querySelectorAll('.dtab').forEach(function(t){t.classList.remove('active')});
   document.querySelectorAll('.dpanel').forEach(function(p){p.classList.remove('on')});
@@ -1384,6 +1478,8 @@ function switchDashTab(tab, el){
   if(p) p.classList.add('on');
   if(tab==='payments' && !_dashPaymentsLoaded){ _dashPaymentsLoaded = true; loadDashboardPayments(); }
   if(tab==='revenue' && !_dashRevenueLoaded){ _dashRevenueLoaded = true; loadDashboardRevenue(); }
+  if(tab==='billing' && !_dashBillingLoaded){ _dashBillingLoaded = true; loadDashboardBilling(); }
+  if(tab==='reports' && !_dashReportsLoaded){ _dashReportsLoaded = true; loadReportsView(); }
 }
 function toggleDashMore(){
   var el = document.getElementById('dash-more-metrics');
@@ -1791,16 +1887,15 @@ async function loadDashboard(){
   var today = new Date().toISOString().slice(0,10);
   var monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-  var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients, activity] = await Promise.all([
+  var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients] = await Promise.all([
     _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admitting_doctor,admission_diagnosis,status').eq('clinic_id',_clinicId).eq('status','Active'),
-    _supa.from('beds').select('id,bed_number,ward,status').eq('clinic_id',_clinicId),
+    _supa.from('beds').select('*').eq('clinic_id',_clinicId),
     _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00'),
     _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',today+'T00:00:00'),
     _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',today+'T00:00:00'),
     _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId),
     _supa.from('nh_payments').select('amount').eq('clinic_id',_clinicId),
-    _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId),
-    _supa.from('nh_audit_log').select('action,details,created_at,actor_id,clinic_id').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(8)
+    _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId)
   ]);
 
   /* Month-to-date figures for the collapsible "More facility metrics"
@@ -1819,6 +1914,7 @@ async function loadDashboard(){
 
   var active   = adm.data || [];
   var allBeds  = beds.data || [];
+  await autoVacateExpiredCleaningBeds(allBeds);
   var occupied = allBeds.filter(function(b){return b.status==='Occupied';}).length;
   var available= allBeds.filter(function(b){return (b.status||'').toLowerCase()==='vacant';}).length;
   var todayRev = (charges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
@@ -1867,39 +1963,6 @@ async function loadDashboard(){
     }
   }
 
-  /* Activity feed */
-  var feedEl = document.getElementById('dash-activity-feed');
-  if(feedEl){
-    var acts = activity.data || [];
-    if(!acts.length){
-      feedEl.innerHTML='<div class="empty" style="padding:18px"><div class="empty-ic">📋</div><p class="empty-t">No recent activity</p></div>';
-    } else {
-      var ACTION_META = {
-        charge_added:   {dot:'act-dot-green', icon:'💳', label:'Charge added'},
-        voice_charges_added:{dot:'act-dot-green',icon:'🎙️',label:'Voice charges added'},
-        bed_edited:     {dot:'act-dot-amber', icon:'🛏️', label:'Bed updated'},
-        bed_added:      {dot:'act-dot-blue',  icon:'🛏️', label:'Bed added'},
-        prescription_saved:{dot:'act-dot-blue',icon:'💊',label:'Prescription saved'},
-        invite_generated:{dot:'act-dot-blue', icon:'👥', label:'Invite generated'},
-        patient_admitted:{dot:'act-dot-green',icon:'🏥',label:'Patient admitted'},
-        bill_uploaded:  {dot:'act-dot-blue',  icon:'📎', label:'Bill uploaded'},
-      };
-      feedEl.innerHTML = acts.map(function(a){
-        var m = ACTION_META[a.action] || {dot:'act-dot-amber',icon:'📋',label:a.action.replace(/_/g,' ')};
-        var d = a.details || {};
-        var detail = d.desc || d.name || d.num || d.role || '';
-        var amt = d.total ? ' · ₹'+Number(d.total).toLocaleString('en-IN') : (d.price?' · ₹'+Number(d.price).toLocaleString('en-IN'):'');
-        var t = new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-        return '<div class="activity-row">'
-          +'<div class="act-dot '+m.dot+'"></div>'
-          +'<div style="flex:1;min-width:0">'
-            +'<div class="act-main">'+m.icon+' '+m.label+(detail?' — '+esc(detail):'')+(amt?'<b>'+amt+'</b>':'')+'</div>'
-            +'<div class="act-meta">'+t+' today</div>'
-          +'</div></div>';
-      }).join('');
-    }
-  }
-
   /* Bed map (Overview tab) */
   var mini = document.getElementById('dash-bed-mini');
   if(mini){
@@ -1908,7 +1971,6 @@ async function loadDashboard(){
       var isFemale = FEMALE_WARDS.indexOf(b.ward||'') >= 0;
       var cls = b.status==='Occupied' ? (isFemale?'critical':'occupied')
               : b.status==='Cleaning' ? 'cleaning'
-              : b.status==='Critical' ? 'critical'
               : 'available';
       return '<div class="bed-map-cell '+cls+'" title="Bed '+esc(b.bed_number||'')+' ('+esc(b.ward||'')+') — '+b.status+'">'+esc(b.bed_number||'?')+'</div>';
     }).join('');
@@ -1975,6 +2037,25 @@ async function loadAudit(){
 /* ── ENHANCED BED MANAGEMENT ─────────────────────────────────────────── */
 var _editBedId = null;
 
+/* Beds auto-return from Cleaning to Vacant 30 minutes after discharge.
+   Checked opportunistically whenever beds are loaded (Bed Management or
+   Dashboard) rather than with a background timer, since this is a
+   client without a server-side scheduler. Mutates the passed array in
+   place so the caller's render reflects the change immediately. */
+var CLEANING_MINUTES = 30;
+async function autoVacateExpiredCleaningBeds(beds){
+  var now = Date.now();
+  var expired = beds.filter(function(b){
+    return b.status==='Cleaning' && b.cleaning_started_at && (now - new Date(b.cleaning_started_at).getTime()) >= CLEANING_MINUTES*60000;
+  });
+  if(!expired.length) return;
+  await Promise.all(expired.map(function(b){
+    return _supa.from('beds').update({status:'Vacant',cleaning_started_at:null}).eq('id',b.id).then(function(){
+      b.status='Vacant'; b.cleaning_started_at=null;
+    }).catch(function(){});
+  }));
+}
+
 async function loadBeds(){
   if(!_clinicId)return;
   var [bedsRes, admsRes] = await Promise.all([
@@ -1982,6 +2063,7 @@ async function loadBeds(){
     _supa.from('admissions').select('bed_id,patient_name,patient_id,admission_date').eq('clinic_id',_clinicId).eq('status','Active')
   ]);
   var beds   = bedsRes.data  || [];
+  await autoVacateExpiredCleaningBeds(beds);
   var admMap = {};
   (admsRes.data||[]).forEach(function(a){ admMap[a.bed_id] = a; });
 
@@ -2020,9 +2102,14 @@ async function loadBeds(){
       var adm     = admMap[b.id];
       var days    = adm ? Math.floor((Date.now()-new Date(adm.admission_date))/86400000) : 0;
       var isOcc   = !!(adm && adm.patient_name) || b.status==='Occupied';
-      var cls     = isOcc ? 'occupied' : b.status==='Cleaning' ? 'cleaning' : b.status==='Reserved' ? 'occupied' : b.status==='Critical' ? 'critical' : '';
+      var cls     = isOcc ? 'occupied' : b.status==='Cleaning' ? 'cleaning' : b.status==='Reserved' ? 'occupied' : '';
       var inact   = b.is_active===false ? ' bed-card-inactive' : '';
       var rate    = b.daily_rate ? '₹'+Number(b.daily_rate).toLocaleString('en-IN')+'/d' : '';
+      var cleaningLeft = '';
+      if(b.status==='Cleaning' && b.cleaning_started_at){
+        var minsLeft = CLEANING_MINUTES - Math.floor((Date.now()-new Date(b.cleaning_started_at).getTime())/60000);
+        if(minsLeft>0) cleaningLeft = '<div class="bed-days">Vacant in '+minsLeft+'m</div>';
+      }
       var _oc = isOcc && adm && adm.patient_id
         ? 'openPatientFromBed('+JSON.stringify(adm.patient_id)+','+JSON.stringify(adm.patient_name||'')+','+JSON.stringify(b.bed_number||'')+','+JSON.stringify(ward||'')+')'
         : 'openEditBed('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(ward)+','+(b.daily_rate||0)+','+JSON.stringify(b.status)+','+(b.is_active!==false)+')';
@@ -2032,6 +2119,7 @@ async function loadBeds(){
         +'<div class="bed-ward">'+esc(ward)+'</div>'
         +(rate?'<div class="bed-card-rate">'+rate+'</div>':'')
         +(adm?'<div class="bed-patient">'+esc(adm.patient_name||'')+'</div><div class="bed-days">Day '+(days+1)+'</div>':'')
+        +cleaningLeft
         +(b.is_active===false?'<div class="bed-days" style="color:var(--red)">Deactivated</div>':'')
         +'<div class="bed-status-dot"></div>'
         +'</div>';
@@ -2464,7 +2552,15 @@ async function generateDischarge(){
   var url=URL.createObjectURL(blob);window.open(url,'_blank');
   /* Update admission status */
   await _supa.from('admissions').update({status:'Discharged',discharge_date:new Date().toISOString()}).eq('id',_currentDischargeId);
-  await _supa.from('beds').update({status:'Cleaning',current_admission_id:null}).eq('current_admission_id',_currentDischargeId);
+  /* Bed goes to Cleaning and auto-returns to Vacant after 30 minutes
+     (checked in loadBeds()/loadDashboard()). cleaning_started_at is
+     attempted first; if that column doesn't exist in this database yet,
+     it falls back to the plain update so discharge still works — the
+     bed will just stay "Cleaning" until manually changed. */
+  var bedUpdate = await _supa.from('beds').update({status:'Cleaning',current_admission_id:null,cleaning_started_at:new Date().toISOString()}).eq('current_admission_id',_currentDischargeId);
+  if(bedUpdate.error){
+    await _supa.from('beds').update({status:'Cleaning',current_admission_id:null}).eq('current_admission_id',_currentDischargeId);
+  }
   /* Send WhatsApp if phone exists */
   if(adm.data.patient_phone){
     var phone=(adm.data.patient_phone||'').replace(/[^\d]/g,'');
@@ -2521,13 +2617,7 @@ async function loadReceptionHome(){
   }).join('');
 }
 
-/* ── FINANCE (owner only) ── */
-async function loadFinance(){
-  if(!_clinicId) return;
-  var period = document.getElementById('fin-filter-period');
-  var p = period ? period.value : 'month';
-  await renderFinanceInto('fin', p);
-}
+/* ── DASHBOARD · REVENUE (uses the shared renderFinanceInto below) ── */
 
 /* Shared by the standalone Finance page (#fin-*) and the Dashboard's
    Revenue tab (#dr-*) — same real queries, just a different id prefix
@@ -2622,6 +2712,17 @@ function loadReportsView(){
   if(d && !d.value) d.value = new Date().toISOString().slice(0,10);
   var m = document.getElementById('rpt-month-date');
   if(m && !m.value) m.value = new Date().toISOString().slice(0,7);
+  var chk = document.getElementById('rpt-auto-whatsapp');
+  var num = document.getElementById('rpt-auto-whatsapp-number');
+  if(chk) chk.checked = localStorage.getItem('rpt_auto_wa_'+_clinicId) === '1';
+  if(num) num.value = localStorage.getItem('rpt_auto_wa_number_'+_clinicId) || '';
+}
+function saveReportAutoSendConfig(){
+  var chk = document.getElementById('rpt-auto-whatsapp');
+  var num = document.getElementById('rpt-auto-whatsapp-number');
+  localStorage.setItem('rpt_auto_wa_'+_clinicId, chk && chk.checked ? '1' : '0');
+  if(num) localStorage.setItem('rpt_auto_wa_number_'+_clinicId, num.value||'');
+  showToast('Preference saved');
 }
 
 function _printReport(title, bodyHtml){
@@ -2643,8 +2744,10 @@ function _printReport(title, bodyHtml){
     +'td{padding:7px 8px;border-bottom:1px solid #F0F1F4}'
     +'.section-h{font-size:13px;font-weight:700;margin:22px 0 8px}'
     +'.note{font-size:10.5px;color:#8B93A1;margin-top:24px;border-top:1px solid #E1E4EA;padding-top:10px}'
-    +'@media print{body{padding:12px}}'
+    +'.print-btn{background:#1E3A5F;color:#fff;border:none;padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}'
+    +'@media print{.no-print{display:none}body{padding:12px}}'
     +'</style></head><body>'
+    +'<div class="no-print" style="text-align:right;margin-bottom:10px"><button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button></div>'
     +'<h1>'+esc(title)+'</h1>'
     +'<div class="sub">'+esc(nhName)+' · AuraScale NH</div>'
     +bodyHtml
@@ -2653,7 +2756,6 @@ function _printReport(title, bodyHtml){
   );
   win.document.close();
   win.focus();
-  setTimeout(function(){ try{ win.print(); }catch(e){} }, 300);
 }
 
 async function generateDailyReport(){
@@ -2864,6 +2966,20 @@ async function openBedFinanceDetail(bed, bedAdms, chMap, pyMap, rate, days){
   alert(msg);
 }
 
+function loadDashboardBilling(){
+  var method = localStorage.getItem('billing_method_'+_clinicId) || '24hr';
+  var cutoff = localStorage.getItem('billing_cutoff_'+_clinicId) || '06:00';
+  var mSel = document.getElementById('fin-billing-method');
+  var cInput = document.getElementById('fin-cutoff-time');
+  if(mSel) mSel.value = method;
+  if(cInput) cInput.value = cutoff;
+  toggleCutoffWrap();
+}
+function toggleCutoffWrap(){
+  var mSel = document.getElementById('fin-billing-method');
+  var wrap = document.getElementById('fin-cutoff-wrap');
+  if(mSel && wrap) wrap.style.display = mSel.value==='cutoff' ? 'block' : 'none';
+}
 function saveBillingConfig(){
   var method = (document.getElementById('fin-billing-method')||{}).value;
   var cutoff = (document.getElementById('fin-cutoff-time')||{}).value;
@@ -3240,12 +3356,69 @@ async function generateStaffInvite(){
   document.getElementById('staff-invite-code').textContent = code;
   document.getElementById('staff-invite-result').style.display = 'block';
   document.getElementById('staff-label').value = '';
+  document.getElementById('staff-send-wa').style.display = _inviteChannel==='whatsapp' ? 'flex' : 'none';
+  document.getElementById('staff-send-sms').style.display = _inviteChannel==='sms' ? 'flex' : 'none';
   loadInvitesList();
+}
+
+function openInviteStaffModal(){
+  document.getElementById('staff-invite-phone').value = '';
+  document.getElementById('staff-label').value = '';
+  document.getElementById('staff-error').style.display = 'none';
+  document.getElementById('staff-invite-result').style.display = 'none';
+  setInviteChannel('whatsapp');
+  openModal('mod-add-staff');
+}
+
+/* ── INVITE CHANNEL (WhatsApp / SMS) ── AuraScale has no WhatsApp
+   Business API connected yet, so "Send via WhatsApp" opens a wa.me deep
+   link with the invite pre-filled in the app already installed on this
+   device/computer — a real, working share action today. It's designed
+   so that once a WhatsApp Business number is connected, automatic
+   sending can slot in without changing this UI. */
+var _inviteChannel = 'whatsapp';
+function setInviteChannel(channel){
+  _inviteChannel = channel;
+  document.getElementById('seg-whatsapp').classList.toggle('active', channel==='whatsapp');
+  document.getElementById('seg-sms').classList.toggle('active', channel==='sms');
+  var waBtn = document.getElementById('staff-send-wa');
+  var smsBtn = document.getElementById('staff-send-sms');
+  if(document.getElementById('staff-invite-result').style.display !== 'none'){
+    waBtn.style.display = channel==='whatsapp' ? 'flex' : 'none';
+    smsBtn.style.display = channel==='sms' ? 'flex' : 'none';
+  }
+}
+function _inviteMessage(){
+  var nhName = document.getElementById('sb-nh-name').textContent || 'your nursing home';
+  var role = document.getElementById('staff-role').value;
+  return 'You\'ve been invited to join '+nhName+' on AuraScale NH as a '+role+'. Open the app, tap "Register NH" → "I Have an Invite Code", and enter this code: '+_lastGeneratedInvite;
+}
+function sendInviteViaWhatsApp(){
+  var phone = (document.getElementById('staff-invite-phone').value||'').replace(/[^\d]/g,'');
+  if(!phone){ showToast('Enter their mobile number first'); return; }
+  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(_inviteMessage()),'_blank');
+}
+function sendInviteViaSMS(){
+  var phone = (document.getElementById('staff-invite-phone').value||'').trim();
+  if(!phone){ showToast('Enter their mobile number first'); return; }
+  window.open('sms:'+phone+'?body='+encodeURIComponent(_inviteMessage()),'_blank');
 }
 function copyInviteCode(){
   if(!_lastGeneratedInvite)return;
   navigator.clipboard.writeText(_lastGeneratedInvite).then(function(){showToast('Code copied');}).catch(function(){showToast('Code: '+_lastGeneratedInvite);});
 }
+
+/* ── PERIODIC BED-CLEANING SWEEP ──
+   Checks once a minute (only while the relevant view is open) so beds
+   left in "Cleaning" actually flip to "Vacant" after 30 minutes without
+   needing a manual page reload. */
+setInterval(function(){
+  if(!_clinicId) return;
+  var bedsView = document.getElementById('v-beds');
+  var dashView = document.getElementById('v-dashboard');
+  if(bedsView && bedsView.classList.contains('on')) loadBeds();
+  if(dashView && dashView.classList.contains('on')) loadDashboard();
+}, 60000);
 
 /* ── SESSION RESTORE ── */
 _supa.auth.onAuthStateChange(async function(event,session){
@@ -3384,4 +3557,3 @@ async function openPatientFromBed(patientId, patientName, bedNum, ward){
 </script>
 </body>
 </html>
-            
