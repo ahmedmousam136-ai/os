@@ -238,21 +238,12 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
     <nav class="sb-nav">
       <p class="nav-sec">Overview</p>
       <button class="nb on" onclick="nav('home',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>My Patients
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>Overview
         <span class="nb-badge" id="nav-review-badge" style="display:none">0</span>
       </button>
       <p class="nav-sec">Inpatient Work</p>
-      <button class="nb" onclick="nav('rounds',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>Progress Notes
-      </button>
-      <button class="nb" onclick="nav('patients',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>All Patients
-      </button>
       <button class="nb" onclick="nav('beds',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/></svg></span>Bed Overview
-      </button>
-      <button class="nb" onclick="nav('ayushman',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>Ayushman / PM-JAY
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/></svg></span>All Patients
       </button>
     </nav>
     <div class="sb-foot">
@@ -275,10 +266,11 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
         </button>
         <span class="bc-root">AuraScale NH</span>
         <span class="bc-sep">/</span>
-        <span class="bc-page" id="tab-title">My Patients</span>
+        <span class="bc-page" id="tab-title">Overview</span>
       </div>
-      <div class="hdr-r">
-        <input class="hdr-search" id="global-search" placeholder="Search patient name or phone…" oninput="searchPatients(this.value)"/>
+      <div class="hdr-r" style="position:relative">
+        <input class="hdr-search" id="global-search" placeholder="Search patient name or phone…" oninput="searchPatients(this.value)" onblur="setTimeout(function(){document.getElementById('search-results').style.display='none';},150)"/>
+        <div id="search-results" style="display:none;position:absolute;top:38px;right:36px;width:280px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-lg);max-height:320px;overflow-y:auto;z-index:50"></div>
         <span style="font-size:10px;color:var(--text-tertiary)"><span class="rt-dot"></span>Live</span>
       </div>
     </header>
@@ -287,7 +279,7 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
       <!-- HOME: MY PATIENTS -->
       <div id="v-home" class="view on">
         <div class="sh">
-          <div><h1 class="st">My Patients</h1><p class="ss" id="home-date-sub">Patients assigned to you · Today</p></div>
+          <div><h1 class="st">Overview</h1><p class="ss" id="home-date-sub">Patients assigned to you · Today</p></div>
         </div>
         <div class="mg" style="grid-template-columns:repeat(3,1fr)">
           <div class="mc"><div class="mc-lbl">My Patients</div><div class="mc-val" id="h-assigned">—</div><div class="mc-sub">assigned to me</div></div>
@@ -313,49 +305,11 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
         </div>
       </div>
 
-      <!-- PROGRESS NOTES / ROUNDS -->
-      <div id="v-rounds" class="view">
-        <div class="sh">
-          <div><h1 class="st">Progress Notes</h1><p class="ss">Select a patient to write or view notes</p></div>
-          <button class="qbtn" onclick="openNoteModal()" id="add-note-btn" style="display:none">+ Add Note</button>
-        </div>
-        <div class="rounds-wrap">
-          <div class="rounds-patient-list">
-            <div class="ph"><div class="pt">Active Patients</div></div>
-            <div id="rounds-patient-list"></div>
-          </div>
-          <div class="rounds-detail">
-            <div id="rounds-selected-bar" style="display:none" class="patient-selected-bar">
-              <div>
-                <div style="font-weight:700;font-size:13px" id="rounds-patient-name">—</div>
-                <div style="font-size:10.5px;color:var(--green)" id="rounds-patient-meta"></div>
-              </div>
-              <button class="qbtn" onclick="openNoteModal()">+ Add Note</button>
-            </div>
-            <div class="panel">
-              <div class="ph"><div class="pt">Notes</div></div>
-              <div id="rounds-notes-list">
-                <div class="empty"><div class="empty-ic">📋</div><p class="empty-t">Select a patient</p><p class="empty-s">Choose from the list on the left</p></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ALL PATIENTS -->
-      <div id="v-patients" class="view">
-        <div class="sh">
-          <div><h1 class="st">Patients</h1><p class="ss">All patients at this facility</p></div>
-        </div>
-        <input class="finput" id="patient-search" placeholder="Search by name or phone…" oninput="loadPatientsList()"/>
-        <div id="patients-list"></div>
-      </div>
-
-      <!-- BEDS OVERVIEW -->
+      <!-- ALL PATIENTS (bed-grid view) -->
       <div id="v-beds" class="view">
         <div class="sh">
           <div>
-            <h1 class="st">Bed Overview</h1>
+            <h1 class="st">All Patients</h1>
             <p class="ss"><span class="rt-dot"></span>Live · click an occupied bed to view patient</p>
           </div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
@@ -366,16 +320,6 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
           </div>
         </div>
         <div id="beds-by-ward"></div>
-      </div>
-
-      <!-- AYUSHMAN -->
-      <div id="v-ayushman" class="view">
-        <div class="sh"><div><h1 class="st">Ayushman / PM-JAY</h1><p class="ss">Internal case tracking — not an official government status</p></div></div>
-        <div class="note-box note-amber">AuraScale is not a government authority. This section is for your facility's internal record-keeping only. Always confirm actual status on the official Ayushman Bharat / PM-JAY portal.</div>
-        <div class="panel">
-          <div class="ph"><div class="pt">Cases Tracked</div><span id="ayushman-count" style="font-size:11px;color:var(--text-tertiary);font-weight:600">—</span></div>
-          <div id="ayushman-list"></div>
-        </div>
       </div>
 
     </main>
@@ -433,7 +377,6 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
         <div class="patient-tab" onclick="switchTab('prescription',this)">Prescription</div>
         <div class="patient-tab" onclick="switchTab('documents',this)">Documents</div>
         <div class="patient-tab" onclick="switchTab('history',this)">Full History</div>
-        <div class="patient-tab" onclick="switchTab('ayushman',this)">Ayushman</div>
       </div>
     </div>
     <div class="mb" style="padding-top:0">
@@ -455,39 +398,14 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
       <div class="ptab" id="t-history">
         <div id="t-history-list"></div>
       </div>
-      <div class="ptab" id="t-ayushman"></div>
-    </div>
-  </div>
-</div>
-
-<!-- AYUSHMAN MODAL -->
-<div class="mod-ov" id="mod-ayushman">
-  <div class="modal">
-    <div class="mh"><div class="mtitle">🤝 Ayushman / PM-JAY Record</div><button class="mclose" onclick="closeModal('mod-ayushman')">✕</button></div>
-    <div class="mb">
-      <div class="note-box note-amber" style="font-size:11px">Internal record only. Confirm actual status on pmjay.gov.in or with your authorised Ayushman provider.</div>
-      <div><label class="flbl">Beneficiary ID</label><input class="finput" id="ay-bid" placeholder="Government-issued Beneficiary ID"/></div>
-      <div><label class="flbl">ABHA ID</label><input class="finput" id="ay-abha" placeholder="14-digit ABHA number"/></div>
-      <div><label class="flbl">Internal Status</label>
-        <select class="finput" id="ay-status">
-          <option value="internal_record">Internal Record (not verified)</option>
-          <option value="submitted">Submitted to Provider</option>
-          <option value="pending">Pending Verification</option>
-          <option value="verified_official">Verified via Official Portal</option>
-          <option value="rejected">Rejected</option>
-          <option value="unknown">Unknown / Not Checked</option>
-        </select>
-      </div>
-      <div><label class="flbl">Notes</label><textarea class="finput ftextarea" id="ay-notes" rows="3" placeholder="Claim number, documents, follow-up…"></textarea></div>
-      <button class="msub" onclick="saveAyushman()">✓ Save Record</button>
     </div>
   </div>
 </div>
 
 
-<!-- BED PATIENT PROFILE MODAL (from bed click) -->
+<!-- BED PATIENT PROFILE MODAL (from bed click) — kept simple: quick actions, not a full tabbed workspace -->
 <div class="mod-ov" id="mod-bed-profile">
-  <div class="modal modal-wide">
+  <div class="modal">
     <div class="mh">
       <div>
         <div class="mtitle" id="bpp-title">Bed Patient</div>
@@ -495,50 +413,61 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
       </div>
       <button class="mclose" onclick="closeModal('mod-bed-profile')">✕</button>
     </div>
-    <!-- Patient identity bar -->
-    <div style="margin:14px 17px 0;padding:12px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);display:flex;align-items:center;gap:12px">
-      <div class="adm-av" id="bpp-av" style="width:42px;height:42px;border-radius:10px;font-size:18px;flex-shrink:0">?</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:13.5px" id="bpp-name">—</div>
-        <div style="font-size:10.5px;color:var(--text-secondary);margin-top:2px" id="bpp-meta">—</div>
+    <div class="mb">
+      <!-- Patient identity bar -->
+      <div style="padding:12px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);display:flex;align-items:center;gap:12px">
+        <div class="adm-av" id="bpp-av" style="width:42px;height:42px;border-radius:10px;font-size:18px;flex-shrink:0">?</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13.5px" id="bpp-name">—</div>
+          <div style="font-size:10.5px;color:var(--text-secondary);margin-top:2px" id="bpp-meta">—</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:20px;color:var(--green)" id="bpp-days">—</div>
+          <div style="font-size:9px;color:var(--text-tertiary)">days</div>
+        </div>
       </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:22px;color:var(--green)" id="bpp-days">—</div>
-        <div style="font-size:9px;color:var(--text-tertiary)">days</div>
+
+      <div id="bpp-adm-info" style="display:flex;flex-direction:column;gap:3px;margin-top:12px"></div>
+
+      <!-- Quick actions -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0">
+        <button class="qbtn" style="flex-direction:column;height:62px;gap:5px;font-size:10.5px" onclick="triggerDocUpload(_bppPatientId)">
+          <span style="font-size:18px">📎</span>Upload Doc
+        </button>
+        <button class="qbtn" style="flex-direction:column;height:62px;gap:5px;font-size:10.5px" onclick="openNoteModalFromBed()">
+          <span style="font-size:18px">🎙️</span>Voice Note
+        </button>
+        <button class="qbtn" style="flex-direction:column;height:62px;gap:5px;font-size:10.5px" onclick="openOrderTestModal()">
+          <span style="font-size:18px">🧪</span>Order Test
+        </button>
       </div>
-    </div>
-    <div style="padding:12px 17px 0">
-      <div class="bp-tabs">
-        <div class="bp-tab on" onclick="bppTab('info',this)">📋 Info</div>
-        <div class="bp-tab" onclick="bppTab('notes',this)">🩺 Notes</div>
-        <div class="bp-tab" onclick="bppTab('prescription',this)">💊 Prescription</div>
-        <div class="bp-tab" onclick="bppTab('documents',this)">📎 Documents</div>
-        <div class="bp-tab" onclick="bppTab('history',this)">📂 History</div>
-      </div>
-    </div>
-    <div class="mb" style="padding-top:0">
-      <div class="bp-pnl on" id="bpp-pnl-info">
-        <div id="bpp-adm-info" style="display:flex;flex-direction:column;gap:3px"></div>
-        <button class="qbtn" style="margin-top:10px;width:100%;justify-content:center" onclick="openNoteModalFromBed()">📋 Add Progress Note</button>
-      </div>
-      <div class="bp-pnl" id="bpp-pnl-notes">
-        <button class="qbtn" style="margin-bottom:10px;width:100%;justify-content:center" onclick="openNoteModalFromBed()">+ Add Progress Note</button>
-        <div id="bpp-notes-list"></div>
-      </div>
-      <div class="bp-pnl" id="bpp-pnl-prescription">
-        <button class="qbtn" style="margin-bottom:10px;width:100%;justify-content:center" onclick="openPrescriptionModal()">+ Write Prescription</button>
-        <div id="bpp-rx-list"></div>
-      </div>
-      <div class="bp-pnl" id="bpp-pnl-documents">
-        <div class="note-box note-amber" style="margin-bottom:10px;font-size:11px">View originals — never rely on extracted text alone for clinical decisions.</div>
+
+      <div class="panel">
+        <div class="ph"><div class="pt">📎 Documents</div></div>
         <div id="bpp-doc-list"></div>
       </div>
-      <div class="bp-pnl" id="bpp-pnl-history">
-        <div id="bpp-history-list"></div>
-      </div>
+
+      <p class="ss" style="text-align:center;margin-top:14px">
+        <a href="#" onclick="event.preventDefault();closeModal('mod-bed-profile');openProfile(_bppPatientId,document.getElementById('bpp-name').textContent)" style="color:var(--navy);font-weight:600">View full clinical profile (notes, prescriptions, history) →</a>
+      </p>
     </div>
   </div>
 </div>
+
+<!-- ORDER TEST MODAL -->
+<div class="mod-ov" id="mod-order-test">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">🧪 Order Test</div><button class="mclose" onclick="closeModal('mod-order-test')">✕</button></div>
+    <div class="mb">
+      <div class="note-box note-amber" style="font-size:11px">AuraScale doesn't have a dedicated diagnostic-centre/lab workflow connected yet — this saves the order into the patient's clinical record so it's visible in their history and to reception.</div>
+      <div><label class="flbl">Test Name *</label><input class="finput" id="ot-test-name" placeholder="e.g. CBC, X-Ray Chest, Blood Sugar (Fasting)"/></div>
+      <div><label class="flbl">Notes / Instructions</label><textarea class="finput ftextarea" id="ot-notes" rows="3" placeholder="Urgency, clinical reason, special instructions…"></textarea></div>
+      <div id="ot-err" style="color:var(--red);font-size:11.5px;display:none"></div>
+      <button class="msub" onclick="saveTestOrder()">✓ Save Test Order</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="doctor-doc-input" style="display:none" accept="application/pdf,image/*" onchange="handleDoctorDocUpload(event)"/>
 
 <!-- PRESCRIPTION MODAL -->
 <div class="mod-ov" id="mod-prescription">
@@ -600,13 +529,10 @@ function nav(id,btn){
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var t={home:'My Patients',rounds:'Progress Notes',patients:'All Patients',beds:'Bed Overview',ayushman:'Ayushman / PM-JAY'};
+  var t={home:'Overview',beds:'All Patients'};
   document.getElementById('tab-title').textContent=t[id]||id;
   if(id==='home')loadHome();
-  if(id==='rounds')loadRoundsPatients();
-  if(id==='patients')loadPatientsList();
   if(id==='beds')loadBeds();
-  if(id==='ayushman')loadAyushmanView();
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
 function openModal(id){document.getElementById(id).classList.add('open')}
@@ -649,49 +575,10 @@ async function loadHome(){
 }
 
 /* ── ROUNDS ── */
-async function loadRoundsPatients(){
-  var r=await _supa.from('admissions').select('id,patient_id,patient_name,admitting_doctor,admission_diagnosis,admission_date').eq('clinic_id',_clinicId).eq('status','Active').order('admission_date',{ascending:true});
-  var list=document.getElementById('rounds-patient-list');
-  if(!r.data||!r.data.length){list.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">🛏️</div><p class="empty-t">No active patients</p></div>';return;}
-  list.innerHTML=r.data.map(function(a){
-    var days=Math.floor((Date.now()-new Date(a.admission_date))/86400000);
-    return '<div class="adm-row" style="cursor:pointer" onclick="selectRoundsPatient(\''+a.id+'\',\''+esc(a.patient_name||'')+'\')" id="rounds-row-'+a.id+'"><div class="adm-av">'+((a.patient_name||'?').charAt(0).toUpperCase())+'</div><div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'')+'</div><div class="adm-meta">Day '+(days+1)+(a.admission_diagnosis?' · '+esc(a.admission_diagnosis):'')+'</div></div></div>';
-  }).join('');
-}
-
 var _currentAdmId=null,_currentAdmName='';
-function selectRoundsPatient(admId,name){
+function quickAddNote(admId,name){
   _currentAdmId=admId;_currentAdmName=name;
-  /* Highlight selected row */
-  document.querySelectorAll('#rounds-patient-list .adm-row').forEach(function(r){r.style.background='';});
-  var row=document.getElementById('rounds-row-'+admId);
-  if(row)row.style.background='var(--green-bg)';
-  /* Show selected bar */
-  var bar=document.getElementById('rounds-selected-bar');bar.style.display='flex';
-  document.getElementById('rounds-patient-name').textContent=name;
-  document.getElementById('rounds-patient-meta').textContent='Active Admission · Select to add note';
-  document.getElementById('add-note-btn').style.display='';
-  loadNotes(admId);
-}
-async function loadNotes(admId){
-  var r=await _supa.from('progress_notes').select('*').eq('admission_id',admId).order('created_at',{ascending:false});
-  var list=document.getElementById('rounds-notes-list');
-  if(!r.data||!r.data.length){list.innerHTML='<div class="empty" style="padding:28px"><div class="empty-ic">📋</div><p class="empty-t">No notes yet</p><p class="empty-s">Tap "Add Note" to write the first progress note for this patient</p></div>';return;}
-  list.innerHTML=r.data.map(function(n){
-    var t=new Date(n.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    var vitals=[];
-    if(n.bp)vitals.push('BP: '+n.bp);
-    if(n.temperature)vitals.push('T: '+n.temperature+'°F');
-    if(n.pulse)vitals.push('P: '+n.pulse+'/min');
-    if(n.spo2)vitals.push('SpO₂: '+n.spo2+'%');
-    if(n.weight)vitals.push('Wt: '+n.weight+' kg');
-    return '<div class="note-row">'
-      +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="note-doc">'+esc(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
-      +(vitals.length?'<div class="note-vitals">'+vitals.map(function(v){return '<span class="vital-pill">'+v+'</span>';}).join('')+'</div>':'')
-      +(n.subjective?'<div class="note-text"><b>S:</b> '+esc(n.subjective)+'</div>':'')
-      +(n.plan?'<div class="note-text"><b>A/P:</b> '+esc(n.plan)+'</div>':'')
-      +'</div>';
-  }).join('');
+  openNoteModal();
 }
 
 function openNoteModal(){
@@ -756,21 +643,36 @@ function stopVoice(){
 }
 
 /* ── PATIENTS LIST ── */
-async function loadPatientsList(){
-  var q=(document.getElementById('patient-search').value||'').trim();
-  var query=_supa.from('nh_patients').select('id,full_name,phone,age,gender,needs_review').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(50);
-  if(q)query=query.or('full_name.ilike.%'+q+'%,phone.ilike.%'+q+'%');
-  var r=await query;
-  var el=document.getElementById('patients-list');
-  if(!r.data||!r.data.length){el.innerHTML='<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients found</p></div>';return;}
-  el.innerHTML='<div class="panel">'+r.data.map(function(p){
-    return '<div class="adm-row" style="cursor:pointer" onclick="openProfile(\''+p.id+'\',\''+esc(p.full_name||'')+'\')"><div class="adm-av">'+((p.full_name||'?').charAt(0).toUpperCase())+'</div><div style="flex:1;min-width:0"><div class="adm-name">'+esc(p.full_name||'')+'</div><div class="adm-meta">'+(p.age?p.age+'y ':'')+''+(p.gender||'')+(p.phone?' · '+p.phone:'')+'</div></div>'+(p.needs_review?'<span class="chip ch-wait">Review</span>':'')+'</div>';
-  }).join('')+'</div>';
-}
+var _searchDebounce=null;
 function searchPatients(q){
-  nav('patients',document.querySelector('.nb[onclick*=patients]'));
-  document.getElementById('patient-search').value=q;
-  loadPatientsList();
+  clearTimeout(_searchDebounce);
+  var box=document.getElementById('search-results');
+  q=(q||'').trim();
+  if(q.length<2){box.style.display='none';box.innerHTML='';return;}
+  _searchDebounce=setTimeout(function(){ runPatientSearch(q); }, 250);
+}
+async function runPatientSearch(q){
+  var box=document.getElementById('search-results');
+  var r=await _supa.from('nh_patients').select('id,full_name,phone,age,gender').eq('clinic_id',_clinicId).or('full_name.ilike.%'+q+'%,phone.ilike.%'+q+'%').limit(8);
+  var rows=r.data||[];
+  if(!rows.length){
+    box.innerHTML='<div class="empty" style="padding:16px"><p class="empty-s">No matching patients</p></div>';
+    box.style.display='block';
+    return;
+  }
+  box.innerHTML=rows.map(function(p){
+    return '<div class="adm-row" style="cursor:pointer" onmousedown="closeSearchAndOpen(\''+p.id+'\',\''+esc(p.full_name||'')+'\')">'
+      +'<div class="adm-av">'+((p.full_name||'?').charAt(0).toUpperCase())+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="adm-name">'+esc(p.full_name||'')+'</div>'
+      +'<div class="adm-meta">'+(p.age?p.age+'y ':'')+(p.gender||'')+(p.phone?' · '+p.phone:'')+'</div></div>'
+      +'</div>';
+  }).join('');
+  box.style.display='block';
+}
+function closeSearchAndOpen(id,name){
+  document.getElementById('search-results').style.display='none';
+  document.getElementById('global-search').value='';
+  openProfile(id,name);
 }
 
 /* ── PATIENT PROFILE ── */
@@ -808,14 +710,13 @@ async function openProfile(id,name){
         +'<div><b>Doctor:</b> '+(a.admitting_doctor||'—')+'</div>'
         +'<div><b>Diagnosis:</b> '+(a.admission_diagnosis||'Not recorded')+'</div>'
         +(a.status==='Active'?'<div><b>Duration:</b> '+(days+1)+' day(s)</div>':'')
-        +(a.status==='Active'?'<button class="qbtn" style="margin-top:8px" onclick="selectRoundsPatient(\''+a.id+'\',\''+esc(pd.full_name||'')+'\')" >📋 Add Progress Note</button>':'')
+        +(a.status==='Active'?'<button class="qbtn" style="margin-top:8px" onclick="quickAddNote(\''+a.id+'\',\''+esc(pd.full_name||'')+'\')" >📋 Add Progress Note</button>':'')
         +'</div>';
     }).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No admissions yet.</p>');
   loadNotesTab(id);
   loadPrescriptionTab(id);
   loadPatientDocumentsInto(id,'pp-doc-list',true);
   loadFullHistoryTab(id);
-  loadAyushmanTab(id);
   /* Refresh home badge */
   loadHome();
 }
@@ -834,54 +735,60 @@ async function loadNotesTab(patientId){
       +(n.plan?'<div class="note-text"><b>A/P:</b> '+esc(n.plan)+'</div>':'')+'</div>';
   }).join('');
 }
+/* ── DOCUMENTS (shared: patient profile Documents tab + bed popup) ──
+   Uses the SAME storage bucket ('nh-documents') and table
+   ('nh_patient_documents') as the receptionist/owner portal, so a
+   document uploaded from either side shows up everywhere — one source
+   of truth, no duplicate storage. */
+async function loadPatientDocumentsInto(patientId,targetElId,canUpload){
+  var el=document.getElementById(targetElId);
+  if(!el||!patientId)return;
+  var r=await _supa.from('nh_patient_documents').select('*').eq('patient_id',patientId).order('created_at',{ascending:false});
+  var rows=r.data||[];
+  if(!rows.length){
+    el.innerHTML='<div class="empty" style="padding:18px"><div class="empty-ic">📎</div><p class="empty-t">No documents yet</p><p class="empty-s">'+(canUpload?'Upload one, or ask reception to add it':'Reception hasn\'t uploaded anything yet')+'</p></div>';
+    return;
+  }
+  el.innerHTML=rows.map(function(d){
+    var t=new Date(d.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    return '<div class="doc-card">'
+      +'<div class="doc-ic">📄</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px">'+esc(d.file_name||'Document')+'</div>'
+      +'<div class="ss">'+esc(d.doc_type||'document')+' · '+t+'</div></div>'
+      +'<button class="qbtn" onclick="viewDoctorDoc(\''+d.file_path+'\')">View</button>'
+      +'</div>';
+  }).join('');
+}
+async function viewDoctorDoc(path){
+  var r=await _supa.storage.from('nh-documents').createSignedUrl(path,300);
+  if(r.error||!r.data){showToast('Could not open document');return;}
+  window.open(r.data.signedUrl,'_blank');
+}
+var _docUploadPatientId=null;
+function triggerDocUpload(patientId){
+  _docUploadPatientId=patientId;
+  document.getElementById('doctor-doc-input').click();
+}
+async function handleDoctorDocUpload(evt){
+  var file=evt.target.files[0];
+  var patientId=_docUploadPatientId;
+  if(!file||!patientId)return;
+  showToast('Uploading…');
+  var path=_clinicId+'/'+patientId+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  var up=await _supa.storage.from('nh-documents').upload(path,file);
+  if(up.error){showToast('Upload failed: '+up.error.message);return;}
+  await _supa.from('nh_patient_documents').insert({clinic_id:_clinicId,patient_id:patientId,file_path:path,file_name:file.name,doc_type:file.type||'document',uploaded_by:_myUid});
+  showToast('Document uploaded');
+  if(_bppPatientId===patientId)loadPatientDocumentsInto(patientId,'bpp-doc-list',true);
+  if(_pid===patientId)loadPatientDocumentsInto(patientId,'pp-doc-list',true);
+  evt.target.value='';
+}
+
 function switchTab(tab,el){
   document.querySelectorAll('.patient-tab').forEach(function(t){t.classList.remove('active')});
   document.querySelectorAll('.ptab').forEach(function(p){p.classList.remove('active')});
   if(el)el.classList.add('active');
   var panel=document.getElementById('t-'+tab);if(panel)panel.classList.add('active');
-}
-
-/* ── AYUSHMAN ── */
-async function loadAyushmanView(){
-  var r=await _supa.from('nh_ayushman_cases').select('*,nh_patients(full_name)').eq('clinic_id',_clinicId).order('updated_at',{ascending:false});
-  var rows=r.data||[];
-  document.getElementById('ayushman-count').textContent=rows.length+' cases';
-  var list=document.getElementById('ayushman-list');
-  if(!rows.length){list.innerHTML='<div class="empty"><div class="empty-ic">🤝</div><p class="empty-t">No Ayushman / PM-JAY cases yet</p><p class="empty-s">Open a patient profile → Ayushman tab to start tracking</p></div>';return;}
-  list.innerHTML=rows.map(function(c){
-    var name=c.nh_patients?c.nh_patients.full_name:'Patient';
-    return '<div class="adm-row"><div class="adm-av" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">🤝</div>'
-      +'<div style="flex:1"><div class="adm-name">'+esc(name)+'</div><div class="adm-meta">'+c.status.replace(/_/g,' ')+'</div></div>'
-      +'<span class="chip ch-wait">'+c.status.replace(/_/g,' ')+'</span></div>';
-  }).join('');
-}
-async function loadAyushmanTab(patientId){
-  var r=await _supa.from('nh_ayushman_cases').select('*').eq('patient_id',patientId).order('updated_at',{ascending:false}).limit(1);
-  var el=document.getElementById('t-ayushman');
-  var ex=r.data&&r.data.length?r.data[0]:null;
-  el.innerHTML='<div class="note-box note-amber" style="margin-bottom:12px;font-size:11px">Internal record only — confirm actual status on pmjay.gov.in or with your authorised provider.</div>'
-    +(ex?'<div style="font-size:12.5px;display:flex;flex-direction:column;gap:4px">'
-        +'<div class="ir"><span class="il">Status</span><span class="iv">'+ex.status.replace(/_/g,' ')+'</span></div>'
-        +'<div class="ir"><span class="il">Beneficiary ID</span><span class="iv">'+(ex.beneficiary_id||'—')+'</span></div>'
-        +'<div class="ir"><span class="il">ABHA ID</span><span class="iv">'+(ex.abha_id||'—')+'</span></div>'
-        +'<div class="ir"><span class="il">Notes</span><span class="iv">'+(ex.notes||'—')+'</span></div></div>'
-      :'<p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">No case recorded yet.</p>')
-    +'<button class="qbtn" style="margin-top:10px" onclick="openAyushmanModal(\''+(ex?esc(ex.beneficiary_id||''):'')+'\')">'+(ex?'Update Case':'+ Start Ayushman Case')+'</button>';
-}
-function openAyushmanModal(b){
-  document.getElementById('ay-bid').value=b||'';
-  document.getElementById('ay-abha').value='';
-  document.getElementById('ay-notes').value='';
-  openModal('mod-ayushman');
-}
-async function saveAyushman(){
-  if(!_pid){showToast('No patient selected');return;}
-  var p={clinic_id:_clinicId,patient_id:_pid,beneficiary_id:(document.getElementById('ay-bid').value||'').trim(),abha_id:(document.getElementById('ay-abha').value||'').trim(),status:document.getElementById('ay-status').value,notes:(document.getElementById('ay-notes').value||'').trim(),created_by:_myUid,updated_at:new Date().toISOString()};
-  var ex=await _supa.from('nh_ayushman_cases').select('id').eq('patient_id',_pid).limit(1);
-  var res=ex.data&&ex.data.length?await _supa.from('nh_ayushman_cases').update(p).eq('id',ex.data[0].id):await _supa.from('nh_ayushman_cases').insert(p);
-  if(res.error){showToast('Error: '+res.error.message);return;}
-  closeModal('mod-ayushman');showToast('Ayushman record saved');
-  loadAyushmanTab(_pid);
 }
 
 
@@ -938,8 +845,6 @@ async function openBedPatientProfile(bedId,num,ward,admId,patientId,patientName,
   document.getElementById('bpp-av').textContent=(patientName||'?').charAt(0).toUpperCase();
   document.getElementById('bpp-name').textContent=patientName||'Patient';
   document.getElementById('bpp-days').textContent=days;
-  /* Switch to info tab */
-  bppTab('info',document.querySelector('.bp-tab'));
   openModal('mod-bed-profile');
   /* Load admission details */
   var [adm,pt]=await Promise.all([
@@ -961,46 +866,46 @@ async function openBedPatientProfile(bedId,num,ward,admId,patientId,patientName,
     +'<div class="ir"><span class="il">Doctor</span><span class="iv">'+esc(d.admitting_doctor||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Ward / Bed</span><span class="iv">'+esc(ward)+' / '+esc(num)+'</span></div>'
     +(pd.guardian?'<div class="ir"><span class="il">Guardian</span><span class="iv">'+esc(pd.guardian)+'</span></div>':'');
-  /* Pre-load other tabs */
-  loadBppNotes();loadBppRx();loadBppDocs();loadBppHistory();
-  /* Set pid/admId for notes modal */
+  loadPatientDocumentsInto(patientId,'bpp-doc-list',true);
+  /* Set pid/admId for notes/prescription modals reached from this popup */
   _pid=patientId;_admId=admId;
 }
 
-function bppTab(tab,el){
-  document.querySelectorAll('.bp-tab').forEach(function(t){t.classList.remove('on')});
-  document.querySelectorAll('.bp-pnl').forEach(function(p){p.classList.remove('on')});
-  if(el)el.classList.add('on');
-  var p=document.getElementById('bpp-pnl-'+tab);if(p)p.classList.add('on');
-}
-
-async function loadBppNotes(){
-  if(!_bppAdmId)return;
-  var r=await _supa.from('progress_notes').select('*').eq('admission_id',_bppAdmId).order('created_at',{ascending:false});
-  var el=document.getElementById('bpp-notes-list');
-  if(!r.data||!r.data.length){el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No notes yet for this admission.</p>';return;}
-  el.innerHTML=renderNoteCards(r.data);
-}
-async function loadBppRx(){
-  if(!_bppPatientId)return;
-  var r=await _supa.from('nh_prescriptions').select('*').eq('patient_id',_bppPatientId).order('created_at',{ascending:false}).limit(10);
-  renderRxList('bpp-rx-list',r.data||[]);
-}
-async function loadBppDocs(){
-  if(!_bppPatientId)return;
-  loadPatientDocumentsInto(_bppPatientId,'bpp-doc-list',true);
-}
-async function loadBppHistory(){
-  if(!_bppPatientId)return;
-  var r=await _supa.from('admissions').select('*').eq('patient_id',_bppPatientId).order('admission_date',{ascending:false});
-  var el=document.getElementById('bpp-history-list');
-  el.innerHTML=renderAdmissionHistory(r.data||[]);
-}
 function openNoteModalFromBed(){
   if(!_bppAdmId){showToast('No active admission');return;}
   _admId=_bppAdmId;_pid=_bppPatientId;
   _currentAdmId=_bppAdmId;_currentAdmName=document.getElementById('bpp-name').textContent;
   openNoteModal();
+}
+
+/* ── ORDER TEST ──
+   AuraScale has no diagnostic-centre/lab workflow connected yet, so
+   this doesn't create a fake lab-order record — it saves a clearly
+   tagged entry into the same progress_notes table used elsewhere, so
+   the order is genuinely visible in the patient's real clinical
+   history rather than living in a disconnected mock system. */
+function openOrderTestModal(){
+  if(!_bppAdmId){showToast('No active admission');return;}
+  document.getElementById('ot-test-name').value='';
+  document.getElementById('ot-notes').value='';
+  document.getElementById('ot-err').style.display='none';
+  openModal('mod-order-test');
+}
+async function saveTestOrder(){
+  var name=(document.getElementById('ot-test-name').value||'').trim();
+  var notes=(document.getElementById('ot-notes').value||'').trim();
+  var err=document.getElementById('ot-err');
+  err.style.display='none';
+  if(!name){err.textContent='Enter a test name';err.style.display='block';return;}
+  var text='🧪 Lab test ordered: '+name+(notes?' — '+notes:'');
+  var r=await _supa.from('progress_notes').insert({
+    clinic_id:_clinicId,admission_id:_bppAdmId,patient_id:_bppPatientId,created_by:_myUid,
+    doctor_name:(document.getElementById('note-doc')||{}).value||'Doctor',
+    plan:text,note_date:new Date().toISOString().slice(0,10)
+  });
+  if(r.error){err.textContent='Error: '+r.error.message;err.style.display='block';return;}
+  closeModal('mod-order-test');
+  showToast('Test order saved to patient record');
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1045,8 +950,7 @@ async function savePrescription(){
   }
   await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'prescription_saved',target_table:'nh_prescriptions',target_id:pid,details:{diagnosis:diag}});
   closeModal('mod-prescription');showToast('Prescription saved');
-  /* Reload prescription tab in whichever modal is open */
-  if(document.getElementById('mod-bed-profile').classList.contains('open'))loadBppRx();
+  /* Reload prescription tab if the full profile is open */
   if(document.getElementById('mod-profile').classList.contains('open'))loadPrescriptionTab(pid);
 }
 async function loadPrescriptionTab(patientId){
