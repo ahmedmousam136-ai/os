@@ -929,7 +929,7 @@ async function loadBeds(){
         var isOcc=!!(adm&&adm.patient_name)||s==='occupied';
         var cls=isOcc?'occupied':s==='cleaning'?'cleaning':s==='reserved'?'reserved':'';
         var days=adm?Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1:0;
-        var clickable=isOcc?'onclick="openBedPatientProfile('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(esc(w))+','+(adm?JSON.stringify(adm.id):JSON.stringify(''))+','+(adm?JSON.stringify(adm.patient_id||''):JSON.stringify(''))+','+(adm?JSON.stringify(esc(adm.patient_name||'')):JSON.stringify(''))+','+days+')"'  :'style="cursor:default"';
+        var clickable=isOcc?('onclick="openBedPatientProfile('+jsAttr(b.id)+','+jsAttr(b.bed_number)+','+jsAttr(w)+','+jsAttr(adm?adm.id:'')+','+jsAttr(adm?(adm.patient_id||''):'')+','+jsAttr(adm?(adm.patient_name||''):'')+','+days+')"'):'style="cursor:default"';
         return '<div class="bov '+cls+'" '+clickable+'>'
           +'<div class="bov-num">'+esc(b.bed_number)+'</div>'
           +'<div class="bov-ward">'+esc(w)+'</div>'
@@ -1147,6 +1147,18 @@ function stopRxVoice(){
 
 /* ── UTILS ── */
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+/* Safely embed a JS string literal argument inside a double-quoted HTML
+   onclick="..." attribute. JSON.stringify() alone is NOT safe here: it
+   emits double-quoted strings, which the browser reads as the end of
+   the onclick="..." attribute the moment it hits the first embedded
+   quote — silently truncating the handler so the click does nothing.
+   This builds a single-quoted JS string instead, with any raw double
+   quotes HTML-entity-escaped (the browser decodes &quot; back to " while
+   parsing the attribute, before the JS ever runs) and single quotes/
+   backslashes escaped for the JS string itself. */
+function jsAttr(v){
+  return "'"+String(v==null?'':v).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,'\\n').replace(/\r/g,'')+"'";
+}
 
 init();
 </script>
