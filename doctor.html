@@ -245,6 +245,10 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
       <button class="nb" onclick="nav('beds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/></svg></span>All Patients
       </button>
+      <p class="nav-sec">Account</p>
+      <button class="nb" onclick="nav('settings',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings
+      </button>
     </nav>
     <div class="sb-foot">
       <button class="theme-toggle" onclick="toggleTheme()">
@@ -320,6 +324,38 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
           </div>
         </div>
         <div id="beds-by-ward"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="v-settings" class="view">
+        <div class="sh"><div><h1 class="st">Settings</h1><p class="ss">Manage your account</p></div></div>
+
+        <div class="panel">
+          <div class="ph"><div class="pt">Change Password</div></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:12px;max-width:420px">
+            <div>
+              <label class="flbl">Current Password</label>
+              <input class="finput" id="set-old-pass" type="password" placeholder="Enter your current password"/>
+              <p class="ss" style="margin-top:4px;cursor:pointer;text-decoration:underline;display:inline-block" onclick="handleLogout()">Forgot password? Sign out and use "Forgot password?" on the login screen</p>
+            </div>
+            <div><label class="flbl">New Password</label><input class="finput" id="set-new-pass" type="password" placeholder="Min 6 characters"/></div>
+            <div><label class="flbl">Confirm New Password</label><input class="finput" id="set-new-pass-confirm" type="password"/></div>
+            <div id="set-pass-error" style="color:var(--red);font-size:11.5px;display:none"></div>
+            <button class="msub" id="set-pass-btn" onclick="handleChangePassword()">Update Password</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph"><div class="pt">Change Email</div></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:12px;max-width:420px">
+            <p class="ss">A confirmation link will be sent to the new email — the change only takes effect once you click it.</p>
+            <div><label class="flbl">Current Password</label><input class="finput" id="set-email-current-pass" type="password" placeholder="Enter your current password"/></div>
+            <div><label class="flbl">New Email</label><input class="finput" id="set-new-email" type="email"/></div>
+            <div id="set-email-error" style="color:var(--red);font-size:11.5px;display:none"></div>
+            <div id="set-email-success" style="color:var(--green);font-size:11.5px;display:none"></div>
+            <button class="msub" id="set-email-btn" onclick="handleChangeEmail()">Send Confirmation Link</button>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -529,7 +565,7 @@ function nav(id,btn){
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var t={home:'Overview',beds:'All Patients'};
+  var t={home:'Overview',beds:'All Patients',settings:'Settings'};
   document.getElementById('tab-title').textContent=t[id]||id;
   if(id==='home')loadHome();
   if(id==='beds')loadBeds();
@@ -782,6 +818,72 @@ async function handleDoctorDocUpload(evt){
   if(_bppPatientId===patientId)loadPatientDocumentsInto(patientId,'bpp-doc-list',true);
   if(_pid===patientId)loadPatientDocumentsInto(patientId,'pp-doc-list',true);
   evt.target.value='';
+}
+
+/* ── SETTINGS: CHANGE PASSWORD / EMAIL ──
+   Same re-authentication approach as the owner portal: the current
+   password is verified against Supabase Auth itself via
+   signInWithPassword (a real server-side check, not a client-side
+   gate) before anything is changed. */
+async function handleChangePassword(){
+  var oldPass=document.getElementById('set-old-pass').value||'';
+  var pass=document.getElementById('set-new-pass').value||'';
+  var confirm=document.getElementById('set-new-pass-confirm').value||'';
+  var err=document.getElementById('set-pass-error');
+  var btn=document.getElementById('set-pass-btn');
+  err.style.display='none';
+  if(!oldPass){err.textContent='Enter your current password.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  if(pass!==confirm){err.textContent='Passwords do not match.';err.style.display='block';return;}
+  if(oldPass===pass){err.textContent='New password must be different from your current password.';err.style.display='block';return;}
+  if(btn.disabled)return;
+  btn.disabled=true;var orig=btn.textContent;btn.textContent='Verifying…';
+  try{
+    var userRes=await _supa.auth.getUser();
+    var email=userRes.data&&userRes.data.user?userRes.data.user.email:null;
+    if(!email){err.textContent='Could not verify your session. Please sign in again.';err.style.display='block';return;}
+    var verify=await _supa.auth.signInWithPassword({email:email,password:oldPass});
+    if(verify.error){err.textContent='Current password is incorrect.';err.style.display='block';return;}
+    btn.textContent='Updating…';
+    var r=await _supa.auth.updateUser({password:pass});
+    if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
+    document.getElementById('set-old-pass').value='';
+    document.getElementById('set-new-pass').value='';
+    document.getElementById('set-new-pass-confirm').value='';
+    showToast('Password updated');
+  }finally{btn.disabled=false;btn.textContent=orig;}
+}
+async function handleChangeEmail(){
+  var oldPass=document.getElementById('set-email-current-pass').value||'';
+  var email=(document.getElementById('set-new-email').value||'').trim();
+  var err=document.getElementById('set-email-error');
+  var ok=document.getElementById('set-email-success');
+  var btn=document.getElementById('set-email-btn');
+  err.style.display='none';ok.style.display='none';
+  if(!oldPass){err.textContent='Enter your current password.';err.style.display='block';return;}
+  if(!email){err.textContent='Enter a new email.';err.style.display='block';return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='Enter a valid email address.';err.style.display='block';return;}
+  if(btn.disabled)return;
+  btn.disabled=true;var orig=btn.textContent;btn.textContent='Verifying…';
+  try{
+    var userRes=await _supa.auth.getUser();
+    var currentEmail=userRes.data&&userRes.data.user?userRes.data.user.email:null;
+    if(!currentEmail){err.textContent='Could not verify your session. Please sign in again.';err.style.display='block';return;}
+    if(email.toLowerCase()===currentEmail.toLowerCase()){err.textContent='This is already your current email.';err.style.display='block';return;}
+    var verify=await _supa.auth.signInWithPassword({email:currentEmail,password:oldPass});
+    if(verify.error){err.textContent='Current password is incorrect.';err.style.display='block';return;}
+    btn.textContent='Sending…';
+    var r=await _supa.auth.updateUser({email:email});
+    if(r.error){
+      var msg=(r.error.message||'').toLowerCase();
+      err.textContent=(msg.indexOf('already')>-1||msg.indexOf('registered')>-1||msg.indexOf('exists')>-1)?'This email is already associated with an account. Use a different email.':r.error.message;
+      err.style.display='block';
+      return;
+    }
+    document.getElementById('set-email-current-pass').value='';
+    ok.textContent='Confirmation link sent to '+email+'. The change takes effect once you click it.';
+    ok.style.display='block';
+  }finally{btn.disabled=false;btn.textContent=orig;}
 }
 
 function switchTab(tab,el){
