@@ -1575,6 +1575,11 @@ async function handleInviteSignup(){
       err.style.display='block';
       return;
     }
+    /* Backfill email onto their own nh_staff row — a self-update, so
+       normal RLS ("users can update their own row") already covers it.
+       Wrapped safely: if the 'email' column doesn't exist yet in this
+       database, this just silently no-ops rather than blocking signup. */
+    try{ await _supa.from('nh_staff').update({email:email}).eq('id',r.data.user.id); }catch(e){}
     showToast('Welcome — your '+redeem.data.role+' account is ready.');
     await _initApp();
   }finally{
@@ -1675,7 +1680,7 @@ async function handleSignup(){
       return;
     }
     await _supa.from('facility_members').upsert({user_id:r.data.user.id,clinic_id:ins.data.id,role:'owner'});
-    await _supa.from('nh_staff').upsert({id:r.data.user.id,clinic_id:ins.data.id,role:'owner',full_name:name});
+    await _supa.from('nh_staff').upsert({id:r.data.user.id,clinic_id:ins.data.id,role:'owner',full_name:name,email:email});
   }
   document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Registration Submitted</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your nursing home account is under review.<br>We will activate it within 24 hours.<br><br>WhatsApp us to expedite activation.</p><a href="https://wa.me/919330660325?text=Hi, I registered '+nhname+' on AuraScale NH. Please activate." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us to Activate</a></div></div>';
 }
@@ -1828,7 +1833,7 @@ async function _initApp(){
        invited Receptionist/Doctor logins (not just the original owner)
        find their clinic. Falls back to the legacy owner_id lookup for
        any account that predates nh_staff and hasn't been backfilled. */
-    var staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id',uid).single(),20000,'your staff record');
+    var staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active,email').eq('id',uid).single(),20000,'your staff record');
 
     var clinicId=null;
     if(staffRow.data&&staffRow.data.clinic_id){
@@ -1849,7 +1854,7 @@ async function _initApp(){
            so every database-side rule (invites, patients, etc.) that
            checks nh_staff actually sees this login as the owner it is,
            instead of only believing it client-side. */
-        await _supa.from('nh_staff').upsert({id:uid,clinic_id:clinicId,role:'owner'});
+        await _supa.from('nh_staff').upsert({id:uid,clinic_id:clinicId,role:'owner',email:(userRes.data.user.email||null)});
       }
     }
     if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
@@ -1865,6 +1870,16 @@ async function _initApp(){
     }
     _clinicId=cl.data.id;
     document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
+    /* Self-heal: if this login's nh_staff row predates the email column
+       (or was created before we started saving it), backfill it now
+       with their own session email. Safe because it's a self-update —
+       same RLS pattern as everything else in this file — and it means
+       every existing staff member's email fills in automatically the
+       next time they sign in, without needing service-role/admin access
+       to read other users' emails from auth.users. */
+    if(staffRow.data && !staffRow.data.email && userRes.data.user.email){
+      try{ await _supa.from('nh_staff').update({email:userRes.data.user.email}).eq('id',uid); }catch(e){}
+    }
     /* nh.html is the Owner portal only. Doctor and Receptionist logins
        are sent to their own genuinely separate pages — not shown an
        inline view within this file. Supabase persists the session in
@@ -3226,13 +3241,18 @@ async function saveAyushmanCase(){
 /* ── STAFF (owner only) ── */
 async function loadStaffList(){
   if(!_clinicId||_myRole!=='owner')return;
-  var r=await _supa.from('nh_staff').select('id,role,full_name,is_active,created_at').eq('clinic_id',_clinicId).order('created_at');
+  var r=await _supa.from('nh_staff').select('id,role,full_name,is_active,created_at,email').eq('clinic_id',_clinicId).order('created_at');
+  if(r.error){
+    /* 'email' column doesn't exist in this database yet — fall back so
+       the staff list still loads correctly, just without email shown. */
+    r=await _supa.from('nh_staff').select('id,role,full_name,is_active,created_at').eq('clinic_id',_clinicId).order('created_at');
+  }
   var list=document.getElementById('staff-list');
   if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">👥</div><p class="empty-t">No staff yet</p></div>';}
   else{
     list.innerHTML=r.data.map(function(s){
       return '<div class="adm-row"><div class="adm-av">'+(s.full_name||'?').charAt(0)+'</div>'
-        +'<div style="flex:1"><div class="adm-name">'+(s.full_name||'Unnamed')+'</div><div class="adm-meta">'+s.role+(s.is_active?'':' · deactivated')+'</div></div>'
+        +'<div style="flex:1"><div class="adm-name">'+(s.full_name||'Unnamed')+(s.email?' <span style="font-weight:400;color:var(--text-tertiary)">· '+esc(s.email)+'</span>':'')+'</div><div class="adm-meta">'+s.role+(s.is_active?'':' · deactivated')+'</div></div>'
         +'<button class="qbtn" onclick="toggleStaffActive(\''+s.id+'\','+(!s.is_active)+')">'+(s.is_active?'Deactivate':'Activate')+'</button>'
         +(s.role!=='owner'?'<button class="qbtn" style="color:var(--red);margin-left:6px" onclick="removeStaff(\''+s.id+'\',\''+(s.full_name||'this staff member').replace(/'/g,"\\'")+'\')">Revoke Access</button>':'')
         +'</div>';
