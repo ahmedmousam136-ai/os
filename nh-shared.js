@@ -90,7 +90,7 @@ async function nhAuthGuard(requiredRole) {
     }
 
     var cl = await withTimeout(
-      _supa.from('clinics').select('id,name,is_approved').eq('id', clinicId).single(),
+      _supa.from('clinics').select('id,name,is_approved,subscription_status').eq('id', clinicId).single(),
       20000, 'facility details'
     );
 
@@ -98,6 +98,13 @@ async function nhAuthGuard(requiredRole) {
 
     if (!cl.data.is_approved) {
       document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><div style="font-size:40px;margin-bottom:16px">⏳</div><h2>Account Pending Activation</h2><p style="color:#666;margin:12px 0 20px">Your AuraScale NH account is being reviewed. We activate within 24 hours.</p><a href="https://wa.me/919330660325?text=Hi, please activate my AuraScale NH account." target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;text-decoration:none">📲 WhatsApp Us</a></div></div>';
+      return null;
+    }
+
+    /* Subscription lock — owner & receptionist are frozen out if payment is overdue.
+       Doctors are ALWAYS exempt: patient care must not be interrupted by a billing dispute. */
+    if (_myRole !== 'doctor' && cl.data.subscription_status === 'frozen') {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><div style="font-size:40px;margin-bottom:16px">🔒</div><h2>Subscription Payment Due</h2><p style="color:#666;margin:12px 0 20px">Access to billing and administration is paused until this month\'s AuraScale subscription is renewed. Doctors can continue accessing patient records as normal.</p><a href="https://wa.me/919330660325?text=Hi, I need to renew my AuraScale subscription." target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;text-decoration:none">📲 Renew via WhatsApp</a></div></div>';
       return null;
     }
 
