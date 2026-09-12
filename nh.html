@@ -435,78 +435,72 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       </div>
     </div>
     <nav class="sb-nav">
-      <p class="nav-sec">Overview</p>
+      <p class="nav-sec" data-i18n="sec_overview">Overview</p>
       <button class="nb on" onclick="nav('dashboard',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
-        Dashboard
+        <span data-i18n="nav_dashboard">Dashboard</span>
       </button>
-      <p class="nav-sec">Patients</p>
+      <p class="nav-sec" data-i18n="sec_patients">Patients</p>
       <button class="nb doctor-home-only" onclick="nav('doctor-home',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-        My Patients Home
+        <span data-i18n="nav_mypatientshome">My Patients Home</span>
       </button>
       <button class="nb reception-home-only" onclick="nav('reception-home',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-        Reception Home
+        <span data-i18n="nav_receptionhome">Reception Home</span>
       </button>
       <button class="nb" onclick="nav('patients',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-        Patients
+        <span data-i18n="nav_patients">Patients</span>
       </button>
-      <p class="nav-sec">Inpatient</p>
+      <p class="nav-sec" data-i18n="sec_inpatient">Inpatient</p>
       <button class="nb" onclick="nav('beds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/><path d="M12 14v-3"/></svg></span>
-        Bed Management
+        <span data-i18n="nav_beds">Bed Management</span>
         <span class="nb-badge" id="nav-occupied-count">0</span>
       </button>
       <button class="nb reception-only" onclick="nav('admissions',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
-        Admissions
+        <span data-i18n="nav_admissions">Admissions</span>
       </button>
       <button class="nb reception-only" onclick="nav('rounds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
-        Progress Notes
+        <span data-i18n="nav_rounds">Progress Notes</span>
       </button>
       <button class="nb reception-only" onclick="nav('billing',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
-        Billing
+        <span data-i18n="nav_billing">Billing</span>
       </button>
       <button class="nb reception-only" onclick="nav('discharge',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
-        Discharge
+        <span data-i18n="nav_discharge">Discharge</span>
       </button>
-      <button class="nb owner-only" onclick="nav('reports',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></span>
-        Reports
-      </button>
-      <p class="nav-sec">Programs</p>
+      <p class="nav-sec" data-i18n="sec_programs">Programs</p>
       <button class="nb owner-only" onclick="nav('audit',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Audit
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span data-i18n="nav_audit">Audit</span>
       </button>
       <button class="nb reception-only" onclick="nav('ayushman',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
-        Ayushman / PM-JAY
+        <span data-i18n="nav_ayushman">Ayushman / PM-JAY</span>
       </button>
       <div class="owner-only">
         <button class="nb" onclick="nav('staff',this)">
           <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-          Staff
+          <span data-i18n="nav_staff">Staff</span>
         </button>
       </div>
-      <p class="nav-sec owner-only">Account</p>
+      <p class="nav-sec owner-only" data-i18n="sec_account">Account</p>
       <button class="nb owner-only" onclick="nav('notifications',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
-        Notifications
+        <span data-i18n="nav_notifications">Notifications</span>
       </button>
-      <p class="nav-sec">Account</p>
-      <p class="nav-sec">Account</p>
       <button class="nb owner-only" onclick="nav('subscription',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
-        Subscription
+        <span data-i18n="nav_subscription">Subscription</span>
       </button>
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-        Settings
+        <span data-i18n="nav_settings">Settings</span>
       </button>
     </nav>
     <div class="sb-foot">
@@ -535,10 +529,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <span class="bc-page" id="tab-title">Dashboard</span>
       </div>
       <div class="hdr-r">
+        <select id="lang-switcher" onchange="setLanguage(this.value)" style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--surface);color:var(--text-primary);font-size:12px;font-weight:600;cursor:pointer">
+          <option value="en">🌐 English</option>
+          <option value="bn">🌐 বাংলা</option>
+          <option value="hi">🌐 हिंदी</option>
+        </select>
         <span class="date-pill" id="hdr-date"></span>
         <button class="add-btn reception-only" id="hdr-add-btn" onclick="openAdmitModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Admit Patient
+          <span data-i18n="btn_admit_patient">Admit Patient</span>
         </button>
       </div>
     </header>
@@ -1374,6 +1373,48 @@ function toggleMoreMetrics(btn){
   if(!body) return;
   body.style.display = (body.style.display === 'none' || !body.style.display) ? 'flex' : 'none';
 }
+
+/* ── LANGUAGE / i18n ── */
+var I18N = {
+  en: {
+    sec_overview:'Overview', sec_patients:'Patients', sec_inpatient:'Inpatient', sec_programs:'Programs', sec_account:'Account',
+    nav_dashboard:'Dashboard', nav_mypatientshome:'My Patients Home', nav_receptionhome:'Reception Home', nav_patients:'Patients',
+    nav_beds:'Bed Management', nav_admissions:'Admissions', nav_rounds:'Progress Notes', nav_billing:'Billing', nav_discharge:'Discharge',
+    nav_audit:'Audit', nav_ayushman:'Ayushman / PM-JAY', nav_staff:'Staff', nav_notifications:'Notifications',
+    nav_subscription:'Subscription', nav_settings:'Settings', btn_admit_patient:'Admit Patient'
+  },
+  bn: {
+    sec_overview:'ওভারভিউ', sec_patients:'রোগী', sec_inpatient:'ইনপেশেন্ট', sec_programs:'প্রোগ্রাম', sec_account:'অ্যাকাউন্ট',
+    nav_dashboard:'ড্যাশবোর্ড', nav_mypatientshome:'আমার রোগী', nav_receptionhome:'রিসেপশন হোম', nav_patients:'রোগীরা',
+    nav_beds:'বেড ব্যবস্থাপনা', nav_admissions:'ভর্তি', nav_rounds:'প্রগ্রেস নোট', nav_billing:'বিলিং', nav_discharge:'ছুটি',
+    nav_audit:'অডিট', nav_ayushman:'আয়ুষ্মান / পিএম-জেএওয়াই', nav_staff:'স্টাফ', nav_notifications:'বিজ্ঞপ্তি',
+    nav_subscription:'সাবস্ক্রিপশন', nav_settings:'সেটিংস', btn_admit_patient:'রোগী ভর্তি করুন'
+  },
+  hi: {
+    sec_overview:'ओवरव्यू', sec_patients:'मरीज़', sec_inpatient:'इनपेशेंट', sec_programs:'प्रोग्राम', sec_account:'खाता',
+    nav_dashboard:'डैशबोर्ड', nav_mypatientshome:'मेरे मरीज़', nav_receptionhome:'रिसेप्शन होम', nav_patients:'मरीज़',
+    nav_beds:'बेड प्रबंधन', nav_admissions:'भर्ती', nav_rounds:'प्रगति नोट्स', nav_billing:'बिलिंग', nav_discharge:'छुट्टी',
+    nav_audit:'ऑडिट', nav_ayushman:'आयुष्मान / पीएम-जय', nav_staff:'स्टाफ', nav_notifications:'सूचनाएं',
+    nav_subscription:'सब्सक्रिप्शन', nav_settings:'सेटिंग्स', btn_admit_patient:'मरीज़ भर्ती करें'
+  }
+};
+function setLanguage(lang){
+  if(!I18N[lang])lang='en';
+  localStorage.setItem('aurascale_lang',lang);
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var key=el.getAttribute('data-i18n');
+    if(I18N[lang][key])el.textContent=I18N[lang][key];
+  });
+  var sw=document.getElementById('lang-switcher');if(sw)sw.value=lang;
+  // Sidebar labels are translated above; page headers, table columns, and other deeper
+  // text are not yet covered by this first pass — the data-i18n system can be extended
+  // to any element by adding data-i18n="key" plus a matching entry in I18N.
+}
+function initLanguage(){
+  var saved=localStorage.getItem('aurascale_lang')||'en';
+  setLanguage(saved);
+}
+initLanguage();
 
 function nav(id,btn){
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')});
