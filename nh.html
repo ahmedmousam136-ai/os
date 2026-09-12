@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#ffffff" id="meta-theme"/>
 <title>AuraScale NH — Nursing Home OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script>
 /* RESET REDIRECT — must run before Supabase loads */
 (function(){
@@ -24,20 +24,20 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root,[data-theme="light"]{
-  --bg:#F5F6F8;--surface:#FFFFFF;--surface2:#FAFBFC;
-  --border:#E1E4EA;--border-mid:#C7CCD6;--border-strong:#9AA2B1;
-  --text-primary:#17202E;--text-secondary:#5B6472;--text-tertiary:#8B93A1;
-  --blue:#1E3A5F;--blue-light:#2E5580;--blue-bg:#EAEFF5;--blue-border:#C7D2E0;--blue-hover:#16304E;
-  --green:#2F5D46;--green-bg:#E9F1EC;--green-border:#BFD8CB;
-  --amber:#9C6B1E;--amber-bg:#F5EEE0;--amber-border:#E3D2AE;
-  --red:#8B3A3A;--red-bg:#F4E9E9;--red-border:#E3C6C6;
-  --purple:#4A4470;--purple-bg:#EDECF4;--purple-border:#CFCBE0;
+  --bg:#F7F6F3;--surface:#FFFFFF;--surface2:#FAFAF8;
+  --border:#E8E5DF;--border-mid:#D2CEC6;--border-strong:#AEA9A0;
+  --text-primary:#18170F;--text-secondary:#64605A;--text-tertiary:#9E9A93;
+  --blue:#2E63D4;--blue-light:#4475E0;--blue-bg:#EDF2FC;--blue-border:#BDD0F7;--blue-hover:#2354C0;
+  --green:#12976A;--green-bg:#EAFAF3;--green-border:#9ADEC3;
+  --amber:#C27820;--amber-bg:#FDF4E6;--amber-border:#F0CEAA;
+  --red:#C23838;--red-bg:#FDF0F0;--red-border:#F2B8B8;
+  --purple:#6B3FA0;--purple-bg:#F3EDFB;--purple-border:#D4B8F0;
   --sidebar-w:260px;--header-h:54px;
   --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
   --sh-xs:0 1px 3px rgba(0,0,0,.05);--sh-sm:0 2px 8px rgba(0,0,0,.07);
   --sh-md:0 4px 18px rgba(0,0,0,.09);--sh-lg:0 12px 42px rgba(0,0,0,.13);
   --ease:.17s cubic-bezier(.4,0,.2,1);
-  /* Sidebar — black, matching reference image 2 */
+  /* Sidebar — inverted relative to the main surface: black sidebar in light mode */
   --sidebar-bg:#111214;--sidebar-text:#FFFFFF;
   --sidebar-text-secondary:rgba(255,255,255,.56);--sidebar-text-tertiary:rgba(255,255,255,.38);
   --sidebar-border:rgba(255,255,255,.09);--sidebar-hover-bg:rgba(255,255,255,.07);--sidebar-active-bg:rgba(255,255,255,.13);
@@ -70,7 +70,7 @@ a{color:inherit;text-decoration:none}
 .auth-wrap{width:100%;max-width:400px}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px 24px;box-shadow:var(--sh-lg)}
 .auth-logo{text-align:center;margin-bottom:20px}
-.auth-title{font-family:'IBM Plex Sans',sans-serif;font-size:22px;color:var(--text-primary);letter-spacing:-.02em}
+.auth-title{font-family:'Instrument Serif',serif;font-size:22px;color:var(--text-primary);letter-spacing:-.02em}
 .auth-sub{font-size:11.5px;color:var(--text-tertiary);margin-top:4px}
 .auth-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:20px}
 .auth-tab{flex:1;padding:8px;text-align:center;border-radius:6px;font-size:12px;font-weight:600;color:var(--text-tertiary);cursor:pointer;transition:all var(--ease)}
@@ -91,14 +91,9 @@ a{color:inherit;text-decoration:none}
 #sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);border-right:1px solid var(--sidebar-border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;overflow-y:auto;overflow-x:hidden;transition:background .22s ease,border-color .22s ease}
 .sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--sidebar-border)}
 .sb-mark{display:flex;align-items:baseline;gap:0;line-height:1}
-.sb-mark .a{font-family:'IBM Plex Sans',sans-serif;font-size:21px;font-weight:800;color:var(--sidebar-text)}
-.sb-mark .s{font-family:'IBM Plex Sans',sans-serif;font-size:21px;font-weight:800;color:var(--green)}
+.sb-mark .a{font-family:'Instrument Serif',serif;font-size:21px;color:var(--sidebar-text)}
+.sb-mark .s{font-family:'Instrument Serif',serif;font-size:21px;color:var(--green)}
 .sb-mark .os{font-size:10px;font-weight:700;color:var(--sidebar-text-tertiary);letter-spacing:.08em;margin-left:5px}
-/* The login screen reuses this same logo markup, but it always sits on a
-   white card regardless of the sidebar's own theme — so it needs its own
-   fixed, always-visible colors instead of inheriting the sidebar ones. */
-.auth-logo .sb-mark .a{color:var(--text-primary)!important}
-.auth-logo .sb-mark .os{color:var(--text-tertiary)!important}
 .sb-tag{font-size:10px;color:var(--sidebar-text-tertiary);letter-spacing:.05em;margin-top:3px}
 .sb-facility{padding:11px 13px;border-bottom:1px solid var(--sidebar-border)}
 .sb-facility-inner{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);padding:12px 13px}
@@ -126,7 +121,7 @@ nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px}
 header{height:var(--header-h);background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(16px)}
 [data-theme="dark"] header{background:rgba(23,27,36,.94)}
 .hdr-l{display:flex;align-items:center;gap:9px;flex:1}
-.bc-root{font-family:'IBM Plex Sans',sans-serif;font-size:15px;color:var(--text-primary)}
+.bc-root{font-family:'Instrument Serif',serif;font-size:15px;color:var(--text-primary)}
 .bc-sep{color:var(--text-tertiary);font-size:12px}
 .bc-page{color:var(--text-secondary);font-size:12.5px;font-weight:500}
 .hdr-r{display:flex;align-items:center;gap:7px}
@@ -138,21 +133,21 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 /* ── VIEWS ── */
 .view{display:none;flex-direction:column;gap:18px}.view.on{display:flex}
 .sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.st{font-family:'IBM Plex Sans',sans-serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
+.st{font-family:'Instrument Serif',serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
 .ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
 
 /* ── METRICS ── */
 .mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
-.mc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 16px 14px;box-shadow:var(--sh-xs);transition:all var(--ease)}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 14px;box-shadow:var(--sh-xs);transition:all var(--ease)}
 .mc:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
 .mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
 .mc-icon{width:27px;height:27px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
-.mc-val{font-family:'IBM Plex Sans',sans-serif;font-weight:800;font-size:28px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mc-val{font-family:'Instrument Serif',serif;font-size:28px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
 .mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:5px}
 
 /* ── PANELS ── */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--sh-xs)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
 .ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
 .pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
 .pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em}
@@ -190,7 +185,7 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 .adm-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
 .adm-row:hover{background:var(--bg)}
 .adm-row:last-child{border-bottom:none}
-.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;flex-shrink:0}
+.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
 .adm-name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
 .adm-meta{font-size:10.5px;color:var(--text-secondary);margin-top:1px}
 .adm-actions{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
@@ -200,7 +195,7 @@ main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 .chg-row:last-child{border-bottom:none}
 .chg-name{font-size:12px;font-weight:500;color:var(--text-primary)}
 .chg-type{font-size:10px;color:var(--text-tertiary);margin-top:1px}
-.chg-amt{font-size:13px;font-weight:700;color:var(--text-primary);font-family:'IBM Plex Sans',sans-serif}
+.chg-amt{font-size:13px;font-weight:700;color:var(--text-primary);font-family:'Instrument Serif',serif}
 
 /* ── NOTE ROW ── */
 .note-row{padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
@@ -295,18 +290,16 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 .dash-pnl{display:flex;flex-direction:column;gap:14px}
 
 /* Collapsible "More metrics" sections */
-.more-metrics-toggle{display:flex;align-items:center;gap:6px;background:none;border:none;padding:6px 2px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;width:fit-content}
+.more-metrics-toggle{display:flex;align-items:center;gap:6px;background:none;border:none;padding:6px 2px;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;width:fit-content}
 .more-metrics-toggle:hover{color:var(--text-primary)}
 .mm-arrow{display:inline-block;transition:transform .15s ease;font-size:10px}
 .more-metrics-toggle.open .mm-arrow{transform:rotate(90deg)}
 .more-metrics-body{display:flex;flex-direction:column;gap:14px}
 .mg3b{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-/* Cards stay plain white always — only the number itself carries color,
-   matching the reference design (no tinted card backgrounds). */
-.mc-green .mc-val{color:var(--green)}
-.mc-amber .mc-val{color:var(--amber)}
-.mc-red .mc-val{color:var(--red)}
-.mc-blue .mc-val{color:var(--blue)}
+.mc-green{border-color:var(--green-border)!important;background:var(--green-bg)!important}
+.mc-amber{border-color:var(--amber-border)!important;background:var(--amber-bg)!important}
+.mc-red{border-color:var(--red-border)!important;background:var(--red-bg)!important}
+.mc-blue{border-color:var(--blue-border)!important;background:var(--blue-bg)!important}
 /* ACTIVITY FEED */
 .activity-row{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(228,224,216,.5)}
 .activity-row:last-child{border-bottom:none}
@@ -323,7 +316,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 .fin-cat-bar{height:4px;border-radius:2px;margin-top:4px;background:var(--green);transition:width .4s}
 .fin-cat-name{font-size:12px;font-weight:600}
 .fin-cat-sub{font-size:10px;color:var(--text-tertiary)}
-.fin-cat-amt{font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:700;text-align:right}
+.fin-cat-amt{font-family:'Instrument Serif',serif;font-size:16px;font-weight:700;text-align:right}
 /* BED BILLING BADGE */
 .bed-billing-badge{font-size:8px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);padding:2px 5px;border-radius:3px;font-weight:700;margin-top:3px;display:inline-block}
 /* REALTIME PULSE */
@@ -580,7 +573,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
           <div class="panel">
             <div class="ph"><div class="pt" data-i18n="bed_map">Bed Map</div></div>
-            <div id="dash-bed-mini" style="padding:16px;display:flex;flex-wrap:wrap;gap:10px"></div>
+            <div id="dash-bed-mini" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:5px"></div>
           </div>
 
           <button type="button" class="more-metrics-toggle" onclick="toggleMoreMetrics(this)">
@@ -591,11 +584,11 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               <div class="mc mc-green"><div class="mc-lbl" data-i18n="m_occupied_beds">Occupied Beds</div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub" data-i18n="m_currently_in_use">currently in use</div></div>
               <div class="mc"><div class="mc-lbl" data-i18n="m_today_adm">Today Admissions</div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub" data-i18n="m_new_today">new today</div></div>
               <div class="mc"><div class="mc-lbl" data-i18n="m_today_dis">Today Discharges</div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub" data-i18n="m_discharged_today">discharged today</div></div>
-              <div class="mc"><div class="mc-lbl" data-i18n="m_current_billing">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub" data-i18n="m_active_adm_total">active admissions total</div></div>
+              <div class="mc mc-blue"><div class="mc-lbl" data-i18n="m_current_billing">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub" data-i18n="m_active_adm_total">active admissions total</div></div>
             </div>
             <div class="mg6">
               <div class="mc mc-green"><div class="mc-lbl" data-i18n="m_monthly_revenue">Monthly Revenue</div><div class="mc-val" id="dm-monthly-revenue">—</div><div class="mc-sub" data-i18n="m_month_to_date">month to date</div></div>
-              <div class="mc"><div class="mc-lbl" data-i18n="m_total_collection">Total Collection</div><div class="mc-val" id="dm-collection">—</div><div class="mc-sub" data-i18n="m_payments_this_month">payments this month</div></div>
+              <div class="mc mc-blue"><div class="mc-lbl" data-i18n="m_total_collection">Total Collection</div><div class="mc-val" id="dm-collection">—</div><div class="mc-sub" data-i18n="m_payments_this_month">payments this month</div></div>
               <div class="mc mc-red"><div class="mc-lbl" data-i18n="m_expenses">Expenses</div><div class="mc-val" id="dm-expenses">—</div><div class="mc-sub" data-i18n="m_this_month">this month</div></div>
               <div class="mc"><div class="mc-lbl" data-i18n="m_net_revenue">Net Revenue</div><div class="mc-val" id="dm-net">—</div><div class="mc-sub" data-i18n="m_revenue_minus_exp">revenue − expenses</div></div>
             </div>
@@ -681,51 +674,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
                 <div class="ph"><div class="pt" data-i18n="revenue_by_dept">Revenue by Department</div></div>
                 <div id="rev-by-dept"></div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ══════════════ REPORTS TAB (moved here from a misplaced spot inside
-             the Discharge view, where it could never display) ══════════════ -->
-        <div class="dash-pnl" id="dtab-reports" style="display:none">
-          <div class="sh" style="margin-bottom:12px"><div><p class="ss" style="margin-top:0" data-i18n="reports_subtitle">Daily and monthly management reports</p></div></div>
-          <div class="mg2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div class="panel" style="padding:18px">
-              <div style="font-weight:700;font-size:14px;margin-bottom:4px">📄 <span data-i18n="daily_owner_report">Daily Owner Report</span></div>
-              <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px" data-i18n="daily_report_desc">Today's revenue, collection, expenses, admissions/discharges and important transactions.</p>
-              <input type="date" class="finput" id="report-daily-date"/>
-              <button class="msub" onclick="generateDailyReport()" data-i18n="generate_print">Generate &amp; Print</button>
-            </div>
-            <div class="panel" style="padding:18px">
-              <div style="font-weight:700;font-size:14px;margin-bottom:4px">📊 <span data-i18n="monthly_mgmt_audit">Monthly Management Audit</span></div>
-              <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px" data-i18n="monthly_report_desc">Full month revenue, collection, expenses, department/service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</p>
-              <input type="month" class="finput" id="report-monthly-month"/>
-              <button class="msub" onclick="generateMonthlyReport()" data-i18n="generate_print">Generate &amp; Print</button>
-            </div>
-          </div>
-          <div class="note-box note-blue" style="margin-top:14px;font-size:11px" data-i18n="reports_note">
-            ℹ️ Reports open as a printable page — use your browser's "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn't wired up, since no messaging/email integration exists in this app yet.
-          </div>
-        </div>
-
-        <!-- ══════════════ BILLING TAB (moved here from a misplaced spot inside
-             the Discharge view, where it could never display) ══════════════ -->
-        <div class="dash-pnl" id="dtab-billing" style="display:none">
-          <div class="panel owner-only">
-            <div class="ph"><div class="pt">⚙️ <span data-i18n="billing_method">Billing Method</span></div></div>
-            <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
-              <div><label class="flbl" data-i18n="billing_method">Billing Method</label>
-                <select class="finput" id="fin-billing-method">
-                  <option value="24hr" data-i18n="bm_24hr">24-Hour Billing (from admission time)</option>
-                  <option value="calendar" data-i18n="bm_calendar">Calendar Day (midnight cutoff)</option>
-                  <option value="cutoff" data-i18n="bm_cutoff">Custom Hospital Cutoff</option>
-                </select>
-              </div>
-              <div id="fin-cutoff-wrap" style="display:none">
-                <label class="flbl" data-i18n="cutoff_time">Cutoff Time</label>
-                <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
-              </div>
-              <button class="qbtn" onclick="saveBillingConfig()" data-i18n="save_billing_config">Save Billing Config</button>
             </div>
           </div>
         </div>
@@ -841,7 +789,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             <div id="billing-charges-list"></div>
             <div id="billing-total-bar" style="display:none;padding:13px 15px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
               <span style="font-size:12px;font-weight:700;color:var(--text-primary)">Total Due</span>
-              <span style="font-family:'IBM Plex Sans',sans-serif;font-size:20px;font-weight:700;color:var(--green)" id="billing-total">₹0</span>
+              <span style="font-family:'Instrument Serif',serif;font-size:20px;font-weight:700;color:var(--green)" id="billing-total">₹0</span>
             </div>
           </div>
         </div>
@@ -855,6 +803,47 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="panel">
           <div class="ph"><div class="pt">Ready for Discharge</div><span class="pb pb-g" id="discharge-count">0</span></div>
           <div id="discharge-list"></div>
+        </div>
+        <div class="dash-pnl" id="dtab-reports" style="display:none">
+          <div class="sh" style="margin-bottom:12px"><div><p class="ss" style="margin-top:0" data-i18n="reports_subtitle">Daily and monthly management reports</p></div></div>
+          <div class="mg2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="panel" style="padding:18px">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">📄 <span data-i18n="daily_owner_report">Daily Owner Report</span></div>
+              <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px" data-i18n="daily_report_desc">Today's revenue, collection, expenses, admissions/discharges and important transactions.</p>
+              <input type="date" class="finput" id="report-daily-date"/>
+              <button class="msub" onclick="generateDailyReport()" data-i18n="generate_print">Generate &amp; Print</button>
+            </div>
+            <div class="panel" style="padding:18px">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">📊 <span data-i18n="monthly_mgmt_audit">Monthly Management Audit</span></div>
+              <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px" data-i18n="monthly_report_desc">Full month revenue, collection, expenses, department/service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</p>
+              <input type="month" class="finput" id="report-monthly-month"/>
+              <button class="msub" onclick="generateMonthlyReport()" data-i18n="generate_print">Generate &amp; Print</button>
+            </div>
+          </div>
+          <div class="note-box note-blue" style="margin-top:14px;font-size:11px" data-i18n="reports_note">
+            ℹ️ Reports open as a printable page — use your browser's "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn't wired up, since no messaging/email integration exists in this app yet.
+          </div>
+        </div>
+
+        <!-- ══════════════ BILLING TAB ══════════════ -->
+        <div class="dash-pnl" id="dtab-billing" style="display:none">
+          <div class="panel owner-only">
+            <div class="ph"><div class="pt">⚙️ <span data-i18n="billing_method">Billing Method</span></div></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+              <div><label class="flbl" data-i18n="billing_method">Billing Method</label>
+                <select class="finput" id="fin-billing-method">
+                  <option value="24hr" data-i18n="bm_24hr">24-Hour Billing (from admission time)</option>
+                  <option value="calendar" data-i18n="bm_calendar">Calendar Day (midnight cutoff)</option>
+                  <option value="cutoff" data-i18n="bm_cutoff">Custom Hospital Cutoff</option>
+                </select>
+              </div>
+              <div id="fin-cutoff-wrap" style="display:none">
+                <label class="flbl" data-i18n="cutoff_time">Cutoff Time</label>
+                <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
+              </div>
+              <button class="qbtn" onclick="saveBillingConfig()" data-i18n="save_billing_config">Save Billing Config</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1177,7 +1166,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       </div>
       <div id="dis-bill-summary" style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:12px 14px">
         <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:4px">TOTAL BILL</div>
-        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:24px;color:var(--green)" id="dis-total-amount">₹0</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:24px;color:var(--green)" id="dis-total-amount">₹0</div>
       </div>
       <button class="msub" onclick="generateDischarge()">📄 Generate & Send to WhatsApp</button>
     </div>
@@ -1590,17 +1579,45 @@ async function payAuraScaleSubscription(){
 async function loadSubscriptionStatus(){
   var badge=document.getElementById('sub-status-badge'),note=document.getElementById('sub-status-note');
   if(!badge||!_clinicId)return;
-  var r=await _supa.from('clinics').select('subscription_status').eq('id',_clinicId).single();
+  var r=await _supa.from('clinics').select('subscription_status,subscription_expires_at').eq('id',_clinicId).single();
   var status=(r.data&&r.data.subscription_status)||'active';
+  var expiresAt=r.data&&r.data.subscription_expires_at;
+  var daysLeft=expiresAt?Math.ceil((new Date(expiresAt).getTime()-Date.now())/86400000):null;
+
   if(status==='frozen'){
-    badge.textContent='Payment Due';
+    badge.textContent='Locked';
     badge.style.background='var(--red-bg)';badge.style.color='var(--red)';
-    note.textContent='Access to billing and admin features is paused until this month\'s subscription is renewed. Your doctors can still access patient records as normal.';
+    note.textContent='Access to billing and admin features is paused because the grace period after renewal ended without payment. Your doctors can still access patient records as normal.';
+  }else if(daysLeft!==null && daysLeft<0){
+    var daysUntilLock=7+daysLeft; // grace period counts down from 7
+    badge.textContent='Grace Period';
+    badge.style.background='#FFF3CD';badge.style.color='#8A6D00';
+    note.textContent='Your subscription ended on '+new Date(expiresAt).toLocaleDateString('en-IN')+'. You have '+Math.max(daysUntilLock,0)+' day(s) left before the account is automatically locked — renew now to avoid interruption.';
+  }else if(daysLeft!==null){
+    badge.textContent='Active';
+    badge.style.background='var(--green-bg)';badge.style.color='var(--green)';
+    note.textContent='Renews on '+new Date(expiresAt).toLocaleDateString('en-IN')+' ('+daysLeft+' day'+(daysLeft===1?'':'s')+' left).';
   }else{
     badge.textContent='Active';
     badge.style.background='var(--green-bg)';badge.style.color='var(--green)';
-    note.textContent='Your AuraScale subscription is active and up to date.';
+    note.textContent='Your AuraScale subscription is active. No payment has been recorded yet — the renewal date will appear here after your first payment.';
   }
+}
+
+/* Shows a persistent top banner if the subscription is in its 7-day grace period —
+   visible everywhere in the app, not just the Subscription page, like a Netflix warning. */
+function renderSubscriptionBanner(){
+  var existing=document.getElementById('sub-grace-banner');
+  if(existing)existing.remove();
+  var sub=window._auraSubscription;
+  if(!sub||!sub.inGracePeriod||_myRole==='doctor')return;
+  var daysUntilLock=Math.max(sub.daysUntilLock,0);
+  var banner=document.createElement('div');
+  banner.id='sub-grace-banner';
+  banner.style.cssText='background:#FFF3CD;color:#8A6D00;padding:10px 16px;text-align:center;font-size:12.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap';
+  banner.innerHTML='⏳ Your AuraScale subscription has expired — '+daysUntilLock+' day'+(daysUntilLock===1?'':'s')+' left before the account is locked.'
+    +' <a href="#" onclick="nav(\'subscription\');return false;" style="color:#8A6D00;text-decoration:underline;font-weight:700">Renew now</a>';
+  document.body.insertBefore(banner, document.body.firstChild);
 }
 
 /* ── MODAL ── */
@@ -1972,13 +1989,31 @@ async function _initApp(){
     if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
     document.body.setAttribute('data-role',_myRole);
 
-    var cl=await withTimeout(_supa.from('clinics').select('id,name,facility_type,is_approved').eq('id',clinicId).single(),20000,'your facility details');
+    var cl=await withTimeout(_supa.from('clinics').select('id,name,facility_type,is_approved,subscription_status,subscription_expires_at').eq('id',clinicId).single(),20000,'your facility details');
     if(!cl.data){failAndReturnToLogin('Clinic record not found.');return;}
     if(!cl.data.is_approved){
       document.getElementById('app-shell').classList.remove('authenticated');
       document.getElementById('auth-screen').classList.remove('hidden');
       document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/919330660325?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a></div></div>';
       return;
+    }
+    /* Subscription lock — this is the owner's own portal, so no role exemption applies here
+       (doctors never reach this point; they're redirected to doctor.html above). Whether the
+       account is actually frozen is decided server-side by the daily check-subscriptions job,
+       which enforces the 7-day grace period after subscription_expires_at. */
+    if(cl.data.subscription_status==='frozen'){
+      document.getElementById('app-shell').classList.remove('authenticated');
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">🔒</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Subscription Payment Due</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale subscription\'s grace period has ended. Renew now to restore access — your doctors can still access patient records as normal.</p><a href="https://wa.me/919330660325?text=Hi, I need to renew my AuraScale subscription." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 Renew via WhatsApp</a></div></div>';
+      return;
+    }
+    /* Expose renewal/grace-period info for the top banner (renderSubscriptionBanner). */
+    window._auraSubscription={status:cl.data.subscription_status,expiresAt:cl.data.subscription_expires_at||null};
+    if(cl.data.subscription_expires_at){
+      var _daysLeft=Math.ceil((new Date(cl.data.subscription_expires_at).getTime()-Date.now())/86400000);
+      window._auraSubscription.daysLeft=_daysLeft;
+      window._auraSubscription.inGracePeriod=_daysLeft<0;
+      window._auraSubscription.daysUntilLock=_daysLeft<0?(7+_daysLeft):null;
     }
     _clinicId=cl.data.id;
     document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
@@ -1990,6 +2025,7 @@ async function _initApp(){
     if(_myRole==='doctor'){ window.location.href='doctor.html'; return; }
     if(_myRole==='receptionist'){ window.location.href='receptionist.html'; return; }
     loadDashboard();
+    renderSubscriptionBanner();
   }catch(e){
     console.error('_initApp failed:',e);
     failAndReturnToLogin(e.message||'Something went wrong loading your dashboard. Please try again.');
@@ -2108,20 +2144,18 @@ async function loadDashboard(){
     }
   }
 
-  /* Bed mini map — each tile shows the bed number as text, with a light
-     tint + border per status, instead of a bare colored square. */
+  /* Bed mini map */
   var mini = document.getElementById('dash-bed-mini');
   if(mini){
     var FEMALE_WARDS = ['Female','Maternity'];
     mini.innerHTML = allBeds.map(function(b){
       var isFemale = FEMALE_WARDS.indexOf(b.ward||'') >= 0;
-      var bg, border, text;
-      if(b.status==='Occupied'){ bg=isFemale?'#FDF0F7':'var(--green-bg)'; border=isFemale?'#F0B8DC':'var(--green-border)'; text=isFemale?'#C0398A':'var(--green)'; }
-      else if(b.status==='Cleaning'){ bg='var(--amber-bg)'; border='var(--amber-border)'; text='var(--amber)'; }
-      else if(b.status==='Reserved'){ bg='var(--blue-bg)'; border='var(--blue-border)'; text='var(--blue)'; }
-      else if(b.status==='Critical'){ bg='var(--red-bg)'; border='var(--red-border)'; text='var(--red)'; }
-      else { bg='var(--surface)'; border='var(--border)'; text='var(--text-secondary)'; }
-      return '<div title="Bed '+esc(b.bed_number||'')+' ('+esc(b.ward||'')+') — '+esc(b.status||'')+'" style="width:54px;height:54px;background:'+bg+';border:1.5px solid '+border+';color:'+text+';border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:default">'+esc(b.bed_number||'')+'</div>';
+      var col = b.status==='Occupied' ? (isFemale?'#C0398A':'var(--green)')
+              : b.status==='Cleaning' ? 'var(--amber)'
+              : b.status==='Reserved' ? 'var(--blue)'
+              : b.status==='Critical' ? 'var(--red)'
+              : 'var(--border)';
+      return '<div title="Bed '+(b.bed_number||'')+' ('+(b.ward||'')+') — '+b.status+'" style="width:100%;aspect-ratio:1;background:'+col+';border-radius:5px;opacity:.8;cursor:default"></div>';
     }).join('');
   }
 
