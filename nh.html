@@ -559,6 +559,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <button class="dash-tab" data-dtab="payments" onclick="dashTab('payments',this)" data-i18n="tab_payments">Payments</button>
           <button class="dash-tab" data-dtab="revenue" onclick="dashTab('revenue',this)" data-i18n="tab_revenue">Revenue</button>
           <button class="dash-tab" data-dtab="reports" onclick="dashTab('reports',this)" data-i18n="tab_reports">Reports</button>
+          <button class="dash-tab" data-dtab="billing" onclick="dashTab('billing',this)" data-i18n="tab_billing">Billing</button>
         </div>
 
         <!-- ══════════════ OVERVIEW TAB ══════════════ -->
@@ -661,7 +662,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             <div class="mc"><div class="mc-lbl" data-i18n="m_period_revenue">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
           </div>
           <button type="button" class="more-metrics-toggle" onclick="toggleMoreMetrics(this)">
-            <span class="mm-arrow">▸</span> <span data-i18n="service_dept_billing">Service, department &amp; billing config</span>
+            <span class="mm-arrow">▸</span> <span data-i18n="service_dept_billing">Revenue by service &amp; department</span>
           </button>
           <div class="more-metrics-body" style="display:none">
             <div class="two-col">
@@ -672,23 +673,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               <div class="panel">
                 <div class="ph"><div class="pt" data-i18n="revenue_by_dept">Revenue by Department</div></div>
                 <div id="rev-by-dept"></div>
-              </div>
-            </div>
-            <div class="panel owner-only">
-              <div class="ph"><div class="pt">⚙️ <span data-i18n="billing_method">Billing Method</span></div></div>
-              <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
-                <div><label class="flbl" data-i18n="billing_method">Billing Method</label>
-                  <select class="finput" id="fin-billing-method">
-                    <option value="24hr" data-i18n="bm_24hr">24-Hour Billing (from admission time)</option>
-                    <option value="calendar" data-i18n="bm_calendar">Calendar Day (midnight cutoff)</option>
-                    <option value="cutoff" data-i18n="bm_cutoff">Custom Hospital Cutoff</option>
-                  </select>
-                </div>
-                <div id="fin-cutoff-wrap" style="display:none">
-                  <label class="flbl" data-i18n="cutoff_time">Cutoff Time</label>
-                  <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
-                </div>
-                <button class="qbtn" onclick="saveBillingConfig()" data-i18n="save_billing_config">Save Billing Config</button>
               </div>
             </div>
           </div>
@@ -838,6 +822,27 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           </div>
           <div class="note-box note-blue" style="margin-top:14px;font-size:11px" data-i18n="reports_note">
             ℹ️ Reports open as a printable page — use your browser's "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn't wired up, since no messaging/email integration exists in this app yet.
+          </div>
+        </div>
+
+        <!-- ══════════════ BILLING TAB ══════════════ -->
+        <div class="dash-pnl" id="dtab-billing" style="display:none">
+          <div class="panel owner-only">
+            <div class="ph"><div class="pt">⚙️ <span data-i18n="billing_method">Billing Method</span></div></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+              <div><label class="flbl" data-i18n="billing_method">Billing Method</label>
+                <select class="finput" id="fin-billing-method">
+                  <option value="24hr" data-i18n="bm_24hr">24-Hour Billing (from admission time)</option>
+                  <option value="calendar" data-i18n="bm_calendar">Calendar Day (midnight cutoff)</option>
+                  <option value="cutoff" data-i18n="bm_cutoff">Custom Hospital Cutoff</option>
+                </select>
+              </div>
+              <div id="fin-cutoff-wrap" style="display:none">
+                <label class="flbl" data-i18n="cutoff_time">Cutoff Time</label>
+                <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
+              </div>
+              <button class="qbtn" onclick="saveBillingConfig()" data-i18n="save_billing_config">Save Billing Config</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1382,7 +1387,7 @@ var I18N = {
     nav_audit:'Audit', nav_ayushman:'Ayushman / PM-JAY', nav_staff:'Staff', nav_notifications:'Notifications',
     nav_subscription:'Subscription', nav_settings:'Settings', btn_admit_patient:'Admit Patient',
     dash_title:'Owner Dashboard', dash_subtitle:'Live facility overview', live:'Live',
-    tab_overview:'Overview', tab_payments:'Payments', tab_revenue:'Revenue', tab_reports:'Reports',
+    tab_overview:'Overview', tab_payments:'Payments', tab_revenue:'Revenue', tab_reports:'Reports', tab_billing:'Billing',
     m_avail_beds:'Available Beds', m_avail_beds_sub:'ready to admit, of', m_total_lc:'total',
     m_today_revenue:'Today Revenue', m_charges_today:'charges today',
     m_outstanding_due:'Outstanding Due', m_unpaid_balance:'unpaid balance',
@@ -1405,7 +1410,7 @@ var I18N = {
     rev_subtitle:'Revenue, payments and outstanding dues',
     per_patient_balance:'Per-Patient Balance',
     m_total_charged:'Total Charged', m_total_paid:'Total Paid', m_period_revenue:'Period Revenue',
-    service_dept_billing:'Service, department & billing config',
+    service_dept_billing:'Revenue by service & department',
     revenue_by_service:'Revenue by Service', revenue_by_dept:'Revenue by Department',
     billing_method:'Billing Method', bm_24hr:'24-Hour Billing (from admission time)', bm_calendar:'Calendar Day (midnight cutoff)', bm_cutoff:'Custom Hospital Cutoff',
     cutoff_time:'Cutoff Time', save_billing_config:'Save Billing Config',
@@ -1422,7 +1427,7 @@ var I18N = {
     nav_audit:'অডিট', nav_ayushman:'আয়ুষ্মান / পিএম-জেএওয়াই', nav_staff:'স্টাফ', nav_notifications:'বিজ্ঞপ্তি',
     nav_subscription:'সাবস্ক্রিপশন', nav_settings:'সেটিংস', btn_admit_patient:'রোগী ভর্তি করুন',
     dash_title:'মালিকের ড্যাশবোর্ড', dash_subtitle:'হাসপাতালের লাইভ ওভারভিউ', live:'লাইভ',
-    tab_overview:'ওভারভিউ', tab_payments:'পেমেন্ট', tab_revenue:'রাজস্ব', tab_reports:'রিপোর্ট',
+    tab_overview:'ওভারভিউ', tab_payments:'পেমেন্ট', tab_revenue:'রাজস্ব', tab_reports:'রিপোর্ট', tab_billing:'বিলিং',
     m_avail_beds:'খালি বেড', m_avail_beds_sub:'ভর্তির জন্য প্রস্তুত, মোট', m_total_lc:'টি',
     m_today_revenue:'আজকের আয়', m_charges_today:'আজকের চার্জ',
     m_outstanding_due:'বকেয়া টাকা', m_unpaid_balance:'অপরিশোধিত ব্যালেন্স',
@@ -1445,7 +1450,7 @@ var I18N = {
     rev_subtitle:'রাজস্ব, পেমেন্ট এবং বকেয়া',
     per_patient_balance:'রোগী অনুযায়ী বকেয়া',
     m_total_charged:'মোট বিল', m_total_paid:'মোট পরিশোধিত', m_period_revenue:'সময়কালের আয়',
-    service_dept_billing:'সেবা, বিভাগ ও বিলিং সেটিংস',
+    service_dept_billing:'সেবা ও বিভাগ অনুযায়ী আয়',
     revenue_by_service:'সেবা অনুযায়ী আয়', revenue_by_dept:'বিভাগ অনুযায়ী আয়',
     billing_method:'বিলিং পদ্ধতি', bm_24hr:'২৪-ঘণ্টা বিলিং (ভর্তির সময় থেকে)', bm_calendar:'ক্যালেন্ডার দিন (মধ্যরাত কাটঅফ)', bm_cutoff:'কাস্টম হাসপাতাল কাটঅফ',
     cutoff_time:'কাটঅফ সময়', save_billing_config:'বিলিং সেটিংস সংরক্ষণ করুন',
@@ -1462,7 +1467,7 @@ var I18N = {
     nav_audit:'ऑडिट', nav_ayushman:'आयुष्मान / पीएम-जय', nav_staff:'स्टाफ', nav_notifications:'सूचनाएं',
     nav_subscription:'सब्सक्रिप्शन', nav_settings:'सेटिंग्स', btn_admit_patient:'मरीज़ भर्ती करें',
     dash_title:'मालिक डैशबोर्ड', dash_subtitle:'लाइव फैसिलिटी ओवरव्यू', live:'लाइव',
-    tab_overview:'ओवरव्यू', tab_payments:'भुगतान', tab_revenue:'राजस्व', tab_reports:'रिपोर्ट',
+    tab_overview:'ओवरव्यू', tab_payments:'भुगतान', tab_revenue:'राजस्व', tab_reports:'रिपोर्ट', tab_billing:'बिलिंग',
     m_avail_beds:'खाली बेड', m_avail_beds_sub:'भर्ती के लिए तैयार, कुल', m_total_lc:'में से',
     m_today_revenue:'आज का राजस्व', m_charges_today:'आज का चार्ज',
     m_outstanding_due:'बकाया राशि', m_unpaid_balance:'अवैतनिक बैलेंस',
@@ -1485,7 +1490,7 @@ var I18N = {
     rev_subtitle:'राजस्व, भुगतान और बकाया राशि',
     per_patient_balance:'मरीज़-वार बकाया',
     m_total_charged:'कुल बिल', m_total_paid:'कुल भुगतान', m_period_revenue:'अवधि का राजस्व',
-    service_dept_billing:'सेवा, विभाग और बिलिंग सेटिंग',
+    service_dept_billing:'सेवा और विभाग अनुसार राजस्व',
     revenue_by_service:'सेवा अनुसार राजस्व', revenue_by_dept:'विभाग अनुसार राजस्व',
     billing_method:'बिलिंग तरीका', bm_24hr:'24-घंटे बिलिंग (भर्ती के समय से)', bm_calendar:'कैलेंडर दिन (मध्यरात्रि कटऑफ)', bm_cutoff:'कस्टम अस्पताल कटऑफ',
     cutoff_time:'कटऑफ समय', save_billing_config:'बिलिंग सेटिंग सहेजें',
