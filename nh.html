@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#ffffff" id="meta-theme"/>
 <title>AuraScale NH — Nursing Home OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script>
 /* RESET REDIRECT — must run before Supabase loads */
 (function(){
@@ -17,54 +17,49 @@
   }
 })();
 </script>
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root,[data-theme="light"]{
-  --bg:#F5F6F8;--surface:#FFFFFF;--surface2:#FAFBFC;
-  --border:#E1E4EA;--border-mid:#CBD1DB;--border-strong:#AEB6C4;
-  --text-primary:#17202E;--text-secondary:#5B6472;--text-tertiary:#8B93A1;
-  --navy:#1E3A5F;--navy-bg:#EAEFF5;--navy-border:#C9D5E3;--navy-hover:#16304F;
-  --blue:#1E3A5F;--blue-light:#2C4F7C;--blue-bg:#EAEFF5;--blue-border:#C9D5E3;--blue-hover:#16304F;
-  --forest:#2F5D46;--forest-bg:#E9F1EC;--forest-border:#C3D9CC;
-  --green:#2F5D46;--green-bg:#E9F1EC;--green-border:#C3D9CC;
-  --amber:#8A6A2E;--amber-bg:#F5EFE2;--amber-border:#E0D2AC;
-  --burgundy:#8B3A3A;--burgundy-bg:#F4E9E9;--burgundy-border:#E0C6C6;
-  --red:#8B3A3A;--red-bg:#F4E9E9;--red-border:#E0C6C6;
-  --purple:#5C4B7A;--purple-bg:#EFEAF5;--purple-border:#D6CBEA;
-  --sidebar-w:210px;--header-h:54px;
-  --r-sm:6px;--r-md:6px;--r-lg:6px;--r-xl:10px;
-  --sh-xs:none;--sh-sm:none;
+  --bg:#F7F6F3;--surface:#FFFFFF;--surface2:#FAFAF8;
+  --border:#E8E5DF;--border-mid:#D2CEC6;--border-strong:#AEA9A0;
+  --text-primary:#18170F;--text-secondary:#64605A;--text-tertiary:#9E9A93;
+  --blue:#2E63D4;--blue-light:#4475E0;--blue-bg:#EDF2FC;--blue-border:#BDD0F7;--blue-hover:#2354C0;
+  --green:#12976A;--green-bg:#EAFAF3;--green-border:#9ADEC3;
+  --amber:#C27820;--amber-bg:#FDF4E6;--amber-border:#F0CEAA;
+  --red:#C23838;--red-bg:#FDF0F0;--red-border:#F2B8B8;
+  --purple:#6B3FA0;--purple-bg:#F3EDFB;--purple-border:#D4B8F0;
+  --sidebar-w:260px;--header-h:54px;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
+  --sh-xs:0 1px 3px rgba(0,0,0,.05);--sh-sm:0 2px 8px rgba(0,0,0,.07);
   --sh-md:0 4px 18px rgba(0,0,0,.09);--sh-lg:0 12px 42px rgba(0,0,0,.13);
   --ease:.17s cubic-bezier(.4,0,.2,1);
-  /* Sidebar — dark charcoal, matching the reference */
-  --sidebar-bg:#17181A;--sidebar-text:#C9CBCE;
-  --sidebar-text-secondary:#9A9CA0;--sidebar-text-tertiary:#7C7E82;
-  --sidebar-border:#2A2C2F;--sidebar-hover-bg:#1F2123;--sidebar-active-bg:#232527;
+  /* Sidebar — inverted relative to the main surface: black sidebar in light mode */
+  --sidebar-bg:#111214;--sidebar-text:#FFFFFF;
+  --sidebar-text-secondary:rgba(255,255,255,.56);--sidebar-text-tertiary:rgba(255,255,255,.38);
+  --sidebar-border:rgba(255,255,255,.09);--sidebar-hover-bg:rgba(255,255,255,.07);--sidebar-active-bg:rgba(255,255,255,.13);
 }
 [data-theme="dark"]{
   --bg:#0F1117;--surface:#171B24;--surface2:#1C2130;
   --border:#252A38;--border-mid:#2E3448;--border-strong:#3A4160;
-  --text-primary:#E8E9EF;--text-secondary:#8E96B0;--text-tertiary:#6B7387;
-  --navy:#6E93C4;--navy-bg:#1B2A3D;--navy-border:#2E4460;--navy-hover:#83A4D0;
-  --blue:#6E93C4;--blue-bg:#1B2A3D;--blue-border:#2E4460;--blue-hover:#83A4D0;
-  --forest:#6FA98B;--forest-bg:#152420;--forest-border:#2A4238;
-  --green:#6FA98B;--green-bg:#152420;--green-border:#2A4238;
-  --amber:#C7A968;--amber-bg:#2A2413;--amber-border:#463A1E;
-  --burgundy:#C77F7F;--burgundy-bg:#2A1717;--burgundy-border:#462424;
-  --red:#C77F7F;--red-bg:#2A1717;--red-border:#462424;
-  --purple:#A395C4;--purple-bg:#1E1A2A;--purple-border:#332C46;
+  --text-primary:#E8E9EF;--text-secondary:#8E96B0;--text-tertiary:#525A72;
+  --blue:#4D85F0;--blue-bg:#1A243D;--blue-border:#2A3A5C;--blue-hover:#5C91F5;
+  --green:#1BB880;--green-bg:#0E2A1F;--green-border:#1A4A35;
+  --amber:#E09940;--amber-bg:#271E0E;--amber-border:#3D2E10;
+  --red:#E05050;--red-bg:#250F0F;--red-border:#3D1A1A;
+  --purple:#A07BDB;--purple-bg:#1E1530;--purple-border:#3D2560;
   /* Sidebar — inverted relative to the main surface: white sidebar in dark mode */
-  --sidebar-bg:#FFFFFF;--sidebar-text:#17202E;
-  --sidebar-text-secondary:#5B6472;--sidebar-text-tertiary:#8B93A1;
-  --sidebar-border:#E1E4EA;--sidebar-hover-bg:#F5F6F8;--sidebar-active-bg:#EAEFF5;
+  --sidebar-bg:#FFFFFF;--sidebar-text:#18170F;
+  --sidebar-text-secondary:#64605A;--sidebar-text-tertiary:#9E9A93;
+  --sidebar-border:#E8E5DF;--sidebar-hover-bg:#F7F6F3;--sidebar-active-bg:#E8E5DF;
 }
 html{background:var(--bg);-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--text-primary);font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.55;-webkit-tap-highlight-color:transparent}
-button{font-family:'IBM Plex Sans',sans-serif;cursor:pointer;border:none;background:none;outline:none}
-input,textarea,select{font-family:'IBM Plex Sans',sans-serif;outline:none;-webkit-appearance:none;appearance:none}
+body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;outline:none}
+input,textarea,select{font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;appearance:none}
 a{color:inherit;text-decoration:none}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
@@ -75,7 +70,7 @@ a{color:inherit;text-decoration:none}
 .auth-wrap{width:100%;max-width:400px}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px 24px;box-shadow:var(--sh-lg)}
 .auth-logo{text-align:center;margin-bottom:20px}
-.auth-title{font-family:'IBM Plex Sans',sans-serif;font-size:22px;color:var(--text-primary);letter-spacing:-.02em}
+.auth-title{font-family:'Instrument Serif',serif;font-size:22px;color:var(--text-primary);letter-spacing:-.02em}
 .auth-sub{font-size:11.5px;color:var(--text-tertiary);margin-top:4px}
 .auth-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:20px}
 .auth-tab{flex:1;padding:8px;text-align:center;border-radius:6px;font-size:12px;font-weight:600;color:var(--text-tertiary);cursor:pointer;transition:all var(--ease)}
@@ -83,9 +78,9 @@ a{color:inherit;text-decoration:none}
 .auth-panel{display:none}.auth-panel.active{display:flex;flex-direction:column;gap:12px}
 .auth-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);display:block;margin-bottom:5px}
 .auth-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;min-height:44px;transition:border-color var(--ease)}
-.auth-input:focus{border-color:var(--navy);background:var(--surface)}
-.auth-btn{width:100%;background:var(--navy);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease)}
-.auth-btn:hover{background:var(--navy-hover)}
+.auth-input:focus{border-color:var(--blue);background:var(--surface)}
+.auth-btn{width:100%;background:var(--green);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease);box-shadow:0 2px 8px rgba(18,151,106,.2)}
+.auth-btn:hover{background:#0f8059}
 .auth-error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;display:none}
 
 /* ── APP SHELL ── */
@@ -96,73 +91,64 @@ a{color:inherit;text-decoration:none}
 #sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);border-right:1px solid var(--sidebar-border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;overflow-y:auto;overflow-x:hidden;transition:background .22s ease,border-color .22s ease}
 .sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--sidebar-border)}
 .sb-mark{display:flex;align-items:baseline;gap:0;line-height:1}
-.sb-mark .a{font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:700;color:var(--sidebar-text)}
-.sb-mark .s{font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:700;color:#4ADE80}
+.sb-mark .a{font-family:'Instrument Serif',serif;font-size:21px;color:var(--sidebar-text)}
+.sb-mark .s{font-family:'Instrument Serif',serif;font-size:21px;color:var(--green)}
 .sb-mark .os{font-size:10px;font-weight:700;color:var(--sidebar-text-tertiary);letter-spacing:.08em;margin-left:5px}
 .sb-tag{font-size:10px;color:var(--sidebar-text-tertiary);letter-spacing:.05em;margin-top:3px}
 .sb-facility{padding:11px 13px;border-bottom:1px solid var(--sidebar-border)}
-.sb-facility-inner{background:var(--sidebar-hover-bg);border:1px solid var(--sidebar-border);border-radius:var(--r-md);padding:12px 13px}
-.sb-fac-name{font-size:12.5px;font-weight:700;color:var(--sidebar-text)}
-.sb-fac-type{font-size:10px;color:var(--sidebar-text-tertiary);font-weight:600;margin-top:2px}
-.sb-online{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:10.5px;color:var(--sidebar-text-tertiary)}
-.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:#4ADE80}
+.sb-facility-inner{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);padding:12px 13px}
+.sb-fac-name{font-size:12.5px;font-weight:700;color:var(--text-primary)}
+.sb-fac-type{font-size:10px;color:var(--green);font-weight:600;margin-top:2px}
+.sb-online{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:10.5px;color:var(--text-secondary)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--green)}
 nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px}
 .nav-sec{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--sidebar-text-tertiary);font-weight:700;padding:9px 9px 4px;margin-top:4px}
 .nb{width:100%;display:flex;align-items:center;gap:9px;padding:10px 9px;border-radius:var(--r-sm);color:var(--sidebar-text-secondary);font-size:12.5px;font-weight:500;transition:all var(--ease);cursor:pointer;white-space:nowrap;text-align:left;position:relative;min-height:42px}
 .nb:hover:not(.on){background:var(--sidebar-hover-bg);color:var(--sidebar-text)}
 .nb.on{background:var(--sidebar-active-bg);color:var(--sidebar-text);font-weight:700}
+.nb.on::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--sidebar-text);border-radius:0 2px 2px 0}
 .nb-ic{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.65}
 .nb.on .nb-ic{opacity:1}
 .nb-badge{margin-left:auto;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:4px}
 .sb-foot{padding:11px 13px;border-top:1px solid var(--sidebar-border);flex-shrink:0}
 .sb-controls{display:flex;align-items:center;gap:6px;margin-bottom:10px}
 .theme-toggle{display:flex;align-items:center;gap:5px;background:var(--sidebar-hover-bg);border:1px solid var(--sidebar-border);border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;transition:all var(--ease);min-height:32px;flex:1;color:var(--sidebar-text-secondary);font-size:10px;font-weight:600}
-.lang-select{background:var(--sidebar-hover-bg);border:1px solid var(--sidebar-border);border-radius:var(--r-sm);padding:5px 6px;min-height:32px;color:var(--sidebar-text-secondary);font-size:10px;font-weight:700;cursor:pointer;width:52px;text-align:center;text-align-last:center}
-.lang-select option{background:var(--sidebar-bg);color:var(--sidebar-text)}
 .sb-out{display:flex;align-items:center;gap:6px;color:var(--sidebar-text-tertiary);font-size:11px;cursor:pointer;transition:color var(--ease);padding:6px 0}
 .sb-out:hover{color:var(--red)}
 
 /* ── MAIN ── */
 #main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
-header{height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);padding:0 34px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30}
-[data-theme="dark"] header{background:var(--surface)}
+header{height:var(--header-h);background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;backdrop-filter:blur(16px)}
+[data-theme="dark"] header{background:rgba(23,27,36,.94)}
 .hdr-l{display:flex;align-items:center;gap:9px;flex:1}
-.bc-root{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:var(--text-tertiary)}
+.bc-root{font-family:'Instrument Serif',serif;font-size:15px;color:var(--text-primary)}
 .bc-sep{color:var(--text-tertiary);font-size:12px}
-.bc-page{color:var(--text-tertiary);font-size:12px;font-weight:400}
+.bc-page{color:var(--text-secondary);font-size:12.5px;font-weight:500}
 .hdr-r{display:flex;align-items:center;gap:7px}
-.date-pill{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:6px 12px;font-size:12px;color:var(--text-secondary);font-weight:500}
-.add-btn{background:var(--navy);border:none;color:#fff;padding:9px 16px;border-radius:var(--r-sm);display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:40px}
-.add-btn:hover{background:var(--navy-hover)}
-main.content{flex:1;padding:26px 34px;background:var(--bg);overflow-y:auto}
+.date-pill{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--text-secondary)}
+.add-btn{background:var(--green);border:none;color:#fff;padding:9px 16px;border-radius:var(--r-sm);display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;box-shadow:0 3px 12px rgba(18,151,106,.32);cursor:pointer;white-space:nowrap;min-height:40px}
+.add-btn:hover{background:#0f8059}
+main.content{flex:1;padding:20px;background:var(--bg);overflow-y:auto}
 
 /* ── VIEWS ── */
 .view{display:none;flex-direction:column;gap:18px}.view.on{display:flex}
 .sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.st{font-family:'IBM Plex Sans',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
+.st{font-family:'Instrument Serif',serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
 .ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
 
-/* ── METRICS (hairline-grid KPI style, matching reference) ── */
-.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
-.mc{background:var(--surface);padding:16px 18px}
-.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.mc-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;font-weight:600;color:var(--text-tertiary)}
-.mc-icon{width:30px;height:30px;border-radius:9px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
-.mc-icon-green{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
-.mc-icon-blue{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
-.mc-icon-amber{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
-.mc-icon-red{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
-.mc-val{font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:20px;color:var(--text-primary);letter-spacing:-.01em;line-height:1;font-variant-numeric:tabular-nums}
-.mc-val.forest{color:var(--forest)}
-.mc-val.burgundy{color:var(--burgundy)}
-.mc-sub{font-size:11px;color:var(--text-tertiary);margin-top:5px}
-.mc-delta{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:6px}
-.mc-delta-up{background:var(--green-bg);color:var(--green)}
-.mc-delta-down{background:var(--red-bg);color:var(--red)}
+/* ── METRICS ── */
+.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 14px;box-shadow:var(--sh-xs);transition:all var(--ease)}
+.mc:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
+.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
+.mc-icon{width:27px;height:27px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
+.mc-val{font-family:'Instrument Serif',serif;font-size:28px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:5px}
 
 /* ── PANELS ── */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
-.ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
 .pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
 .pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em}
 .pb-b{color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-border)}
@@ -171,7 +157,7 @@ main.content{flex:1;padding:26px 34px;background:var(--bg);overflow-y:auto}
 .pb-a{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
 
 /* ── CHIPS ── */
-.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .ch-dis{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
 .ch-vac{background:var(--bg);color:var(--text-secondary);border:1px solid var(--border)}
@@ -186,7 +172,7 @@ main.content{flex:1;padding:26px 34px;background:var(--bg);overflow-y:auto}
 .bed-card.occupied{border-color:var(--green-border);background:var(--green-bg)}
 .bed-card.critical{border-color:var(--red-border);background:var(--red-bg)}
 .bed-card.cleaning{border-color:var(--amber-border);background:var(--amber-bg)}
-.bed-num{font-family:'IBM Plex Sans',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.bed-num{font-family:'DM Sans',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.02em}
 .bed-ward{font-size:9px;color:var(--text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
 .bed-patient{font-size:10px;font-weight:600;color:var(--text-primary);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bed-days{font-size:9px;color:var(--text-tertiary);margin-top:2px}
@@ -195,28 +181,11 @@ main.content{flex:1;padding:26px 34px;background:var(--bg);overflow-y:auto}
 .bed-card.critical .bed-status-dot{background:var(--red)}
 .bed-card.cleaning .bed-status-dot{background:var(--amber)}
 
-/* ── WARD-GROUPED BED MANAGEMENT (fixes previously-missing styles) ── */
-.ward-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);margin-bottom:14px}
-.ward-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.ward-title{font-family:'IBM Plex Sans',sans-serif;font-weight:800;font-size:13px;color:var(--text-primary);letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px}
-.female-ward-badge{font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--burgundy);background:var(--burgundy-bg);border:1px solid var(--burgundy-border);padding:2px 7px;border-radius:4px}
-.ward-stats{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.ward-stat{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text-secondary);font-weight:600}
-.ward-stat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.bed-grid-ward{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;padding:16px}
-.bed-card{position:relative}
-.bed-card-rate{font-size:9px;font-weight:700;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px;margin-top:5px;display:inline-block}
-.bed-edit-btn{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-tertiary);opacity:0;transition:opacity var(--ease),background var(--ease)}
-.bed-card:hover .bed-edit-btn{opacity:1;background:rgba(0,0,0,.05)}
-.bed-card-inactive{opacity:.5}
-.bed-card-inactive::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent,transparent 6px,rgba(0,0,0,.04) 6px,rgba(0,0,0,.04) 7px);border-radius:inherit;pointer-events:none}
-@media(max-width:600px){.bed-grid-ward{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}}
-
 /* ── ADMISSION ROW ── */
 .adm-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
 .adm-row:hover{background:var(--bg)}
 .adm-row:last-child{border-bottom:none}
-.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:800;font-family:'IBM Plex Sans',sans-serif;flex-shrink:0}
+.adm-av{width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:13px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
 .adm-name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
 .adm-meta{font-size:10.5px;color:var(--text-secondary);margin-top:1px}
 .adm-actions{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
@@ -226,7 +195,7 @@ main.content{flex:1;padding:26px 34px;background:var(--bg);overflow-y:auto}
 .chg-row:last-child{border-bottom:none}
 .chg-name{font-size:12px;font-weight:500;color:var(--text-primary)}
 .chg-type{font-size:10px;color:var(--text-tertiary);margin-top:1px}
-.chg-amt{font-size:13px;font-weight:700;color:var(--text-primary);font-family:'IBM Plex Sans',sans-serif}
+.chg-amt{font-size:13px;font-weight:700;color:var(--text-primary);font-family:'Instrument Serif',serif}
 
 /* ── NOTE ROW ── */
 .note-row{padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
@@ -251,13 +220,13 @@ main.content{flex:1;padding:26px 34px;background:var(--bg);overflow-y:auto}
 .mb{padding:16px 17px;display:flex;flex-direction:column;gap:13px}
 .flbl{color:var(--text-tertiary);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:block;margin-bottom:5px}
 .finput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;transition:border-color var(--ease);min-height:44px}
-.finput:focus{border-color:var(--navy);background:var(--surface)}
+.finput:focus{border-color:var(--green);background:var(--surface)}
 .ftextarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font-size:14px;resize:none;line-height:1.6}
-.ftextarea:focus{border-color:var(--navy);background:var(--surface)}
+.ftextarea:focus{border-color:var(--green);background:var(--surface)}
 .rx-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .rx-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.msub{width:100%;background:var(--navy);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease)}
-.msub:hover{background:var(--navy-hover)}
+.msub{width:100%;background:var(--green);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease)}
+.msub:hover{background:#0f8059}
 .qbtn{background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-size:10px;padding:6px 10px;border-radius:5px;display:flex;align-items:center;gap:3px;font-weight:600;transition:all var(--ease);cursor:pointer;box-shadow:var(--sh-xs);min-height:32px}
 .qbtn:hover{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
 .empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
@@ -301,6 +270,7 @@ body[data-role="doctor"] .doctor-home-only{display:flex}
 body[data-role="receptionist"] .reception-home-only{display:flex}
 .mic-btn.recording{background:var(--red);color:#fff;animation:pulseMic 1.2s infinite}
 @keyframes pulseMic{0%,100%{opacity:1}50%{opacity:.65}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 .doc-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px}
 .doc-card .doc-ic{width:32px;height:32px;border-radius:8px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .patient-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r-sm);padding:3px;margin-bottom:12px;overflow-x:auto}
@@ -310,52 +280,22 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 .extract-box{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;color:var(--text-secondary);margin-bottom:10px}
 
 /* ── ENHANCED OWNER DASHBOARD ── */
-.mg6{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
-.mg3b{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:10px}
-/* ── DASHBOARD TABS (Overview / Payments / Revenue) ── */
-.dtabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:2px}
-.dtab{font-size:13px;font-weight:600;color:var(--text-secondary);padding:10px 4px;margin-right:22px;cursor:pointer;border-bottom:2px solid transparent}
-.dtab.active{color:var(--navy);border-bottom-color:var(--navy)}
-.dpanel{display:none;flex-direction:column;gap:16px}
-.dpanel.on{display:flex}
-.dmore{margin-top:2px}
-.dmore-summary{font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;padding:6px 0;user-select:none}
-.dmore-arrow{font-size:10px;color:var(--navy);display:inline-block;transition:transform var(--ease)}
-.dmore.open .dmore-arrow{transform:rotate(90deg)}
-.dmore-body{display:none;margin-top:10px}
-.dmore.open .dmore-body{display:block}
-.bed-map{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px}
-.bed-map-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-tertiary);margin-bottom:12px}
-.bed-map-row{display:flex;flex-wrap:wrap;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;width:fit-content}
-.bed-map-cell{width:48px;height:48px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px;color:var(--text-secondary)}
-.bed-map-cell.available{background:var(--forest-bg);color:var(--forest)}
-.bed-map-cell.occupied{background:var(--navy-bg);color:var(--navy)}
-.bed-map-cell.critical{background:var(--burgundy-bg);color:var(--burgundy)}
-.bed-map-cell.cleaning{background:var(--amber-bg);color:var(--amber)}
-.method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
-.method{background:var(--surface);padding:14px 16px}
-.method .m-label{font-size:10.5px;color:var(--text-tertiary);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
-.method .m-value{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-.dnote{margin-top:4px;padding:12px 14px;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--r-md);font-size:11.5px;color:var(--text-secondary);line-height:1.6}
-@media(max-width:600px){.method-grid{grid-template-columns:1fr 1fr}}
+.mg6{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 
-/* ── SEGMENTED TOGGLE (invite channel, etc.) ── */
-.seg-toggle{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:3px}
-.seg-btn{flex:1;text-align:center;padding:8px;border-radius:5px;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
-.seg-btn.active{background:var(--surface);color:var(--navy);box-shadow:var(--sh-xs)}
-.share-row{display:flex;gap:8px;margin-top:10px}
-.share-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:var(--r-sm);font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text-primary)}
-.share-btn.wa{background:#25D366;border-color:#25D366;color:#fff}
-.share-btn.sms{background:var(--navy);border-color:var(--navy);color:#fff}
+/* Dashboard tab bar (Overview / Payments / Revenue) */
+.dash-tabs{display:flex;gap:22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.dash-tab{background:none;border:none;padding:0 0 11px;font-size:13px;font-weight:600;color:var(--text-tertiary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.dash-tab:hover{color:var(--text-secondary)}
+.dash-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.dash-pnl{display:flex;flex-direction:column;gap:14px}
 
-/* ── REPORTS ── */
-.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px}
-.report-card-title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:8px}
-.report-card-icon{width:30px;height:30px;border-radius:8px;background:var(--navy-bg);border:1px solid var(--navy-border);color:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.report-card-desc{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px}
-.report-note{display:flex;gap:8px;align-items:flex-start;background:var(--navy-bg);border:1px solid var(--navy-border);border-radius:var(--r-md);padding:11px 14px;font-size:11.5px;color:var(--text-secondary);line-height:1.6}
-@media(max-width:900px){.report-grid{grid-template-columns:1fr}}
+/* Collapsible "More metrics" sections */
+.more-metrics-toggle{display:flex;align-items:center;gap:6px;background:none;border:none;padding:6px 2px;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;width:fit-content}
+.more-metrics-toggle:hover{color:var(--text-primary)}
+.mm-arrow{display:inline-block;transition:transform .15s ease;font-size:10px}
+.more-metrics-toggle.open .mm-arrow{transform:rotate(90deg)}
+.more-metrics-body{display:flex;flex-direction:column;gap:14px}
+.mg3b{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
 .mc-green{border-color:var(--green-border)!important;background:var(--green-bg)!important}
 .mc-amber{border-color:var(--amber-border)!important;background:var(--amber-bg)!important}
 .mc-red{border-color:var(--red-border)!important;background:var(--red-bg)!important}
@@ -376,7 +316,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 .fin-cat-bar{height:4px;border-radius:2px;margin-top:4px;background:var(--green);transition:width .4s}
 .fin-cat-name{font-size:12px;font-weight:600}
 .fin-cat-sub{font-size:10px;color:var(--text-tertiary)}
-.fin-cat-amt{font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:700;text-align:right}
+.fin-cat-amt{font-family:'Instrument Serif',serif;font-size:16px;font-weight:700;text-align:right}
 /* BED BILLING BADGE */
 .bed-billing-badge{font-size:8px;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);padding:2px 5px;border-radius:3px;font-weight:700;margin-top:3px;display:inline-block}
 /* REALTIME PULSE */
@@ -424,8 +364,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <p class="auth-sub">Nursing Home Operating System</p>
       </div>
       <div class="auth-tabs">
-        <div class="auth-tab active" onclick="switchAuthTab('login',this)" data-i18n="auth_sign_in">Sign In</div>
-        <div class="auth-tab" onclick="switchAuthTab('signup',this)" data-i18n="auth_register_nh">Register NH</div>
+        <div class="auth-tab active" onclick="switchAuthTab('login',this)">Sign In</div>
+        <div class="auth-tab" onclick="switchAuthTab('signup',this)">Register NH</div>
       </div>
       <!-- LOGIN -->
       <div id="auth-panel-login" class="auth-panel active">
@@ -485,91 +425,99 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
   <div id="sidebar">
     <div class="sb-logo">
       <div class="sb-mark"><span class="a">Aura</span><span class="s">Scale</span><span class="os">NH</span></div>
-      <div class="sb-tag" data-i18n="tag_os">Nursing Home OS</div>
+      <div class="sb-tag">Nursing Home OS</div>
     </div>
     <div class="sb-facility">
       <div class="sb-facility-inner">
         <div class="sb-fac-name" id="sb-nh-name">Loading...</div>
-        <div class="sb-fac-type"><span data-i18n="fac_type">🏥 Private Nursing Home</span></div>
+        <div class="sb-fac-type">🏥 Private Nursing Home</div>
         <div class="sb-online"><span class="dot"></span><span id="sb-occupancy">Loading...</span></div>
       </div>
     </div>
     <nav class="sb-nav">
-      <p class="nav-sec" data-i18n="sec_overview">Overview</p>
+      <p class="nav-sec">Overview</p>
       <button class="nb on" onclick="nav('dashboard',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
-        <span data-i18n="nav_dashboard">Dashboard</span>
+        Dashboard
       </button>
-      <p class="nav-sec" data-i18n="sec_patients">Patients</p>
+      <p class="nav-sec">Patients</p>
       <button class="nb doctor-home-only" onclick="nav('doctor-home',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-        <span data-i18n="nav_my_patients">My Patients Home</span>
+        My Patients Home
       </button>
       <button class="nb reception-home-only" onclick="nav('reception-home',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-        <span data-i18n="nav_reception_home">Reception Home</span>
+        Reception Home
       </button>
       <button class="nb" onclick="nav('patients',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-        <span data-i18n="nav_patients">Patients</span>
+        Patients
       </button>
-      <p class="nav-sec" data-i18n="sec_inpatient">Inpatient</p>
+      <p class="nav-sec">Inpatient</p>
       <button class="nb" onclick="nav('beds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 14h20"/><path d="M7 14v-3"/><path d="M17 14v-3"/><path d="M12 14v-3"/></svg></span>
-        <span data-i18n="nav_beds">Bed Management</span>
+        Bed Management
         <span class="nb-badge" id="nav-occupied-count">0</span>
       </button>
       <button class="nb reception-only" onclick="nav('admissions',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
-        <span data-i18n="nav_admissions">Admissions</span>
+        Admissions
       </button>
       <button class="nb reception-only" onclick="nav('rounds',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
-        <span data-i18n="nav_progress_notes">Progress Notes</span>
+        Progress Notes
       </button>
       <button class="nb reception-only" onclick="nav('billing',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
-        <span data-i18n="nav_billing">Billing</span>
+        Billing
       </button>
       <button class="nb reception-only" onclick="nav('discharge',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
-        <span data-i18n="nav_discharge">Discharge</span>
+        Discharge
       </button>
-      <p class="nav-sec" data-i18n="sec_programs">Programs</p>
+      <button class="nb owner-only" onclick="nav('expenses',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/><line x1="12" y1="1" x2="12" y2="23"/><line x1="1" y1="1" x2="23" y2="23"/></svg></span>
+        Expenses
+      </button>
+      <button class="nb owner-only" onclick="nav('reports',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></span>
+        Reports
+      </button>
+      <p class="nav-sec">Programs</p>
       <button class="nb owner-only" onclick="nav('audit',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span data-i18n="nav_audit">Activity Audit</span>
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>Audit
       </button>
       <button class="nb reception-only" onclick="nav('ayushman',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
-        <span data-i18n="nav_ayushman">Ayushman / PM-JAY</span>
+        Ayushman / PM-JAY
       </button>
       <div class="owner-only">
         <button class="nb" onclick="nav('staff',this)">
           <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-          <span data-i18n="nav_staff">Staff</span>
+          Staff
         </button>
       </div>
-      <p class="nav-sec" data-i18n="sec_account">Account</p>
+      <p class="nav-sec owner-only">Account</p>
+      <button class="nb owner-only" onclick="nav('notifications',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+        Notifications
+      </button>
+      <p class="nav-sec">Account</p>
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-        <span data-i18n="nav_settings">Settings</span>
+        Settings
       </button>
     </nav>
     <div class="sb-foot">
       <div class="sb-controls">
         <button class="theme-toggle" onclick="toggleTheme()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          <span data-i18n="theme">Theme</span>
+          Theme
         </button>
-        <select class="lang-select" id="lang-select" onchange="setLanguage(this.value)" title="Language">
-          <option value="en">EN</option>
-          <option value="hi">हिं</option>
-          <option value="bn">বাং</option>
-        </select>
       </div>
       <div class="sb-out" onclick="handleLogout()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        <span data-i18n="sign_out">Sign Out</span>
+        Sign Out
       </div>
     </div>
   </div>
@@ -589,7 +537,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <span class="date-pill" id="hdr-date"></span>
         <button class="add-btn reception-only" id="hdr-add-btn" onclick="openAdmitModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span data-i18n="btn_admit_patient">Admit Patient</span>
+          Admit Patient
         </button>
       </div>
     </header>
@@ -599,149 +547,148 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-dashboard" class="view on">
         <div class="sh">
           <div>
-            <h1 class="st"><span data-i18n="dash_title">Owner Dashboard</span> 🏥</h1>
-            <p class="ss"><span data-i18n="dash_sub">Live facility overview</span> · <span id="dash-date2"></span></p>
+            <h1 class="st">Owner Dashboard 🏥</h1>
+            <p class="ss">Live facility overview · <span id="dash-date2"></span></p>
           </div>
-          <div class="rt-live"><span class="rt-dot"></span><span data-i18n="live">Live</span></div>
+          <div class="rt-live"><span class="rt-dot"></span>Live</div>
         </div>
 
-        <div class="dtabs">
-          <div class="dtab active" data-dtab="overview" onclick="switchDashTab('overview',this)"><span data-i18n="tab_overview">Overview</span></div>
-          <div class="dtab" data-dtab="payments" onclick="switchDashTab('payments',this)"><span data-i18n="tab_payments">Payments</span></div>
-          <div class="dtab" data-dtab="revenue" onclick="switchDashTab('revenue',this)"><span data-i18n="tab_revenue">Revenue</span></div>
-          <div class="dtab" data-dtab="billing" onclick="switchDashTab('billing',this)"><span data-i18n="tab_billing">Billing</span></div>
-          <div class="dtab" data-dtab="reports" onclick="switchDashTab('reports',this)"><span data-i18n="tab_reports">Reports</span></div>
+        <!-- Dashboard tab bar -->
+        <div class="dash-tabs">
+          <button class="dash-tab on" data-dtab="overview" onclick="dashTab('overview',this)">Overview</button>
+          <button class="dash-tab" data-dtab="payments" onclick="dashTab('payments',this)">Payments</button>
+          <button class="dash-tab" data-dtab="revenue" onclick="dashTab('revenue',this)">Revenue</button>
         </div>
 
-        <!-- OVERVIEW -->
-        <div id="dtab-overview" class="dpanel on">
-          <div class="mg">
-            <div class="mc"><div class="mc-lbl">Available Beds</div><div class="mc-val forest" id="dm-available">—</div><div class="mc-sub">ready to admit</div></div>
-            <div class="mc"><div class="mc-lbl">Today Revenue</div><div class="mc-val forest" id="dm-revenue">—</div><div class="mc-sub">charges today</div></div>
-            <div class="mc"><div class="mc-lbl">Outstanding Due</div><div class="mc-val burgundy" id="dm-outstanding">—</div><div class="mc-sub">unpaid balance</div></div>
+        <!-- ══════════════ OVERVIEW TAB ══════════════ -->
+        <div class="dash-pnl on" id="dtab-overview">
+          <div class="mg6">
+            <div class="mc"><div class="mc-lbl">Available Beds</div><div class="mc-val" id="dm-available">—</div><div class="mc-sub">ready to admit, of <span id="dm-total-beds">—</span> total</div></div>
+            <div class="mc mc-green"><div class="mc-lbl">Today Revenue</div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">charges today</div></div>
+            <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="dm-outstanding">—</div><div class="mc-sub">unpaid balance</div></div>
             <div class="mc"><div class="mc-lbl">Total Patients</div><div class="mc-val" id="dm-total-patients">—</div><div class="mc-sub">all time</div></div>
           </div>
 
-          <div class="bed-map">
-            <div class="bed-map-label">Bed Map</div>
-            <div class="bed-map-row" id="dash-bed-mini"></div>
+          <div class="panel">
+            <div class="ph"><div class="pt">Bed Map</div></div>
+            <div id="dash-bed-mini" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:5px"></div>
           </div>
 
-          <div class="dmore" id="dash-more-metrics">
-            <div class="dmore-summary" onclick="toggleDashMore()"><span class="dmore-arrow">▸</span> More facility metrics</div>
-            <div class="dmore-body">
-              <div class="mg6">
-                <div class="mc"><div class="mc-lbl">Occupied Beds</div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">of <span id="dm-total-beds">—</span> total</div></div>
-                <div class="mc"><div class="mc-lbl">Today Admissions</div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new today</div></div>
-                <div class="mc"><div class="mc-lbl">Today Discharges</div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
-                <div class="mc"><div class="mc-lbl">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub">active admissions total</div></div>
-              </div>
-              <div class="mg6" style="margin-top:1px">
-                <div class="mc"><div class="mc-lbl">Monthly Revenue</div><div class="mc-val forest" id="dm-month-revenue">—</div><div class="mc-sub">charges this month</div></div>
-                <div class="mc"><div class="mc-lbl">Total Collection</div><div class="mc-val" id="dm-month-collection">—</div><div class="mc-sub">payments this month</div></div>
-                <div class="mc"><div class="mc-lbl">Expenses</div><div class="mc-val" style="color:var(--text-tertiary)">—</div><div class="mc-sub">not tracked yet</div></div>
-                <div class="mc"><div class="mc-lbl">Net Revenue</div><div class="mc-val" style="color:var(--text-tertiary)">N/A</div><div class="mc-sub">needs expense tracking</div></div>
-              </div>
+          <button type="button" class="more-metrics-toggle" onclick="toggleMoreMetrics(this)">
+            <span class="mm-arrow">▸</span> More facility metrics
+          </button>
+          <div class="more-metrics-body" id="more-metrics-body" style="display:none">
+            <div class="mg6">
+              <div class="mc mc-green"><div class="mc-lbl">Occupied Beds</div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">currently in use</div></div>
+              <div class="mc"><div class="mc-lbl">Today Admissions</div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new today</div></div>
+              <div class="mc"><div class="mc-lbl">Today Discharges</div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
+              <div class="mc mc-blue"><div class="mc-lbl">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub">active admissions total</div></div>
+            </div>
+            <div class="mg6">
+              <div class="mc mc-green"><div class="mc-lbl">Monthly Revenue</div><div class="mc-val" id="dm-monthly-revenue">—</div><div class="mc-sub">month to date</div></div>
+              <div class="mc mc-blue"><div class="mc-lbl">Total Collection</div><div class="mc-val" id="dm-collection">—</div><div class="mc-sub">payments this month</div></div>
+              <div class="mc mc-red"><div class="mc-lbl">Expenses</div><div class="mc-val" id="dm-expenses">—</div><div class="mc-sub">this month</div></div>
+              <div class="mc"><div class="mc-lbl">Net Revenue</div><div class="mc-val" id="dm-net">—</div><div class="mc-sub">revenue − expenses</div></div>
             </div>
           </div>
+        </div>
 
-          <div class="panel">
-            <div class="ph"><div class="pt">Active Patients</div><span class="pb pb-g" id="active-count">0</span></div>
-            <div id="dash-active-list"></div>
+        <!-- ══════════════ PAYMENTS TAB ══════════════ -->
+        <div class="dash-pnl" id="dtab-payments" style="display:none">
+          <div class="sh" style="margin-bottom:12px">
+            <div><p class="ss" style="margin-top:0">All payments received across the facility</p></div>
+            <select class="finput" id="pay-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadPaymentsPage()">
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month" selected>This Month</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div class="mg6">
+            <div class="mc mc-green"><div class="mc-lbl">Total Collected</div><div class="mc-val" id="pay-total">₹0</div></div>
+            <div class="mc"><div class="mc-lbl">Transactions</div><div class="mc-val" id="pay-count">0</div></div>
+            <div class="mc mc-blue"><div class="mc-lbl">Cash</div><div class="mc-val" id="pay-cash">₹0</div></div>
+            <div class="mc"><div class="mc-lbl">Digital (UPI/Card/Bank)</div><div class="mc-val" id="pay-digital">₹0</div></div>
+          </div>
+          <button type="button" class="more-metrics-toggle" onclick="toggleMoreMetrics(this)">
+            <span class="mm-arrow">▸</span> Payment method breakdown
+          </button>
+          <div class="more-metrics-body" style="display:none">
+            <div class="mg6">
+              <div class="mc"><div class="mc-lbl">UPI</div><div class="mc-val" id="pay-upi">₹0</div></div>
+              <div class="mc"><div class="mc-lbl">Card</div><div class="mc-val" id="pay-card">₹0</div></div>
+              <div class="mc"><div class="mc-lbl">Bank Transfer</div><div class="mc-val" id="pay-bank">₹0</div></div>
+              <div class="mc"><div class="mc-lbl">Other</div><div class="mc-val" id="pay-other">₹0</div></div>
+            </div>
+          </div>
+          <div class="panel" style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px">
+              <thead><tr style="border-bottom:1px solid var(--border);text-align:left">
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Patient</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Date &amp; Time</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Method</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Received By</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Amount</th>
+              </tr></thead>
+              <tbody id="pay-tbody"></tbody>
+            </table>
           </div>
         </div>
 
-        <!-- PAYMENTS -->
-        <div id="dtab-payments" class="dpanel">
-          <div class="mg" style="grid-template-columns:repeat(2,1fr)">
-            <div class="mc"><div class="mc-lbl">Total Collected</div><div class="mc-val forest" id="dp-collected">₹0</div></div>
-            <div class="mc"><div class="mc-lbl">Transactions</div><div class="mc-val" id="dp-count">0</div></div>
+        <!-- ══════════════ REVENUE TAB ══════════════ -->
+        <div class="dash-pnl" id="dtab-revenue" style="display:none">
+          <div class="sh" style="margin-bottom:12px">
+            <div><p class="ss" style="margin-top:0">Revenue, payments and outstanding dues</p></div>
+            <select class="finput" id="fin-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadRevenue()">
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="week">This Week</option>
+              <option value="month" selected>This Month</option>
+              <option value="lastmonth">Last Month</option>
+              <option value="all">All Time</option>
+            </select>
           </div>
           <div class="panel">
-            <div class="ph"><div class="pt">Payments</div></div>
-            <div id="dp-list"></div>
+            <div class="ph"><div class="pt">Per-Patient Balance</div></div>
+            <div id="fin-list"></div>
           </div>
-          <div class="dnote">AuraScale doesn't yet have a "Record Payment" action, so there's no payment-method, date, or received-by breakdown to show — the figures above reflect only what's actually stored in the database today.</div>
-        </div>
-
-        <!-- REVENUE -->
-        <div id="dtab-revenue" class="dpanel">
           <div class="mg">
-            <div class="mc"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="dr-charged">₹0</div></div>
-            <div class="mc"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="dr-paid">₹0</div></div>
-            <div class="mc"><div class="mc-lbl">Outstanding Due</div><div class="mc-val burgundy" id="dr-due">₹0</div></div>
-            <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val forest" id="dr-month">₹0</div></div>
+            <div class="mc mc-green"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
+            <div class="mc mc-blue"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
+            <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
+            <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
           </div>
-          <div class="two-col">
-            <div class="panel">
-              <div class="ph"><div class="pt">Revenue by Category</div></div>
-              <div id="dr-by-category"></div>
-            </div>
-            <div class="panel">
-              <div class="ph"><div class="pt">Per-Patient Balance</div></div>
-              <div id="dr-list"></div>
-            </div>
-          </div>
-          <div class="dnote">Showing this month · for billing-method settings, see the <a href="#" onclick="switchDashTab('billing',document.querySelector('.dtab[data-dtab=billing]'));return false" style="color:var(--navy);font-weight:600">Billing tab</a>.</div>
-        </div>
-
-        <!-- BILLING -->
-        <div id="dtab-billing" class="dpanel">
-          <div class="panel">
-            <div class="ph"><div class="pt">⚙️ Billing Method</div></div>
-            <div style="padding:14px;display:flex;flex-direction:column;gap:10px;max-width:420px">
-              <div><label class="flbl">Billing Method</label>
-                <select class="finput" id="fin-billing-method" onchange="toggleCutoffWrap()">
-                  <option value="24hr">24-Hour Billing (from admission time)</option>
-                  <option value="calendar">Calendar Day (midnight cutoff)</option>
-                  <option value="cutoff">Custom Hospital Cutoff</option>
-                </select>
+          <button type="button" class="more-metrics-toggle" onclick="toggleMoreMetrics(this)">
+            <span class="mm-arrow">▸</span> Service, department &amp; billing config
+          </button>
+          <div class="more-metrics-body" style="display:none">
+            <div class="two-col">
+              <div class="panel">
+                <div class="ph"><div class="pt">Revenue by Service</div></div>
+                <div id="fin-by-category"></div>
               </div>
-              <div id="fin-cutoff-wrap" style="display:none">
-                <label class="flbl">Cutoff Time</label>
-                <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
+              <div class="panel">
+                <div class="ph"><div class="pt">Revenue by Department</div></div>
+                <div id="rev-by-dept"></div>
               </div>
-              <button class="qbtn" onclick="saveBillingConfig()">Save Billing Config</button>
             </div>
-          </div>
-        </div>
-
-        <!-- REPORTS -->
-        <div id="dtab-reports" class="dpanel">
-          <div class="report-grid">
-            <div class="report-card">
-              <div class="report-card-title">
-                <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
-                Daily Owner Report
+            <div class="panel owner-only">
+              <div class="ph"><div class="pt">⚙️ Billing Method</div></div>
+              <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+                <div><label class="flbl">Billing Method</label>
+                  <select class="finput" id="fin-billing-method">
+                    <option value="24hr">24-Hour Billing (from admission time)</option>
+                    <option value="calendar">Calendar Day (midnight cutoff)</option>
+                    <option value="cutoff">Custom Hospital Cutoff</option>
+                  </select>
+                </div>
+                <div id="fin-cutoff-wrap" style="display:none">
+                  <label class="flbl">Cutoff Time</label>
+                  <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
+                </div>
+                <button class="qbtn" onclick="saveBillingConfig()">Save Billing Config</button>
               </div>
-              <div class="report-card-desc">Today's revenue, collection, admissions/discharges and important transactions.</div>
-              <div style="margin-bottom:12px"><input class="finput" id="rpt-daily-date" type="date"/></div>
-              <button class="msub" onclick="generateDailyReport()" data-i18n="btn_generate_report">Generate Report</button>
-            </div>
-            <div class="report-card">
-              <div class="report-card-title">
-                <div class="report-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>
-                Monthly Management Audit
-              </div>
-              <div class="report-card-desc">Full month revenue, collection, service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</div>
-              <div style="margin-bottom:12px"><input class="finput" id="rpt-month-date" type="month"/></div>
-              <button class="msub" onclick="generateMonthlyReport()" data-i18n="btn_generate_report">Generate Report</button>
-            </div>
-          </div>
-          <div class="report-note">
-            <span>ℹ️</span>
-            <span>Reports open as a page you can view or print (browser's "Print → Save as PDF" to download or share). Automatic WhatsApp sending isn't wired up yet — set your preference below and it will start working once WhatsApp is connected.</span>
-          </div>
-
-          <div class="panel">
-            <div class="ph"><div class="pt">💬 Automatic Daily Report via WhatsApp</div></div>
-            <div style="padding:14px;display:flex;flex-direction:column;gap:10px;max-width:420px">
-              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="checkbox" id="rpt-auto-whatsapp" style="width:16px;height:16px;cursor:pointer" onchange="saveReportAutoSendConfig()"/>
-                <span style="font-size:12.5px;font-weight:600">Send the Daily Owner Report to WhatsApp automatically, every day</span>
-              </label>
-              <div><label class="flbl">WhatsApp Number</label><input class="finput" id="rpt-auto-whatsapp-number" type="tel" placeholder="e.g. 9330660325" oninput="saveReportAutoSendConfig()"/></div>
-              <div class="dnote" style="margin-top:0">Not active yet — AuraScale doesn't have a WhatsApp connection configured. This preference is saved and will take effect automatically as soon as WhatsApp sending is enabled for this facility.</div>
             </div>
           </div>
         </div>
@@ -749,7 +696,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
       <!-- DOCTOR HOME (distinct landing for doctor role) -->
       <div id="v-doctor-home" class="view">
-        <div class="sh"><div><h1 class="st" data-i18n="doc_home_title">My Patients</h1><p class="ss" data-i18n="doc_home_sub">Patients assigned to you</p></div></div>
+        <div class="sh"><div><h1 class="st">My Patients</h1><p class="ss">Patients assigned to you</p></div></div>
         <div class="mg" style="margin-bottom:16px">
           <div class="mc"><div class="mc-lbl">Assigned Patients</div><div class="mc-val" id="dh-assigned-count">0</div></div>
           <div class="mc"><div class="mc-lbl">Needs Review</div><div class="mc-val" id="dh-review-count">0</div></div>
@@ -766,8 +713,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
       <!-- RECEPTIONIST HOME (simple, register-first landing) -->
       <div id="v-reception-home" class="view">
-        <div class="sh"><div><h1 class="st" data-i18n="rec_home_title">Reception</h1><p class="ss" data-i18n="rec_home_sub">Register patients and manage admissions</p></div></div>
-        <button class="add-btn" style="width:100%;padding:16px;font-size:14px;margin-bottom:16px" onclick="openAdmitModal()" data-i18n="btn_register_admit_full">+ Register / Admit New Patient</button>
+        <div class="sh"><div><h1 class="st">Reception</h1><p class="ss">Register patients and manage admissions</p></div></div>
+        <button class="add-btn" style="width:100%;padding:16px;font-size:14px;margin-bottom:16px" onclick="openAdmitModal()">+ Register / Admit New Patient</button>
         <div class="panel">
           <input class="finput" id="rh-search" placeholder="Search patients by name or phone…" oninput="loadReceptionHome()" style="margin-bottom:10px"/>
           <div id="rh-recent-list"></div>
@@ -777,8 +724,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- PATIENTS (persistent profiles) -->
       <div id="v-patients" class="view">
         <div class="sh">
-          <div><h1 class="st" data-i18n="patients_title">Patients</h1><p class="ss" data-i18n="patients_sub">Persistent patient records · Search by name or phone</p></div>
-          <button class="add-btn reception-only" onclick="openAdmitModal()" data-i18n="btn_register_admit">+ Register / Admit</button>
+          <div><h1 class="st">Patients</h1><p class="ss">Persistent patient records · Search by name or phone</p></div>
+          <button class="add-btn reception-only" onclick="openAdmitModal()">+ Register / Admit</button>
         </div>
         <div class="panel">
           <div class="ph"><input class="finput" id="patient-search" placeholder="Search by name or phone…" oninput="loadPatientsList()" style="max-width:320px"/></div>
@@ -790,7 +737,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-beds" class="view">
         <div class="sh">
           <div>
-            <h1 class="st" data-i18n="beds_title">Bed Management</h1>
+            <h1 class="st">Bed Management</h1>
             <p class="ss">Ward-grouped · Real-time occupancy · Owner-only rate configuration</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -798,8 +745,9 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Occupied
               <span style="width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block;margin-left:6px"></span>Vacant
               <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;margin-left:6px"></span>Cleaning
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;margin-left:6px"></span>Critical
             </span>
-            <button class="add-btn" onclick="openAddBedModal()" data-i18n="btn_add_bed">+ Add Bed</button>
+            <button class="add-btn" onclick="openAddBedModal()">+ Add Bed</button>
           </div>
         </div>
         <!-- Ward-grouped bed panels rendered here by loadBeds() -->
@@ -809,7 +757,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- ADMISSIONS -->
       <div id="v-admissions" class="view">
         <div class="sh">
-          <div><h1 class="st" data-i18n="admissions_title">Admissions</h1><p class="ss" data-i18n="admissions_sub">All active inpatients · Admit new patients from header</p></div>
+          <div><h1 class="st">Admissions</h1><p class="ss">All active inpatients · Admit new patients from header</p></div>
         </div>
         <div class="panel">
           <div class="ph"><div class="pt">Active Admissions</div><span class="pb pb-g" id="adm-count">0</span></div>
@@ -824,7 +772,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- PROGRESS NOTES -->
       <div id="v-rounds" class="view">
         <div class="sh">
-          <div><h1 class="st" data-i18n="rounds_title">Progress Notes</h1><p class="ss" data-i18n="rounds_sub">Select a patient to add or view today's notes</p></div>
+          <div><h1 class="st">Progress Notes</h1><p class="ss">Select a patient to add or view today's notes</p></div>
         </div>
         <div class="two-col">
           <div class="panel">
@@ -841,7 +789,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- BILLING -->
       <div id="v-billing" class="view">
         <div class="sh">
-          <div><h1 class="st" data-i18n="billing_title">Billing</h1><p class="ss" data-i18n="billing_sub">Track charges · Generate bills · No leakage</p></div>
+          <div><h1 class="st">Billing</h1><p class="ss">Track charges · Generate bills · No leakage</p></div>
         </div>
         <div class="two-col">
           <div class="panel">
@@ -856,7 +804,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             <div id="billing-charges-list"></div>
             <div id="billing-total-bar" style="display:none;padding:13px 15px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
               <span style="font-size:12px;font-weight:700;color:var(--text-primary)">Total Due</span>
-              <span style="font-family:'IBM Plex Sans',sans-serif;font-size:20px;font-weight:700;color:var(--green)" id="billing-total">₹0</span>
+              <span style="font-family:'Instrument Serif',serif;font-size:20px;font-weight:700;color:var(--green)" id="billing-total">₹0</span>
             </div>
           </div>
         </div>
@@ -865,7 +813,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- DISCHARGE -->
       <div id="v-discharge" class="view">
         <div class="sh">
-          <div><h1 class="st" data-i18n="discharge_title">Discharge</h1><p class="ss" data-i18n="discharge_sub">Generate summary · Final bill · WhatsApp to family</p></div>
+          <div><h1 class="st">Discharge</h1><p class="ss">Generate summary · Final bill · WhatsApp to family</p></div>
         </div>
         <div class="panel">
           <div class="ph"><div class="pt">Ready for Discharge</div><span class="pb pb-g" id="discharge-count">0</span></div>
@@ -873,10 +821,65 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         </div>
       </div>
 
+      <!-- EXPENSES (owner) -->
+      <div id="v-expenses" class="view owner-only">
+        <div class="sh">
+          <div><h1 class="st">Expenses</h1><p class="ss">Hospital operating expenses</p></div>
+          <button class="qbtn" style="background:var(--blue);color:#fff;border:none" onclick="openAddExpense()">+ Add Expense</button>
+        </div>
+        <div class="mg">
+          <div class="mc mc-red"><div class="mc-lbl">Total Expenses (Period)</div><div class="mc-val" id="exp-total">₹0</div></div>
+          <div class="mc"><div class="mc-lbl">Entries</div><div class="mc-val" id="exp-count">0</div></div>
+          <div class="mc"><div class="mc-lbl">Top Category</div><div class="mc-val" id="exp-top-cat" style="font-size:16px">—</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><div class="pt">Expense Log</div></div>
+            <div id="exp-list"></div>
+          </div>
+          <div class="panel">
+            <div class="ph"><div class="pt">By Category</div></div>
+            <div id="exp-by-cat"></div>
+          </div>
+        </div>
+        <div class="note-box note-amber" style="margin-top:10px;font-size:11px">
+          ⚠️ Expense tracking requires an <code>nh_expenses</code> table in Supabase. If it hasn't been created yet, this page will show a setup notice instead of data — see the note at the bottom of this chat.
+        </div>
+      </div>
+
+      <!-- REPORTS (owner) -->
+      <div id="v-reports" class="view owner-only">
+        <div class="sh"><div><h1 class="st">Reports</h1><p class="ss">Daily and monthly management reports</p></div></div>
+        <div class="mg2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="panel" style="padding:18px">
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px">📄 Daily Owner Report</div>
+            <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Today's revenue, collection, expenses, admissions/discharges and important transactions.</p>
+            <input type="date" class="finput" id="report-daily-date"/>
+            <button class="msub" onclick="generateDailyReport()">Generate &amp; Print</button>
+          </div>
+          <div class="panel" style="padding:18px">
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px">📊 Monthly Management Audit</div>
+            <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Full month revenue, collection, expenses, department/service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</p>
+            <input type="month" class="finput" id="report-monthly-month"/>
+            <button class="msub" onclick="generateMonthlyReport()">Generate &amp; Print</button>
+          </div>
+        </div>
+        <div class="note-box note-blue" style="margin-top:14px;font-size:11px">
+          ℹ️ Reports open as a printable page — use your browser's "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn't wired up, since no messaging/email integration exists in this app yet.
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS (owner) -->
+      <div id="v-notifications" class="view owner-only">
+        <div class="sh"><div><h1 class="st">Notifications</h1><p class="ss">Alerts and recent business activity</p></div></div>
+        <div class="panel"><div id="owner-alerts-list"></div></div>
+      </div>
+
+
       <!-- STAFF AUDIT / ACTIVITY (owner only) -->
       <div id="v-audit" class="view owner-only">
         <div class="sh">
-          <div><h1 class="st" data-i18n="audit_title">Activity Audit</h1><p class="ss" data-i18n="audit_sub">Every staff action with patient, bed, time and amount</p></div>
+          <div><h1 class="st">Activity Audit</h1><p class="ss">Every staff action with patient, bed, time and amount</p></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <select class="finput" id="audit-filter-role" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadAudit()">
               <option value="">All Roles</option>
@@ -893,7 +896,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- AYUSHMAN / PM-JAY -->
       <div id="v-ayushman" class="view">
         <div class="sh">
-          <div><h1 class="st" data-i18n="ayushman_title">Ayushman Bharat / PM-JAY</h1><p class="ss" data-i18n="ayushman_sub">Internal case tracking — not an official government verification</p></div>
+          <div><h1 class="st">Ayushman Bharat / PM-JAY</h1><p class="ss">Internal case tracking — not an official government verification</p></div>
         </div>
         <div class="extract-box owner-only" id="ayushman-summary" style="background:var(--blue-bg);border-color:var(--blue-border)">Loading summary…</div>
         <div class="panel">
@@ -905,8 +908,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- STAFF (owner only) -->
       <div id="v-staff" class="view owner-only">
         <div class="sh">
-          <div><h1 class="st" data-i18n="staff_title">Staff</h1><p class="ss" data-i18n="staff_sub">Manage Receptionist and Doctor accounts for this facility</p></div>
-          <button class="add-btn" onclick="openInviteStaffModal()" data-i18n="btn_invite_staff">+ Invite Staff</button>
+          <div><h1 class="st">Staff</h1><p class="ss">Manage Receptionist and Doctor accounts for this facility</p></div>
+          <button class="add-btn" onclick="openModal('mod-add-staff')">+ Invite Staff</button>
         </div>
         <div class="panel">
           <div class="ph"><div class="pt">Team</div></div>
@@ -920,7 +923,20 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
       <!-- SETTINGS (owner only) -->
       <div id="v-settings" class="view owner-only">
-        <div class="sh"><div><h1 class="st" data-i18n="settings_title">Settings</h1><p class="ss" data-i18n="settings_sub">Manage your account</p></div></div>
+        <div class="sh"><div><h1 class="st">Settings</h1><p class="ss">Manage your account</p></div></div>
+
+        <div class="panel">
+          <div class="ph"><div class="pt">AuraScale Subscription</div></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="ss">Status</span>
+              <span id="sub-status-badge" style="font-weight:700;font-size:12px;padding:4px 10px;border-radius:999px">—</span>
+            </div>
+            <p class="ss" id="sub-status-note">Checking subscription status…</p>
+            <button onclick="payAuraScaleSubscription()" id="pay-sub-btn" class="add-btn" style="width:100%;justify-content:center">💳 Pay Subscription Now</button>
+            <a href="https://wa.me/919330660325?text=Hi, I'd like to renew/check my AuraScale subscription." target="_blank" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:transparent;border:1px solid var(--border);color:var(--text-secondary)">📲 Or renew via WhatsApp instead</a>
+          </div>
+        </div>
 
         <div class="panel">
           <div class="ph"><div class="pt">Change Password</div></div>
@@ -969,6 +985,35 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 <!-- MODALS -->
 
 <!-- ADMIT PATIENT MODAL -->
+<div class="mod-ov" id="mod-add-expense">
+  <div class="modal" style="max-width:400px">
+    <div class="mh">
+      <div class="mtitle">+ Add Expense</div>
+      <button class="mclose" onclick="closeModal('mod-add-expense')">✕</button>
+    </div>
+    <div class="mb">
+      <label class="flbl">Category</label>
+      <select class="finput" id="exp-category">
+        <option>Staff</option><option>Supplies</option><option>Utilities</option>
+        <option>Maintenance</option><option>Medical Supplies</option><option>Equipment</option>
+        <option>Rent</option><option>Other</option>
+      </select>
+      <label class="flbl">Amount (₹)</label>
+      <input class="finput" id="exp-amount" type="number" placeholder="0"/>
+      <label class="flbl">Date</label>
+      <input class="finput" id="exp-date" type="date"/>
+      <label class="flbl">Payment Method</label>
+      <select class="finput" id="exp-method">
+        <option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option>
+      </select>
+      <label class="flbl">Notes</label>
+      <input class="finput" id="exp-notes" placeholder="Optional details"/>
+      <div id="exp-err" style="color:var(--red);font-size:11.5px;display:none;margin-bottom:8px"></div>
+      <button class="msub" onclick="saveNewExpense()">Save Expense</button>
+    </div>
+  </div>
+</div>
+
 <div class="mod-ov" id="mod-admit">
   <div class="modal">
     <div class="mh">
@@ -1059,6 +1104,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <option value="Occupied">Occupied</option>
           <option value="Cleaning">Cleaning</option>
           <option value="Reserved">Reserved</option>
+          <option value="Critical">Critical</option>
         </select>
       </div>
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm)">
@@ -1137,7 +1183,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       </div>
       <div id="dis-bill-summary" style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:12px 14px">
         <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:4px">TOTAL BILL</div>
-        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:24px;color:var(--green)" id="dis-total-amount">₹0</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:24px;color:var(--green)" id="dis-total-amount">₹0</div>
       </div>
       <button class="msub" onclick="generateDischarge()">📄 Generate & Send to WhatsApp</button>
     </div>
@@ -1147,7 +1193,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 <!-- PATIENT PROFILE MODAL -->
 <div class="mod-ov" id="mod-patient-profile">
   <div class="modal" style="max-width:560px">
-    <div class="mh"><div class="mtitle" id="pp-title">Patient</div><button class="mclose" onclick="closeModal('mod-patient-profile')">✕</button></div>
+    <div class="mh"><div class="mtitle" id="pp-title">Patient</div><span id="pp-status-dot" style="margin-right:10px"></span><button class="mclose" onclick="closeModal('mod-patient-profile')">✕</button></div>
     <div class="mb">
       <div class="patient-tabs">
         <div class="patient-tab active" data-pt="overview" onclick="switchPatientTab('overview',this)">Overview</div>
@@ -1202,25 +1248,12 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <select class="finput" id="staff-role"><option value="receptionist">Receptionist</option><option value="doctor">Doctor</option></select>
       </div>
       <div><label class="flbl">Label (optional, for your reference)</label><input class="finput" id="staff-label" placeholder="e.g. Front desk — morning shift"/></div>
-      <div>
-        <label class="flbl">Send Invite Via</label>
-        <div class="seg-toggle">
-          <div class="seg-btn active" id="seg-whatsapp" onclick="setInviteChannel('whatsapp')">💬 WhatsApp</div>
-          <div class="seg-btn" id="seg-sms" onclick="setInviteChannel('sms')">✉️ SMS</div>
-        </div>
-      </div>
-      <div><label class="flbl">Their Mobile Number</label><input class="finput" id="staff-invite-phone" type="tel" placeholder="e.g. 9330660325"/></div>
       <div id="staff-error" class="auth-error"></div>
       <button class="msub" onclick="generateStaffInvite()">+ Generate Invite Code</button>
       <div id="staff-invite-result" style="display:none;margin-top:14px;padding:14px;background:var(--bg);border-radius:var(--r-sm);text-align:center">
         <div class="ss">Invite Code</div>
         <div id="staff-invite-code" style="font-family:monospace;font-size:20px;font-weight:700;margin:6px 0;letter-spacing:1px"></div>
-        <div class="share-row">
-          <button class="qbtn" onclick="copyInviteCode()" style="flex:1">Copy Code</button>
-          <button class="share-btn wa" id="staff-send-wa" onclick="sendInviteViaWhatsApp()" style="display:none">💬 Send via WhatsApp</button>
-          <button class="share-btn sms" id="staff-send-sms" onclick="sendInviteViaSMS()" style="display:none">✉️ Send via SMS</button>
-        </div>
-        <p class="ss" style="margin-top:8px">This opens WhatsApp/your messages app with the code pre-filled — AuraScale doesn't send it automatically yet.</p>
+        <button class="qbtn" onclick="copyInviteCode()">Copy Code</button>
       </div>
     </div>
   </div>
@@ -1331,103 +1364,6 @@ function toggleTheme(){
 }
 (function(){var th=localStorage.getItem('nh-theme')||'light';document.documentElement.setAttribute('data-theme',th);})();
 
-/* ── LANGUAGE (EN / HI / BN) ──
-   Covers static app chrome — sidebar, page headings, tab labels, and
-   common buttons — via data-i18n tags. Patient/doctor names, notes, and
-   other data typed into the app are left as entered, since translating
-   someone's own data isn't something a UI toggle should silently do. */
-var I18N = {
-  en: {
-    tag_os:'Nursing Home OS', fac_type:'🏥 Private Nursing Home',
-    sec_overview:'Overview', sec_patients:'Patients', sec_inpatient:'Inpatient', sec_programs:'Programs', sec_account:'Account',
-    nav_dashboard:'Dashboard', nav_my_patients:'My Patients Home', nav_reception_home:'Reception Home', nav_patients:'Patients',
-    nav_beds:'Bed Management', nav_admissions:'Admissions', nav_progress_notes:'Progress Notes', nav_billing:'Billing',
-    nav_discharge:'Discharge', nav_audit:'Activity Audit', nav_ayushman:'Ayushman / PM-JAY', nav_staff:'Staff', nav_settings:'Settings',
-    theme:'Theme', sign_out:'Sign Out',
-    btn_admit_patient:'Admit Patient', btn_register_admit_full:'+ Register / Admit New Patient', btn_register_admit:'+ Register / Admit',
-    btn_add_bed:'+ Add Bed', btn_invite_staff:'+ Invite Staff', btn_generate_report:'Generate Report',
-    dash_title:'Owner Dashboard', dash_sub:'Live facility overview', live:'Live',
-    tab_overview:'Overview', tab_payments:'Payments', tab_revenue:'Revenue', tab_billing:'Billing', tab_reports:'Reports',
-    doc_home_title:'My Patients', doc_home_sub:'Patients assigned to you',
-    rec_home_title:'Reception', rec_home_sub:'Register patients and manage admissions',
-    patients_title:'Patients', patients_sub:'Persistent patient records · Search by name or phone',
-    beds_title:'Bed Management',
-    admissions_title:'Admissions', admissions_sub:'All active inpatients · Admit new patients from header',
-    rounds_title:'Progress Notes', rounds_sub:"Select a patient to add or view today's notes",
-    billing_title:'Billing', billing_sub:'Track charges · Generate bills · No leakage',
-    discharge_title:'Discharge', discharge_sub:'Generate summary · Final bill · WhatsApp to family',
-    audit_title:'Activity Audit', audit_sub:'Every staff action with patient, bed, time and amount',
-    ayushman_title:'Ayushman Bharat / PM-JAY', ayushman_sub:'Internal case tracking — not an official government verification',
-    staff_title:'Staff', staff_sub:'Manage Receptionist and Doctor accounts for this facility',
-    settings_title:'Settings', settings_sub:'Manage your account',
-    auth_sign_in:'Sign In', auth_register_nh:'Register NH'
-  },
-  hi: {
-    tag_os:'नर्सिंग होम OS', fac_type:'🏥 निजी नर्सिंग होम',
-    sec_overview:'अवलोकन', sec_patients:'मरीज़', sec_inpatient:'भर्ती मरीज़', sec_programs:'कार्यक्रम', sec_account:'खाता',
-    nav_dashboard:'डैशबोर्ड', nav_my_patients:'मेरे मरीज़', nav_reception_home:'रिसेप्शन होम', nav_patients:'मरीज़',
-    nav_beds:'बेड प्रबंधन', nav_admissions:'भर्ती', nav_progress_notes:'प्रगति नोट्स', nav_billing:'बिलिंग',
-    nav_discharge:'छुट्टी', nav_audit:'गतिविधि लेखा', nav_ayushman:'आयुष्मान / PM-JAY', nav_staff:'स्टाफ', nav_settings:'सेटिंग्स',
-    theme:'थीम', sign_out:'साइन आउट',
-    btn_admit_patient:'मरीज़ भर्ती करें', btn_register_admit_full:'+ पंजीकरण / नया मरीज़ भर्ती करें', btn_register_admit:'+ पंजीकरण / भर्ती',
-    btn_add_bed:'+ बेड जोड़ें', btn_invite_staff:'+ स्टाफ आमंत्रित करें', btn_generate_report:'रिपोर्ट बनाएं',
-    dash_title:'मालिक डैशबोर्ड', dash_sub:'लाइव सुविधा अवलोकन', live:'लाइव',
-    tab_overview:'अवलोकन', tab_payments:'भुगतान', tab_revenue:'राजस्व', tab_billing:'बिलिंग', tab_reports:'रिपोर्ट',
-    doc_home_title:'मेरे मरीज़', doc_home_sub:'आपको सौंपे गए मरीज़',
-    rec_home_title:'रिसेप्शन', rec_home_sub:'मरीज़ों को पंजीकृत करें और भर्ती प्रबंधित करें',
-    patients_title:'मरीज़', patients_sub:'स्थायी मरीज़ रिकॉर्ड · नाम या फ़ोन से खोजें',
-    beds_title:'बेड प्रबंधन',
-    admissions_title:'भर्ती', admissions_sub:'सभी सक्रिय भर्ती मरीज़ · ऊपर से नया मरीज़ भर्ती करें',
-    rounds_title:'प्रगति नोट्स', rounds_sub:'नोट्स देखने या जोड़ने के लिए मरीज़ चुनें',
-    billing_title:'बिलिंग', billing_sub:'शुल्क ट्रैक करें · बिल बनाएं',
-    discharge_title:'छुट्टी', discharge_sub:'सारांश तैयार करें · अंतिम बिल · व्हाट्सएप पर भेजें',
-    audit_title:'गतिविधि लेखा', audit_sub:'हर स्टाफ कार्रवाई मरीज़, बेड, समय और राशि सहित',
-    ayushman_title:'आयुष्मान भारत / PM-JAY', ayushman_sub:'आंतरिक रिकॉर्ड — यह सरकारी सत्यापन नहीं है',
-    staff_title:'स्टाफ', staff_sub:'इस सुविधा के रिसेप्शनिस्ट और डॉक्टर खाते प्रबंधित करें',
-    settings_title:'सेटिंग्स', settings_sub:'अपना खाता प्रबंधित करें',
-    auth_sign_in:'साइन इन', auth_register_nh:'नर्सिंग होम पंजीकृत करें'
-  },
-  bn: {
-    tag_os:'নার্সিং হোম OS', fac_type:'🏥 বেসরকারি নার্সিং হোম',
-    sec_overview:'সংক্ষিপ্ত বিবরণ', sec_patients:'রোগী', sec_inpatient:'ভর্তি রোগী', sec_programs:'প্রোগ্রাম', sec_account:'অ্যাকাউন্ট',
-    nav_dashboard:'ড্যাশবোর্ড', nav_my_patients:'আমার রোগীরা', nav_reception_home:'রিসেপশন হোম', nav_patients:'রোগী',
-    nav_beds:'বেড ব্যবস্থাপনা', nav_admissions:'ভর্তি', nav_progress_notes:'অগ্রগতি নোট', nav_billing:'বিলিং',
-    nav_discharge:'ছুটি', nav_audit:'কার্যকলাপ নিরীক্ষা', nav_ayushman:'আয়ুষ্মান / PM-JAY', nav_staff:'স্টাফ', nav_settings:'সেটিংস',
-    theme:'থিম', sign_out:'সাইন আউট',
-    btn_admit_patient:'রোগী ভর্তি করুন', btn_register_admit_full:'+ নিবন্ধন / নতুন রোগী ভর্তি করুন', btn_register_admit:'+ নিবন্ধন / ভর্তি',
-    btn_add_bed:'+ বেড যোগ করুন', btn_invite_staff:'+ স্টাফ আমন্ত্রণ করুন', btn_generate_report:'রিপোর্ট তৈরি করুন',
-    dash_title:'মালিক ড্যাশবোর্ড', dash_sub:'লাইভ প্রতিষ্ঠান সংক্ষিপ্ত বিবরণ', live:'লাইভ',
-    tab_overview:'সংক্ষিপ্ত বিবরণ', tab_payments:'পেমেন্ট', tab_revenue:'রাজস্ব', tab_billing:'বিলিং', tab_reports:'রিপোর্ট',
-    doc_home_title:'আমার রোগীরা', doc_home_sub:'আপনাকে বরাদ্দ করা রোগীরা',
-    rec_home_title:'রিসেপশন', rec_home_sub:'রোগী নিবন্ধন করুন এবং ভর্তি পরিচালনা করুন',
-    patients_title:'রোগী', patients_sub:'স্থায়ী রোগী রেকর্ড · নাম বা ফোন দিয়ে খুঁজুন',
-    beds_title:'বেড ব্যবস্থাপনা',
-    admissions_title:'ভর্তি', admissions_sub:'সব সক্রিয় ভর্তি রোগী · উপর থেকে নতুন রোগী ভর্তি করুন',
-    rounds_title:'অগ্রগতি নোট', rounds_sub:'নোট দেখতে বা যোগ করতে একজন রোগী নির্বাচন করুন',
-    billing_title:'বিলিং', billing_sub:'চার্জ ট্র্যাক করুন · বিল তৈরি করুন',
-    discharge_title:'ছুটি', discharge_sub:'সারাংশ তৈরি করুন · চূড়ান্ত বিল · হোয়াটসঅ্যাপে পাঠান',
-    audit_title:'কার্যকলাপ নিরীক্ষা', audit_sub:'রোগী, বেড, সময় ও পরিমাণসহ প্রতিটি স্টাফ কার্যকলাপ',
-    ayushman_title:'আয়ুষ্মান ভারত / PM-JAY', ayushman_sub:'অভ্যন্তরীণ রেকর্ড — এটি সরকারি যাচাই নয়',
-    staff_title:'স্টাফ', staff_sub:'এই প্রতিষ্ঠানের রিসেপশনিস্ট ও ডাক্তার অ্যাকাউন্ট পরিচালনা করুন',
-    settings_title:'সেটিংস', settings_sub:'আপনার অ্যাকাউন্ট পরিচালনা করুন',
-    auth_sign_in:'সাইন ইন', auth_register_nh:'নার্সিং হোম নিবন্ধন করুন'
-  }
-};
-function setLanguage(lang){
-  if(!I18N[lang]) lang='en';
-  localStorage.setItem('nh-lang', lang);
-  document.documentElement.setAttribute('lang', lang);
-  document.body.style.fontFamily = lang==='bn' ? "'Noto Sans Bengali','IBM Plex Sans',sans-serif" : "'IBM Plex Sans',sans-serif";
-  var dict = I18N[lang];
-  document.querySelectorAll('[data-i18n]').forEach(function(el){
-    var key = el.getAttribute('data-i18n');
-    if(dict[key]) el.textContent = dict[key];
-  });
-  var sel = document.getElementById('lang-select');
-  if(sel) sel.value = lang;
-}
-(function(){ setLanguage(localStorage.getItem('nh-lang')||'en'); })();
-
 /* ── MOBILE SIDEBAR ── */
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
@@ -1435,20 +1371,36 @@ function toggleSidebar(){
 }
 
 /* ── NAVIGATION ── */
+/* ── DASHBOARD TABS (Overview / Payments / Revenue) ── */
+function dashTab(tab, el){
+  document.querySelectorAll('.dash-tab').forEach(function(b){ b.classList.remove('on'); });
+  document.querySelectorAll('.dash-pnl').forEach(function(p){ p.style.display = 'none'; });
+  if(el) el.classList.add('on');
+  var pnl = document.getElementById('dtab-'+tab);
+  if(pnl) pnl.style.display = 'flex';
+}
+
+/* ── Collapsible "More metrics" sections used across the Dashboard tabs ── */
+function toggleMoreMetrics(btn){
+  btn.classList.toggle('open');
+  var body = btn.nextElementSibling;
+  if(!body) return;
+  body.style.display = (body.style.display === 'none' || !body.style.display) ? 'flex' : 'none';
+}
+
 function nav(id,btn){
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')});
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);
   if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings'};
-  var titleI18nKeys={dashboard:'dash_title','doctor-home':'doc_home_title','reception-home':'rec_home_title',patients:'patients_title',beds:'beds_title',admissions:'admissions_title',rounds:'rounds_title',billing:'billing_title',discharge:'discharge_title',ayushman:'ayushman_title',staff:'staff_title',settings:'settings_title'};
-  var curLang = localStorage.getItem('nh-lang')||'en';
-  var localizedTitles = (I18N[curLang]||{});
-  var t=document.getElementById('tab-title');if(t)t.textContent=(titleI18nKeys[id] && localizedTitles[titleI18nKeys[id]]) || titles[id] || id;
-  if(id==='dashboard')loadDashboard();
+  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',expenses:'Expenses',reports:'Reports',notifications:'Notifications',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings',audit:'Audit'};
+  var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
+  if(id==='expenses')loadExpensesPage();
+  if(id==='reports')loadReportsPage();
+  if(id==='notifications')loadOwnerNotifications();
   if(id==='audit')loadAudit();
   if(id==='patients')loadPatientsList();
   if(id==='beds')loadBeds();
@@ -1458,32 +1410,56 @@ function nav(id,btn){
   if(id==='discharge')loadDischargeList();
   if(id==='ayushman')loadAyushmanView();
   if(id==='staff')loadStaffList();
+  if(id==='settings')loadSubscriptionStatus();
   /* auto-close sidebar on mobile after navigating */
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
 
-/* ── DASHBOARD TABS (Overview / Payments / Revenue) ──
-   Payments/Revenue data is fetched lazily, the first time each tab is
-   opened, so a normal Overview-only visit does the same number of
-   queries as before. */
-var _dashPaymentsLoaded = false;
-var _dashRevenueLoaded = false;
-var _dashBillingLoaded = false;
-var _dashReportsLoaded = false;
-function switchDashTab(tab, el){
-  document.querySelectorAll('.dtab').forEach(function(t){t.classList.remove('active')});
-  document.querySelectorAll('.dpanel').forEach(function(p){p.classList.remove('on')});
-  if(el) el.classList.add('active');
-  var p = document.getElementById('dtab-'+tab);
-  if(p) p.classList.add('on');
-  if(tab==='payments' && !_dashPaymentsLoaded){ _dashPaymentsLoaded = true; loadDashboardPayments(); }
-  if(tab==='revenue' && !_dashRevenueLoaded){ _dashRevenueLoaded = true; loadDashboardRevenue(); }
-  if(tab==='billing' && !_dashBillingLoaded){ _dashBillingLoaded = true; loadDashboardBilling(); }
-  if(tab==='reports' && !_dashReportsLoaded){ _dashReportsLoaded = true; loadReportsView(); }
+/* ── PAY SUBSCRIPTION (Cashfree) ── */
+async function payAuraScaleSubscription(){
+  var btn=document.getElementById('pay-sub-btn');
+  var originalText=btn.textContent;
+  btn.disabled=true;btn.textContent='Preparing checkout…';
+  try{
+    var amount=999; // TODO: replace with the real monthly subscription amount once pricing is finalized
+    var nameEl=document.getElementById('sb-nh-name');
+    var clinicName=(nameEl&&nameEl.textContent)||'AuraScale Customer';
+    var r=await _supa.functions.invoke('create-cashfree-order',{
+      body:{clinic_id:_clinicId,clinic_name:clinicName,amount:amount}
+    });
+    if(r.error||!r.data||!r.data.payment_session_id){
+      alert('Could not start payment. Please try again or use the WhatsApp option.');
+      console.error('Cashfree order error:',r.error||r.data);
+      btn.disabled=false;btn.textContent=originalText;
+      return;
+    }
+    var cashfree=Cashfree({mode:'sandbox'}); // change to 'production' once using live keys
+    cashfree.checkout({
+      paymentSessionId:r.data.payment_session_id,
+      redirectTarget:'_self'
+    });
+  }catch(e){
+    console.error(e);
+    alert('Something went wrong starting the payment. Please try again.');
+    btn.disabled=false;btn.textContent=originalText;
+  }
 }
-function toggleDashMore(){
-  var el = document.getElementById('dash-more-metrics');
-  if(el) el.classList.toggle('open');
+
+/* ── SUBSCRIPTION STATUS ── */
+async function loadSubscriptionStatus(){
+  var badge=document.getElementById('sub-status-badge'),note=document.getElementById('sub-status-note');
+  if(!badge||!_clinicId)return;
+  var r=await _supa.from('clinics').select('subscription_status').eq('id',_clinicId).single();
+  var status=(r.data&&r.data.subscription_status)||'active';
+  if(status==='frozen'){
+    badge.textContent='Payment Due';
+    badge.style.background='var(--red-bg)';badge.style.color='var(--red)';
+    note.textContent='Access to billing and admin features is paused until this month\'s subscription is renewed. Your doctors can still access patient records as normal.';
+  }else{
+    badge.textContent='Active';
+    badge.style.background='var(--green-bg)';badge.style.color='var(--green)';
+    note.textContent='Your AuraScale subscription is active and up to date.';
+  }
 }
 
 /* ── MODAL ── */
@@ -1575,11 +1551,6 @@ async function handleInviteSignup(){
       err.style.display='block';
       return;
     }
-    /* Backfill email onto their own nh_staff row — a self-update, so
-       normal RLS ("users can update their own row") already covers it.
-       Wrapped safely: if the 'email' column doesn't exist yet in this
-       database, this just silently no-ops rather than blocking signup. */
-    try{ await _supa.from('nh_staff').update({email:email}).eq('id',r.data.user.id); }catch(e){}
     showToast('Welcome — your '+redeem.data.role+' account is ready.');
     await _initApp();
   }finally{
@@ -1680,7 +1651,7 @@ async function handleSignup(){
       return;
     }
     await _supa.from('facility_members').upsert({user_id:r.data.user.id,clinic_id:ins.data.id,role:'owner'});
-    await _supa.from('nh_staff').upsert({id:r.data.user.id,clinic_id:ins.data.id,role:'owner',full_name:name,email:email});
+    await _supa.from('nh_staff').upsert({id:r.data.user.id,clinic_id:ins.data.id,role:'owner',full_name:name});
   }
   document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Registration Submitted</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your nursing home account is under review.<br>We will activate it within 24 hours.<br><br>WhatsApp us to expedite activation.</p><a href="https://wa.me/919330660325?text=Hi, I registered '+nhname+' on AuraScale NH. Please activate." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us to Activate</a></div></div>';
 }
@@ -1833,7 +1804,7 @@ async function _initApp(){
        invited Receptionist/Doctor logins (not just the original owner)
        find their clinic. Falls back to the legacy owner_id lookup for
        any account that predates nh_staff and hasn't been backfilled. */
-    var staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active,email').eq('id',uid).single(),20000,'your staff record');
+    var staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id',uid).single(),20000,'your staff record');
 
     var clinicId=null;
     if(staffRow.data&&staffRow.data.clinic_id){
@@ -1854,7 +1825,7 @@ async function _initApp(){
            so every database-side rule (invites, patients, etc.) that
            checks nh_staff actually sees this login as the owner it is,
            instead of only believing it client-side. */
-        await _supa.from('nh_staff').upsert({id:uid,clinic_id:clinicId,role:'owner',email:(userRes.data.user.email||null)});
+        await _supa.from('nh_staff').upsert({id:uid,clinic_id:clinicId,role:'owner'});
       }
     }
     if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
@@ -1870,16 +1841,6 @@ async function _initApp(){
     }
     _clinicId=cl.data.id;
     document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
-    /* Self-heal: if this login's nh_staff row predates the email column
-       (or was created before we started saving it), backfill it now
-       with their own session email. Safe because it's a self-update —
-       same RLS pattern as everything else in this file — and it means
-       every existing staff member's email fills in automatically the
-       next time they sign in, without needing service-role/admin access
-       to read other users' emails from auth.users. */
-    if(staffRow.data && !staffRow.data.email && userRes.data.user.email){
-      try{ await _supa.from('nh_staff').update({email:userRes.data.user.email}).eq('id',uid); }catch(e){}
-    }
     /* nh.html is the Owner portal only. Doctor and Receptionist logins
        are sent to their own genuinely separate pages — not shown an
        inline view within this file. Supabase persists the session in
@@ -1902,34 +1863,23 @@ async function loadDashboard(){
   var today = new Date().toISOString().slice(0,10);
   var monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-  var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients] = await Promise.all([
+  var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients, activity, monthCharges, monthPayments, monthExpenses] = await Promise.all([
     _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admitting_doctor,admission_diagnosis,status').eq('clinic_id',_clinicId).eq('status','Active'),
-    _supa.from('beds').select('*').eq('clinic_id',_clinicId),
+    _supa.from('beds').select('id,bed_number,ward,status').eq('clinic_id',_clinicId),
     _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00'),
     _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',today+'T00:00:00'),
     _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',today+'T00:00:00'),
     _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId),
     _supa.from('nh_payments').select('amount').eq('clinic_id',_clinicId),
-    _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId)
+    _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId),
+    _supa.from('nh_audit_log').select('action,details,created_at,actor_id,clinic_id').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(8),
+    _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',monthStart),
+    _supa.from('nh_payments').select('amount').eq('clinic_id',_clinicId).gte('created_at',monthStart),
+    _supa.from('nh_expenses').select('amount').eq('clinic_id',_clinicId).gte('expense_date',monthStart.slice(0,10))
   ]);
-
-  /* Month-to-date figures for the collapsible "More facility metrics"
-     section — isolated in its own try/catch so that if nh_payments
-     doesn't carry a created_at column in this database, it degrades to
-     "—" instead of breaking the rest of the dashboard. */
-  var monthRevenue = null, monthCollection = null;
-  try{
-    var monthCh = await _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',monthStart);
-    if(!monthCh.error) monthRevenue = (monthCh.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
-  }catch(e){}
-  try{
-    var monthPy = await _supa.from('nh_payments').select('amount,created_at').eq('clinic_id',_clinicId).gte('created_at',monthStart);
-    if(!monthPy.error) monthCollection = (monthPy.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
-  }catch(e){}
 
   var active   = adm.data || [];
   var allBeds  = beds.data || [];
-  await autoVacateExpiredCleaningBeds(allBeds);
   var occupied = allBeds.filter(function(b){return b.status==='Occupied';}).length;
   var available= allBeds.filter(function(b){return (b.status||'').toLowerCase()==='vacant';}).length;
   var todayRev = (charges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
@@ -1951,8 +1901,14 @@ async function loadDashboard(){
   safe('active-count', active.length);
   safe('nav-occupied-count', occupied);
   safe('sb-occupancy', occupied+'/'+allBeds.length+' beds occupied');
-  safe('dm-month-revenue', monthRevenue===null ? '—' : '₹'+monthRevenue.toLocaleString('en-IN'));
-  safe('dm-month-collection', monthCollection===null ? '—' : '₹'+monthCollection.toLocaleString('en-IN'));
+
+  var monthRev = (monthCharges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
+  var monthColl = (monthPayments.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
+  var monthExp = monthExpenses.error ? null : (monthExpenses.data||[]).reduce(function(s,e){return s+(e.amount||0);},0);
+  safe('dm-monthly-revenue','₹'+monthRev.toLocaleString('en-IN'));
+  safe('dm-collection','₹'+monthColl.toLocaleString('en-IN'));
+  safe('dm-expenses', monthExp===null ? '—' : '₹'+monthExp.toLocaleString('en-IN'));
+  safe('dm-net', monthExp===null ? 'N/A' : '₹'+(monthRev-monthExp).toLocaleString('en-IN'));
 
   /* Active patients list */
   var list = document.getElementById('dash-active-list');
@@ -1970,7 +1926,7 @@ async function loadDashboard(){
           +'<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'')+'</div>'
           +'<div class="adm-meta">'+esc(a.admitting_doctor||'')+(a.admission_diagnosis?' &middot; '+esc(a.admission_diagnosis):'')+' &middot; Day '+days+'</div></div>'
           +'<span class="chip ch-act">Active</span>';
-        div.onclick = (function(id,nm){ return function(){ openProfile(id,nm); }; })(a.id, a.patient_name||'');
+        div.onclick = (function(id,nm){ return function(){ openPatientProfile(id,nm); }; })(a.id, a.patient_name||'');
         rows.push(div);
       });
       list.innerHTML = '';
@@ -1978,22 +1934,62 @@ async function loadDashboard(){
     }
   }
 
-  /* Bed map (Overview tab) */
+  /* Activity feed */
+  var feedEl = document.getElementById('dash-activity-feed');
+  if(feedEl){
+    var acts = activity.data || [];
+    if(!acts.length){
+      feedEl.innerHTML='<div class="empty" style="padding:18px"><div class="empty-ic">📋</div><p class="empty-t">No recent activity</p></div>';
+    } else {
+      var ACTION_META = {
+        charge_added:   {dot:'act-dot-green', icon:'💳', label:'Charge added'},
+        voice_charges_added:{dot:'act-dot-green',icon:'🎙️',label:'Voice charges added'},
+        bed_edited:     {dot:'act-dot-amber', icon:'🛏️', label:'Bed updated'},
+        bed_added:      {dot:'act-dot-blue',  icon:'🛏️', label:'Bed added'},
+        prescription_saved:{dot:'act-dot-blue',icon:'💊',label:'Prescription saved'},
+        invite_generated:{dot:'act-dot-blue', icon:'👥', label:'Invite generated'},
+        patient_admitted:{dot:'act-dot-green',icon:'🏥',label:'Patient admitted'},
+        bill_uploaded:  {dot:'act-dot-blue',  icon:'📎', label:'Bill uploaded'},
+      };
+      feedEl.innerHTML = acts.map(function(a){
+        var m = ACTION_META[a.action] || {dot:'act-dot-amber',icon:'📋',label:a.action.replace(/_/g,' ')};
+        var d = a.details || {};
+        var detail = d.desc || d.name || d.num || d.role || '';
+        var amt = d.total ? ' · ₹'+Number(d.total).toLocaleString('en-IN') : (d.price?' · ₹'+Number(d.price).toLocaleString('en-IN'):'');
+        var t = new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+        return '<div class="activity-row">'
+          +'<div class="act-dot '+m.dot+'"></div>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div class="act-main">'+m.icon+' '+m.label+(detail?' — '+esc(detail):'')+(amt?'<b>'+amt+'</b>':'')+'</div>'
+            +'<div class="act-meta">'+t+' today</div>'
+          +'</div></div>';
+      }).join('');
+    }
+  }
+
+  /* Bed mini map */
   var mini = document.getElementById('dash-bed-mini');
   if(mini){
     var FEMALE_WARDS = ['Female','Maternity'];
     mini.innerHTML = allBeds.map(function(b){
       var isFemale = FEMALE_WARDS.indexOf(b.ward||'') >= 0;
-      var cls = b.status==='Occupied' ? (isFemale?'critical':'occupied')
-              : b.status==='Cleaning' ? 'cleaning'
-              : 'available';
-      return '<div class="bed-map-cell '+cls+'" title="Bed '+esc(b.bed_number||'')+' ('+esc(b.ward||'')+') — '+b.status+'">'+esc(b.bed_number||'?')+'</div>';
+      var col = b.status==='Occupied' ? (isFemale?'#C0398A':'var(--green)')
+              : b.status==='Cleaning' ? 'var(--amber)'
+              : b.status==='Reserved' ? 'var(--blue)'
+              : b.status==='Critical' ? 'var(--red)'
+              : 'var(--border)';
+      return '<div title="Bed '+(b.bed_number||'')+' ('+(b.ward||'')+') — '+b.status+'" style="width:100%;aspect-ratio:1;background:'+col+';border-radius:5px;opacity:.8;cursor:default"></div>';
     }).join('');
   }
 
   /* Header date */
   var d2 = document.getElementById('dash-date2');
   if(d2) d2.textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+
+  /* Payments & Revenue now live directly on the Dashboard (no separate
+     sidebar pages), so refresh them here too. */
+  loadPaymentsPage();
+  loadRevenue();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2052,25 +2048,6 @@ async function loadAudit(){
 /* ── ENHANCED BED MANAGEMENT ─────────────────────────────────────────── */
 var _editBedId = null;
 
-/* Beds auto-return from Cleaning to Vacant 30 minutes after discharge.
-   Checked opportunistically whenever beds are loaded (Bed Management or
-   Dashboard) rather than with a background timer, since this is a
-   client without a server-side scheduler. Mutates the passed array in
-   place so the caller's render reflects the change immediately. */
-var CLEANING_MINUTES = 30;
-async function autoVacateExpiredCleaningBeds(beds){
-  var now = Date.now();
-  var expired = beds.filter(function(b){
-    return b.status==='Cleaning' && b.cleaning_started_at && (now - new Date(b.cleaning_started_at).getTime()) >= CLEANING_MINUTES*60000;
-  });
-  if(!expired.length) return;
-  await Promise.all(expired.map(function(b){
-    return _supa.from('beds').update({status:'Vacant',cleaning_started_at:null}).eq('id',b.id).then(function(){
-      b.status='Vacant'; b.cleaning_started_at=null;
-    }).catch(function(){});
-  }));
-}
-
 async function loadBeds(){
   if(!_clinicId)return;
   var [bedsRes, admsRes] = await Promise.all([
@@ -2078,7 +2055,6 @@ async function loadBeds(){
     _supa.from('admissions').select('bed_id,patient_name,patient_id,admission_date').eq('clinic_id',_clinicId).eq('status','Active')
   ]);
   var beds   = bedsRes.data  || [];
-  await autoVacateExpiredCleaningBeds(beds);
   var admMap = {};
   (admsRes.data||[]).forEach(function(a){ admMap[a.bed_id] = a; });
 
@@ -2097,10 +2073,10 @@ async function loadBeds(){
   });
 
   var WARD_COLORS = {
-    'Female'    : { bg:'var(--burgundy-bg)', border:'var(--burgundy-border)', dot:'var(--burgundy)' },
+    'Female'    : { bg:'#FDF0F7', border:'#F0B8DC', dot:'#C0398A' },
     'ICU'       : { bg:'var(--red-bg)', border:'var(--red-border)', dot:'var(--red)' },
     'Emergency' : { bg:'var(--red-bg)', border:'var(--red-border)', dot:'var(--red)' },
-    'Maternity' : { bg:'var(--purple-bg)', border:'var(--purple-border)', dot:'var(--purple)' },
+    'Maternity' : { bg:'#F3EDFB', border:'#D4B8F0', dot:'#6B3FA0' },
   };
 
   var wardKeys = Object.keys(wards);
@@ -2117,14 +2093,9 @@ async function loadBeds(){
       var adm     = admMap[b.id];
       var days    = adm ? Math.floor((Date.now()-new Date(adm.admission_date))/86400000) : 0;
       var isOcc   = !!(adm && adm.patient_name) || b.status==='Occupied';
-      var cls     = isOcc ? 'occupied' : b.status==='Cleaning' ? 'cleaning' : b.status==='Reserved' ? 'occupied' : '';
+      var cls     = isOcc ? 'occupied' : b.status==='Cleaning' ? 'cleaning' : b.status==='Reserved' ? 'occupied' : b.status==='Critical' ? 'critical' : '';
       var inact   = b.is_active===false ? ' bed-card-inactive' : '';
       var rate    = b.daily_rate ? '₹'+Number(b.daily_rate).toLocaleString('en-IN')+'/d' : '';
-      var cleaningLeft = '';
-      if(b.status==='Cleaning' && b.cleaning_started_at){
-        var minsLeft = CLEANING_MINUTES - Math.floor((Date.now()-new Date(b.cleaning_started_at).getTime())/60000);
-        if(minsLeft>0) cleaningLeft = '<div class="bed-days">Vacant in '+minsLeft+'m</div>';
-      }
       var _oc = isOcc && adm && adm.patient_id
         ? 'openPatientFromBed('+JSON.stringify(adm.patient_id)+','+JSON.stringify(adm.patient_name||'')+','+JSON.stringify(b.bed_number||'')+','+JSON.stringify(ward||'')+')'
         : 'openEditBed('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(ward)+','+(b.daily_rate||0)+','+JSON.stringify(b.status)+','+(b.is_active!==false)+')';
@@ -2134,7 +2105,6 @@ async function loadBeds(){
         +'<div class="bed-ward">'+esc(ward)+'</div>'
         +(rate?'<div class="bed-card-rate">'+rate+'</div>':'')
         +(adm?'<div class="bed-patient">'+esc(adm.patient_name||'')+'</div><div class="bed-days">Day '+(days+1)+'</div>':'')
-        +cleaningLeft
         +(b.is_active===false?'<div class="bed-days" style="color:var(--red)">Deactivated</div>':'')
         +'<div class="bed-status-dot"></div>'
         +'</div>';
@@ -2536,13 +2506,13 @@ async function generateDischarge(){
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({unit:'mm',format:'a4'});
   var W=210,x=16,y=18;
-  doc.setFillColor(30,58,95);doc.rect(0,0,W,30,'F');
+  doc.setFillColor(18,151,106);doc.rect(0,0,W,30,'F');
   doc.setTextColor(255,255,255);
   doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('DISCHARGE SUMMARY',x,12);
   doc.setFont('helvetica','normal');doc.setFontSize(9);
   var nhName=document.getElementById('sb-nh-name').textContent;
   doc.text(nhName,x,19);doc.text('AuraScale NH · Nursing Home Management System',x,25);
-  y=38;doc.setTextColor(23,32,46);
+  y=38;doc.setTextColor(24,23,15);
   doc.setFontSize(10);doc.setFont('helvetica','bold');
   doc.text('Patient: ',x,y);doc.setFont('helvetica','normal');doc.text((adm.data.patient_name||'')+'   '+((adm.data.patient_age||'')+' yrs')+'   '+(adm.data.patient_gender||''),x+18,y);
   y+=6;doc.setFont('helvetica','bold');doc.text('Admitted:',x,y);doc.setFont('helvetica','normal');doc.text(new Date(adm.data.admission_date).toLocaleDateString('en-GB')+' · Duration: '+(days+1)+' days',x+18,y);
@@ -2562,20 +2532,12 @@ async function generateDischarge(){
   });
   y+=2;doc.line(x,y,W-16,y);y+=5;
   doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('Total Amount:',x,y);doc.text('₹'+total.toLocaleString('en-IN'),W-30,y);
-  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(139,147,161);doc.text('Generated by AuraScale NH · '+new Date().toLocaleDateString('en-GB'),x,285);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(158,154,147);doc.text('Generated by AuraScale NH · '+new Date().toLocaleDateString('en-GB'),x,285);
   var blob=doc.output('blob');
   var url=URL.createObjectURL(blob);window.open(url,'_blank');
   /* Update admission status */
   await _supa.from('admissions').update({status:'Discharged',discharge_date:new Date().toISOString()}).eq('id',_currentDischargeId);
-  /* Bed goes to Cleaning and auto-returns to Vacant after 30 minutes
-     (checked in loadBeds()/loadDashboard()). cleaning_started_at is
-     attempted first; if that column doesn't exist in this database yet,
-     it falls back to the plain update so discharge still works — the
-     bed will just stay "Cleaning" until manually changed. */
-  var bedUpdate = await _supa.from('beds').update({status:'Cleaning',current_admission_id:null,cleaning_started_at:new Date().toISOString()}).eq('current_admission_id',_currentDischargeId);
-  if(bedUpdate.error){
-    await _supa.from('beds').update({status:'Cleaning',current_admission_id:null}).eq('current_admission_id',_currentDischargeId);
-  }
+  await _supa.from('beds').update({status:'Cleaning',current_admission_id:null}).eq('current_admission_id',_currentDischargeId);
   /* Send WhatsApp if phone exists */
   if(adm.data.patient_phone){
     var phone=(adm.data.patient_phone||'').replace(/[^\d]/g,'');
@@ -2632,21 +2594,22 @@ async function loadReceptionHome(){
   }).join('');
 }
 
-/* ── DASHBOARD · REVENUE (uses the shared renderFinanceInto below) ── */
-
-/* Shared by the standalone Finance page (#fin-*) and the Dashboard's
-   Revenue tab (#dr-*) — same real queries, just a different id prefix
-   and target elements, so both stay in sync with one code path. */
-async function renderFinanceInto(prefix, p){
+/* ── FINANCE (owner only) ── */
+async function loadRevenue(){
   if(!_clinicId) return;
+  var period = document.getElementById('fin-filter-period');
+  var p = period ? period.value : 'month';
   var now = new Date();
-  var from = '';
-  if(p==='today') from = now.toISOString().slice(0,10)+'T00:00:00';
+  var from = '', to = '';
+  if(p==='today'){ from = now.toISOString().slice(0,10)+'T00:00:00'; }
+  else if(p==='yesterday'){ var y=new Date(now); y.setDate(y.getDate()-1); from=y.toISOString().slice(0,10)+'T00:00:00'; to=now.toISOString().slice(0,10)+'T00:00:00'; }
   else if(p==='week'){ var d=new Date(now); d.setDate(d.getDate()-7); from=d.toISOString(); }
   else if(p==='month') from = new Date(now.getFullYear(),now.getMonth(),1).toISOString();
+  else if(p==='lastmonth'){ var lm=new Date(now.getFullYear(),now.getMonth()-1,1); var lmEnd=new Date(now.getFullYear(),now.getMonth(),1); from=lm.toISOString(); to=lmEnd.toISOString(); }
 
   var query = _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId);
   if(from) query = query.gte('created_at', from);
+  if(to) query = query.lt('created_at', to);
   var [charges, payments, adms] = await Promise.all([
     query,
     _supa.from('nh_payments').select('amount,admission_id').eq('clinic_id',_clinicId),
@@ -2660,19 +2623,19 @@ async function renderFinanceInto(prefix, p){
   var due          = Math.max(0, totalCharged-totalPaid);
 
   var safe = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
-  safe(prefix+'-charged','₹'+totalCharged.toLocaleString('en-IN'));
-  safe(prefix+'-paid','₹'+totalPaid.toLocaleString('en-IN'));
-  safe(prefix+'-due','₹'+due.toLocaleString('en-IN'));
-  safe(prefix+'-month','₹'+totalCharged.toLocaleString('en-IN'));
+  safe('fin-charged','₹'+totalCharged.toLocaleString('en-IN'));
+  safe('fin-paid','₹'+totalPaid.toLocaleString('en-IN'));
+  safe('fin-due','₹'+due.toLocaleString('en-IN'));
+  safe('fin-month','₹'+totalCharged.toLocaleString('en-IN'));
 
-  /* Category breakdown */
+  /* Category breakdown (= Revenue by Service) */
   var cats = {};
   ch.forEach(function(c){
     var t = c.charge_type || 'Other';
     if(!cats[t]) cats[t] = 0;
     cats[t] += (c.total_price||0);
   });
-  var catEl = document.getElementById(prefix+'-by-category');
+  var catEl = document.getElementById('fin-by-category');
   if(catEl){
     var catEntries = Object.entries(cats).sort(function(a,b){return b[1]-a[1];});
     var maxAmt = catEntries.length ? catEntries[0][1] : 1;
@@ -2693,8 +2656,42 @@ async function renderFinanceInto(prefix, p){
     }
   }
 
+  /* Revenue by Department — derived from each charge's admission → bed → ward,
+     since "department" isn't a separate field in the schema; ward is the
+     closest real, existing concept (same approach used elsewhere in the app). */
+  var deptEl = document.getElementById('rev-by-dept');
+  if(deptEl){
+    var admIdsForDept = Array.from(new Set(ch.map(function(c){return c.admission_id;}).filter(Boolean)));
+    var admDeptRes = admIdsForDept.length ? await _supa.from('admissions').select('id,bed_id').in('id',admIdsForDept) : {data:[]};
+    var admToBed = {}; (admDeptRes.data||[]).forEach(function(a){ admToBed[a.id]=a.bed_id; });
+    var bedIdsForDept = Array.from(new Set(Object.values(admToBed).filter(Boolean)));
+    var bedDeptRes = bedIdsForDept.length ? await _supa.from('beds').select('id,ward').in('id',bedIdsForDept) : {data:[]};
+    var bedToWard = {}; (bedDeptRes.data||[]).forEach(function(b){ bedToWard[b.id]=b.ward; });
+    var depts = {};
+    ch.forEach(function(c){
+      var bedId = admToBed[c.admission_id];
+      var dept = (bedId && bedToWard[bedId]) ? bedToWard[bedId] : 'OPD / Other';
+      depts[dept] = (depts[dept]||0) + (c.total_price||0);
+    });
+    var deptEntries = Object.entries(depts).sort(function(a,b){return b[1]-a[1];});
+    var maxDept = deptEntries.length ? deptEntries[0][1] : 1;
+    if(!deptEntries.length){
+      deptEl.innerHTML = '<div class="empty" style="padding:20px"><p class="empty-t">No department-linked charges in this period</p></div>';
+    } else {
+      deptEl.innerHTML = deptEntries.map(function(entry){
+        var pct = maxDept>0 ? Math.round(entry[1]/maxDept*100) : 0;
+        return '<div class="fin-cat-row">'
+          +'<div style="flex:1;min-width:0"><div class="fin-cat-name">🏥 '+esc(entry[0])+'</div>'
+          +'<div style="margin-top:5px;background:var(--border);border-radius:2px;height:4px"><div class="fin-cat-bar" style="width:'+pct+'%;background:var(--blue)"></div></div>'
+          +'</div>'
+          +'<div class="fin-cat-amt">₹'+entry[1].toLocaleString('en-IN')+'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+
   /* Per-patient balance */
-  var el = document.getElementById(prefix+'-list');
+  var el = document.getElementById('fin-list');
   if(!el) return;
   var admList = adms.data || [];
   if(!admList.length){ el.innerHTML='<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No active admissions</p></div>'; return; }
@@ -2716,194 +2713,353 @@ async function renderFinanceInto(prefix, p){
       +'<div style="flex:1"><div class="adm-name">'+esc(a.patient_name||'')+'</div>'
       +'<div class="adm-meta">Billed: &#8377;'+tot.toLocaleString('en-IN')+' &middot; Paid: &#8377;'+paid.toLocaleString('en-IN')+'</div></div>'
       +'<span style="font-weight:700;color:'+(due2>0?'var(--red)':'var(--green)')+'">&#8377;'+Math.abs(due2).toLocaleString('en-IN')+(due2>0?' due':' clear')+'</span>';
-    div.onclick = (function(id,nm){ return function(){ openProfile(id,nm); }; })(a.id, a.patient_name||'');
+    div.onclick = (function(id,nm){ return function(){ openPatientProfile(id,nm); }; })(a.id, a.patient_name||'');
     el.appendChild(div);
   });
 }
 
-/* ── REPORTS ── */
-function loadReportsView(){
-  var d = document.getElementById('rpt-daily-date');
-  if(d && !d.value) d.value = new Date().toISOString().slice(0,10);
-  var m = document.getElementById('rpt-month-date');
-  if(m && !m.value) m.value = new Date().toISOString().slice(0,7);
-  var chk = document.getElementById('rpt-auto-whatsapp');
-  var num = document.getElementById('rpt-auto-whatsapp-number');
-  if(chk) chk.checked = localStorage.getItem('rpt_auto_wa_'+_clinicId) === '1';
-  if(num) num.value = localStorage.getItem('rpt_auto_wa_number_'+_clinicId) || '';
-}
-function saveReportAutoSendConfig(){
-  var chk = document.getElementById('rpt-auto-whatsapp');
-  var num = document.getElementById('rpt-auto-whatsapp-number');
-  localStorage.setItem('rpt_auto_wa_'+_clinicId, chk && chk.checked ? '1' : '0');
-  if(num) localStorage.setItem('rpt_auto_wa_number_'+_clinicId, num.value||'');
-  showToast('Preference saved');
+/* ══════════════════════════════════════════════════════════════
+   PAYMENTS PAGE (Owner) — real nh_payments records
+══════════════════════════════════════════════════════════════ */
+async function loadPaymentsPage(){
+  if(!_clinicId) return;
+  var period = document.getElementById('pay-filter-period');
+  var p = period ? period.value : 'month';
+  var now = new Date();
+  var from = '';
+  if(p==='today') from = now.toISOString().slice(0,10)+'T00:00:00';
+  else if(p==='week'){ var d=new Date(now); d.setDate(d.getDate()-7); from=d.toISOString(); }
+  else if(p==='month') from = new Date(now.getFullYear(),now.getMonth(),1).toISOString();
+
+  var query = _supa.from('nh_payments').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(200);
+  if(from) query = query.gte('created_at', from);
+  var payRes = await query;
+  var rows = payRes.data || [];
+
+  var total = rows.reduce(function(s,p){return s+(p.amount||0);},0);
+  var byMethod = function(name){ return rows.filter(function(p){return (p.method||'').toLowerCase()===name;}).reduce(function(s,p){return s+(p.amount||0);},0); };
+  var cash = byMethod('cash');
+  var upi = byMethod('upi');
+  var card = byMethod('card');
+  var bank = byMethod('bank transfer');
+  var other = Math.max(0, total - cash - upi - card - bank);
+  var digital = total - cash;
+  var safe = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+  safe('pay-total','₹'+total.toLocaleString('en-IN'));
+  safe('pay-count', rows.length);
+  safe('pay-cash','₹'+cash.toLocaleString('en-IN'));
+  safe('pay-digital','₹'+digital.toLocaleString('en-IN'));
+  safe('pay-upi','₹'+upi.toLocaleString('en-IN'));
+  safe('pay-card','₹'+card.toLocaleString('en-IN'));
+  safe('pay-bank','₹'+bank.toLocaleString('en-IN'));
+  safe('pay-other','₹'+other.toLocaleString('en-IN'));
+
+  var tbody = document.getElementById('pay-tbody');
+  if(!tbody) return;
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:12px">No payments in this period</td></tr>'; return; }
+
+  var admIds = Array.from(new Set(rows.map(function(p){return p.admission_id;}).filter(Boolean)));
+  var admRes = admIds.length ? await _supa.from('admissions').select('id,patient_name,bed_id').in('id',admIds) : {data:[]};
+  var admMap = {}; (admRes.data||[]).forEach(function(a){ admMap[a.id]=a; });
+  var bedIds = Array.from(new Set((admRes.data||[]).map(function(a){return a.bed_id;}).filter(Boolean)));
+  var bedRes = bedIds.length ? await _supa.from('beds').select('id,ward').in('id',bedIds) : {data:[]};
+  var bedMap = {}; (bedRes.data||[]).forEach(function(b){ bedMap[b.id]=b.ward; });
+  var staffIds = Array.from(new Set(rows.map(function(p){return p.recorded_by;}).filter(Boolean)));
+  var staffRes = staffIds.length ? await _supa.from('nh_staff').select('id,full_name').in('id',staffIds) : {data:[]};
+  var staffMap = {}; (staffRes.data||[]).forEach(function(s){ staffMap[s.id]=s.full_name; });
+
+  tbody.innerHTML = rows.map(function(p){
+    var adm = admMap[p.admission_id] || {};
+    var dept = adm.bed_id ? (bedMap[adm.bed_id]||'—') : 'OPD';
+    var dt = new Date(p.created_at);
+    return '<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openPatientProfile(\''+(adm.patient_id||'')+'\',\''+esc(adm.patient_name||'')+'\')">'
+      + '<td style="padding:10px 14px;font-weight:600">'+esc(adm.patient_name||'—')+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+dt.toLocaleDateString('en-GB')+' '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+esc(dept)+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+esc(p.method||'—')+'</td>'
+      + '<td style="padding:10px 14px;color:var(--text-secondary)">'+esc(staffMap[p.recorded_by]||'—')+'</td>'
+      + '<td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green)">₹'+Number(p.amount||0).toLocaleString('en-IN')+'</td>'
+    + '</tr>';
+  }).join('');
 }
 
-function _printReport(title, bodyHtml){
-  var win = window.open('', '_blank');
-  if(!win){ showToast('Please allow pop-ups to view the report'); return; }
-  var nhName = document.getElementById('sb-nh-name').textContent || 'Nursing Home';
-  win.document.write(
-    '<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+esc(title)+' — '+esc(nhName)+'</title>'
-    +'<style>'
-    +"body{font-family:'IBM Plex Sans',Arial,sans-serif;color:#17202E;padding:32px;max-width:760px;margin:0 auto}"
-    +'h1{font-size:20px;margin:0 0 2px}'
-    +'.sub{color:#5B6472;font-size:12px;margin-bottom:20px}'
-    +'.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#E1E4EA;border:1px solid #E1E4EA;border-radius:6px;overflow:hidden;margin-bottom:22px}'
-    +'.kpi{background:#fff;padding:12px 14px}'
-    +'.kpi .l{font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:#8B93A1;font-weight:600;margin-bottom:5px}'
-    +'.kpi .v{font-size:17px;font-weight:700}'
-    +'table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px}'
-    +'th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.03em;color:#8B93A1;border-bottom:1px solid #E1E4EA;padding:6px 8px}'
-    +'td{padding:7px 8px;border-bottom:1px solid #F0F1F4}'
-    +'.section-h{font-size:13px;font-weight:700;margin:22px 0 8px}'
-    +'.note{font-size:10.5px;color:#8B93A1;margin-top:24px;border-top:1px solid #E1E4EA;padding-top:10px}'
-    +'.print-btn{background:#1E3A5F;color:#fff;border:none;padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}'
-    +'@media print{.no-print{display:none}body{padding:12px}}'
-    +'</style></head><body>'
-    +'<div class="no-print" style="text-align:right;margin-bottom:10px"><button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button></div>'
-    +'<h1>'+esc(title)+'</h1>'
-    +'<div class="sub">'+esc(nhName)+' · AuraScale NH</div>'
-    +bodyHtml
-    +'<div class="note">Generated by AuraScale NH on '+new Date().toLocaleString('en-GB')+'</div>'
-    +'</body></html>'
-  );
-  win.document.close();
-  win.focus();
+/* ══════════════════════════════════════════════════════════════
+   EXPENSES PAGE (Owner) — requires an `nh_expenses` table:
+   clinic_id, category, amount, expense_date, payment_method,
+   added_by, notes, created_at. This table did not exist in the
+   inspected schema, so queries below fail gracefully with a setup
+   notice rather than fabricating numbers.
+══════════════════════════════════════════════════════════════ */
+var EXPENSE_CATEGORIES = ['Staff','Supplies','Utilities','Maintenance','Medical Supplies','Equipment','Rent','Other'];
+
+async function loadExpensesPage(){
+  if(!_clinicId) return;
+  var totalEl = document.getElementById('exp-total');
+  var countEl = document.getElementById('exp-count');
+  var topEl = document.getElementById('exp-top-cat');
+  var listEl = document.getElementById('exp-list');
+  var catEl = document.getElementById('exp-by-cat');
+
+  var r = await _supa.from('nh_expenses').select('*').eq('clinic_id',_clinicId).order('expense_date',{ascending:false}).limit(200);
+
+  if(r.error){
+    var msg = '<div class="empty" style="padding:28px"><div class="empty-ic">⚠️</div><p class="empty-t">Expense tracking isn\'t set up yet</p><p class="empty-s">Create an <code>nh_expenses</code> table in Supabase to start recording hospital expenses here.</p></div>';
+    if(listEl) listEl.innerHTML = msg;
+    if(catEl) catEl.innerHTML = '';
+    if(totalEl) totalEl.textContent = '—';
+    if(countEl) countEl.textContent = '—';
+    if(topEl) topEl.textContent = '—';
+    return;
+  }
+
+  var rows = r.data || [];
+  var total = rows.reduce(function(s,e){return s+(e.amount||0);},0);
+  if(totalEl) totalEl.textContent = '₹'+total.toLocaleString('en-IN');
+  if(countEl) countEl.textContent = rows.length;
+
+  var cats = {};
+  rows.forEach(function(e){ var c=e.category||'Other'; cats[c]=(cats[c]||0)+(e.amount||0); });
+  var catEntries = Object.entries(cats).sort(function(a,b){return b[1]-a[1];});
+  if(topEl) topEl.textContent = catEntries.length ? catEntries[0][0] : '—';
+
+  if(catEl){
+    var maxCat = catEntries.length ? catEntries[0][1] : 1;
+    catEl.innerHTML = catEntries.length ? catEntries.map(function(entry){
+      var pct = maxCat>0 ? Math.round(entry[1]/maxCat*100) : 0;
+      return '<div class="fin-cat-row"><div style="flex:1;min-width:0"><div class="fin-cat-name">'+esc(entry[0])+'</div>'
+        +'<div style="margin-top:5px;background:var(--border);border-radius:2px;height:4px"><div class="fin-cat-bar" style="width:'+pct+'%;background:var(--red)"></div></div></div>'
+        +'<div class="fin-cat-amt">₹'+entry[1].toLocaleString('en-IN')+'</div></div>';
+    }).join('') : '<div class="empty" style="padding:16px"><p class="empty-t">No expenses yet</p></div>';
+  }
+
+  if(listEl){
+    listEl.innerHTML = rows.length ? rows.map(function(e){
+      return '<div class="adm-row"><div class="adm-av">💸</div>'
+        + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(e.category||'Other')+(e.notes?' — '+esc(e.notes):'')+'</div>'
+        + '<div class="adm-meta">'+new Date(e.expense_date).toLocaleDateString('en-GB')+' · '+esc(e.payment_method||'—')+'</div></div>'
+        + '<div style="font-weight:700;color:var(--red)">₹'+Number(e.amount||0).toLocaleString('en-IN')+'</div>'
+      + '</div>';
+    }).join('') : '<div class="empty" style="padding:20px"><p class="empty-t">No expenses recorded</p></div>';
+  }
+}
+
+function openAddExpense(){
+  var d = document.getElementById('exp-date');
+  if(d) d.value = new Date().toISOString().slice(0,10);
+  var e = document.getElementById('exp-err');
+  if(e) e.style.display='none';
+  openModal('mod-add-expense');
+}
+async function saveNewExpense(){
+  var cat = document.getElementById('exp-category').value;
+  var amt = parseFloat(document.getElementById('exp-amount').value)||0;
+  var date = document.getElementById('exp-date').value;
+  var method = document.getElementById('exp-method').value;
+  var notes = document.getElementById('exp-notes').value;
+  var errEl = document.getElementById('exp-err');
+  errEl.style.display='none';
+  if(amt<=0){ errEl.textContent='Enter a valid amount.'; errEl.style.display='block'; return; }
+  if(!date){ errEl.textContent='Select a date.'; errEl.style.display='block'; return; }
+
+  var r = await _supa.from('nh_expenses').insert({
+    clinic_id:_clinicId, category:cat, amount:amt, expense_date:date,
+    payment_method:method, notes:notes, added_by:_myUid
+  });
+  if(r.error){ errEl.textContent = 'Could not save — '+r.error.message+(r.error.message.indexOf('does not exist')>-1?' (the nh_expenses table needs to be created in Supabase first)':''); errEl.style.display='block'; return; }
+
+  _supa.from('nh_audit_log').insert({ clinic_id:_clinicId, actor_id:_myUid, action:'expense_added', target_table:'nh_expenses', details:{category:cat, amount:amt} });
+  closeModal('mod-add-expense');
+  showToast('Expense recorded');
+  loadExpensesPage();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REPORTS PAGE (Owner) — Daily/Monthly printable reports.
+   No outbound WhatsApp/email automation exists in this app, so
+   these generate a printable page (Print → Save as PDF / share)
+   rather than faking an automatic send.
+══════════════════════════════════════════════════════════════ */
+function loadReportsPage(){
+  var d = document.getElementById('report-daily-date');
+  if(d && !d.value) d.value = new Date().toISOString().slice(0,10);
+  var m = document.getElementById('report-monthly-month');
+  if(m && !m.value) m.value = new Date().toISOString().slice(0,7);
 }
 
 async function generateDailyReport(){
-  if(!_clinicId) return;
-  var dateStr = document.getElementById('rpt-daily-date').value;
-  if(!dateStr){ showToast('Pick a date first'); return; }
+  var dateStr = document.getElementById('report-daily-date').value || new Date().toISOString().slice(0,10);
   var from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
 
-  var [charges, admToday, disToday] = await Promise.all([
-    _supa.from('admission_charges').select('description,charge_type,total_price,created_at').eq('clinic_id',_clinicId).gte('created_at',from).lte('created_at',to).order('created_at'),
+  var [chargesRes, paymentsRes, admRes, disRes, expRes, clinicRes] = await Promise.all([
+    _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId).gte('created_at',from).lte('created_at',to),
+    _supa.from('nh_payments').select('*').eq('clinic_id',_clinicId).gte('created_at',from).lte('created_at',to),
     _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',from).lte('admission_date',to),
-    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',from).lte('discharge_date',to)
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',from).lte('discharge_date',to),
+    _supa.from('nh_expenses').select('*').eq('clinic_id',_clinicId).gte('expense_date',dateStr).lte('expense_date',dateStr),
+    _supa.from('clinics').select('name').eq('id',_clinicId).single()
   ]);
+  var charges = chargesRes.data||[], payments = paymentsRes.data||[], expenses = expRes.error?[]:(expRes.data||[]);
+  var revenue = charges.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var collected = payments.reduce(function(s,p){return s+(p.amount||0);},0);
+  var expTotal = expenses.reduce(function(s,e){return s+(e.amount||0);},0);
+  var net = revenue - expTotal;
+  var occRes = await _supa.from('beds').select('status').eq('clinic_id',_clinicId);
+  var occupied = (occRes.data||[]).filter(function(b){return b.status==='Occupied';}).length;
+  var totalBeds = (occRes.data||[]).length;
 
-  var collected = null;
-  try{
-    var pay = await _supa.from('nh_payments').select('amount,created_at').eq('clinic_id',_clinicId).gte('created_at',from).lte('created_at',to);
-    if(!pay.error) collected = (pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
-  }catch(e){}
+  var byType = {};
+  charges.forEach(function(c){ var t=c.charge_type||'Other'; byType[t]=(byType[t]||0)+(c.total_price||0); });
 
-  var ch = charges.data || [];
-  var revenue = ch.reduce(function(s,c){return s+(c.total_price||0);},0);
-  var niceDate = new Date(dateStr+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-  var kpis = '<div class="kpis">'
-    +'<div class="kpi"><div class="l">Revenue</div><div class="v">₹'+revenue.toLocaleString('en-IN')+'</div></div>'
-    +'<div class="kpi"><div class="l">Collection</div><div class="v">'+(collected===null?'—':'₹'+collected.toLocaleString('en-IN'))+'</div></div>'
-    +'<div class="kpi"><div class="l">Admissions</div><div class="v">'+(admToday.data||[]).length+'</div></div>'
-    +'<div class="kpi"><div class="l">Discharges</div><div class="v">'+(disToday.data||[]).length+'</div></div>'
-    +'</div>';
-
-  var rows = ch.map(function(c){
-    var t = new Date(c.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    return '<tr><td>'+t+'</td><td>'+esc(c.charge_type||'')+'</td><td>'+esc(c.description||'')+'</td><td style="text-align:right">₹'+Number(c.total_price||0).toLocaleString('en-IN')+'</td></tr>';
-  }).join('');
-  var table = '<div class="section-h">Transactions</div>'
-    +(ch.length
-      ? '<table><tr><th>Time</th><th>Type</th><th>Description</th><th style="text-align:right">Amount</th></tr>'+rows+'</table>'
-      : '<p style="color:#8B93A1;font-size:12px">No charges recorded on this day.</p>')
-    +'<p style="font-size:10.5px;color:#8B93A1">Expenses are not tracked in AuraScale yet, so they are not included above.</p>';
-
-  _printReport('Daily Owner Report — '+niceDate, kpis+table);
+  printReportWindow('Daily Hospital Report', new Date(dateStr).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}), (clinicRes.data||{}).name,
+    [
+      {label:"Today's Revenue", value:'₹'+revenue.toLocaleString('en-IN')},
+      {label:"Today's Collection", value:'₹'+collected.toLocaleString('en-IN')},
+      {label:"Today's Expenses", value:'₹'+expTotal.toLocaleString('en-IN')},
+      {label:'Net Revenue', value:'₹'+net.toLocaleString('en-IN')},
+      {label:'Admissions', value:(admRes.data||[]).length},
+      {label:'Discharges', value:(disRes.data||[]).length},
+      {label:'Occupied Beds', value:occupied+' / '+totalBeds}
+    ],
+    byType
+  );
 }
 
 async function generateMonthlyReport(){
-  if(!_clinicId) return;
-  var monthStr = document.getElementById('rpt-month-date').value;
-  if(!monthStr){ showToast('Pick a month first'); return; }
+  var monthStr = document.getElementById('report-monthly-month').value || new Date().toISOString().slice(0,7);
   var parts = monthStr.split('-');
-  var y = parseInt(parts[0],10), m = parseInt(parts[1],10);
-  var from = new Date(y, m-1, 1).toISOString();
-  var to = new Date(y, m, 1).toISOString();
-  var niceMonth = new Date(y, m-1, 1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  var from = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1);
+  var to = new Date(parseInt(parts[0]), parseInt(parts[1]), 1);
 
-  var [charges, admCount, disCount, beds] = await Promise.all([
-    _supa.from('admission_charges').select('charge_type,total_price,created_at').eq('clinic_id',_clinicId).gte('created_at',from).lt('created_at',to),
-    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',from).lt('admission_date',to),
-    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',from).lt('discharge_date',to),
-    _supa.from('beds').select('id,status').eq('clinic_id',_clinicId)
+  var [chargesRes, paymentsRes, admRes, disRes, expRes, clinicRes] = await Promise.all([
+    _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId).gte('created_at',from.toISOString()).lt('created_at',to.toISOString()),
+    _supa.from('nh_payments').select('*').eq('clinic_id',_clinicId).gte('created_at',from.toISOString()).lt('created_at',to.toISOString()),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',from.toISOString()).lt('admission_date',to.toISOString()),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',from.toISOString()).lt('discharge_date',to.toISOString()),
+    _supa.from('nh_expenses').select('*').eq('clinic_id',_clinicId).gte('expense_date',from.toISOString().slice(0,10)).lt('expense_date',to.toISOString().slice(0,10)),
+    _supa.from('clinics').select('name').eq('id',_clinicId).single()
   ]);
+  var charges = chargesRes.data||[], payments = paymentsRes.data||[], expenses = expRes.error?[]:(expRes.data||[]);
+  var revenue = charges.reduce(function(s,c){return s+(c.total_price||0);},0);
+  var collected = payments.reduce(function(s,p){return s+(p.amount||0);},0);
+  var expTotal = expenses.reduce(function(s,e){return s+(e.amount||0);},0);
+  var net = revenue - expTotal;
 
-  var collected = null;
-  try{
-    var pay = await _supa.from('nh_payments').select('amount,created_at').eq('clinic_id',_clinicId).gte('created_at',from).lt('created_at',to);
-    if(!pay.error) collected = (pay.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
-  }catch(e){}
+  var methodBreak = {};
+  payments.forEach(function(p){ var m=p.method||'Other'; methodBreak[m]=(methodBreak[m]||0)+(p.amount||0); });
+  var byType = {};
+  charges.forEach(function(c){ var t=c.charge_type||'Other'; byType[t]=(byType[t]||0)+(c.total_price||0); });
+  Object.keys(methodBreak).forEach(function(k){ byType['Payments via '+k] = methodBreak[k]; });
 
-  var ch = charges.data || [];
-  var revenue = ch.reduce(function(s,c){return s+(c.total_price||0);},0);
-  var allBeds = beds.data || [];
-  var occNow = allBeds.length ? Math.round(allBeds.filter(function(b){return b.status==='Occupied';}).length/allBeds.length*100) : 0;
-
-  var cats = {};
-  ch.forEach(function(c){ var t=c.charge_type||'Other'; cats[t]=(cats[t]||0)+(c.total_price||0); });
-  var catEntries = Object.entries(cats).sort(function(a,b){return b[1]-a[1];});
-
-  var kpis = '<div class="kpis">'
-    +'<div class="kpi"><div class="l">Revenue</div><div class="v">₹'+revenue.toLocaleString('en-IN')+'</div></div>'
-    +'<div class="kpi"><div class="l">Collection</div><div class="v">'+(collected===null?'—':'₹'+collected.toLocaleString('en-IN'))+'</div></div>'
-    +'<div class="kpi"><div class="l">Admissions</div><div class="v">'+(admCount.data||[]).length+'</div></div>'
-    +'<div class="kpi"><div class="l">Discharges</div><div class="v">'+(disCount.data||[]).length+'</div></div>'
-    +'</div>';
-
-  var breakdown = '<div class="section-h">Revenue by Service</div>'
-    +(catEntries.length
-      ? '<table><tr><th>Service</th><th style="text-align:right">Amount</th></tr>'
-        +catEntries.map(function(e){return '<tr><td>'+esc(e[0])+'</td><td style="text-align:right">₹'+e[1].toLocaleString('en-IN')+'</td></tr>';}).join('')
-        +'</table>'
-      : '<p style="color:#8B93A1;font-size:12px">No charges recorded this month.</p>');
-
-  var occupancy = '<div class="section-h">Occupancy</div>'
-    +'<p style="font-size:12px">Current occupancy: <b>'+occNow+'%</b> ('+allBeds.filter(function(b){return b.status==='Occupied';}).length+' of '+allBeds.length+' beds) — reflects today, not an average across the month.</p>';
-
-  var disclaimer = '<p style="font-size:10.5px;color:#8B93A1;margin-top:16px">Expenses are not tracked in AuraScale yet, so no expense or net-revenue figure is included. This report is a management summary and is not a substitute for statutory accounting or CA services.</p>';
-
-  _printReport('Monthly Management Audit — '+niceMonth, kpis+breakdown+occupancy+disclaimer);
-}
-async function loadDashboardRevenue(){
-  await renderFinanceInto('dr', 'month');
+  var monthLabel = from.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  printReportWindow('Monthly Management Audit', monthLabel, (clinicRes.data||{}).name,
+    [
+      {label:'Total Revenue', value:'₹'+revenue.toLocaleString('en-IN')},
+      {label:'Total Collection', value:'₹'+collected.toLocaleString('en-IN')},
+      {label:'Total Expenses', value:'₹'+expTotal.toLocaleString('en-IN')},
+      {label:'Net Revenue', value:'₹'+net.toLocaleString('en-IN')},
+      {label:'Admissions', value:(admRes.data||[]).length},
+      {label:'Discharges', value:(disRes.data||[]).length}
+    ],
+    byType,
+    'This is a management/operational audit summary, not a substitute for statutory accounting, GST compliance, or professional CA services.'
+  );
 }
 
-/* ── DASHBOARD · PAYMENTS TAB ──
-   Honest about what's real: nh_payments only ever stores amount +
-   admission_id today, and there is no "Record Payment" form anywhere
-   in the app yet, so Total Collected/Transactions reflect true data,
-   but a method/date/received-by breakdown isn't tracked — shown as an
-   explicit note rather than invented columns. */
-async function loadDashboardPayments(){
-  if(!_clinicId) return;
-  var [py, adms] = await Promise.all([
-    _supa.from('nh_payments').select('id,amount,admission_id').eq('clinic_id',_clinicId),
-    _supa.from('admissions').select('id,patient_name').eq('clinic_id',_clinicId)
+function printReportWindow(title, periodLabel, clinicName, summaryRows, breakdown, footnote){
+  var w = window.open('','_blank');
+  var rowsHtml = summaryRows.map(function(r){ return '<tr><td>'+esc(r.label)+'</td><td style="text-align:right;font-weight:700">'+r.value+'</td></tr>'; }).join('');
+  var breakdownHtml = Object.keys(breakdown||{}).length ? Object.entries(breakdown).sort(function(a,b){return b[1]-a[1];}).map(function(e){
+    return '<tr><td>'+esc(e[0])+'</td><td style="text-align:right">₹'+Number(e[1]).toLocaleString('en-IN')+'</td></tr>';
+  }).join('') : '<tr><td colspan="2" style="text-align:center;color:#888">No data</td></tr>';
+
+  w.document.write('<html><head><title>'+esc(title)+'</title><style>'
+    +'body{font-family:Arial,sans-serif;padding:30px;color:#111;max-width:640px;margin:0 auto}'
+    +'h1{font-size:20px;margin:0}h2{font-size:13px;font-weight:normal;color:#555;margin:4px 0 0}'
+    +'.header{border-bottom:2px solid #000;padding-bottom:14px;margin-bottom:16px}'
+    +'table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:14px}'
+    +'th{background:#f5f5f5;padding:8px;text-align:left;border:1px solid #ddd}'
+    +'td{padding:8px;border:1px solid #ddd}'
+    +'.section-title{font-weight:bold;font-size:13px;margin-top:20px;margin-bottom:6px}'
+    +'.footnote{font-size:10.5px;color:#888;margin-top:20px;line-height:1.5}'
+    +'@media print{button{display:none}}'
+    +'</style></head><body>'
+    +'<div class="header"><h1>AURASCALE</h1><h2>'+esc(title)+' — '+esc(clinicName||'')+' · '+esc(periodLabel)+'</h2></div>'
+    +'<table><tr><th colspan="2">Financial Summary</th></tr>'+rowsHtml+'</table>'
+    +'<div class="section-title">Revenue &amp; Payment Breakdown</div>'
+    +'<table><tr><th>Category</th><th style="text-align:right">Amount</th></tr>'+breakdownHtml+'</table>'
+    +(footnote ? '<div class="footnote">'+esc(footnote)+'</div>' : '')
+    +'<button onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#2554E0;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer">Print / Save as PDF</button>'
+    +'</body></html>');
+  w.document.close();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   OWNER NOTIFICATIONS — real, rule-based alerts from existing data
+   plus recent business activity. No fake/random alerts.
+══════════════════════════════════════════════════════════════ */
+async function loadOwnerNotifications(){
+  var el = document.getElementById('owner-alerts-list');
+  if(!el || !_clinicId) return;
+  el.innerHTML = '<div class="empty" style="padding:20px"><p class="empty-t">Loading…</p></div>';
+
+  var [admRes, bedsRes, activityRes] = await Promise.all([
+    _supa.from('admissions').select('id,patient_id,patient_name,admission_date').eq('clinic_id',_clinicId).eq('status','Active'),
+    _supa.from('beds').select('status').eq('clinic_id',_clinicId),
+    _supa.from('nh_audit_log').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20)
   ]);
-  var rows = py.data || [];
-  var nameMap = {};
-  (adms.data||[]).forEach(function(a){ nameMap[a.id]=a.patient_name; });
-  var total = rows.reduce(function(s,p){return s+(p.amount||0);},0);
-  var safe = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
-  safe('dp-collected','₹'+total.toLocaleString('en-IN'));
-  safe('dp-count', rows.length);
-  var el = document.getElementById('dp-list');
-  if(!el) return;
-  if(!rows.length){
-    el.innerHTML='<div class="empty"><div class="empty-ic">💳</div><p class="empty-t">No payments recorded yet</p><p class="empty-s">There is currently no "Record Payment" action in AuraScale — this table reflects only what exists in the database.</p></div>';
-    return;
+  var admissions = admRes.data || [];
+  var beds = bedsRes.data || [];
+  var alerts = [];
+
+  /* Rule: outstanding balance per active admission */
+  var admIds = admissions.map(function(a){return a.id;});
+  if(admIds.length){
+    var [chRes, pyRes] = await Promise.all([
+      _supa.from('admission_charges').select('admission_id,total_price').in('admission_id',admIds),
+      _supa.from('nh_payments').select('admission_id,amount').in('admission_id',admIds)
+    ]);
+    var chMap={}, pyMap={};
+    (chRes.data||[]).forEach(function(c){ chMap[c.admission_id]=(chMap[c.admission_id]||0)+(c.total_price||0); });
+    (pyRes.data||[]).forEach(function(p){ pyMap[p.admission_id]=(pyMap[p.admission_id]||0)+(p.amount||0); });
+    admissions.forEach(function(a){
+      var due = (chMap[a.id]||0) - (pyMap[a.id]||0);
+      if(due > 20000){
+        alerts.push({icon:'⚠️', title:'High outstanding balance', detail:esc(a.patient_name||'Patient')+' — ₹'+due.toLocaleString('en-IN')+' due', level:'red'});
+      }
+      var days = Math.floor((Date.now()-new Date(a.admission_date))/86400000);
+      if(due > 0 && days >= 5){
+        alerts.push({icon:'⏰', title:'Overdue bill', detail:esc(a.patient_name||'Patient')+' — admitted '+days+' days ago, still unpaid', level:'amber'});
+      }
+    });
   }
-  el.innerHTML = rows.map(function(p){
-    return '<div class="adm-row">'
-      +'<div class="adm-av">'+(nameMap[p.admission_id]||'?').charAt(0)+'</div>'
-      +'<div style="flex:1"><div class="adm-name">'+esc(nameMap[p.admission_id]||'Unknown patient')+'</div></div>'
-      +'<span style="font-weight:700;font-family:\'IBM Plex Sans\',sans-serif">₹'+Number(p.amount||0).toLocaleString('en-IN')+'</span>'
-      +'</div>';
+
+  /* Rule: bed occupancy threshold */
+  if(beds.length){
+    var occ = beds.filter(function(b){return b.status==='Occupied';}).length;
+    var pct = Math.round(occ/beds.length*100);
+    if(pct >= 90){
+      alerts.push({icon:'🛏️', title:'Bed occupancy high', detail:pct+'% occupied ('+occ+'/'+beds.length+') — consider planning for capacity', level:'amber'});
+    }
+  }
+
+  var alertsHtml = alerts.length ? alerts.map(function(a){
+    var bg = a.level==='red' ? 'var(--red-bg)' : 'var(--amber-bg)';
+    var col = a.level==='red' ? 'var(--red)' : 'var(--amber)';
+    return '<div class="adm-row"><div class="adm-av" style="background:'+bg+';color:'+col+'">'+a.icon+'</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.title)+'</div><div class="adm-meta">'+a.detail+'</div></div></div>';
+  }).join('') : '<div class="empty" style="padding:20px"><div class="empty-ic">✅</div><p class="empty-t">No alerts — everything looks normal</p></div>';
+
+  var activityHtml = (activityRes.data||[]).map(function(a){
+    var label = (a.action||'Activity').replace(/_/g,' ');
+    return '<div class="adm-row"><div class="adm-av">📋</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name" style="text-transform:capitalize">'+esc(label)+'</div>'
+      + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div></div>';
   }).join('');
+
+  el.innerHTML = '<div style="padding:14px 15px 0;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Alerts</div>'
+    + alertsHtml
+    + '<div style="padding:14px 15px 0;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;border-top:1px solid var(--border);margin-top:8px">Recent Activity</div>'
+    + (activityHtml || '<div class="empty" style="padding:20px"><p class="empty-t">No recent activity</p></div>');
 }
 
 async function loadBedwiseFinance(){
@@ -2981,20 +3137,6 @@ async function openBedFinanceDetail(bed, bedAdms, chMap, pyMap, rate, days){
   alert(msg);
 }
 
-function loadDashboardBilling(){
-  var method = localStorage.getItem('billing_method_'+_clinicId) || '24hr';
-  var cutoff = localStorage.getItem('billing_cutoff_'+_clinicId) || '06:00';
-  var mSel = document.getElementById('fin-billing-method');
-  var cInput = document.getElementById('fin-cutoff-time');
-  if(mSel) mSel.value = method;
-  if(cInput) cInput.value = cutoff;
-  toggleCutoffWrap();
-}
-function toggleCutoffWrap(){
-  var mSel = document.getElementById('fin-billing-method');
-  var wrap = document.getElementById('fin-cutoff-wrap');
-  if(mSel && wrap) wrap.style.display = mSel.value==='cutoff' ? 'block' : 'none';
-}
 function saveBillingConfig(){
   var method = (document.getElementById('fin-billing-method')||{}).value;
   var cutoff = (document.getElementById('fin-cutoff-time')||{}).value;
@@ -3023,21 +3165,11 @@ async function loadPatientsList(){
   var r=await query;
   var list=document.getElementById('patients-list');
   if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients found</p></div>';return;}
-  var patientIds = r.data.map(function(p){return p.id;});
-  var allAdms = await _supa.from('admissions').select('patient_id,status').eq('clinic_id',_clinicId).in('patient_id',patientIds);
-  var statusMap = {};
-  (allAdms.data||[]).forEach(function(a){
-    if(a.status==='Active') statusMap[a.patient_id]='Active';
-    else if(!statusMap[a.patient_id]) statusMap[a.patient_id]='Discharged';
-  });
   list.innerHTML=r.data.map(function(p){
-    var st = statusMap[p.id];
-    var chip = st==='Active' ? '<span class="chip ch-act">Active</span>' : st==='Discharged' ? '<span class="chip ch-dis">Discharged</span>' : '';
     return '<div class="adm-row" style="cursor:pointer" onclick="openPatientProfile(\''+p.id+'\',\''+(p.full_name||'').replace(/'/g,"\\'")+'\')">'
       +'<div class="adm-av">'+(p.full_name||'?').charAt(0)+'</div>'
       +'<div style="flex:1"><div class="adm-name">'+p.full_name+'</div>'
       +'<div class="adm-meta">'+(p.age?p.age+'y ':'')+(p.gender||'')+(p.phone?' · '+p.phone:'')+'</div></div>'
-      +chip
       +'</div>';
   }).join('');
 }
@@ -3049,30 +3181,39 @@ async function openPatientProfile(id,name){
   var p=await _supa.from('nh_patients').select('*').eq('id',id).single();
   var adms=await _supa.from('admissions').select('status,admission_date,discharge_date,admission_diagnosis,admitting_doctor').eq('patient_id',id).order('admission_date',{ascending:false});
   var pd=p.data||{};
-  var admList=adms.data||[];
-  var current=admList.find(function(a){return a.status==='Active';});
-  var fmt=function(dt){return dt?new Date(dt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';};
-  var statusChip=current?'<span class="chip ch-act">Active</span>':(admList.length?'<span class="chip ch-dis">Discharged</span>':'');
-  var historyHtml=admList.length
-    ? admList.map(function(a){
-        return '<div style="padding:9px 0;border-bottom:1px solid rgba(228,224,216,.5)">'
-          +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">'
-            +'<span class="chip '+(a.status==='Active'?'ch-act':'ch-dis')+'">'+esc(a.status||'')+'</span>'
-            +(a.admitting_doctor?'<span style="font-size:11px;color:var(--text-secondary)">'+esc(a.admitting_doctor)+'</span>':'')
-          +'</div>'
-          +'<div style="font-size:11.5px;color:var(--text-secondary)">Admitted: '+fmt(a.admission_date)+' &middot; Discharged: '+(a.status==='Active'?'—':fmt(a.discharge_date))+'</div>'
-          +(a.admission_diagnosis?'<div style="font-size:11.5px;color:var(--text-tertiary);margin-top:2px">'+esc(a.admission_diagnosis)+'</div>':'')
-        +'</div>';
-      }).join('')
-    : '<p class="ss">No admissions on record.</p>';
+  var admList = adms.data || [];
+  var latestAdm = admList.length ? admList[0] : null;
+
+  var statusHtml = '';
+  var dotHtml = '';
+  if(latestAdm && latestAdm.status==='Active'){
+    var admDate = new Date(latestAdm.admission_date);
+    statusHtml = '<div><b>Status:</b> <span class="chip" style="background:var(--green-bg);color:var(--green)">Admitted</span></div>'
+      +'<div><b>Admitted:</b> '+admDate.toLocaleDateString('en-GB')+'</div>'
+      +'<div><b>Discharged:</b> N/A</div>';
+    dotHtml = '<span title="Active — currently admitted" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--green)"><span style="width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-bg);display:inline-block;animation:pulse 2s ease-in-out infinite"></span>Active</span>';
+  } else if(latestAdm && latestAdm.status==='Discharged'){
+    var admDate2 = new Date(latestAdm.admission_date);
+    var disDate = latestAdm.discharge_date ? new Date(latestAdm.discharge_date) : null;
+    statusHtml = '<div><b>Status:</b> <span class="chip" style="background:var(--surface2);color:var(--text-secondary)">Discharged</span></div>'
+      +'<div><b>Admitted:</b> '+admDate2.toLocaleDateString('en-GB')+'</div>'
+      +'<div><b>Discharged:</b> '+(disDate?disDate.toLocaleDateString('en-GB'):'Nil')+'</div>';
+    dotHtml = '<span title="Discharged" style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--text-tertiary)"><span style="width:9px;height:9px;border-radius:50%;background:var(--text-tertiary);display:inline-block"></span>&#10003; Discharged</span>';
+  } else {
+    statusHtml = '<div><b>Status:</b> <span class="chip" style="background:var(--surface2);color:var(--text-tertiary)">Not Admitted</span></div>'
+      +'<div><b>Admitted:</b> N/A</div>'
+      +'<div><b>Discharged:</b> N/A</div>';
+    dotHtml = '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--text-tertiary)"><span style="width:9px;height:9px;border-radius:50%;background:var(--border);display:inline-block"></span>Not Admitted</span>';
+  }
+  var dotEl = document.getElementById('pp-status-dot');
+  if(dotEl) dotEl.innerHTML = dotHtml;
+
   document.getElementById('pp-overview').innerHTML=
-    '<div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;margin-bottom:14px">'
-    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>Name:</b> '+(pd.full_name||'')+' '+statusChip+'</div>'
+    '<div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">'
+    +'<div><b>Name:</b> '+(pd.full_name||'')+'</div>'
     +'<div><b>Age / Gender:</b> '+(pd.age||'—')+' / '+(pd.gender||'—')+'</div>'
     +'<div><b>Phone:</b> '+(pd.phone||'—')+'</div>'
-    +'</div>'
-    +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px">Admission History</div>'
-    +historyHtml
+    +statusHtml
     ;
   openModal('mod-patient-profile');
   loadPatientDocuments(id);
@@ -3241,18 +3382,13 @@ async function saveAyushmanCase(){
 /* ── STAFF (owner only) ── */
 async function loadStaffList(){
   if(!_clinicId||_myRole!=='owner')return;
-  var r=await _supa.from('nh_staff').select('id,role,full_name,is_active,created_at,email').eq('clinic_id',_clinicId).order('created_at');
-  if(r.error){
-    /* 'email' column doesn't exist in this database yet — fall back so
-       the staff list still loads correctly, just without email shown. */
-    r=await _supa.from('nh_staff').select('id,role,full_name,is_active,created_at').eq('clinic_id',_clinicId).order('created_at');
-  }
+  var r=await _supa.from('nh_staff').select('id,role,full_name,is_active,created_at').eq('clinic_id',_clinicId).order('created_at');
   var list=document.getElementById('staff-list');
   if(!r.data||!r.data.length){list.innerHTML='<div class="empty"><div class="empty-ic">👥</div><p class="empty-t">No staff yet</p></div>';}
   else{
     list.innerHTML=r.data.map(function(s){
       return '<div class="adm-row"><div class="adm-av">'+(s.full_name||'?').charAt(0)+'</div>'
-        +'<div style="flex:1"><div class="adm-name">'+(s.full_name||'Unnamed')+(s.email?' <span style="font-weight:400;color:var(--text-tertiary)">· '+esc(s.email)+'</span>':'')+'</div><div class="adm-meta">'+s.role+(s.is_active?'':' · deactivated')+'</div></div>'
+        +'<div style="flex:1"><div class="adm-name">'+(s.full_name||'Unnamed')+'</div><div class="adm-meta">'+s.role+(s.is_active?'':' · deactivated')+'</div></div>'
         +'<button class="qbtn" onclick="toggleStaffActive(\''+s.id+'\','+(!s.is_active)+')">'+(s.is_active?'Deactivate':'Activate')+'</button>'
         +(s.role!=='owner'?'<button class="qbtn" style="color:var(--red);margin-left:6px" onclick="removeStaff(\''+s.id+'\',\''+(s.full_name||'this staff member').replace(/'/g,"\\'")+'\')">Revoke Access</button>':'')
         +'</div>';
@@ -3376,69 +3512,12 @@ async function generateStaffInvite(){
   document.getElementById('staff-invite-code').textContent = code;
   document.getElementById('staff-invite-result').style.display = 'block';
   document.getElementById('staff-label').value = '';
-  document.getElementById('staff-send-wa').style.display = _inviteChannel==='whatsapp' ? 'flex' : 'none';
-  document.getElementById('staff-send-sms').style.display = _inviteChannel==='sms' ? 'flex' : 'none';
   loadInvitesList();
-}
-
-function openInviteStaffModal(){
-  document.getElementById('staff-invite-phone').value = '';
-  document.getElementById('staff-label').value = '';
-  document.getElementById('staff-error').style.display = 'none';
-  document.getElementById('staff-invite-result').style.display = 'none';
-  setInviteChannel('whatsapp');
-  openModal('mod-add-staff');
-}
-
-/* ── INVITE CHANNEL (WhatsApp / SMS) ── AuraScale has no WhatsApp
-   Business API connected yet, so "Send via WhatsApp" opens a wa.me deep
-   link with the invite pre-filled in the app already installed on this
-   device/computer — a real, working share action today. It's designed
-   so that once a WhatsApp Business number is connected, automatic
-   sending can slot in without changing this UI. */
-var _inviteChannel = 'whatsapp';
-function setInviteChannel(channel){
-  _inviteChannel = channel;
-  document.getElementById('seg-whatsapp').classList.toggle('active', channel==='whatsapp');
-  document.getElementById('seg-sms').classList.toggle('active', channel==='sms');
-  var waBtn = document.getElementById('staff-send-wa');
-  var smsBtn = document.getElementById('staff-send-sms');
-  if(document.getElementById('staff-invite-result').style.display !== 'none'){
-    waBtn.style.display = channel==='whatsapp' ? 'flex' : 'none';
-    smsBtn.style.display = channel==='sms' ? 'flex' : 'none';
-  }
-}
-function _inviteMessage(){
-  var nhName = document.getElementById('sb-nh-name').textContent || 'your nursing home';
-  var role = document.getElementById('staff-role').value;
-  return 'You\'ve been invited to join '+nhName+' on AuraScale NH as a '+role+'. Open the app, tap "Register NH" → "I Have an Invite Code", and enter this code: '+_lastGeneratedInvite;
-}
-function sendInviteViaWhatsApp(){
-  var phone = (document.getElementById('staff-invite-phone').value||'').replace(/[^\d]/g,'');
-  if(!phone){ showToast('Enter their mobile number first'); return; }
-  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(_inviteMessage()),'_blank');
-}
-function sendInviteViaSMS(){
-  var phone = (document.getElementById('staff-invite-phone').value||'').trim();
-  if(!phone){ showToast('Enter their mobile number first'); return; }
-  window.open('sms:'+phone+'?body='+encodeURIComponent(_inviteMessage()),'_blank');
 }
 function copyInviteCode(){
   if(!_lastGeneratedInvite)return;
   navigator.clipboard.writeText(_lastGeneratedInvite).then(function(){showToast('Code copied');}).catch(function(){showToast('Code: '+_lastGeneratedInvite);});
 }
-
-/* ── PERIODIC BED-CLEANING SWEEP ──
-   Checks once a minute (only while the relevant view is open) so beds
-   left in "Cleaning" actually flip to "Vacant" after 30 minutes without
-   needing a manual page reload. */
-setInterval(function(){
-  if(!_clinicId) return;
-  var bedsView = document.getElementById('v-beds');
-  var dashView = document.getElementById('v-dashboard');
-  if(bedsView && bedsView.classList.contains('on')) loadBeds();
-  if(dashView && dashView.classList.contains('on')) loadDashboard();
-}, 60000);
 
 /* ── SESSION RESTORE ── */
 _supa.auth.onAuthStateChange(async function(event,session){
