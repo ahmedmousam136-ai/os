@@ -1563,7 +1563,7 @@ async function payAuraScaleSubscription(){
       btn.disabled=false;btn.textContent=originalText;
       return;
     }
-    var cashfree=Cashfree({mode:'sandbox'}); // change to 'production' once using live keys
+    var cashfree=Cashfree({mode:'production'});
     cashfree.checkout({
       paymentSessionId:r.data.payment_session_id,
       redirectTarget:'_self'
