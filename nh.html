@@ -547,49 +547,49 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-dashboard" class="view on">
         <div class="sh">
           <div>
-            <h1 class="st">Owner Dashboard 🏥</h1>
-            <p class="ss">Live facility overview · <span id="dash-date2"></span></p>
+            <h1 class="st"><span data-i18n="dash_title">Owner Dashboard</span> 🏥</h1>
+            <p class="ss"><span data-i18n="dash_subtitle">Live facility overview</span> · <span id="dash-date2"></span></p>
           </div>
-          <div class="rt-live"><span class="rt-dot"></span>Live</div>
+          <div class="rt-live"><span class="rt-dot"></span><span data-i18n="live">Live</span></div>
         </div>
 
         <!-- Dashboard tab bar -->
         <div class="dash-tabs">
-          <button class="dash-tab on" data-dtab="overview" onclick="dashTab('overview',this)">Overview</button>
-          <button class="dash-tab" data-dtab="payments" onclick="dashTab('payments',this)">Payments</button>
-          <button class="dash-tab" data-dtab="revenue" onclick="dashTab('revenue',this)">Revenue</button>
-          <button class="dash-tab" onclick="nav('reports')">Reports</button>
+          <button class="dash-tab on" data-dtab="overview" onclick="dashTab('overview',this)" data-i18n="tab_overview">Overview</button>
+          <button class="dash-tab" data-dtab="payments" onclick="dashTab('payments',this)" data-i18n="tab_payments">Payments</button>
+          <button class="dash-tab" data-dtab="revenue" onclick="dashTab('revenue',this)" data-i18n="tab_revenue">Revenue</button>
+          <button class="dash-tab" data-dtab="reports" onclick="dashTab('reports',this)" data-i18n="tab_reports">Reports</button>
         </div>
 
         <!-- ══════════════ OVERVIEW TAB ══════════════ -->
         <div class="dash-pnl on" id="dtab-overview">
           <div class="mg6">
-            <div class="mc"><div class="mc-lbl">Available Beds</div><div class="mc-val" id="dm-available">—</div><div class="mc-sub">ready to admit, of <span id="dm-total-beds">—</span> total</div></div>
-            <div class="mc mc-green"><div class="mc-lbl">Today Revenue</div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub">charges today</div></div>
-            <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="dm-outstanding">—</div><div class="mc-sub">unpaid balance</div></div>
-            <div class="mc"><div class="mc-lbl">Total Patients</div><div class="mc-val" id="dm-total-patients">—</div><div class="mc-sub">all time</div></div>
+            <div class="mc"><div class="mc-lbl" data-i18n="m_avail_beds">Available Beds</div><div class="mc-val" id="dm-available">—</div><div class="mc-sub"><span data-i18n="m_avail_beds_sub">ready to admit, of</span> <span id="dm-total-beds">—</span> <span data-i18n="m_total_lc">total</span></div></div>
+            <div class="mc mc-green"><div class="mc-lbl" data-i18n="m_today_revenue">Today Revenue</div><div class="mc-val" id="dm-revenue">—</div><div class="mc-sub" data-i18n="m_charges_today">charges today</div></div>
+            <div class="mc mc-red"><div class="mc-lbl" data-i18n="m_outstanding_due">Outstanding Due</div><div class="mc-val" id="dm-outstanding">—</div><div class="mc-sub" data-i18n="m_unpaid_balance">unpaid balance</div></div>
+            <div class="mc"><div class="mc-lbl" data-i18n="m_total_patients">Total Patients</div><div class="mc-val" id="dm-total-patients">—</div><div class="mc-sub" data-i18n="m_all_time">all time</div></div>
           </div>
 
           <div class="panel">
-            <div class="ph"><div class="pt">Bed Map</div></div>
+            <div class="ph"><div class="pt" data-i18n="bed_map">Bed Map</div></div>
             <div id="dash-bed-mini" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:5px"></div>
           </div>
 
           <button type="button" class="more-metrics-toggle" onclick="toggleMoreMetrics(this)">
-            <span class="mm-arrow">▸</span> More facility metrics
+            <span class="mm-arrow">▸</span> <span data-i18n="more_metrics">More facility metrics</span>
           </button>
           <div class="more-metrics-body" id="more-metrics-body" style="display:none">
             <div class="mg6">
-              <div class="mc mc-green"><div class="mc-lbl">Occupied Beds</div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub">currently in use</div></div>
-              <div class="mc"><div class="mc-lbl">Today Admissions</div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub">new today</div></div>
-              <div class="mc"><div class="mc-lbl">Today Discharges</div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub">discharged today</div></div>
-              <div class="mc mc-blue"><div class="mc-lbl">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub">active admissions total</div></div>
+              <div class="mc mc-green"><div class="mc-lbl" data-i18n="m_occupied_beds">Occupied Beds</div><div class="mc-val" id="dm-occupied">—</div><div class="mc-sub" data-i18n="m_currently_in_use">currently in use</div></div>
+              <div class="mc"><div class="mc-lbl" data-i18n="m_today_adm">Today Admissions</div><div class="mc-val" id="dm-today-adm">—</div><div class="mc-sub" data-i18n="m_new_today">new today</div></div>
+              <div class="mc"><div class="mc-lbl" data-i18n="m_today_dis">Today Discharges</div><div class="mc-val" id="dm-today-dis">—</div><div class="mc-sub" data-i18n="m_discharged_today">discharged today</div></div>
+              <div class="mc mc-blue"><div class="mc-lbl" data-i18n="m_current_billing">Current Billing</div><div class="mc-val" id="dm-current-billing">—</div><div class="mc-sub" data-i18n="m_active_adm_total">active admissions total</div></div>
             </div>
             <div class="mg6">
-              <div class="mc mc-green"><div class="mc-lbl">Monthly Revenue</div><div class="mc-val" id="dm-monthly-revenue">—</div><div class="mc-sub">month to date</div></div>
-              <div class="mc mc-blue"><div class="mc-lbl">Total Collection</div><div class="mc-val" id="dm-collection">—</div><div class="mc-sub">payments this month</div></div>
-              <div class="mc mc-red"><div class="mc-lbl">Expenses</div><div class="mc-val" id="dm-expenses">—</div><div class="mc-sub">this month</div></div>
-              <div class="mc"><div class="mc-lbl">Net Revenue</div><div class="mc-val" id="dm-net">—</div><div class="mc-sub">revenue − expenses</div></div>
+              <div class="mc mc-green"><div class="mc-lbl" data-i18n="m_monthly_revenue">Monthly Revenue</div><div class="mc-val" id="dm-monthly-revenue">—</div><div class="mc-sub" data-i18n="m_month_to_date">month to date</div></div>
+              <div class="mc mc-blue"><div class="mc-lbl" data-i18n="m_total_collection">Total Collection</div><div class="mc-val" id="dm-collection">—</div><div class="mc-sub" data-i18n="m_payments_this_month">payments this month</div></div>
+              <div class="mc mc-red"><div class="mc-lbl" data-i18n="m_expenses">Expenses</div><div class="mc-val" id="dm-expenses">—</div><div class="mc-sub" data-i18n="m_this_month">this month</div></div>
+              <div class="mc"><div class="mc-lbl" data-i18n="m_net_revenue">Net Revenue</div><div class="mc-val" id="dm-net">—</div><div class="mc-sub" data-i18n="m_revenue_minus_exp">revenue − expenses</div></div>
             </div>
           </div>
         </div>
@@ -597,40 +597,40 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <!-- ══════════════ PAYMENTS TAB ══════════════ -->
         <div class="dash-pnl" id="dtab-payments" style="display:none">
           <div class="sh" style="margin-bottom:12px">
-            <div><p class="ss" style="margin-top:0">All payments received across the facility</p></div>
+            <div><p class="ss" style="margin-top:0" data-i18n="pay_subtitle">All payments received across the facility</p></div>
             <select class="finput" id="pay-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadPaymentsPage()">
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month" selected>This Month</option>
-              <option value="all">All Time</option>
+              <option value="today" data-i18n="f_today">Today</option>
+              <option value="week" data-i18n="f_this_week">This Week</option>
+              <option value="month" selected data-i18n="f_this_month">This Month</option>
+              <option value="all" data-i18n="f_all_time">All Time</option>
             </select>
           </div>
           <div class="mg6">
-            <div class="mc mc-green"><div class="mc-lbl">Total Collected</div><div class="mc-val" id="pay-total">₹0</div></div>
-            <div class="mc"><div class="mc-lbl">Transactions</div><div class="mc-val" id="pay-count">0</div></div>
-            <div class="mc mc-blue"><div class="mc-lbl">Cash</div><div class="mc-val" id="pay-cash">₹0</div></div>
-            <div class="mc"><div class="mc-lbl">Digital (UPI/Card/Bank)</div><div class="mc-val" id="pay-digital">₹0</div></div>
+            <div class="mc mc-green"><div class="mc-lbl" data-i18n="m_total_collected">Total Collected</div><div class="mc-val" id="pay-total">₹0</div></div>
+            <div class="mc"><div class="mc-lbl" data-i18n="m_transactions">Transactions</div><div class="mc-val" id="pay-count">0</div></div>
+            <div class="mc mc-blue"><div class="mc-lbl" data-i18n="m_cash">Cash</div><div class="mc-val" id="pay-cash">₹0</div></div>
+            <div class="mc"><div class="mc-lbl" data-i18n="m_digital">Digital (UPI/Card/Bank)</div><div class="mc-val" id="pay-digital">₹0</div></div>
           </div>
           <button type="button" class="more-metrics-toggle" onclick="toggleMoreMetrics(this)">
-            <span class="mm-arrow">▸</span> Payment method breakdown
+            <span class="mm-arrow">▸</span> <span data-i18n="pay_method_breakdown">Payment method breakdown</span>
           </button>
           <div class="more-metrics-body" style="display:none">
             <div class="mg6">
-              <div class="mc"><div class="mc-lbl">UPI</div><div class="mc-val" id="pay-upi">₹0</div></div>
-              <div class="mc"><div class="mc-lbl">Card</div><div class="mc-val" id="pay-card">₹0</div></div>
-              <div class="mc"><div class="mc-lbl">Bank Transfer</div><div class="mc-val" id="pay-bank">₹0</div></div>
-              <div class="mc"><div class="mc-lbl">Other</div><div class="mc-val" id="pay-other">₹0</div></div>
+              <div class="mc"><div class="mc-lbl" data-i18n="m_upi">UPI</div><div class="mc-val" id="pay-upi">₹0</div></div>
+              <div class="mc"><div class="mc-lbl" data-i18n="m_card">Card</div><div class="mc-val" id="pay-card">₹0</div></div>
+              <div class="mc"><div class="mc-lbl" data-i18n="m_bank_transfer">Bank Transfer</div><div class="mc-val" id="pay-bank">₹0</div></div>
+              <div class="mc"><div class="mc-lbl" data-i18n="m_other">Other</div><div class="mc-val" id="pay-other">₹0</div></div>
             </div>
           </div>
           <div class="panel" style="overflow-x:auto">
             <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px">
               <thead><tr style="border-bottom:1px solid var(--border);text-align:left">
-                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Patient</th>
-                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Date &amp; Time</th>
-                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
-                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Method</th>
-                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Received By</th>
-                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Amount</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700" data-i18n="col_patient">Patient</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700" data-i18n="col_datetime">Date &amp; Time</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700" data-i18n="col_department">Department</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700" data-i18n="col_method">Method</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700" data-i18n="col_received_by">Received By</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right" data-i18n="col_amount">Amount</th>
               </tr></thead>
               <tbody id="pay-tbody"></tbody>
             </table>
@@ -640,55 +640,55 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <!-- ══════════════ REVENUE TAB ══════════════ -->
         <div class="dash-pnl" id="dtab-revenue" style="display:none">
           <div class="sh" style="margin-bottom:12px">
-            <div><p class="ss" style="margin-top:0">Revenue, payments and outstanding dues</p></div>
+            <div><p class="ss" style="margin-top:0" data-i18n="rev_subtitle">Revenue, payments and outstanding dues</p></div>
             <select class="finput" id="fin-filter-period" style="width:auto;min-height:34px;font-size:11.5px" onchange="loadRevenue()">
-              <option value="today">Today</option>
+              <option value="today" data-i18n="f_today">Today</option>
               <option value="yesterday">Yesterday</option>
               <option value="week">This Week</option>
-              <option value="month" selected>This Month</option>
-              <option value="lastmonth">Last Month</option>
-              <option value="all">All Time</option>
+              <option value="month" selected data-i18n="f_this_month">This Month</option>
+              <option value="lastmonth" data-i18n="f_last_month">Last Month</option>
+              <option value="all" data-i18n="f_all_time">All Time</option>
             </select>
           </div>
           <div class="panel">
-            <div class="ph"><div class="pt">Per-Patient Balance</div></div>
+            <div class="ph"><div class="pt" data-i18n="per_patient_balance">Per-Patient Balance</div></div>
             <div id="fin-list"></div>
           </div>
           <div class="mg">
-            <div class="mc mc-green"><div class="mc-lbl">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
-            <div class="mc mc-blue"><div class="mc-lbl">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
-            <div class="mc mc-red"><div class="mc-lbl">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
-            <div class="mc"><div class="mc-lbl">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
+            <div class="mc mc-green"><div class="mc-lbl" data-i18n="m_total_charged">Total Charged</div><div class="mc-val" id="fin-charged">₹0</div></div>
+            <div class="mc mc-blue"><div class="mc-lbl" data-i18n="m_total_paid">Total Paid</div><div class="mc-val" id="fin-paid">₹0</div></div>
+            <div class="mc mc-red"><div class="mc-lbl" data-i18n="m_outstanding_due">Outstanding Due</div><div class="mc-val" id="fin-due">₹0</div></div>
+            <div class="mc"><div class="mc-lbl" data-i18n="m_period_revenue">Period Revenue</div><div class="mc-val" id="fin-month">₹0</div></div>
           </div>
           <button type="button" class="more-metrics-toggle" onclick="toggleMoreMetrics(this)">
-            <span class="mm-arrow">▸</span> Service, department &amp; billing config
+            <span class="mm-arrow">▸</span> <span data-i18n="service_dept_billing">Service, department &amp; billing config</span>
           </button>
           <div class="more-metrics-body" style="display:none">
             <div class="two-col">
               <div class="panel">
-                <div class="ph"><div class="pt">Revenue by Service</div></div>
+                <div class="ph"><div class="pt" data-i18n="revenue_by_service">Revenue by Service</div></div>
                 <div id="fin-by-category"></div>
               </div>
               <div class="panel">
-                <div class="ph"><div class="pt">Revenue by Department</div></div>
+                <div class="ph"><div class="pt" data-i18n="revenue_by_dept">Revenue by Department</div></div>
                 <div id="rev-by-dept"></div>
               </div>
             </div>
             <div class="panel owner-only">
-              <div class="ph"><div class="pt">⚙️ Billing Method</div></div>
+              <div class="ph"><div class="pt">⚙️ <span data-i18n="billing_method">Billing Method</span></div></div>
               <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
-                <div><label class="flbl">Billing Method</label>
+                <div><label class="flbl" data-i18n="billing_method">Billing Method</label>
                   <select class="finput" id="fin-billing-method">
-                    <option value="24hr">24-Hour Billing (from admission time)</option>
-                    <option value="calendar">Calendar Day (midnight cutoff)</option>
-                    <option value="cutoff">Custom Hospital Cutoff</option>
+                    <option value="24hr" data-i18n="bm_24hr">24-Hour Billing (from admission time)</option>
+                    <option value="calendar" data-i18n="bm_calendar">Calendar Day (midnight cutoff)</option>
+                    <option value="cutoff" data-i18n="bm_cutoff">Custom Hospital Cutoff</option>
                   </select>
                 </div>
                 <div id="fin-cutoff-wrap" style="display:none">
-                  <label class="flbl">Cutoff Time</label>
+                  <label class="flbl" data-i18n="cutoff_time">Cutoff Time</label>
                   <input class="finput" id="fin-cutoff-time" type="time" value="06:00"/>
                 </div>
-                <button class="qbtn" onclick="saveBillingConfig()">Save Billing Config</button>
+                <button class="qbtn" onclick="saveBillingConfig()" data-i18n="save_billing_config">Save Billing Config</button>
               </div>
             </div>
           </div>
@@ -820,27 +820,25 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <div class="ph"><div class="pt">Ready for Discharge</div><span class="pb pb-g" id="discharge-count">0</span></div>
           <div id="discharge-list"></div>
         </div>
-      </div>
-
-      <!-- REPORTS (owner) -->
-      <div id="v-reports" class="view owner-only">
-        <div class="sh"><div><h1 class="st">Reports</h1><p class="ss">Daily and monthly management reports</p></div></div>
-        <div class="mg2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div class="panel" style="padding:18px">
-            <div style="font-weight:700;font-size:14px;margin-bottom:4px">📄 Daily Owner Report</div>
-            <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Today's revenue, collection, expenses, admissions/discharges and important transactions.</p>
-            <input type="date" class="finput" id="report-daily-date"/>
-            <button class="msub" onclick="generateDailyReport()">Generate &amp; Print</button>
+        <div class="dash-pnl" id="dtab-reports" style="display:none">
+          <div class="sh" style="margin-bottom:12px"><div><p class="ss" style="margin-top:0" data-i18n="reports_subtitle">Daily and monthly management reports</p></div></div>
+          <div class="mg2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="panel" style="padding:18px">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">📄 <span data-i18n="daily_owner_report">Daily Owner Report</span></div>
+              <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px" data-i18n="daily_report_desc">Today's revenue, collection, expenses, admissions/discharges and important transactions.</p>
+              <input type="date" class="finput" id="report-daily-date"/>
+              <button class="msub" onclick="generateDailyReport()" data-i18n="generate_print">Generate &amp; Print</button>
+            </div>
+            <div class="panel" style="padding:18px">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">📊 <span data-i18n="monthly_mgmt_audit">Monthly Management Audit</span></div>
+              <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px" data-i18n="monthly_report_desc">Full month revenue, collection, expenses, department/service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</p>
+              <input type="month" class="finput" id="report-monthly-month"/>
+              <button class="msub" onclick="generateMonthlyReport()" data-i18n="generate_print">Generate &amp; Print</button>
+            </div>
           </div>
-          <div class="panel" style="padding:18px">
-            <div style="font-weight:700;font-size:14px;margin-bottom:4px">📊 Monthly Management Audit</div>
-            <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Full month revenue, collection, expenses, department/service breakdown and occupancy. Not a substitute for statutory accounting or CA services.</p>
-            <input type="month" class="finput" id="report-monthly-month"/>
-            <button class="msub" onclick="generateMonthlyReport()">Generate &amp; Print</button>
+          <div class="note-box note-blue" style="margin-top:14px;font-size:11px" data-i18n="reports_note">
+            ℹ️ Reports open as a printable page — use your browser's "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn't wired up, since no messaging/email integration exists in this app yet.
           </div>
-        </div>
-        <div class="note-box note-blue" style="margin-top:14px;font-size:11px">
-          ℹ️ Reports open as a printable page — use your browser's "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn't wired up, since no messaging/email integration exists in this app yet.
         </div>
       </div>
 
@@ -1364,6 +1362,7 @@ function dashTab(tab, el){
   if(el) el.classList.add('on');
   var pnl = document.getElementById('dtab-'+tab);
   if(pnl) pnl.style.display = 'flex';
+  if(tab==='reports') loadReportsPage();
 }
 
 /* ── Collapsible "More metrics" sections used across the Dashboard tabs ── */
@@ -1381,21 +1380,120 @@ var I18N = {
     nav_dashboard:'Dashboard', nav_mypatientshome:'My Patients Home', nav_receptionhome:'Reception Home', nav_patients:'Patients',
     nav_beds:'Bed Management', nav_admissions:'Admissions', nav_rounds:'Progress Notes', nav_billing:'Billing', nav_discharge:'Discharge',
     nav_audit:'Audit', nav_ayushman:'Ayushman / PM-JAY', nav_staff:'Staff', nav_notifications:'Notifications',
-    nav_subscription:'Subscription', nav_settings:'Settings', btn_admit_patient:'Admit Patient'
+    nav_subscription:'Subscription', nav_settings:'Settings', btn_admit_patient:'Admit Patient',
+    dash_title:'Owner Dashboard', dash_subtitle:'Live facility overview', live:'Live',
+    tab_overview:'Overview', tab_payments:'Payments', tab_revenue:'Revenue', tab_reports:'Reports',
+    m_avail_beds:'Available Beds', m_avail_beds_sub:'ready to admit, of', m_total_lc:'total',
+    m_today_revenue:'Today Revenue', m_charges_today:'charges today',
+    m_outstanding_due:'Outstanding Due', m_unpaid_balance:'unpaid balance',
+    m_total_patients:'Total Patients', m_all_time:'all time',
+    bed_map:'Bed Map', more_metrics:'More facility metrics',
+    m_occupied_beds:'Occupied Beds', m_currently_in_use:'currently in use',
+    m_today_adm:'Today Admissions', m_new_today:'new today',
+    m_today_dis:'Today Discharges', m_discharged_today:'discharged today',
+    m_current_billing:'Current Billing', m_active_adm_total:'active admissions total',
+    m_monthly_revenue:'Monthly Revenue', m_month_to_date:'month to date',
+    m_total_collection:'Total Collection', m_payments_this_month:'payments this month',
+    m_expenses:'Expenses', m_this_month:'this month',
+    m_net_revenue:'Net Revenue', m_revenue_minus_exp:'revenue − expenses',
+    pay_subtitle:'All payments received across the facility',
+    f_today:'Today', f_this_week:'This Week', f_this_month:'This Month', f_last_month:'Last Month', f_all_time:'All Time',
+    m_total_collected:'Total Collected', m_transactions:'Transactions', m_cash:'Cash', m_digital:'Digital (UPI/Card/Bank)',
+    pay_method_breakdown:'Payment method breakdown',
+    m_upi:'UPI', m_card:'Card', m_bank_transfer:'Bank Transfer', m_other:'Other',
+    col_patient:'Patient', col_datetime:'Date & Time', col_department:'Department', col_method:'Method', col_received_by:'Received By', col_amount:'Amount',
+    rev_subtitle:'Revenue, payments and outstanding dues',
+    per_patient_balance:'Per-Patient Balance',
+    m_total_charged:'Total Charged', m_total_paid:'Total Paid', m_period_revenue:'Period Revenue',
+    service_dept_billing:'Service, department & billing config',
+    revenue_by_service:'Revenue by Service', revenue_by_dept:'Revenue by Department',
+    billing_method:'Billing Method', bm_24hr:'24-Hour Billing (from admission time)', bm_calendar:'Calendar Day (midnight cutoff)', bm_cutoff:'Custom Hospital Cutoff',
+    cutoff_time:'Cutoff Time', save_billing_config:'Save Billing Config',
+    reports_subtitle:'Daily and monthly management reports',
+    daily_owner_report:'Daily Owner Report', daily_report_desc:"Today's revenue, collection, expenses, admissions/discharges and important transactions.",
+    monthly_mgmt_audit:'Monthly Management Audit', monthly_report_desc:'Full month revenue, collection, expenses, department/service breakdown and occupancy. Not a substitute for statutory accounting or CA services.',
+    generate_print:'Generate & Print',
+    reports_note:'ℹ️ Reports open as a printable page — use your browser\'s "Print → Save as PDF" to download or share (e.g. via WhatsApp Web). Automatic sending isn\'t wired up, since no messaging/email integration exists in this app yet.'
   },
   bn: {
     sec_overview:'ওভারভিউ', sec_patients:'রোগী', sec_inpatient:'ইনপেশেন্ট', sec_programs:'প্রোগ্রাম', sec_account:'অ্যাকাউন্ট',
     nav_dashboard:'ড্যাশবোর্ড', nav_mypatientshome:'আমার রোগী', nav_receptionhome:'রিসেপশন হোম', nav_patients:'রোগীরা',
     nav_beds:'বেড ব্যবস্থাপনা', nav_admissions:'ভর্তি', nav_rounds:'প্রগ্রেস নোট', nav_billing:'বিলিং', nav_discharge:'ছুটি',
     nav_audit:'অডিট', nav_ayushman:'আয়ুষ্মান / পিএম-জেএওয়াই', nav_staff:'স্টাফ', nav_notifications:'বিজ্ঞপ্তি',
-    nav_subscription:'সাবস্ক্রিপশন', nav_settings:'সেটিংস', btn_admit_patient:'রোগী ভর্তি করুন'
+    nav_subscription:'সাবস্ক্রিপশন', nav_settings:'সেটিংস', btn_admit_patient:'রোগী ভর্তি করুন',
+    dash_title:'মালিকের ড্যাশবোর্ড', dash_subtitle:'হাসপাতালের লাইভ ওভারভিউ', live:'লাইভ',
+    tab_overview:'ওভারভিউ', tab_payments:'পেমেন্ট', tab_revenue:'রাজস্ব', tab_reports:'রিপোর্ট',
+    m_avail_beds:'খালি বেড', m_avail_beds_sub:'ভর্তির জন্য প্রস্তুত, মোট', m_total_lc:'টি',
+    m_today_revenue:'আজকের আয়', m_charges_today:'আজকের চার্জ',
+    m_outstanding_due:'বকেয়া টাকা', m_unpaid_balance:'অপরিশোধিত ব্যালেন্স',
+    m_total_patients:'মোট রোগী', m_all_time:'সর্বমোট',
+    bed_map:'বেড ম্যাপ', more_metrics:'আরও তথ্য দেখুন',
+    m_occupied_beds:'পূর্ণ বেড', m_currently_in_use:'বর্তমানে ব্যবহৃত',
+    m_today_adm:'আজকের ভর্তি', m_new_today:'আজকের নতুন',
+    m_today_dis:'আজকের ছুটি', m_discharged_today:'আজ ছুটি হয়েছে',
+    m_current_billing:'চলতি বিল', m_active_adm_total:'চলমান ভর্তির মোট',
+    m_monthly_revenue:'মাসিক আয়', m_month_to_date:'চলতি মাস পর্যন্ত',
+    m_total_collection:'মোট সংগ্রহ', m_payments_this_month:'এই মাসের পেমেন্ট',
+    m_expenses:'খরচ', m_this_month:'এই মাসে',
+    m_net_revenue:'নিট আয়', m_revenue_minus_exp:'আয় − খরচ',
+    pay_subtitle:'হাসপাতালের সব পেমেন্ট',
+    f_today:'আজ', f_this_week:'এই সপ্তাহ', f_this_month:'এই মাস', f_last_month:'গত মাস', f_all_time:'সর্বমোট সময়',
+    m_total_collected:'মোট সংগৃহীত', m_transactions:'লেনদেন', m_cash:'নগদ', m_digital:'ডিজিটাল (UPI/কার্ড/ব্যাংক)',
+    pay_method_breakdown:'পেমেন্ট পদ্ধতি অনুযায়ী বিভাজন',
+    m_upi:'ইউপিআই', m_card:'কার্ড', m_bank_transfer:'ব্যাংক ট্রান্সফার', m_other:'অন্যান্য',
+    col_patient:'রোগী', col_datetime:'তারিখ ও সময়', col_department:'বিভাগ', col_method:'পদ্ধতি', col_received_by:'গ্রহণকারী', col_amount:'পরিমাণ',
+    rev_subtitle:'রাজস্ব, পেমেন্ট এবং বকেয়া',
+    per_patient_balance:'রোগী অনুযায়ী বকেয়া',
+    m_total_charged:'মোট বিল', m_total_paid:'মোট পরিশোধিত', m_period_revenue:'সময়কালের আয়',
+    service_dept_billing:'সেবা, বিভাগ ও বিলিং সেটিংস',
+    revenue_by_service:'সেবা অনুযায়ী আয়', revenue_by_dept:'বিভাগ অনুযায়ী আয়',
+    billing_method:'বিলিং পদ্ধতি', bm_24hr:'২৪-ঘণ্টা বিলিং (ভর্তির সময় থেকে)', bm_calendar:'ক্যালেন্ডার দিন (মধ্যরাত কাটঅফ)', bm_cutoff:'কাস্টম হাসপাতাল কাটঅফ',
+    cutoff_time:'কাটঅফ সময়', save_billing_config:'বিলিং সেটিংস সংরক্ষণ করুন',
+    reports_subtitle:'দৈনিক ও মাসিক ব্যবস্থাপনা রিপোর্ট',
+    daily_owner_report:'দৈনিক মালিক রিপোর্ট', daily_report_desc:'আজকের আয়, সংগ্রহ, খরচ, ভর্তি/ছুটি এবং গুরুত্বপূর্ণ লেনদেন।',
+    monthly_mgmt_audit:'মাসিক ব্যবস্থাপনা অডিট', monthly_report_desc:'পুরো মাসের আয়, সংগ্রহ, খরচ, বিভাগ/সেবা বিভাজন এবং অকুপেন্সি। এটি স্ট্যাটুটরি অ্যাকাউন্টিং বা সিএ পরিষেবার বিকল্প নয়।',
+    generate_print:'তৈরি করুন ও প্রিন্ট করুন',
+    reports_note:'ℹ️ রিপোর্টগুলো প্রিন্টযোগ্য পাতা হিসেবে খোলে — ডাউনলোড বা শেয়ার করতে (যেমন WhatsApp Web-এর মাধ্যমে) আপনার ব্রাউজারের "Print → Save as PDF" ব্যবহার করুন। স্বয়ংক্রিয় পাঠানো এখনও যুক্ত করা হয়নি, কারণ এই অ্যাপে এখনো কোনো মেসেজিং/ইমেইল ইন্টিগ্রেশন নেই।'
   },
   hi: {
     sec_overview:'ओवरव्यू', sec_patients:'मरीज़', sec_inpatient:'इनपेशेंट', sec_programs:'प्रोग्राम', sec_account:'खाता',
     nav_dashboard:'डैशबोर्ड', nav_mypatientshome:'मेरे मरीज़', nav_receptionhome:'रिसेप्शन होम', nav_patients:'मरीज़',
     nav_beds:'बेड प्रबंधन', nav_admissions:'भर्ती', nav_rounds:'प्रगति नोट्स', nav_billing:'बिलिंग', nav_discharge:'छुट्टी',
     nav_audit:'ऑडिट', nav_ayushman:'आयुष्मान / पीएम-जय', nav_staff:'स्टाफ', nav_notifications:'सूचनाएं',
-    nav_subscription:'सब्सक्रिप्शन', nav_settings:'सेटिंग्स', btn_admit_patient:'मरीज़ भर्ती करें'
+    nav_subscription:'सब्सक्रिप्शन', nav_settings:'सेटिंग्स', btn_admit_patient:'मरीज़ भर्ती करें',
+    dash_title:'मालिक डैशबोर्ड', dash_subtitle:'लाइव फैसिलिटी ओवरव्यू', live:'लाइव',
+    tab_overview:'ओवरव्यू', tab_payments:'भुगतान', tab_revenue:'राजस्व', tab_reports:'रिपोर्ट',
+    m_avail_beds:'खाली बेड', m_avail_beds_sub:'भर्ती के लिए तैयार, कुल', m_total_lc:'में से',
+    m_today_revenue:'आज का राजस्व', m_charges_today:'आज का चार्ज',
+    m_outstanding_due:'बकाया राशि', m_unpaid_balance:'अवैतनिक बैलेंस',
+    m_total_patients:'कुल मरीज़', m_all_time:'अब तक',
+    bed_map:'बेड मैप', more_metrics:'और सुविधा आंकड़े देखें',
+    m_occupied_beds:'भरे हुए बेड', m_currently_in_use:'वर्तमान में उपयोग में',
+    m_today_adm:'आज की भर्ती', m_new_today:'आज नए',
+    m_today_dis:'आज की छुट्टी', m_discharged_today:'आज छुट्टी हुई',
+    m_current_billing:'चालू बिलिंग', m_active_adm_total:'चालू भर्ती का कुल',
+    m_monthly_revenue:'मासिक राजस्व', m_month_to_date:'महीने की अब तक की कमाई',
+    m_total_collection:'कुल संग्रह', m_payments_this_month:'इस महीने का भुगतान',
+    m_expenses:'खर्च', m_this_month:'इस महीने',
+    m_net_revenue:'शुद्ध राजस्व', m_revenue_minus_exp:'राजस्व − खर्च',
+    pay_subtitle:'फैसिलिटी में प्राप्त सभी भुगतान',
+    f_today:'आज', f_this_week:'इस सप्ताह', f_this_month:'इस महीने', f_last_month:'पिछला महीना', f_all_time:'हर समय',
+    m_total_collected:'कुल संग्रहित', m_transactions:'लेनदेन', m_cash:'नकद', m_digital:'डिजिटल (UPI/कार्ड/बैंक)',
+    pay_method_breakdown:'भुगतान माध्यम अनुसार विवरण',
+    m_upi:'यूपीआई', m_card:'कार्ड', m_bank_transfer:'बैंक ट्रांसफर', m_other:'अन्य',
+    col_patient:'मरीज़', col_datetime:'तारीख़ और समय', col_department:'विभाग', col_method:'माध्यम', col_received_by:'प्राप्तकर्ता', col_amount:'राशि',
+    rev_subtitle:'राजस्व, भुगतान और बकाया राशि',
+    per_patient_balance:'मरीज़-वार बकाया',
+    m_total_charged:'कुल बिल', m_total_paid:'कुल भुगतान', m_period_revenue:'अवधि का राजस्व',
+    service_dept_billing:'सेवा, विभाग और बिलिंग सेटिंग',
+    revenue_by_service:'सेवा अनुसार राजस्व', revenue_by_dept:'विभाग अनुसार राजस्व',
+    billing_method:'बिलिंग तरीका', bm_24hr:'24-घंटे बिलिंग (भर्ती के समय से)', bm_calendar:'कैलेंडर दिन (मध्यरात्रि कटऑफ)', bm_cutoff:'कस्टम अस्पताल कटऑफ',
+    cutoff_time:'कटऑफ समय', save_billing_config:'बिलिंग सेटिंग सहेजें',
+    reports_subtitle:'दैनिक और मासिक प्रबंधन रिपोर्ट',
+    daily_owner_report:'दैनिक मालिक रिपोर्ट', daily_report_desc:'आज का राजस्व, संग्रह, खर्च, भर्ती/छुट्टी और महत्वपूर्ण लेनदेन।',
+    monthly_mgmt_audit:'मासिक प्रबंधन ऑडिट', monthly_report_desc:'पूरे महीने का राजस्व, संग्रह, खर्च, विभाग/सेवा विवरण और अधिभोग। यह सांविधिक लेखांकन या सीए सेवाओं का विकल्प नहीं है।',
+    generate_print:'बनाएं और प्रिंट करें',
+    reports_note:'ℹ️ रिपोर्ट एक प्रिंट करने योग्य पेज के रूप में खुलती हैं — डाउनलोड या शेयर करने के लिए (जैसे WhatsApp Web के ज़रिए) अपने ब्राउज़र का "Print → Save as PDF" उपयोग करें। स्वचालित भेजना अभी लागू नहीं है, क्योंकि इस ऐप में अभी कोई मैसेजिंग/ईमेल इंटीग्रेशन नहीं है।'
   }
 };
 function setLanguage(lang){
@@ -1406,9 +1504,9 @@ function setLanguage(lang){
     if(I18N[lang][key])el.textContent=I18N[lang][key];
   });
   var sw=document.getElementById('lang-switcher');if(sw)sw.value=lang;
-  // Sidebar labels are translated above; page headers, table columns, and other deeper
-  // text are not yet covered by this first pass — the data-i18n system can be extended
-  // to any element by adding data-i18n="key" plus a matching entry in I18N.
+  // Covers: sidebar navigation + the full Dashboard (Overview/Payments/Revenue/Reports tabs).
+  // Other pages (Patients, Bed Management, Billing, etc.) are not yet covered by this pass —
+  // extend by wrapping text in data-i18n="key" and adding that key to I18N above.
 }
 function initLanguage(){
   var saved=localStorage.getItem('aurascale_lang')||'en';
