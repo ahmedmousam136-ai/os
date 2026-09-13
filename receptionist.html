@@ -1224,6 +1224,20 @@ async function init(){
     return;
   }
   var g=await nhAuthGuard('receptionist');if(!g)return;
+  /* Subscription lock — mirrors the check in nh.html (Owner portal). If the
+     Owner's AuraScale subscription is frozen (7-day grace period after
+     expiry passed with no payment), Receptionist access is locked too,
+     since it's the whole facility's account that's suspended, not just
+     the Owner's personal login. Per instruction, doctor.html is NOT
+     locked — only Owner + Receptionist. */
+  var _subCheck = await _supa.from('clinics').select('subscription_status').eq('id',_clinicId).single();
+  if(_subCheck.data && _subCheck.data.subscription_status==='frozen'){
+    document.body.innerHTML = '<div style="position:fixed;inset:0;background:var(--bg,#F7F6F3);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:sans-serif">'
+      +'<div style="max-width:420px"><div style="font-size:44px;margin-bottom:16px">🔒</div>'
+      +'<h2 style="font-size:19px;font-weight:700;margin-bottom:10px;color:#18170F">Facility Account Locked</h2>'
+      +'<p style="font-size:13.5px;color:#64605A;line-height:1.6;margin-bottom:20px">This facility\'s AuraScale subscription payment is overdue and the grace period has ended. Please contact the Owner/Administrator to renew the subscription — your access will be restored automatically once payment is completed.</p></div></div>';
+    return;
+  }
   _authInfo = g;
   document.getElementById('sb-fac-name').textContent=g.facilityName;
   var pname = g.name || 'Receptionist';
@@ -1545,32 +1559,20 @@ async function runOCR(){
   }
 }
 async function callClaudeOCR(){
+  /* SECURITY NOTE: this used to call api.anthropic.com directly from the
+     browser with an API key — that key would have been visible to anyone
+     using dev tools on this page. It now calls our own Supabase Edge
+     Function (ocr-extract-id), which holds the real API key server-side
+     and never sends it to the browser. */
   var imgData=_imgs.front||_imgs.back;if(!imgData)return null;
   var b64=imgData.replace(/^data:image\/(png|jpg|jpeg|webp);base64,/,'');
   var mime=imgData.startsWith('data:image/png')?'image/png':'image/jpeg';
   try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': typeof ANTHROPIC_API_KEY !== 'undefined' ? ANTHROPIC_API_KEY : '',
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',max_tokens:400,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:mime,data:b64}},
-          {type:'text',text:'This is an Indian '+(_idType==='aadhaar'?'Aadhaar Card':'Voter ID Card')+'. Extract registration information and return ONLY valid JSON with no extra text: {"name":"","dob":"YYYY-MM-DD or null","gender":"Male or Female or Other or null","address":""}. CRITICAL: Do NOT include any Aadhaar number, Voter ID number, or any government ID number. Return null for fields you cannot read clearly.'}
-        ]}]
-      })
+    var res=await _supa.functions.invoke('ocr-extract-id',{
+      body:{ image_base64:b64, mime_type:mime, id_type:_idType }
     });
-    if(!res.ok)throw new Error('API error '+res.status);
-    var data=await res.json();
-    var text=(data.content||[]).map(function(c){return c.text||'';}).join('');
-    var clean=text.replace(/```json|```/g,'').trim();
-    if(!clean||clean==='{}'||clean==='null')return null;
-    return JSON.parse(clean);
+    if(res.error){console.warn('OCR failed:',res.error.message);return null;}
+    return (res.data&&res.data.extracted)?res.data.extracted:null;
   }catch(e){
     console.warn('OCR failed:',e.message);
     return null;
@@ -2829,6 +2831,73 @@ async function loadBpVoiceNotes(){
   }).join('');
 }
 
+/* ── BED PROFILE VOICE NOTE ──────────────────────────────────────────
+   These three functions were referenced by onclick handlers in the HTML
+   (toggleBpVoice, clearBpVoice, saveBpVoice) but were never actually
+   defined anywhere in this file — the button has never worked. This is
+   the fix, built on the shared, upgraded NHSpeech (Whisper-based) so it
+   gets the same long-recording, bilingual-code-switching quality as the
+   rest of the voice features. Saves into nh_voice_notes, the same table
+   the Patient Profile's Notes tab already reads from. */
+var _bpVoiceRec = false, _bpVoiceText = '';
+function toggleBpVoice(){
+  if(_bpVoiceRec){ stopBpVoice(); } else { startBpVoice(); }
+}
+function startBpVoice(){
+  if(!_bpPatientId){ showToast('No patient linked to this bed'); return; }
+  var statusEl = document.getElementById('bp-voice-status');
+  var boxEl = document.getElementById('bp-voice-box');
+  var btn = document.getElementById('bp-voice-btn');
+  var ok = NHSpeech.start({
+    lang:'en-IN',
+    onStart:function(){
+      _bpVoiceRec = true;
+      if(btn) btn.classList.add('rec');
+      if(statusEl) statusEl.textContent = '🔴 Recording… tap mic again to stop';
+      if(boxEl) boxEl.textContent = 'Recording…';
+    },
+    onResult:function(text){ _bpVoiceText = text || ''; if(boxEl) boxEl.textContent = _bpVoiceText || 'Nothing heard.'; },
+    onError:function(e){
+      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':'Mic error: '+e);
+      stopBpVoice(true);
+    },
+    onTranscribing:function(){
+      if(statusEl) statusEl.textContent = 'Transcribing your recording…';
+      if(boxEl) boxEl.textContent = 'Transcribing…';
+    },
+    onEnd:function(){
+      _bpVoiceRec = false;
+      if(btn) btn.classList.remove('rec');
+      if(statusEl) statusEl.textContent = _bpVoiceText ? 'Review the text below, then Save or Clear.' : 'Nothing was heard. Try again.';
+      if(boxEl) boxEl.textContent = _bpVoiceText || 'Nothing recorded yet.';
+    }
+  });
+  if(!ok){ showToast('Voice not supported on this browser.'); return; }
+}
+function stopBpVoice(skipStatus){
+  NHSpeech.stop();
+  if(!skipStatus){
+    var statusEl = document.getElementById('bp-voice-status');
+    if(statusEl) statusEl.textContent = 'Transcribing your recording…';
+  }
+}
+function clearBpVoice(){
+  _bpVoiceText = '';
+  var boxEl = document.getElementById('bp-voice-box'); if(boxEl) boxEl.textContent = 'Nothing recorded yet.';
+  var statusEl = document.getElementById('bp-voice-status'); if(statusEl) statusEl.textContent = 'Tap mic to record';
+}
+async function saveBpVoice(){
+  if(!_bpPatientId){ showToast('No patient linked to this bed'); return; }
+  var text = (_bpVoiceText||'').trim();
+  if(!text){ showToast('Nothing to save — record a note first'); return; }
+  var r = await _supa.from('nh_voice_notes').insert({ clinic_id:_clinicId, patient_id:_bpPatientId, note_text:text, created_by:_myUid });
+  if(r.error){ showToast('Error: '+r.error.message); return; }
+  await _supa.from('nh_audit_log').insert({ clinic_id:_clinicId, actor_id:_myUid, action:'voice_note_saved', target_table:'nh_voice_notes', target_id:_bpPatientId });
+  showToast('Voice note saved');
+  clearBpVoice();
+  loadBpVoiceNotes();
+}
+
 async function viewBillOriginal(path){
   if(!path){showToast('No file path');return;}
   var r = await _supa.storage.from('nh-documents').createSignedUrl(path, 300);
@@ -2976,80 +3045,45 @@ function removeVcItem(i){ _vcParsed.splice(i,1); renderVoiceParsed(); }
 
 function startVcRecording(){
   if(_vcRecording) return;
-  /* Use Web Speech API directly for long continuous recording */
-  if(!window.SpeechRecognition && !window.webkitSpeechRecognition){
-    showToast('Voice not supported on this browser. Use Chrome.');
-    return;
-  }
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  _vcRecognition = new SR();
-  _vcRecognition.continuous = true;       /* KEY: keeps recording */
-  _vcRecognition.interimResults = true;
-  _vcRecognition.lang = 'en-IN';
-  _vcRecognition.maxAlternatives = 1;
-
   var statusEl = document.getElementById('vc-status');
   var btn = document.getElementById('vc-mic-btn');
-
-  _vcRecognition.onstart = function(){
-    _vcRecording = true;
-    if(btn){ btn.innerHTML = '&#9209; Stop'; btn.classList.add('rec'); }
-    if(statusEl) statusEl.textContent = '&#128308; Recording... speak all charges. Tap Stop when done.';
-  };
-
-  var interimText = '';
-  _vcRecognition.onresult = function(event){
-    var interim = '', final = '';
-    for(var i=event.resultIndex;i<event.results.length;i++){
-      if(event.results[i].isFinal){
-        final += event.results[i][0].transcript + ' ';
+  var ok = NHSpeech.start({
+    lang:'en-IN',
+    onStart:function(){
+      _vcRecording = true;
+      if(btn){ btn.innerHTML = '&#9209; Stop'; btn.classList.add('rec'); }
+      if(statusEl) statusEl.textContent = '\uD83D\uDD34 Recording... speak all charges. Tap Stop when done.';
+    },
+    onResult:function(text){ _vcFullText = text || ''; },
+    onError:function(e){
+      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='unsupported'?'Voice not supported on this browser.':'Mic error: '+e));
+      stopVcRecording(true);
+    },
+    onTranscribing:function(){
+      if(statusEl) statusEl.textContent = 'Transcribing your recording…';
+    },
+    onEnd:function(){
+      _vcRecording = false;
+      if(btn){ btn.innerHTML = '&#127899; Speak Charges'; btn.classList.remove('rec'); }
+      if(_vcFullText.trim()){
+        _vcParsed = parseVoiceText(_vcFullText);
+        renderVoiceParsed();
+        if(statusEl) statusEl.textContent = 'Review the detected charges below. Remove any errors, add prices, then confirm.';
       } else {
-        interim += event.results[i][0].transcript;
+        if(statusEl) statusEl.textContent = 'Nothing was heard. Try again.';
       }
+      _vcFullText = '';
     }
-    if(final){ _vcFullText += final; }
-    /* Show live transcript */
-    var el = document.getElementById('voice-parsed-list');
-    if(interim){
-      el.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--text-tertiary);font-style:italic">Hearing: ' + esc(interim) + '</div>';
-    }
-    if(_vcFullText){
-      if(statusEl) statusEl.textContent = '&#9989; Captured: ' + _vcFullText.slice(0,80) + ((_vcFullText.length>80)?'...':'');
-    }
-  };
-
-  _vcRecognition.onerror = function(event){
-    if(event.error !== 'no-speech'){
-      showToast('Mic error: ' + event.error);
-      stopVcRecording();
-    }
-  };
-
-  _vcRecognition.onend = function(){
-    if(_vcRecording){
-      /* Auto-restart for continuous recording (browser stops after ~60s) */
-      try{ _vcRecognition.start(); } catch(e){ stopVcRecording(); }
-    }
-  };
-
-  try{ _vcRecognition.start(); } catch(e){ showToast('Could not start mic: '+e.message); }
+  });
+  if(!ok){ showToast('Voice not supported on this browser.'); return; }
 }
 
-function stopVcRecording(){
-  _vcRecording = false;
-  if(_vcRecognition){ try{ _vcRecognition.stop(); }catch(e){} _vcRecognition = null; }
-  var btn = document.getElementById('vc-mic-btn');
-  if(btn){ btn.innerHTML = '&#127899; Speak Charges'; btn.classList.remove('rec'); }
-  var statusEl = document.getElementById('vc-status');
-  /* Parse the accumulated text */
-  if(_vcFullText.trim()){
-    _vcParsed = parseVoiceText(_vcFullText);
-    renderVoiceParsed();
-    if(statusEl) statusEl.textContent = 'Review the detected charges below. Remove any errors, add prices, then confirm.';
-  } else {
-    if(statusEl) statusEl.textContent = 'Nothing was heard. Try again.';
+function stopVcRecording(skipStatus){
+  NHSpeech.stop();
+  if(!skipStatus){
+    var statusEl = document.getElementById('vc-status');
+    if(statusEl) statusEl.textContent = 'Transcribing your recording…';
   }
-  _vcFullText = '';
 }
 
 function toggleVcMic(){
@@ -3175,46 +3209,41 @@ function toggleExpVoice(){
 }
 
 function startExpVoice(){
-  if(!window.SpeechRecognition && !window.webkitSpeechRecognition){
-    showToast('Voice not supported. Use Chrome.');
-    return;
-  }
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  _expVoiceRecognition = new SR();
-  _expVoiceRecognition.continuous = false;
-  _expVoiceRecognition.interimResults = true;
-  _expVoiceRecognition.lang = 'en-IN';
   var statusEl = document.getElementById('exp-voice-status');
   var resEl    = document.getElementById('exp-voice-result');
   var btn      = document.getElementById('exp-voice-btn');
-  _expVoiceRecognition.onstart = function(){
-    _expVoiceRec = true;
-    btn.innerHTML = '&#9209; Stop'; btn.style.background = 'var(--red)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--red)';
-    if(statusEl) statusEl.textContent = '&#128308; Recording... speak the charge details';
-    if(resEl) resEl.textContent = 'Listening...';
-  };
-  _expVoiceRecognition.onresult = function(ev){
-    var text = '';
-    for(var i=0;i<ev.results.length;i++) text += ev.results[i][0].transcript;
-    if(resEl) resEl.textContent = text;
-  };
-  _expVoiceRecognition.onend = function(){
-    stopExpVoice();
-  };
-  _expVoiceRecognition.onerror = function(ev){
-    showToast('Mic error: '+ev.error);
-    stopExpVoice();
-  };
-  try{ _expVoiceRecognition.start(); } catch(e){ showToast('Mic error: '+e.message); }
+  var ok = NHSpeech.start({
+    lang:'en-IN',
+    onStart:function(){
+      _expVoiceRec = true;
+      if(btn){ btn.innerHTML = '&#9209; Stop'; btn.style.background = 'var(--red)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--red)'; }
+      if(statusEl) statusEl.textContent = '\uD83D\uDD34 Recording... speak the charge details';
+      if(resEl) resEl.textContent = 'Recording…';
+    },
+    onResult:function(text){ if(resEl) resEl.textContent = text || ''; },
+    onError:function(e){
+      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':'Mic error: '+e);
+      stopExpVoice(true);
+    },
+    onTranscribing:function(){
+      if(statusEl) statusEl.textContent = 'Transcribing your recording…';
+      if(resEl) resEl.textContent = 'Transcribing…';
+    },
+    onEnd:function(){
+      _expVoiceRec = false;
+      if(btn){ btn.innerHTML = '&#127899; Speak Charge'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'var(--green-border)'; }
+      if(statusEl) statusEl.textContent = 'Tap "Apply to form" to transfer the spoken text';
+    }
+  });
+  if(!ok){ showToast('Voice not supported.'); return; }
 }
 
-function stopExpVoice(){
-  _expVoiceRec = false;
-  if(_expVoiceRecognition){ try{_expVoiceRecognition.stop();}catch(e){} _expVoiceRecognition=null; }
-  var btn = document.getElementById('exp-voice-btn');
-  if(btn){ btn.innerHTML = '&#127899; Speak Charge'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'var(--green-border)'; }
-  var statusEl = document.getElementById('exp-voice-status');
-  if(statusEl) statusEl.textContent = 'Tap "Apply to form" to transfer the spoken text';
+function stopExpVoice(skipStatus){
+  NHSpeech.stop();
+  if(!skipStatus){
+    var statusEl = document.getElementById('exp-voice-status');
+    if(statusEl) statusEl.textContent = 'Transcribing your recording…';
+  }
 }
 
 function applyVoiceToExpense(){
