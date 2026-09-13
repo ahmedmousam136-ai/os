@@ -1551,7 +1551,7 @@ async function payAuraScaleSubscription(){
   var originalText=btn.textContent;
   btn.disabled=true;btn.textContent='Preparing checkout…';
   try{
-    var amount=999; // TODO: replace with the real monthly subscription amount once pricing is finalized
+    var amount=3999; // Monthly AuraScale subscription price
     var nameEl=document.getElementById('sb-nh-name');
     var clinicName=(nameEl&&nameEl.textContent)||'AuraScale Customer';
     var r=await _supa.functions.invoke('create-cashfree-order',{
