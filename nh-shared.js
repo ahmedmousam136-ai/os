@@ -318,10 +318,107 @@ async function viewExtractedShared(docId) {
 }
 
 /* ── SPEECH (NHSpeech) ──────────────────────────────────────────────
-   Modular voice provider — matches nh__2_.html's NHSpeech exactly.
-   Swap NHSpeech.provider to change STT engine without touching callers. */
+   Upgraded from the browser's free built-in speech recognition to a
+   paid, much higher-accuracy provider: records real audio locally via
+   MediaRecorder, then sends the finished recording to the transcribe-audio
+   Edge Function, which calls OpenAI Whisper server-side (API key never
+   touches the browser). This handles long recordings (many minutes) and
+   natural Bengali/English code-switching far better than the old
+   browser-only approach, which is kept below as 'webspeech' in case you
+   ever want to switch back to the free option.
+
+   Interface is unchanged for every existing caller:
+     NHSpeech.start({ lang, onResult(text), onError(code), onEnd() })
+     NHSpeech.stop()
+   Two new OPTIONAL callbacks are available to callers that want a better
+   "please wait" UI during the few seconds transcription takes:
+     onStart()        — fired once the mic is actually recording
+     onTranscribing()  — fired the instant recording stops, before the
+                          transcript comes back (upload + AI processing
+                          takes a couple of seconds)
+   Callers that don't provide these two are unaffected — onResult/onEnd
+   still fire exactly as before, just once, with the final full text,
+   instead of many times with partial live text. */
 var NHSpeech = {
   provider: {
+    name: 'whisper',
+    _mediaRecorder: null,
+    _chunks: [],
+    _stream: null,
+    _opts: null,
+    isSupported: function() {
+      return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+    },
+    start: function(opts) {
+      var self = this;
+      self._opts = opts;
+      self._chunks = [];
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+        self._stream = stream;
+        var preferredType = 'audio/webm';
+        var mimeType = (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(preferredType)) ? preferredType : '';
+        try {
+          self._mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
+        } catch (e) {
+          self._mediaRecorder = new MediaRecorder(stream);
+        }
+        self._mediaRecorder.ondataavailable = function(e) {
+          if (e.data && e.data.size > 0) self._chunks.push(e.data);
+        };
+        self._mediaRecorder.onstop = function() {
+          try { self._stream.getTracks().forEach(function(t) { t.stop(); }); } catch (e) {}
+          var blob = new Blob(self._chunks, { type: (self._mediaRecorder && self._mediaRecorder.mimeType) || 'audio/webm' });
+          self._transcribe(blob);
+        };
+        self._mediaRecorder.start();
+        if (opts.onStart) opts.onStart();
+      }).catch(function(err) {
+        var code = (err && err.name === 'NotAllowedError') ? 'mic-denied' : ((err && err.message) || 'mic-error');
+        if (opts.onError) opts.onError(code);
+      });
+    },
+    _transcribe: function(blob) {
+      var self = this, opts = self._opts || {};
+      if (opts.onTranscribing) opts.onTranscribing();
+      if (!blob || blob.size === 0) {
+        if (opts.onError) opts.onError('no-audio');
+        if (opts.onEnd) opts.onEnd();
+        return;
+      }
+      var reader = new FileReader();
+      reader.onloadend = function() {
+        var base64 = String(reader.result).split(',')[1] || '';
+        _supa.functions.invoke('transcribe-audio', {
+          body: { audio_base64: base64, mime_type: blob.type || 'audio/webm' }
+        }).then(function(res) {
+          if (res.error) {
+            if (opts.onError) opts.onError(res.error.message || 'transcription-failed');
+          } else {
+            var text = (res.data && res.data.transcript) || '';
+            if (opts.onResult) opts.onResult(text);
+          }
+          if (opts.onEnd) opts.onEnd();
+        }).catch(function(e) {
+          if (opts.onError) opts.onError((e && e.message) || 'transcription-failed');
+          if (opts.onEnd) opts.onEnd();
+        });
+      };
+      reader.onerror = function() {
+        if (opts.onError) opts.onError('read-failed');
+        if (opts.onEnd) opts.onEnd();
+      };
+      reader.readAsDataURL(blob);
+    },
+    stop: function() {
+      if (this._mediaRecorder && this._mediaRecorder.state !== 'inactive') {
+        try { this._mediaRecorder.stop(); } catch (e) {}
+      }
+    }
+  },
+  /* Free fallback — the original browser-only engine, kept for reference
+     or in case you ever want to switch back off the paid API. Not used
+     unless you manually set NHSpeech.provider = NHSpeech.webSpeechProvider. */
+  webSpeechProvider: {
     name: 'webspeech',
     _rec: null,
     isSupported: function() {
