@@ -659,23 +659,33 @@ function startVoice(){
     lang:'en-IN',
     onResult:function(t){target.value=base+t;},
     onError:function(e){
-      document.getElementById('mic-status').textContent=e==='unsupported'?'Voice not supported in this browser.':'Mic error: '+e+'. Allow microphone access.';
-      stopVoice();
+      document.getElementById('mic-status').textContent=e==='unsupported'?'Voice not supported in this browser.':(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':'Mic error: '+e+'. Please try again.');
+      stopVoice(true);
     },
-    onEnd:function(){if(_voiceActive)stopVoice();}
+    onTranscribing:function(){
+      document.getElementById('mic-status').textContent='Transcribing your recording…';
+    },
+    onEnd:function(){
+      if(_voiceActive){_voiceActive=false;}
+      var btn=document.getElementById('mic-btn');if(btn)btn.classList.remove('recording');
+      var lbl=document.getElementById('mic-label');if(lbl)lbl.textContent='Start Voice Note';
+      var st=document.getElementById('mic-status');if(st)st.textContent='Transcript added to Subjective — edit as needed before saving.';
+    }
   });
   if(!ok)return;
   _voiceActive=true;
   document.getElementById('mic-btn').classList.add('recording');
   document.getElementById('mic-label').textContent='Stop Recording';
-  document.getElementById('mic-status').textContent='🔴 Listening… speak naturally. Review text before saving.';
+  document.getElementById('mic-status').textContent='🔴 Recording… speak naturally, tap Stop when done.';
 }
-function stopVoice(){
+function stopVoice(skipStatus){
   NHSpeech.stop();
   _voiceActive=false;
   var btn=document.getElementById('mic-btn');if(btn)btn.classList.remove('recording');
   var lbl=document.getElementById('mic-label');if(lbl)lbl.textContent='Start Voice Note';
-  var st=document.getElementById('mic-status');if(st)st.textContent='Transcript added to Subjective — edit as needed before saving.';
+  if(!skipStatus){
+    var st=document.getElementById('mic-status');if(st)st.textContent='Transcribing your recording…';
+  }
 }
 
 /* ── PATIENTS LIST ── */
@@ -1129,20 +1139,33 @@ function startRxVoice(){
   var base=target.value?target.value+'\n':'';
   var ok=NHSpeech.start({lang:'en-IN',
     onResult:function(t){target.value=base+t;},
-    onError:function(e){document.getElementById('rx-mic-status').textContent='Mic error: '+e;stopRxVoice();},
-    onEnd:function(){if(_rxVoiceActive)stopRxVoice();}
+    onError:function(e){
+      document.getElementById('rx-mic-status').textContent=e==='mic-denied'?'Microphone access denied — allow it in browser settings.':'Mic error: '+e+'. Please try again.';
+      stopRxVoice(true);
+    },
+    onTranscribing:function(){
+      document.getElementById('rx-mic-status').textContent='Transcribing your recording…';
+    },
+    onEnd:function(){
+      _rxVoiceActive=false;
+      var btn=document.getElementById('rx-mic-btn');if(btn){btn.style.background='var(--red-bg)';btn.style.color='var(--red)';}
+      var lbl=document.getElementById('rx-mic-label');if(lbl)lbl.textContent='Dictate Prescription';
+      var st=document.getElementById('rx-mic-status');if(st)st.textContent='Review drug names, doses and frequencies before saving.';
+    }
   });
   if(!ok){showToast('Voice not supported');return;}
   _rxVoiceActive=true;
   document.getElementById('rx-mic-btn').style.background='var(--red)';document.getElementById('rx-mic-btn').style.color='#fff';
   document.getElementById('rx-mic-label').textContent='Stop Dictation';
-  document.getElementById('rx-mic-status').textContent='🔴 Listening… speak drug names clearly. Review before saving.';
+  document.getElementById('rx-mic-status').textContent='🔴 Recording… speak drug names clearly, tap Stop when done.';
 }
-function stopRxVoice(){
+function stopRxVoice(skipStatus){
   NHSpeech.stop();_rxVoiceActive=false;
   var btn=document.getElementById('rx-mic-btn');if(btn){btn.style.background='var(--red-bg)';btn.style.color='var(--red)';}
   var lbl=document.getElementById('rx-mic-label');if(lbl)lbl.textContent='Dictate Prescription';
-  var st=document.getElementById('rx-mic-status');if(st)st.textContent='Review drug names, doses and frequencies before saving.';
+  if(!skipStatus){
+    var st=document.getElementById('rx-mic-status');if(st)st.textContent='Transcribing your recording…';
+  }
 }
 
 /* ── UTILS ── */
