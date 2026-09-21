@@ -1196,6 +1196,29 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 var _pid=null,_admId=null,_bedId=null,_selBedId=null,_selBedRate=0,_existingPatientId=null,_authInfo=null;
 var _imgs={front:null,back:null};
 var _idType=null,_wizStep=1;
+var _extractedDOB=null;
+
+/* UHID (Unique Hospital ID) generation.
+   Preferred format when a DOB was extracted from a scanned ID card:
+     NH-DDMMYY-XXXX  (e.g. NH-281000-4821 for someone born 28/10/2000)
+   The 4-digit suffix is a random number, not sequential — it exists
+   purely so two patients sharing the same birth date never end up with
+   the same UHID. DOB gives staff an at-a-glance reference; the suffix
+   guarantees uniqueness.
+   Falls back to a timestamp-based ID when no DOB is available (manual
+   entry, ID skipped, or OCR couldn't read a date of birth), so
+   registration is never blocked waiting on this. */
+function generateUHID(){
+  if(_extractedDOB&&!isNaN(_extractedDOB)){
+    var d=_extractedDOB;
+    var dd=String(d.getDate()).padStart(2,'0');
+    var mm=String(d.getMonth()+1).padStart(2,'0');
+    var yy=String(d.getFullYear()).slice(-2);
+    var suffix=String(Math.floor(1000+Math.random()*9000));
+    return 'NH-'+dd+mm+yy+'-'+suffix;
+  }
+  return 'NH-'+Date.now().toString().slice(-6);
+}
 var _voiceRec=false,_voiceText='';
 var _rtChan=null;
 var _cachedBeds=[];
@@ -1500,6 +1523,7 @@ async function openRegisterModal(){
   document.getElementById('ocr-preview').style.display='none';
   document.getElementById('ocr-spin').classList.remove('on');
   ['reg-name','reg-age','reg-phone','reg-address','reg-doctor','reg-diag','reg-uhid'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  _extractedDOB=null;
   document.getElementById('reg-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('reg-err').style.display='none';
   document.getElementById('reg-photo-prev').style.backgroundImage='';
@@ -1574,7 +1598,7 @@ async function runOCR(){
       if(extracted.gender){var g=extracted.gender;document.getElementById('reg-gender').value=g.charAt(0).toUpperCase()+g.slice(1).toLowerCase();}
       if(extracted.address)document.getElementById('reg-address').value=extracted.address;
       if(extracted.phone)document.getElementById('reg-phone').value=extracted.phone;
-      if(extracted.dob){var dob=new Date(extracted.dob);if(!isNaN(dob)){var age=Math.floor((Date.now()-dob)/(365.25*86400000));if(age>0&&age<120)document.getElementById('reg-age').value=age;}}
+      if(extracted.dob){var dob=new Date(extracted.dob);if(!isNaN(dob)){_extractedDOB=dob;var age=Math.floor((Date.now()-dob)/(365.25*86400000));if(age>0&&age<120)document.getElementById('reg-age').value=age;}}
     }else{
       prev.style.display='block';prev.textContent='⚠️ Could not extract information automatically — please enter details manually.';
     }
@@ -1747,7 +1771,7 @@ async function doRegisterAndAdmit(){
   var doctor=(document.getElementById('reg-doctor').value||'').trim();
   var docLogin=document.getElementById('reg-doc-login').value||null;
   var diag=(document.getElementById('reg-diag').value||'').trim();
-  var uhid=(document.getElementById('reg-uhid').value||'').trim()||('NH-'+Date.now().toString().slice(-6));
+  var uhid=(document.getElementById('reg-uhid').value||'').trim()||generateUHID();
   var err=document.getElementById('reg-err');err.style.display='none';
   if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
   if(!phone){err.textContent='Phone number is required';err.style.display='block';return;}
