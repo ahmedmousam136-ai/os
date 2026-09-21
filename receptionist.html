@@ -1521,14 +1521,41 @@ function pickID(type){
   document.getElementById('cap-title').textContent=type==='aadhaar'?'Capture Aadhaar Card':'Capture Voter ID Card';
 }
 function skipIDCapture(){_idType='manual';wizGo(3);}
+/* Resizes/compresses a captured photo before it's ever sent anywhere.
+   Phone cameras often produce 8-15MB+ photos, well over Anthropic's 10MB
+   per-image limit — this was silently causing every real-world OCR
+   attempt to fail with "image exceeds 10 MB maximum". Scaling down to a
+   reasonable max dimension and re-encoding as JPEG keeps quality high
+   enough for OCR while landing well under the limit (typically well
+   under 1MB), and also makes the whole capture step noticeably faster
+   since less data has to be uploaded. */
+function resizeImageDataUrl(dataUrl, maxDim, quality){
+  return new Promise(function(resolve){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width, h=img.height;
+      if(w>maxDim||h>maxDim){
+        if(w>h){ h=Math.round(h*(maxDim/w)); w=maxDim; }
+        else { w=Math.round(w*(maxDim/h)); h=maxDim; }
+      }
+      var canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',quality||0.85));
+    };
+    img.onerror=function(){ resolve(dataUrl); }; // fall back to original if something goes wrong
+    img.src=dataUrl;
+  });
+}
 function triggerCap(side){document.getElementById('cf-'+side).click();}
 function handleCap(evt,side){
   var f=evt.target.files[0];if(!f)return;
   var r=new FileReader();
-  r.onload=function(e){
-    _imgs[side]=e.target.result;
+  r.onload=async function(e){
+    var resized=await resizeImageDataUrl(e.target.result,1600,0.85);
+    _imgs[side]=resized;
     var i=document.getElementById('ci-'+side),a=document.getElementById('ca-'+side),l=document.getElementById('cl-'+side);
-    i.src=e.target.result;i.classList.add('on');a.classList.add('done');l.textContent='✓ Captured';
+    i.src=resized;i.classList.add('on');a.classList.add('done');l.textContent='✓ Captured';
   };
   r.readAsDataURL(f);evt.target.value='';
 }
