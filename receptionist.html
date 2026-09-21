@@ -749,10 +749,8 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       </div>
       <div class="rx-2">
         <div><label class="flbl">Phone *</label><input class="finput" id="reg-phone" type="tel" placeholder="Mobile number"/></div>
-        <div><label class="flbl">Guardian / Emergency</label><input class="finput" id="reg-guardian" placeholder="Name &amp; phone"/></div>
       </div>
       <div><label class="flbl">Address</label><input class="finput" id="reg-address" placeholder="Patient address"/></div>
-      <div><label class="flbl">Aadhaar / Voter ID Number</label><input class="finput" id="reg-id-number" placeholder="Government ID number"/></div>
       <div style="display:flex;gap:8px">
         <button class="qbtn" onclick="wizGo(2)" id="s3-back">← Back</button>
         <button class="msub" style="flex:1" onclick="wizGo(4)">Continue to Admission →</button>
@@ -1501,7 +1499,7 @@ async function openRegisterModal(){
   });
   document.getElementById('ocr-preview').style.display='none';
   document.getElementById('ocr-spin').classList.remove('on');
-  ['reg-name','reg-age','reg-phone','reg-guardian','reg-address','reg-doctor','reg-diag','reg-uhid','reg-id-number'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['reg-name','reg-age','reg-phone','reg-address','reg-doctor','reg-diag','reg-uhid'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('reg-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('reg-err').style.display='none';
   document.getElementById('reg-photo-prev').style.backgroundImage='';
@@ -1575,7 +1573,7 @@ async function runOCR(){
       if(extracted.name)document.getElementById('reg-name').value=extracted.name;
       if(extracted.gender){var g=extracted.gender;document.getElementById('reg-gender').value=g.charAt(0).toUpperCase()+g.slice(1).toLowerCase();}
       if(extracted.address)document.getElementById('reg-address').value=extracted.address;
-      if(extracted.id_number)document.getElementById('reg-id-number').value=extracted.id_number;
+      if(extracted.phone)document.getElementById('reg-phone').value=extracted.phone;
       if(extracted.dob){var dob=new Date(extracted.dob);if(!isNaN(dob)){var age=Math.floor((Date.now()-dob)/(365.25*86400000));if(age>0&&age<120)document.getElementById('reg-age').value=age;}}
     }else{
       prev.style.display='block';prev.textContent='⚠️ Could not extract information automatically — please enter details manually.';
@@ -1743,7 +1741,6 @@ async function doRegisterAndAdmit(){
   var phone=(document.getElementById('reg-phone').value||'').trim();
   var age=(document.getElementById('reg-age').value||'').trim();
   var gender=document.getElementById('reg-gender').value;
-  var guardian=(document.getElementById('reg-guardian').value||'').trim();
   var address=(document.getElementById('reg-address').value||'').trim();
   var visit=document.getElementById('reg-visit').value;
   var date=document.getElementById('reg-date').value;
@@ -1751,7 +1748,6 @@ async function doRegisterAndAdmit(){
   var docLogin=document.getElementById('reg-doc-login').value||null;
   var diag=(document.getElementById('reg-diag').value||'').trim();
   var uhid=(document.getElementById('reg-uhid').value||'').trim()||('NH-'+Date.now().toString().slice(-6));
-  var idNumber=(document.getElementById('reg-id-number').value||'').trim();
   var err=document.getElementById('reg-err');err.style.display='none';
   if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
   if(!phone){err.textContent='Phone number is required';err.style.display='block';return;}
@@ -1762,7 +1758,7 @@ async function doRegisterAndAdmit(){
   var pid=_existingPatientId||await findOrCreatePatient(name,phone,age,gender,docLogin);
   _existingPatientId=null;
   if(!pid){err.textContent='Could not create patient record — please try again';err.style.display='block';btn.disabled=false;btn.innerHTML='✓ Assign Bed &amp; Admit Patient';return;}
-  await _supa.from('nh_patients').update({guardian:guardian,address:address,visit_type:visit,uhid:uhid,govt_id_number:idNumber||null}).eq('id',pid);
+  await _supa.from('nh_patients').update({address:address,visit_type:visit,uhid:uhid}).eq('id',pid);
   // Upload captured ID images
   for(var side of['front','back']){
     if(_imgs[side]){
@@ -1867,7 +1863,6 @@ async function openProfile(id,name){
     +admBlock
     +'<div class="ir"><span class="il">Address</span><span class="iv">'+(d.address||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Guardian / Emergency</span><span class="iv">'+(d.guardian||'—')+'</span></div>'
-    +'<div class="ir"><span class="il">Aadhaar / Voter ID</span><span class="iv">'+esc(d.govt_id_number||'—')+'</span></div>'
     +admDtBlock
     +'</div>';
   loadDocs(id);loadBilling(id);loadFinancing(id);loadAyushman(id);loadNotesTab(id);
