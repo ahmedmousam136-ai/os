@@ -1555,7 +1555,15 @@ async function runOCR(){
   }catch(e){
     document.getElementById('ocr-spin').classList.remove('on');
     document.getElementById('s2-next').disabled=false;
-    showToast('Extraction failed — please enter manually');wizGo(3);
+    if(e&&e.isQuotaExceeded){
+      var prevQ=document.getElementById('ocr-preview');
+      prevQ.style.display='block';
+      prevQ.textContent='📋 This facility has used its included monthly OCR scans. Ask the Owner to purchase a top-up pack (Subscription page) to keep using auto-fill, or enter details manually below.';
+      showToast('OCR quota used up for this billing period');
+    }else{
+      showToast('Extraction failed — please enter manually');
+    }
+    wizGo(3);
   }
 }
 async function callClaudeOCR(){
@@ -1563,7 +1571,13 @@ async function callClaudeOCR(){
      browser with an API key — that key would have been visible to anyone
      using dev tools on this page. It now calls our own Supabase Edge
      Function (ocr-extract-id), which holds the real API key server-side
-     and never sends it to the browser. */
+     and never sends it to the browser.
+
+     USAGE QUOTA: the function blocks with a "quota_exceeded" error once
+     this clinic's included monthly OCR scans (and any purchased top-up
+     bonus) run out. We detect that specific case so the UI can show a
+     clear "ask the Owner to top up" message instead of a generic
+     extraction-failed message. */
   var imgData=_imgs.front||_imgs.back;if(!imgData)return null;
   var b64=imgData.replace(/^data:image\/(png|jpg|jpeg|webp);base64,/,'');
   var mime=imgData.startsWith('data:image/png')?'image/png':'image/jpeg';
@@ -1571,9 +1585,20 @@ async function callClaudeOCR(){
     var res=await _supa.functions.invoke('ocr-extract-id',{
       body:{ image_base64:b64, mime_type:mime, id_type:_idType }
     });
-    if(res.error){console.warn('OCR failed:',res.error.message);return null;}
+    if(res.error){
+      var errBody=null;
+      try{ if(res.error.context&&res.error.context.json) errBody=await res.error.context.json(); }catch(e){}
+      if(errBody&&errBody.error==='quota_exceeded'){
+        var quotaErr=new Error('quota_exceeded');
+        quotaErr.isQuotaExceeded=true;
+        throw quotaErr;
+      }
+      console.warn('OCR failed:',res.error.message);
+      return null;
+    }
     return (res.data&&res.data.extracted)?res.data.extracted:null;
   }catch(e){
+    if(e&&e.isQuotaExceeded) throw e;
     console.warn('OCR failed:',e.message);
     return null;
   }
@@ -2858,7 +2883,7 @@ function startBpVoice(){
     },
     onResult:function(text){ _bpVoiceText = text || ''; if(boxEl) boxEl.textContent = _bpVoiceText || 'Nothing heard.'; },
     onError:function(e){
-      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':'Mic error: '+e);
+      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='quota-exceeded'?'Included monthly voice minutes used up — ask the Owner to top up (Subscription page).':'Mic error: '+e));
       stopBpVoice(true);
     },
     onTranscribing:function(){
@@ -3056,7 +3081,7 @@ function startVcRecording(){
     },
     onResult:function(text){ _vcFullText = text || ''; },
     onError:function(e){
-      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='unsupported'?'Voice not supported on this browser.':'Mic error: '+e));
+      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='unsupported'?'Voice not supported on this browser.':(e==='quota-exceeded'?'Included monthly voice minutes used up — ask the Owner to top up (Subscription page).':'Mic error: '+e)));
       stopVcRecording(true);
     },
     onTranscribing:function(){
@@ -3222,7 +3247,7 @@ function startExpVoice(){
     },
     onResult:function(text){ if(resEl) resEl.textContent = text || ''; },
     onError:function(e){
-      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':'Mic error: '+e);
+      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='quota-exceeded'?'Included monthly voice minutes used up — ask the Owner to top up (Subscription page).':'Mic error: '+e));
       stopExpVoice(true);
     },
     onTranscribing:function(){
