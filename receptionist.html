@@ -456,7 +456,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
               <button class="qbtn" onclick="sendForReview()">✉️ Send to Doctor</button>
               <button class="qbtn" onclick="toggleNoteBox()">📝 Add Note</button>
             </div>
-            <input type="file" id="doc-cam" accept="image/*" capture="environment" style="display:none" onchange="uploadDoc(event)"/>
+            <input type="file" id="doc-cam" accept="image/*" style="display:none" onchange="uploadDoc(event)"/>
             <input type="file" id="doc-file" accept="application/pdf,image/*" style="display:none" onchange="uploadDoc(event)"/>
             <div id="note-box" style="display:none;margin-bottom:14px">
               <div style="display:flex;gap:8px;margin-bottom:10px">
@@ -709,7 +709,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <div style="font-size:12px;font-weight:600" id="cl-front">📷 Tap to capture</div>
             <div style="font-size:10px;color:var(--text-tertiary)">Camera or upload</div>
           </div>
-          <input type="file" id="cf-front" accept="image/*" capture="environment" style="display:none" onchange="handleCap(event,'front')"/>
+          <input type="file" id="cf-front" accept="image/*" style="display:none" onchange="handleCap(event,'front')"/>
         </div>
         <div>
           <div style="font-size:9.5px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">BACK</div>
@@ -719,7 +719,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <div style="font-size:12px;font-weight:600" id="cl-back">📷 Tap to capture</div>
             <div style="font-size:10px;color:var(--text-tertiary)">Camera or upload</div>
           </div>
-          <input type="file" id="cf-back" accept="image/*" capture="environment" style="display:none" onchange="handleCap(event,'back')"/>
+          <input type="file" id="cf-back" accept="image/*" style="display:none" onchange="handleCap(event,'back')"/>
         </div>
       </div>
       <div class="ocr-spin" id="ocr-spin">
@@ -739,7 +739,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <div class="note-box note-amber">⚠️ Verify all fields carefully before saving. AI extraction may be incomplete or inaccurate — staff must review.</div>
       <div style="display:flex;align-items:center;gap:14px">
         <div class="photo-ph" id="reg-photo-prev" onclick="document.getElementById('reg-photo-file').click()" title="Add photo"></div>
-        <input type="file" id="reg-photo-file" accept="image/*" capture="user" style="display:none" onchange="previewPhoto(event)"/>
+        <input type="file" id="reg-photo-file" accept="image/*" style="display:none" onchange="previewPhoto(event)"/>
         <div style="flex:1"><label class="flbl">Patient Name *</label><input class="finput" id="reg-name" placeholder="Full name" autocapitalize="words"/></div>
       </div>
       <div class="rx-3">
@@ -1144,7 +1144,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <button class="qbtn" onclick="document.getElementById('exp-bill-cam').click()">&#128247; Take Photo</button>
             <button class="qbtn" onclick="document.getElementById('exp-bill-file').click()">&#128206; Upload File</button>
           </div>
-          <input type="file" id="exp-bill-cam" accept="image/*" capture="environment" style="display:none" onchange="previewExpBill(event)"/>
+          <input type="file" id="exp-bill-cam" accept="image/*" style="display:none" onchange="previewExpBill(event)"/>
           <input type="file" id="exp-bill-file" accept="image/*,application/pdf" style="display:none" onchange="previewExpBill(event)"/>
           <div id="exp-bill-preview" style="margin-top:8px;display:none">
             <img id="exp-bill-img" style="max-width:100%;max-height:110px;border-radius:var(--r-sm);border:1px solid var(--border);display:none" alt=""/>
