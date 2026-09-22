@@ -1543,7 +1543,7 @@ function pickID(type){
   document.getElementById('s1-next').disabled=false;
   document.getElementById('cap-title').textContent=type==='aadhaar'?'Capture Aadhaar Card':'Capture Voter ID Card';
 }
-function skipIDCapture(){_idType='manual';wizGo(3);}
+function skipIDCapture(){_idType='manual';showGeneratedUHID();wizGo(3);}
 /* Resizes/compresses a captured photo before it's ever sent anywhere.
    Phone cameras often produce 8-15MB+ photos, well over Anthropic's 10MB
    per-image limit — this was silently causing every real-world OCR
@@ -1602,6 +1602,7 @@ async function runOCR(){
     }else{
       prev.style.display='block';prev.textContent='⚠️ Could not extract information automatically — please enter details manually.';
     }
+    showGeneratedUHID();
     wizGo(3);
   }catch(e){
     document.getElementById('ocr-spin').classList.remove('on');
@@ -1614,8 +1615,19 @@ async function runOCR(){
     }else{
       showToast('Extraction failed — please enter manually');
     }
+    showGeneratedUHID();
     wizGo(3);
   }
+}
+/* Shows the auto-generated UHID in the field itself, right when the
+   receptionist reaches the details screen — rather than generating it
+   silently at the very end when the patient is saved, which left the
+   field looking like nothing had happened. If the field already has a
+   value (e.g. the receptionist already typed their own), this leaves it
+   untouched. */
+function showGeneratedUHID(){
+  var f=document.getElementById('reg-uhid');
+  if(f&&!f.value)f.value=generateUHID();
 }
 async function callClaudeOCR(){
   /* SECURITY NOTE: this used to call api.anthropic.com directly from the
