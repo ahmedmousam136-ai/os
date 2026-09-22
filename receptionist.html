@@ -751,9 +751,11 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div><label class="flbl">Phone *</label><input class="finput" id="reg-phone" type="tel" placeholder="Mobile number"/></div>
       </div>
       <div><label class="flbl">Address</label><input class="finput" id="reg-address" placeholder="Patient address"/></div>
+      <div><label class="flbl">Aadhaar / Voter ID Number (optional)</label><input class="finput" id="reg-id-number" placeholder="Leave blank if not visible on card"/></div>
+      <div id="reg-err-3" class="note-box note-amber" style="display:none;color:var(--red);background:var(--red-bg);border-color:var(--red-border)"></div>
       <div style="display:flex;gap:8px">
         <button class="qbtn" onclick="wizGo(2)" id="s3-back">← Back</button>
-        <button class="msub" style="flex:1" onclick="wizGo(4)">Continue to Admission →</button>
+        <button class="msub" style="flex:1" onclick="goToAdmission()">Continue to Admission →</button>
       </div>
     </div>
 
@@ -1238,6 +1240,21 @@ function wizGo(n){
   renderWizBar(n);
   if(n===4)loadBedPicker();
 }
+/* Step 3 → Step 4 gate: Patient Name and Phone are both marked required (*)
+   on the form, but until now nothing actually stopped the receptionist
+   from clicking through to Admission with either left blank — the
+   only check happened at the very final "Admit Patient" click, several
+   steps later. This checks right at the point the receptionist meant:
+   the "Continue to Admission" button itself. */
+function goToAdmission(){
+  var err=document.getElementById('reg-err-3');
+  var name=(document.getElementById('reg-name').value||'').trim();
+  var phone=(document.getElementById('reg-phone').value||'').trim();
+  if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
+  if(!phone){err.textContent='Phone number is required — please enter it before continuing';err.style.display='block';return;}
+  err.style.display='none';
+  wizGo(4);
+}
 
 /* ── INIT ── */
 async function init(){
@@ -1522,10 +1539,11 @@ async function openRegisterModal(){
   });
   document.getElementById('ocr-preview').style.display='none';
   document.getElementById('ocr-spin').classList.remove('on');
-  ['reg-name','reg-age','reg-phone','reg-address','reg-doctor','reg-diag','reg-uhid'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['reg-name','reg-age','reg-phone','reg-address','reg-doctor','reg-diag','reg-uhid','reg-id-number'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   _extractedDOB=null;
   document.getElementById('reg-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('reg-err').style.display='none';
+  document.getElementById('reg-err-3').style.display='none';
   document.getElementById('reg-photo-prev').style.backgroundImage='';
   document.getElementById('reg-photo-prev').textContent='📷';
   document.getElementById('idb-aadhaar').classList.remove('sel');
@@ -1584,6 +1602,10 @@ function handleCap(evt,side){
 }
 async function runOCR(){
   if(!_imgs.front&&!_imgs.back){showToast('Capture at least the front of the ID first');return;}
+  if(!_imgs.front||!_imgs.back){
+    var proceedAnyway=confirm('Only one side of the ID has been captured. Many Aadhaar cards print the address ONLY on the back — capturing just one side may mean the address is missed.\n\nCapture both sides for best results.\n\nContinue with just one side anyway?');
+    if(!proceedAnyway)return;
+  }
   document.getElementById('ocr-spin').classList.add('on');
   document.getElementById('s2-next').disabled=true;
   try{
@@ -1641,13 +1663,24 @@ async function callClaudeOCR(){
      bonus) run out. We detect that specific case so the UI can show a
      clear "ask the Owner to top up" message instead of a generic
      extraction-failed message. */
-  var imgData=_imgs.front||_imgs.back;if(!imgData)return null;
-  var b64=imgData.replace(/^data:image\/(png|jpg|jpeg|webp);base64,/,'');
-  var mime=imgData.startsWith('data:image/png')?'image/png':'image/jpeg';
+  if(!_imgs.front&&!_imgs.back)return null;
+  var body={ id_type:_idType };
+  if(_imgs.front){
+    body.image_base64=_imgs.front.replace(/^data:image\/(png|jpg|jpeg|webp);base64,/,'');
+    body.mime_type=_imgs.front.startsWith('data:image/png')?'image/png':'image/jpeg';
+  }
+  if(_imgs.back){
+    var backB64=_imgs.back.replace(/^data:image\/(png|jpg|jpeg|webp);base64,/,'');
+    var backMime=_imgs.back.startsWith('data:image/png')?'image/png':'image/jpeg';
+    if(body.image_base64){
+      body.image_back_base64=backB64;body.mime_back_type=backMime;
+    }else{
+      // Only the back was captured — send it as the primary image.
+      body.image_base64=backB64;body.mime_type=backMime;
+    }
+  }
   try{
-    var res=await _supa.functions.invoke('ocr-extract-id',{
-      body:{ image_base64:b64, mime_type:mime, id_type:_idType }
-    });
+    var res=await _supa.functions.invoke('ocr-extract-id',{ body:body });
     if(res.error){
       var errBody=null;
       try{ if(res.error.context&&res.error.context.json) errBody=await res.error.context.json(); }catch(e){}
@@ -1784,6 +1817,7 @@ async function doRegisterAndAdmit(){
   var docLogin=document.getElementById('reg-doc-login').value||null;
   var diag=(document.getElementById('reg-diag').value||'').trim();
   var uhid=(document.getElementById('reg-uhid').value||'').trim()||generateUHID();
+  var idNumber=(document.getElementById('reg-id-number').value||'').trim();
   var err=document.getElementById('reg-err');err.style.display='none';
   if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
   if(!phone){err.textContent='Phone number is required';err.style.display='block';return;}
@@ -1794,7 +1828,7 @@ async function doRegisterAndAdmit(){
   var pid=_existingPatientId||await findOrCreatePatient(name,phone,age,gender,docLogin);
   _existingPatientId=null;
   if(!pid){err.textContent='Could not create patient record — please try again';err.style.display='block';btn.disabled=false;btn.innerHTML='✓ Assign Bed &amp; Admit Patient';return;}
-  await _supa.from('nh_patients').update({address:address,visit_type:visit,uhid:uhid}).eq('id',pid);
+  await _supa.from('nh_patients').update({address:address,visit_type:visit,uhid:uhid,govt_id_number:idNumber||null}).eq('id',pid);
   // Upload captured ID images
   for(var side of['front','back']){
     if(_imgs[side]){
@@ -1899,6 +1933,7 @@ async function openProfile(id,name){
     +admBlock
     +'<div class="ir"><span class="il">Address</span><span class="iv">'+(d.address||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Guardian / Emergency</span><span class="iv">'+(d.guardian||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Aadhaar / Voter ID</span><span class="iv">'+esc(d.govt_id_number||'—')+'</span></div>'
     +admDtBlock
     +'</div>';
   loadDocs(id);loadBilling(id);loadFinancing(id);loadAyushman(id);loadNotesTab(id);
