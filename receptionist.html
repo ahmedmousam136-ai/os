@@ -1111,17 +1111,10 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 <div class="mod-ov" id="mod-expense">
   <div class="modal">
     <div class="mh">
-      <div><div class="mtitle">&#128179; Add Charge</div>
-        <div style="display:flex;gap:6px;margin-top:6px">
-          <button id="exp-mode-type" onclick="setExpMode('type')" style="border:1.5px solid var(--green);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;cursor:pointer;background:var(--green);color:#fff">&#9000; Type</button>
-          <button id="exp-mode-voice" onclick="setExpMode('voice')" style="border:1.5px solid var(--border);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;cursor:pointer;background:var(--surface);color:var(--text-secondary)">&#127899; Voice</button>
-        </div>
-      </div>
+      <div><div class="mtitle">&#128179; Add Charge</div></div>
       <button class="mclose" onclick="closeModal('mod-expense');stopExpVoice()">&#10005;</button>
     </div>
     <div class="mb">
-      <!-- TYPE MODE -->
-      <div id="exp-type-mode">
         <div><label class="flbl">Charge Type</label>
           <select class="finput" id="exp-type">
             <option>Bed Charge</option><option>Doctor Fee</option><option>Injection</option>
@@ -1129,7 +1122,14 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <option>Procedure</option><option>Nursing</option><option>Other</option>
           </select>
         </div>
-        <div><label class="flbl">Description *</label><input class="finput" id="exp-desc" placeholder="e.g. Ceftriaxone, CBC test, X-Ray"/></div>
+        <div>
+          <label class="flbl">Description * &nbsp;<span style="font-weight:400;color:var(--text-tertiary);text-transform:none;letter-spacing:0">— type it, or tap the mic and speak (any language)</span></label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="finput" id="exp-desc" placeholder="e.g. Ceftriaxone, CBC test, X-Ray" style="flex:1"/>
+            <button id="exp-mic-btn" onclick="toggleExpVoice()" title="Tap to speak the charge" style="flex-shrink:0;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--green-border);background:var(--green-bg);color:var(--green);font-size:18px;cursor:pointer;line-height:1">&#127908;</button>
+          </div>
+          <div id="exp-voice-status" style="margin-top:6px;font-size:11px;color:var(--text-tertiary);min-height:14px"></div>
+        </div>
         <div class="rx-3">
           <div><label class="flbl">Qty</label><input class="finput" id="exp-qty" type="number" value="1" min="1" oninput="calcExp()"/></div>
           <div><label class="flbl">Unit Price (&#8377;)</label><input class="finput" id="exp-price" type="number" placeholder="0" oninput="calcExp()"/></div>
@@ -1151,20 +1151,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <div id="exp-bill-name" style="font-size:10.5px;color:var(--text-secondary);margin-top:4px"></div>
           </div>
         </div>
-      </div>
-      <!-- VOICE MODE -->
-      <div id="exp-voice-mode" style="display:none">
-        <div style="text-align:center;padding:10px 0 14px">
-          <button id="exp-voice-btn" onclick="toggleExpVoice()" style="border:none;border-radius:50px;padding:14px 28px;font-size:14px;font-weight:700;cursor:pointer;background:var(--green-bg);color:var(--green);border:1.5px solid var(--green-border)">&#127899; Speak Charge</button>
-          <div id="exp-voice-status" style="margin-top:8px;font-size:11.5px;color:var(--text-tertiary)">Tap mic and speak one charge at a time</div>
-        </div>
-        <div style="font-size:11px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:6px;padding:8px 10px;margin-bottom:10px">
-          Example: <b style="color:var(--text-primary)">"Ceftriaxone injection, one unit, one fifty rupees"</b>
-        </div>
-        <div id="exp-voice-result" contenteditable="true" title="Tap to edit if anything was transcribed wrong" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;min-height:50px;font-size:12px;color:var(--text-secondary);margin-bottom:2px;cursor:text">Spoken text will appear here...</div>
-        <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:10px">Tap the text above to fix any mistakes before applying</div>
-        <button class="qbtn" onclick="applyVoiceToExpense()">&#8594; Apply to form above</button>
-      </div>
       <div id="exp-err" style="color:var(--red);font-size:11.5px;margin-top:8px;display:none"></div>
       <button class="msub" onclick="saveExpense()" style="margin-top:10px">&#10003; Save Charge</button>
     </div>
@@ -3320,27 +3306,7 @@ async function printPatientBill(){
 /* ══════════════════════════════════════════════════════════════
    EXPENSE FUNCTIONS — All the missing ones restored
 ══════════════════════════════════════════════════════════════ */
-var _expBillFile = null, _expVoiceRec = false, _expVoiceRecognition = null, _expMode = 'type';
-
-function setExpMode(mode){
-  _expMode = mode;
-  var typeBtn  = document.getElementById('exp-mode-type');
-  var voiceBtn = document.getElementById('exp-mode-voice');
-  var typeDiv  = document.getElementById('exp-type-mode');
-  var voiceDiv = document.getElementById('exp-voice-mode');
-  if(mode === 'type'){
-    typeBtn.style.background  = 'var(--green)'; typeBtn.style.color = '#fff'; typeBtn.style.borderColor = 'var(--green)';
-    voiceBtn.style.background = 'var(--surface)'; voiceBtn.style.color = 'var(--text-secondary)'; voiceBtn.style.borderColor = 'var(--border)';
-    typeDiv.style.display  = 'block';
-    voiceDiv.style.display = 'none';
-    stopExpVoice();
-  } else {
-    voiceBtn.style.background = 'var(--green)'; voiceBtn.style.color = '#fff'; voiceBtn.style.borderColor = 'var(--green)';
-    typeBtn.style.background  = 'var(--surface)'; typeBtn.style.color = 'var(--text-secondary)'; typeBtn.style.borderColor = 'var(--border)';
-    typeDiv.style.display  = 'none';
-    voiceDiv.style.display = 'block';
-  }
-}
+var _expBillFile = null, _expVoiceRec = false;
 
 function toggleExpVoice(){
   if(_expVoiceRec){ stopExpVoice(); } else { startExpVoice(); }
@@ -3348,29 +3314,26 @@ function toggleExpVoice(){
 
 function startExpVoice(){
   var statusEl = document.getElementById('exp-voice-status');
-  var resEl    = document.getElementById('exp-voice-result');
-  var btn      = document.getElementById('exp-voice-btn');
+  var btn      = document.getElementById('exp-mic-btn');
+  var descEl   = document.getElementById('exp-desc');
   var ok = NHSpeech.start({
     lang:'en-IN',
     onStart:function(){
       _expVoiceRec = true;
-      if(btn){ btn.innerHTML = '&#9209; Stop'; btn.style.background = 'var(--red)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--red)'; }
-      if(statusEl) statusEl.textContent = '\uD83D\uDD34 Recording... speak the charge details';
-      if(resEl) resEl.textContent = 'Recording…';
+      if(btn){ btn.innerHTML = '&#9209;'; btn.style.background = 'var(--red)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--red)'; }
+      if(statusEl) statusEl.textContent = '\uD83D\uDD34 Recording… speak in any language';
     },
-    onResult:function(text){ if(resEl) resEl.textContent = text || ''; },
+    onResult:function(text){ applyVoiceToExpense(text, descEl, statusEl); },
     onError:function(e){
       showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='quota-exceeded'?'Included monthly voice minutes used up — ask the Owner to top up (Subscription page).':'Mic error: '+e));
       stopExpVoice(true);
     },
     onTranscribing:function(){
-      if(statusEl) statusEl.textContent = 'Transcribing your recording…';
-      if(resEl) resEl.textContent = 'Transcribing…';
+      if(statusEl) statusEl.textContent = 'Transcribing…';
     },
     onEnd:function(){
       _expVoiceRec = false;
-      if(btn){ btn.innerHTML = '&#127899; Speak Charge'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'var(--green-border)'; }
-      if(statusEl) statusEl.textContent = 'Tap "Apply to form" to transfer the spoken text';
+      if(btn){ btn.innerHTML = '&#127908;'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'var(--green-border)'; }
     }
   });
   if(!ok){ showToast('Voice not supported.'); return; }
@@ -3380,52 +3343,48 @@ function stopExpVoice(skipStatus){
   NHSpeech.stop();
   if(!skipStatus){
     var statusEl = document.getElementById('exp-voice-status');
-    if(statusEl) statusEl.textContent = 'Transcribing your recording…';
+    if(statusEl) statusEl.textContent = 'Transcribing…';
   }
 }
 
-async function applyVoiceToExpense(){
-  /* Copy spoken text to description field and switch to type mode.
-     The text comes from a now-editable box, so this also picks up any
-     manual correction the receptionist made to fix a transcription slip. */
-  var resEl = document.getElementById('exp-voice-result');
-  var text = resEl ? resEl.textContent.trim() : '';
-  if(!text || text === 'Spoken text will appear here...'){ showToast('Speak first'); return; }
+/* Drops the raw transcript straight into the Description box the moment
+   it's ready (so it behaves like typing), then quietly asks the AI parser
+   to understand it — in English, Bengali, Hindi, or a mix of these — and
+   replaces it with a clean English description while filling Qty/Price if
+   they were mentioned. If that call fails, the raw transcript is left in
+   place and the old English-keyword regex is tried as a fallback. */
+async function applyVoiceToExpense(text, descEl, statusEl){
+  descEl = descEl || document.getElementById('exp-desc');
+  statusEl = statusEl || document.getElementById('exp-voice-status');
+  text = (text||'').trim();
+  if(!text) return;
+  // If the box already had typed/spoken text, append rather than overwrite.
+  var existing = descEl.value.trim();
+  var combined = existing ? existing + ', ' + text : text;
+  descEl.value = combined;
+  if(statusEl) statusEl.textContent = 'Understanding…';
 
-  var applyBtn = document.querySelector('#exp-voice-mode button[onclick="applyVoiceToExpense()"]');
-  if(applyBtn){ applyBtn.disabled = true; applyBtn.textContent = 'Understanding…'; }
-
+  var qtyEl = document.getElementById('exp-qty');
+  var priceEl = document.getElementById('exp-price');
   var parsed = null;
   try{
-    var res = await _supa.functions.invoke('parse-voice-charge', { body:{ text:text, mode:'single' } });
+    var res = await _supa.functions.invoke('parse-voice-charge', { body:{ text:combined, mode:'single' } });
     if(!res.error && res.data && !res.data.error){
       parsed = { qty: parseInt(res.data.qty,10) || 1, price: parseFloat(res.data.unit_price) || 0,
                  desc: (res.data.description||'').trim() };
     }
   }catch(e){ console.warn('AI voice-charge parsing failed, falling back to keyword parsing:', e); }
 
-  if(applyBtn){ applyBtn.disabled = false; applyBtn.textContent = '→ Apply to form above'; }
-
-  setExpMode('type');
-  var descEl = document.getElementById('exp-desc');
-  var qtyEl = document.getElementById('exp-qty');
-  var priceEl = document.getElementById('exp-price');
-
   if(parsed && parsed.desc){
-    // AI understood it (works for English, Bengali, Hindi, or a mix) and
-    // already translated the description into English.
-    if(descEl) descEl.value = parsed.desc;
+    descEl.value = parsed.desc;
     if(qtyEl) qtyEl.value = parsed.qty;
     if(parsed.price > 0 && priceEl){ priceEl.value = parsed.price; calcExp(); }
-    showToast('Understood and filled in — review and save');
+    if(statusEl) statusEl.textContent = 'Got it — review below and save';
   } else {
-    // AI call failed (network issue, etc) — fall back to the old
-    // English-keyword regex so the feature still works for English speech.
-    var fallback = parseVoiceChargeFields(text);
-    if(descEl) descEl.value = text.charAt(0).toUpperCase() + text.slice(1,80);
+    var fallback = parseVoiceChargeFields(combined);
     if(qtyEl && fallback.qty) qtyEl.value = fallback.qty;
     if(fallback.price > 0 && priceEl){ priceEl.value = fallback.price; calcExp(); }
-    showToast('Text applied — review and save');
+    if(statusEl) statusEl.textContent = 'Added — please check Qty/Price';
   }
 }
 /* Previously this just grabbed the FIRST number anywhere in the spoken
@@ -3483,9 +3442,9 @@ function openExpenseModal(){
   if(prevEl)  prevEl.style.display = 'none';
   if(imgEl)   imgEl.style.display  = 'none';
   _expBillFile = null;
-  setExpMode('type');
-  var resEl = document.getElementById('exp-voice-result');
-  if(resEl) resEl.textContent = 'Spoken text will appear here...';
+  stopExpVoice(true);
+  var vStatusEl = document.getElementById('exp-voice-status');
+  if(vStatusEl) vStatusEl.textContent = '';
   openModal('mod-expense');
 }
 
