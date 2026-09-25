@@ -1000,10 +1000,10 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <button class="voice-btn" id="bp-voice-btn" onclick="toggleBpVoice()">🎙️</button>
             <div>
               <div style="font-size:12.5px;font-weight:600" id="bp-voice-status">Tap mic to record</div>
-              <div style="font-size:10.5px;color:var(--text-tertiary)">Voice → text · review before saving</div>
+              <div style="font-size:10.5px;color:var(--text-tertiary)">Voice → text · tap the text below to fix any mistakes, then save</div>
             </div>
           </div>
-          <div class="voice-box" id="bp-voice-box">Nothing recorded yet.</div>
+          <div class="voice-box" id="bp-voice-box" contenteditable="true" style="cursor:text" title="Tap to edit if anything was transcribed wrong">Nothing recorded yet.</div>
           <div style="display:flex;gap:8px;margin-top:10px">
             <button class="qbtn" onclick="clearBpVoice()">✕ Clear</button>
             <button class="msub" style="flex:1" onclick="saveBpVoice()">✓ Save Note</button>
@@ -1161,7 +1161,8 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div style="font-size:11px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:6px;padding:8px 10px;margin-bottom:10px">
           Example: <b style="color:var(--text-primary)">"Ceftriaxone injection, one unit, one fifty rupees"</b>
         </div>
-        <div id="exp-voice-result" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;min-height:50px;font-size:12px;color:var(--text-secondary);margin-bottom:10px">Spoken text will appear here...</div>
+        <div id="exp-voice-result" contenteditable="true" title="Tap to edit if anything was transcribed wrong" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;min-height:50px;font-size:12px;color:var(--text-secondary);margin-bottom:2px;cursor:text">Spoken text will appear here...</div>
+        <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:10px">Tap the text above to fix any mistakes before applying</div>
         <button class="qbtn" onclick="applyVoiceToExpense()">&#8594; Apply to form above</button>
       </div>
       <div id="exp-err" style="color:var(--red);font-size:11.5px;margin-top:8px;display:none"></div>
@@ -3010,7 +3011,10 @@ function clearBpVoice(){
 }
 async function saveBpVoice(){
   if(!_bpPatientId){ showToast('No patient linked to this bed'); return; }
-  var text = (_bpVoiceText||'').trim();
+  var boxEl = document.getElementById('bp-voice-box');
+  var liveText = boxEl ? boxEl.textContent : _bpVoiceText;
+  var text = (liveText||'').trim();
+  if(text === 'Nothing recorded yet.' || text === 'Nothing heard.') text = '';
   if(!text){ showToast('Nothing to save — record a note first'); return; }
   var r = await _supa.from('nh_voice_notes').insert({ clinic_id:_clinicId, patient_id:_bpPatientId, note_text:text, created_by:_myUid });
   if(r.error){ showToast('Error: '+r.error.message); return; }
@@ -3184,11 +3188,23 @@ function startVcRecording(){
     onTranscribing:function(){
       if(statusEl) statusEl.textContent = 'Transcribing your recording…';
     },
-    onEnd:function(){
+    onEnd:async function(){
       _vcRecording = false;
       if(btn){ btn.innerHTML = '&#127899; Speak Charges'; btn.classList.remove('rec'); }
-      if(_vcFullText.trim()){
-        _vcParsed = parseVoiceText(_vcFullText);
+      var spoken = _vcFullText.trim();
+      if(spoken){
+        if(statusEl) statusEl.textContent = 'Understanding what was said…';
+        var aiItems = null;
+        try{
+          var res = await _supa.functions.invoke('parse-voice-charge', { body:{ text:spoken, mode:'multi' } });
+          if(!res.error && res.data && Array.isArray(res.data.items) && res.data.items.length){
+            aiItems = res.data.items.map(function(it){
+              return { n: it.name || 'Charge', cat: it.category || 'Other',
+                       p: parseFloat(it.unit_price) || 0, qty: parseInt(it.qty,10) || 1 };
+            });
+          }
+        }catch(e){ console.warn('AI voice-charge parsing failed, falling back to keyword parsing:', e); }
+        _vcParsed = aiItems || parseVoiceText(spoken);
         renderVoiceParsed();
         if(statusEl) statusEl.textContent = 'Review the detected charges below. Remove any errors, add prices, then confirm.';
       } else {
@@ -3368,22 +3384,49 @@ function stopExpVoice(skipStatus){
   }
 }
 
-function applyVoiceToExpense(){
-  /* Copy spoken text to description field and switch to type mode */
+async function applyVoiceToExpense(){
+  /* Copy spoken text to description field and switch to type mode.
+     The text comes from a now-editable box, so this also picks up any
+     manual correction the receptionist made to fix a transcription slip. */
   var resEl = document.getElementById('exp-voice-result');
-  var text = resEl ? resEl.textContent : '';
+  var text = resEl ? resEl.textContent.trim() : '';
   if(!text || text === 'Spoken text will appear here...'){ showToast('Speak first'); return; }
-  var parsed = parseVoiceChargeFields(text);
+
+  var applyBtn = document.querySelector('#exp-voice-mode button[onclick="applyVoiceToExpense()"]');
+  if(applyBtn){ applyBtn.disabled = true; applyBtn.textContent = 'Understanding…'; }
+
+  var parsed = null;
+  try{
+    var res = await _supa.functions.invoke('parse-voice-charge', { body:{ text:text, mode:'single' } });
+    if(!res.error && res.data && !res.data.error){
+      parsed = { qty: parseInt(res.data.qty,10) || 1, price: parseFloat(res.data.unit_price) || 0,
+                 desc: (res.data.description||'').trim() };
+    }
+  }catch(e){ console.warn('AI voice-charge parsing failed, falling back to keyword parsing:', e); }
+
+  if(applyBtn){ applyBtn.disabled = false; applyBtn.textContent = '→ Apply to form above'; }
+
   setExpMode('type');
   var descEl = document.getElementById('exp-desc');
-  if(descEl) descEl.value = text.charAt(0).toUpperCase() + text.slice(1,80);
   var qtyEl = document.getElementById('exp-qty');
-  if(qtyEl && parsed.qty) qtyEl.value = parsed.qty;
-  if(parsed.price > 0){
-    var priceEl = document.getElementById('exp-price');
-    if(priceEl){ priceEl.value = parsed.price; calcExp(); }
+  var priceEl = document.getElementById('exp-price');
+
+  if(parsed && parsed.desc){
+    // AI understood it (works for English, Bengali, Hindi, or a mix) and
+    // already translated the description into English.
+    if(descEl) descEl.value = parsed.desc;
+    if(qtyEl) qtyEl.value = parsed.qty;
+    if(parsed.price > 0 && priceEl){ priceEl.value = parsed.price; calcExp(); }
+    showToast('Understood and filled in — review and save');
+  } else {
+    // AI call failed (network issue, etc) — fall back to the old
+    // English-keyword regex so the feature still works for English speech.
+    var fallback = parseVoiceChargeFields(text);
+    if(descEl) descEl.value = text.charAt(0).toUpperCase() + text.slice(1,80);
+    if(qtyEl && fallback.qty) qtyEl.value = fallback.qty;
+    if(fallback.price > 0 && priceEl){ priceEl.value = fallback.price; calcExp(); }
+    showToast('Text applied — review and save');
   }
-  showToast('Text applied — review and save');
 }
 /* Previously this just grabbed the FIRST number anywhere in the spoken
    sentence and put it into Unit Price — so "quantity is 1, unit price is
