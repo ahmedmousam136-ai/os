@@ -3373,17 +3373,50 @@ function applyVoiceToExpense(){
   var resEl = document.getElementById('exp-voice-result');
   var text = resEl ? resEl.textContent : '';
   if(!text || text === 'Spoken text will appear here...'){ showToast('Speak first'); return; }
-  /* Try to parse price from text */
-  var priceMatch = text.match(/(\d[\d,]*)\s*(?:rupees?|rs\.?|&#8377;)?/i);
-  var price = priceMatch ? parseInt(priceMatch[1].replace(',','')) : 0;
+  var parsed = parseVoiceChargeFields(text);
   setExpMode('type');
   var descEl = document.getElementById('exp-desc');
   if(descEl) descEl.value = text.charAt(0).toUpperCase() + text.slice(1,80);
-  if(price > 0){
+  var qtyEl = document.getElementById('exp-qty');
+  if(qtyEl && parsed.qty) qtyEl.value = parsed.qty;
+  if(parsed.price > 0){
     var priceEl = document.getElementById('exp-price');
-    if(priceEl){ priceEl.value = price; calcExp(); }
+    if(priceEl){ priceEl.value = parsed.price; calcExp(); }
   }
   showToast('Text applied — review and save');
+}
+/* Previously this just grabbed the FIRST number anywhere in the spoken
+   sentence and put it into Unit Price — so "quantity is 1, unit price is
+   100" wrongly read the "1" from quantity as the price. This now looks
+   for the actual words ("quantity", "unit price"/"rate", "total") so each
+   number lands in the right field, and only falls back to "first number
+   found" when the receptionist just states a plain amount with no extra
+   wording (e.g. "doctor fee five hundred"). */
+function parseVoiceChargeFields(text){
+  var qty=1, price=0;
+  var qtyMatch = text.match(/quant(?:i|a)ty\s*(?:is|of|=)?\s*(\d+)/i) || text.match(/\bqty\s*(?:is|of|=)?\s*(\d+)/i);
+  if(qtyMatch) qty = parseInt(qtyMatch[1],10);
+  var priceMatch = text.match(/unit\s*price\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i)
+                 || text.match(/\bprice\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i)
+                 || text.match(/\brate\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i);
+  if(priceMatch){
+    price = parseInt(priceMatch[1].replace(/,/g,''),10);
+  }else{
+    var totalMatch = text.match(/\btotal\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i);
+    if(totalMatch){
+      var total = parseInt(totalMatch[1].replace(/,/g,''),10);
+      price = qty>0 ? Math.round(total/qty) : total;
+    }else{
+      // No explicit "price"/"rate"/"total" wording — fall back to the
+      // first number mentioned that isn't the one already claimed by qty.
+      var allNums = text.match(/\d[\d,]*/g)||[];
+      for(var i=0;i<allNums.length;i++){
+        var n = parseInt(allNums[i].replace(/,/g,''),10);
+        if(!qtyMatch || n !== qty){ price = n; break; }
+      }
+    }
+  }
+  return {qty:qty, price:price};
 }
 
 function openExpenseModal(){
