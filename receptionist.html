@@ -3114,20 +3114,23 @@ function parseVoiceText(text){
     if(t.includes(kw)){
       var item = VOICE_KEYWORDS[kw];
       if(!found.find(function(f){return f.n===item.n;})){
-        /* Try to extract quantity before the keyword */
-        var qtyRe = /(\d+)\s*(?:injection|tablet|tab|test|unit|dose)?/gi;
-        var qty = 1;
-        var match = t.match(new RegExp('(\d+)\s*'+kw.replace('-','\-')));
+        /* Try to extract an explicit quantity right before the keyword —
+           leave qty null (not defaulted to 1) if none was said, per the
+           strict-null rule: a bare item name alone doesn't imply "one". */
+        var qty = null;
+        var match = t.match(new RegExp('(\\d+)\\s*'+kw.replace('-','\\-')));
         if(match) qty = Math.min(parseInt(match[1])||1, 20);
-        found.push({n:item.n, cat:item.cat, p:item.p, qty:qty});
+        else if(new RegExp('\\b(?:a|an|one)\\s+'+kw.replace('-','\\-')).test(t)) qty = 1;
+        found.push({n:item.n, cat:item.cat, p:null, qty:qty});
       }
     }
   });
-  /* Also look for any standalone numbers with price hints like "500 fee" */
   if(!found.length){
-    /* Fallback — treat the whole text as a custom entry */
+    /* Fallback — treat the whole text as a custom entry, still strict-null:
+       we don't know a quantity or price was actually said, so don't invent
+       one just because some text was captured. */
     var shortened = text.slice(0,60).charAt(0).toUpperCase() + text.slice(1,60);
-    found.push({n:shortened, cat:'Other', p:0, qty:1});
+    found.push({n:shortened, cat:'Other', p:null, qty:null});
   }
   return found;
 }
@@ -3140,13 +3143,16 @@ function renderVoiceParsed(){
   }
   el.innerHTML = '';
   _vcParsed.forEach(function(item, i){
+    var qtyKnown = (item.qty !== null && item.qty !== undefined && item.qty > 0);
+    var priceKnown = (item.p !== null && item.p !== undefined && item.p >= 0);
     var row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--green-border);border-radius:var(--r-sm);margin-bottom:7px;background:var(--green-bg)';
     row.innerHTML = '<div><div style="font-size:12.5px;font-weight:600">' + esc(item.n) + '</div>'
-      + '<div style="font-size:10.5px;color:var(--text-tertiary)">' + item.cat + ' &middot; Qty: ' + item.qty
-      + (item.p ? ' &middot; &#8377;' + item.p.toLocaleString('en-IN') : '') + '</div></div>'
+      + '<div style="font-size:10.5px;color:var(--text-tertiary)">' + item.cat + ' &middot; Qty: ' + (qtyKnown ? item.qty : '?')
+      + (priceKnown ? (' &middot; &#8377;' + item.p.toLocaleString('en-IN')) : '') + '</div></div>'
       + '<div style="display:flex;align-items:center;gap:8px">'
-      + (item.p===0 ? '<input type="number" placeholder="&#8377;Price" style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:12px" onchange="(function(idx){return function(e){_vcParsed[idx].p=parseFloat(e.target.value)||0;};})(' + i + ')(event)"/>' : '')
+      + (!qtyKnown ? '<input type="number" min="1" placeholder="Qty" style="width:56px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:12px" onchange="(function(idx){return function(e){_vcParsed[idx].qty=parseInt(e.target.value,10)||null;renderVoiceParsed();};})(' + i + ')(event)"/>' : '')
+      + (!priceKnown ? '<input type="number" min="0" placeholder="&#8377;Price" style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:12px" onchange="(function(idx){return function(e){_vcParsed[idx].p=(e.target.value===\'\'?null:parseFloat(e.target.value));renderVoiceParsed();};})(' + i + ')(event)"/>' : '')
       + '<span style="font-size:16px;cursor:pointer;color:var(--red);padding:2px 7px;border-radius:4px" onclick="removeVcItem(' + i + ')">&#10005;</span>'
       + '</div>';
     el.appendChild(row);
@@ -3186,7 +3192,8 @@ function startVcRecording(){
           if(!res.error && res.data && Array.isArray(res.data.items) && res.data.items.length){
             aiItems = res.data.items.map(function(it){
               return { n: it.name || 'Charge', cat: it.category || 'Other',
-                       p: parseFloat(it.unit_price) || 0, qty: parseInt(it.qty,10) || 1 };
+                       p: (it.unit_price===null||it.unit_price===undefined) ? null : parseFloat(it.unit_price),
+                       qty: (it.qty===null||it.qty===undefined) ? null : parseInt(it.qty,10) };
             });
           }
         }catch(e){ console.warn('AI voice-charge parsing failed, falling back to keyword parsing:', e); }
@@ -3219,7 +3226,9 @@ async function confirmVoiceCharges(){
   var err = document.getElementById('vc-err');
   err.style.display = 'none';
   if(!_vcParsed.length){ err.textContent='Nothing to save.'; err.style.display='block'; return; }
-  var noPrice = _vcParsed.filter(function(i){return !i.p;});
+  var noQty = _vcParsed.filter(function(i){return !(i.qty>0);});
+  if(noQty.length){ err.textContent='Enter quantity for: '+noQty.map(function(i){return i.n;}).join(', '); err.style.display='block'; return; }
+  var noPrice = _vcParsed.filter(function(i){return i.p===null||i.p===undefined||i.p<0;});
   if(noPrice.length){ err.textContent='Enter price for: '+noPrice.map(function(i){return i.n;}).join(', '); err.style.display='block'; return; }
   if(!_admId){ err.textContent='No patient admission selected.'; err.style.display='block'; return; }
   var inserts = _vcParsed.map(function(item){
@@ -3370,34 +3379,54 @@ async function applyVoiceToExpense(text, descEl, statusEl){
   try{
     var res = await _supa.functions.invoke('parse-voice-charge', { body:{ text:combined, mode:'single' } });
     if(!res.error && res.data && !res.data.error){
-      parsed = { qty: parseInt(res.data.qty,10) || 1, price: parseFloat(res.data.unit_price) || 0,
-                 desc: (res.data.description||'').trim() };
+      // STRICT-NULL: qty/unit_price come back as null (not 1/0) whenever the
+      // AI didn't hear them explicitly stated — never coerce those nulls
+      // into a default number here. A missing value must stay missing so
+      // saveExpense() can catch it, instead of quietly becoming "1" or "0".
+      parsed = {
+        qty: (res.data.qty === null || res.data.qty === undefined) ? null : parseInt(res.data.qty,10),
+        price: (res.data.unit_price === null || res.data.unit_price === undefined) ? null : parseFloat(res.data.unit_price),
+        desc: (res.data.description||'').trim()
+      };
     }
   }catch(e){ console.warn('AI voice-charge parsing failed, falling back to keyword parsing:', e); }
 
   if(parsed && parsed.desc){
     descEl.value = parsed.desc;
-    if(qtyEl) qtyEl.value = parsed.qty;
-    if(parsed.price > 0 && priceEl){ priceEl.value = parsed.price; calcExp(); }
-    if(statusEl) statusEl.textContent = 'Got it — review below and save';
   } else {
-    var fallback = parseVoiceChargeFields(combined);
-    if(qtyEl && fallback.qty) qtyEl.value = fallback.qty;
-    if(fallback.price > 0 && priceEl){ priceEl.value = fallback.price; calcExp(); }
-    if(statusEl) statusEl.textContent = 'Added — please check Qty/Price';
+    parsed = parseVoiceChargeFields(combined);
+  }
+
+  // Leave the input BLANK (not 0, not 1) when the value is unknown — a
+  // blank field is visually obvious and saveExpense() will refuse to save
+  // until it's filled in, rather than silently banking a wrong number.
+  if(qtyEl) qtyEl.value = (parsed.qty !== null && parsed.qty !== undefined) ? parsed.qty : '';
+  if(priceEl) priceEl.value = (parsed.price !== null && parsed.price !== undefined) ? parsed.price : '';
+  calcExp();
+
+  var missing = [];
+  if(parsed.qty === null || parsed.qty === undefined) missing.push('quantity');
+  if(parsed.price === null || parsed.price === undefined) missing.push('unit price');
+  if(statusEl){
+    statusEl.textContent = missing.length
+      ? ('Heard "' + descEl.value + '" — please enter the ' + missing.join(' and ') + ", I couldn't catch " + (missing.length>1?'them':'it'))
+      : 'Got it — review below and save';
   }
 }
-/* Previously this just grabbed the FIRST number anywhere in the spoken
-   sentence and put it into Unit Price — so "quantity is 1, unit price is
-   100" wrongly read the "1" from quantity as the price. This now looks
-   for the actual words ("quantity", "unit price"/"rate", "total") so each
-   number lands in the right field, and only falls back to "first number
-   found" when the receptionist just states a plain amount with no extra
-   wording (e.g. "doctor fee five hundred"). */
+/* Offline fallback only, used when the AI call itself fails (network
+   issue etc) — NOT used as the primary path anymore. Kept intentionally
+   simple: same strict-null behavior as the AI path, just English-only
+   regex, since this is purely a safety net. */
 function parseVoiceChargeFields(text){
-  var qty=1, price=0;
-  var qtyMatch = text.match(/quant(?:i|a)ty\s*(?:is|of|=)?\s*(\d+)/i) || text.match(/\bqty\s*(?:is|of|=)?\s*(\d+)/i);
-  if(qtyMatch) qty = parseInt(qtyMatch[1],10);
+  var qty=null, price=null;
+  var qtyMatch = text.match(/quant(?:i|a)ty\s*(?:is|of|=)?\s*(\d+)/i) || text.match(/\bqty\s*(?:is|of|=)?\s*(\d+)/i)
+               || text.match(/\b(?:a|an|one)\s+/i);
+  if(text.match(/quant(?:i|a)ty\s*(?:is|of|=)?\s*(\d+)/i) || text.match(/\bqty\s*(?:is|of|=)?\s*(\d+)/i)){
+    var m = text.match(/quant(?:i|a)ty\s*(?:is|of|=)?\s*(\d+)/i) || text.match(/\bqty\s*(?:is|of|=)?\s*(\d+)/i);
+    qty = parseInt(m[1],10);
+  } else if(/\b(?:a|an|one)\b/i.test(text)){
+    qty = 1; // explicit singular word, not a bare item name — matches the AI's strict-null rule
+  }
   var priceMatch = text.match(/unit\s*price\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i)
                  || text.match(/\bprice\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i)
                  || text.match(/\brate\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i);
@@ -3405,18 +3434,13 @@ function parseVoiceChargeFields(text){
     price = parseInt(priceMatch[1].replace(/,/g,''),10);
   }else{
     var totalMatch = text.match(/\btotal\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i);
-    if(totalMatch){
+    if(totalMatch && qty){
       var total = parseInt(totalMatch[1].replace(/,/g,''),10);
-      price = qty>0 ? Math.round(total/qty) : total;
-    }else{
-      // No explicit "price"/"rate"/"total" wording — fall back to the
-      // first number mentioned that isn't the one already claimed by qty.
-      var allNums = text.match(/\d[\d,]*/g)||[];
-      for(var i=0;i<allNums.length;i++){
-        var n = parseInt(allNums[i].replace(/,/g,''),10);
-        if(!qtyMatch || n !== qty){ price = n; break; }
-      }
+      price = Math.round(total/qty);
     }
+    // No explicit price/rate/total wording found — leave price null rather
+    // than guessing from "the first number left over" (that guessing is
+    // exactly what caused the original quantity/price mix-up bug).
   }
   return {qty:qty, price:price};
 }
@@ -3449,10 +3473,13 @@ function openExpenseModal(){
 }
 
 function calcExp(){
-  var q = parseFloat((document.getElementById('exp-qty')||{value:1}).value)||1;
-  var p = parseFloat((document.getElementById('exp-price')||{value:0}).value)||0;
+  var qRaw = (document.getElementById('exp-qty')||{value:''}).value;
+  var pRaw = (document.getElementById('exp-price')||{value:''}).value;
   var el = document.getElementById('exp-total');
-  if(el) el.value = '₹'+(q*p).toLocaleString('en-IN');
+  var q = parseFloat(qRaw), p = parseFloat(pRaw);
+  var qValid = qRaw !== '' && !isNaN(q) && q > 0;
+  var pValid = pRaw !== '' && !isNaN(p) && p >= 0;
+  if(el) el.value = (qValid && pValid) ? ('₹'+(q*p).toLocaleString('en-IN')) : '—';
 }
 
 function previewExpBill(evt){
@@ -3478,14 +3505,38 @@ async function saveExpense(){
   if(!_bpAdmId){ showToast('No active admission'); return; }
   var type  = (document.getElementById('exp-type')||{value:'Other'}).value;
   var desc  = ((document.getElementById('exp-desc')||{value:''}).value||'').trim();
-  var qty   = parseFloat((document.getElementById('exp-qty')||{value:1}).value)||1;
-  var price = parseFloat((document.getElementById('exp-price')||{value:0}).value)||0;
+  var qtyRaw   = ((document.getElementById('exp-qty')||{value:''}).value||'').trim();
+  var priceRaw = ((document.getElementById('exp-price')||{value:''}).value||'').trim();
   var notes = ((document.getElementById('exp-notes')||{value:''}).value||'').trim();
   var expDate = (document.getElementById('exp-date')||{value:''}).value;
   var errEl = document.getElementById('exp-err');
   if(errEl) errEl.style.display = 'none';
   if(!desc){ if(errEl){errEl.textContent='Description is required';errEl.style.display='block';} return; }
-  if(price <= 0){ if(errEl){errEl.textContent='Enter a price';errEl.style.display='block';} return; }
+
+  /* VALIDATION — deliberately does NOT use `parseFloat(x)||default` here.
+     That pattern is exactly what let a blank/unheard quantity or price
+     silently become 1 or 0 and save as if it were a real, confirmed value.
+     Every check below reads the raw text first so a blank or non-numeric
+     field is caught as "missing", not quietly coerced into a number. */
+  var qty = qtyRaw === '' ? NaN : parseFloat(qtyRaw);
+  if(qtyRaw === '' || isNaN(qty) || !isFinite(qty) || qty <= 0){
+    if(errEl){errEl.textContent='Enter a valid quantity (greater than 0) before saving';errEl.style.display='block';}
+    var qtyEl = document.getElementById('exp-qty'); if(qtyEl) qtyEl.focus();
+    return;
+  }
+  var price = priceRaw === '' ? NaN : parseFloat(priceRaw);
+  if(priceRaw === '' || isNaN(price) || !isFinite(price) || price < 0){
+    if(errEl){errEl.textContent='Enter a valid unit price (0 or more) before saving';errEl.style.display='block';}
+    var priceEl = document.getElementById('exp-price'); if(priceEl) priceEl.focus();
+    return;
+  }
+
+  /* total_price is ALWAYS computed here, deterministically, from the two
+     validated numbers above — never taken from the AI parser and never
+     computed anywhere else. This is the one and only place a charge's
+     total is decided before it reaches the database. */
+  var totalPrice = qty * price;
+
   /* Upload bill image if present */
   var billPath = null;
   if(_expBillFile && _bpPatientId){
@@ -3505,7 +3556,7 @@ async function saveExpense(){
   var r = await _supa.from('admission_charges').insert({
     clinic_id:_clinicId, admission_id:_bpAdmId,
     charge_type:type, description:desc,
-    quantity:qty, unit_price:price, total_price:qty*price,
+    quantity:qty, unit_price:price, total_price:totalPrice,
     notes:notes, bill_path:billPath,
     charge_date:expDate||new Date().toISOString().slice(0,10),
     added_by:_myUid
@@ -3514,7 +3565,7 @@ async function saveExpense(){
   await _supa.from('nh_audit_log').insert({
     clinic_id:_clinicId, actor_id:_myUid, action:'charge_added',
     target_table:'admission_charges', target_id:_bpAdmId,
-    details:{type:type, desc:desc, qty:qty, price:price, total:qty*price}
+    details:{type:type, desc:desc, qty:qty, price:price, total:totalPrice}
   });
   closeModal('mod-expense');
   stopExpVoice();
