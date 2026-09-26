@@ -1121,14 +1121,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <option>Medicine</option><option>Lab Test</option><option>Diagnostic</option>
             <option>Procedure</option><option>Nursing</option><option>Other</option>
           </select>
-        </div>
-        <div>
-          <label class="flbl">Description * &nbsp;<span style="font-weight:400;color:var(--text-tertiary);text-transform:none;letter-spacing:0">— type it, or tap the mic and speak (any language)</span></label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input class="finput" id="exp-desc" placeholder="e.g. Ceftriaxone, CBC test, X-Ray" style="flex:1"/>
-            <button id="exp-mic-btn" onclick="toggleExpVoice()" title="Tap to speak the charge" style="flex-shrink:0;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--green-border);background:var(--green-bg);color:var(--green);font-size:18px;cursor:pointer;line-height:1">&#127908;</button>
-          </div>
-          <div id="exp-voice-status" style="margin-top:6px;font-size:11px;color:var(--text-tertiary);min-height:14px"></div>
+          <div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">Auto-selected from what you type or speak below — change if needed</div>
         </div>
         <div class="rx-3">
           <div><label class="flbl">Qty</label><input class="finput" id="exp-qty" type="number" value="1" min="1" oninput="calcExp()"/></div>
@@ -1151,6 +1144,22 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <div id="exp-bill-name" style="font-size:10.5px;color:var(--text-secondary);margin-top:4px"></div>
           </div>
         </div>
+
+        <!-- ChatGPT-style unified composer: type or speak, one box, mic on
+             the right. Sits immediately above Save so it reads as "the last
+             thing you do before saving" — speak or type the charge, watch
+             the fields above fill in, then save. -->
+        <div style="margin-top:16px">
+          <div id="exp-composer" style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:26px;padding:4px 4px 4px 18px;transition:border-color .15s">
+            <input id="exp-desc" placeholder="Type or speak the charge here…"
+                   style="flex:1;border:none;outline:none;background:transparent;font-size:14.5px;color:var(--text-primary);padding:10px 0;min-width:0"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();applyVoiceToExpense(this.value,this,document.getElementById('exp-voice-status'));}"/>
+            <button id="exp-mic-btn" onclick="toggleExpVoice()" title="Tap to speak the charge (any language)"
+                    style="flex-shrink:0;width:40px;height:40px;border-radius:50%;border:none;background:var(--green);color:#fff;font-size:16px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">&#127908;</button>
+          </div>
+          <div id="exp-voice-status" style="margin-top:6px;padding-left:18px;font-size:11px;color:var(--text-tertiary);min-height:14px"></div>
+        </div>
+
       <div id="exp-err" style="color:var(--red);font-size:11.5px;margin-top:8px;display:none"></div>
       <button class="msub" onclick="saveExpense()" style="margin-top:10px">&#10003; Save Charge</button>
     </div>
@@ -3325,11 +3334,13 @@ function startExpVoice(){
   var statusEl = document.getElementById('exp-voice-status');
   var btn      = document.getElementById('exp-mic-btn');
   var descEl   = document.getElementById('exp-desc');
+  var composer = document.getElementById('exp-composer');
   var ok = NHSpeech.start({
     lang:'en-IN',
     onStart:function(){
       _expVoiceRec = true;
-      if(btn){ btn.innerHTML = '&#9209;'; btn.style.background = 'var(--red)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--red)'; }
+      if(btn){ btn.innerHTML = '&#9209;'; btn.style.background = 'var(--red)'; }
+      if(composer) composer.style.borderColor = 'var(--red)';
       if(statusEl) statusEl.textContent = '\uD83D\uDD34 Recording… speak in any language';
     },
     onResult:function(text){ applyVoiceToExpense(text, descEl, statusEl); },
@@ -3342,7 +3353,8 @@ function startExpVoice(){
     },
     onEnd:function(){
       _expVoiceRec = false;
-      if(btn){ btn.innerHTML = '&#127908;'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green)'; btn.style.borderColor = 'var(--green-border)'; }
+      if(btn){ btn.innerHTML = '&#127908;'; btn.style.background = 'var(--green)'; }
+      if(composer) composer.style.borderColor = 'var(--border)';
     }
   });
   if(!ok){ showToast('Voice not supported.'); return; }
@@ -3367,14 +3379,18 @@ async function applyVoiceToExpense(text, descEl, statusEl){
   statusEl = statusEl || document.getElementById('exp-voice-status');
   text = (text||'').trim();
   if(!text) return;
-  // If the box already had typed/spoken text, append rather than overwrite.
+  // If the box already had DIFFERENT typed/spoken text sitting in it,
+  // append rather than overwrite. When this is called from the composer's
+  // own Enter key, `text` IS `descEl.value` already — appending it to
+  // itself would duplicate it, so only append when they actually differ.
   var existing = descEl.value.trim();
-  var combined = existing ? existing + ', ' + text : text;
+  var combined = (existing && existing !== text) ? existing + ', ' + text : text;
   descEl.value = combined;
   if(statusEl) statusEl.textContent = 'Understanding…';
 
   var qtyEl = document.getElementById('exp-qty');
   var priceEl = document.getElementById('exp-price');
+  var typeEl = document.getElementById('exp-type');
   var parsed = null;
   try{
     var res = await _supa.functions.invoke('parse-voice-charge', { body:{ text:combined, mode:'single' } });
@@ -3386,13 +3402,23 @@ async function applyVoiceToExpense(text, descEl, statusEl){
       parsed = {
         qty: (res.data.qty === null || res.data.qty === undefined) ? null : parseInt(res.data.qty,10),
         price: (res.data.unit_price === null || res.data.unit_price === undefined) ? null : parseFloat(res.data.unit_price),
-        desc: (res.data.description||'').trim()
+        desc: (res.data.description||'').trim(),
+        category: (res.data.category||'').trim()
       };
     }
   }catch(e){ console.warn('AI voice-charge parsing failed, falling back to keyword parsing:', e); }
 
   if(parsed && parsed.desc){
     descEl.value = parsed.desc;
+    // Auto-select the Charge Type dropdown from what the AI actually heard,
+    // instead of leaving it stuck on whatever it defaulted to (usually
+    // "Bed Charge") regardless of the real charge. Only set it when the
+    // category is one of the dropdown's real options — never force an
+    // invalid <select> value, and never overwrite it with a guess.
+    if(typeEl && parsed.category){
+      var match = Array.prototype.find.call(typeEl.options, function(o){ return o.value === parsed.category; });
+      if(match) typeEl.value = parsed.category;
+    }
   } else {
     parsed = parseVoiceChargeFields(combined);
   }
