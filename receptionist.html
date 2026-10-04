@@ -215,10 +215,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .bill-bar{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-md);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
 .bill-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--green)}
 .bill-amt{font-family:'Instrument Serif',serif;font-size:24px;color:var(--green)}
-.voice-btn{background:var(--red-bg);border:1.5px solid var(--red-border);color:var(--red);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--ease);flex-shrink:0}
-.voice-btn.rec{background:var(--red);color:#fff;animation:vpulse 1.2s ease-in-out infinite}
-@keyframes vpulse{0%,100%{box-shadow:0 0 0 0 rgba(194,56,56,.4)}50%{box-shadow:0 0 0 8px rgba(194,56,56,0)}}
-.voice-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;font-size:12.5px;line-height:1.6;min-height:60px;color:var(--text-primary)}
 .empty{text-align:center;padding:36px 20px;color:var(--text-tertiary)}
 .empty-ic{font-size:30px;margin-bottom:9px;opacity:.4}
 .empty-t{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
@@ -292,11 +288,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .charge-total-bar{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .charge-total-lbl{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em}
 .charge-total-amt{font-family:'Instrument Serif',serif;font-size:22px;color:var(--green)}
-/* VOICE PARSE CONFIRM */
-.voice-parsed-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--green-border);border-radius:var(--r-sm);margin-bottom:7px;background:var(--green-bg)}
-.vpi-name{font-size:12.5px;font-weight:600}
-.vpi-remove{font-size:16px;cursor:pointer;color:var(--red);padding:2px 6px;border-radius:4px}
-.vpi-remove:hover{background:var(--red-bg)}
 /* QUICK CHARGE BAR in billing */
 .quick-bar{display:flex;gap:6px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
 .quick-chip{border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;background:var(--surface);transition:all var(--ease);white-space:nowrap}
@@ -546,7 +537,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <div id="v-billing" class="view">
         <div class="sh">
           <div><h1 class="st">Billing</h1><p class="ss">Add charges · record payments</p></div>
-          <button class="qbtn" onclick="openVoiceCharge()" style="gap:6px"><span style="font-size:16px">🎙️</span> Voice Charge</button>
         </div>
         <div class="tabs-row" style="display:flex;gap:4px;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin-bottom:14px;width:fit-content;flex-wrap:wrap">
           <button class="bl-tab-btn on" data-bltab="txns" onclick="blTab('txns',this)">Recent Transactions</button>
@@ -921,25 +911,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
   </div>
 </div>
 
-<!-- VOICE → CHARGE CONFIRM MODAL -->
-<div clas<div class="mod-ov" id="mod-voice-charge">
-  <div class="modal">
-    <div class="mh"><div class="mtitle">&#127899; Voice Charges</div><button class="mclose" onclick="closeModal('mod-voice-charge');stopVcRecording()">&#10005;</button></div>
-    <div class="mb">
-      <div style="text-align:center;margin-bottom:14px">
-        <button id="vc-mic-btn" onclick="toggleVcMic()" style="border:none;border-radius:50px;padding:14px 28px;font-size:14px;font-weight:700;cursor:pointer;background:var(--green-bg);color:var(--green);border:1.5px solid var(--green-border)">&#127899; Speak Charges</button>
-        <div id="vc-status" style="margin-top:8px;font-size:11.5px;color:var(--text-tertiary)">Tap mic and speak. Works like ChatGPT &#8212; keep talking.</div>
-      </div>
-      <div style="font-size:11px;color:var(--text-tertiary);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:6px;padding:8px 10px;margin-bottom:10px">
-        Example: <b style="color:var(--text-primary)">"One injection ceftriaxone, CBC blood test, doctor fee five hundred"</b>
-      </div>
-      <div id="voice-parsed-list"></div>
-      <div id="vc-err" style="color:var(--red);font-size:11.5px;margin-bottom:8px;display:none"></div>
-      <button class="msub" onclick="confirmVoiceCharges()">&#10003; Confirm &amp; Add All to Bill</button>
-    </div>
-  </div>
-</div>
-
 
 <!-- BED PROFILE MODAL -->
 <div class="mod-ov" id="mod-bed-profile">
@@ -981,7 +952,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div class="bp-tabs">
           <div class="bp-tab on" onclick="bpTab('info',this)">&#128203; Info</div>
           <div class="bp-tab" onclick="bpTab('expenses',this)">&#128179; Charges</div>
-          <div class="bp-tab" onclick="bpTab('voice',this)">&#127899; Notes</div>
+          <div class="bp-tab" onclick="bpTab('notes',this)">&#128221; Notes</div>
         </div>
       </div>
       <!-- INFO TAB -->
@@ -995,22 +966,14 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 
           <div id="bp-expenses-list"></div>
         </div>
-        <div class="bp-pnl" id="bp-pnl-voice">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <button class="voice-btn" id="bp-voice-btn" onclick="toggleBpVoice()">🎙️</button>
-            <div>
-              <div style="font-size:12.5px;font-weight:600" id="bp-voice-status">Tap mic to record</div>
-              <div style="font-size:10.5px;color:var(--text-tertiary)">Voice → text · tap the text below to fix any mistakes, then save</div>
-            </div>
-          </div>
-          <div class="voice-box" id="bp-voice-box" contenteditable="true" style="cursor:text" title="Tap to edit if anything was transcribed wrong">Nothing recorded yet.</div>
+        <div class="bp-pnl" id="bp-pnl-notes">
+          <textarea class="finput ftextarea" id="bp-note-input" rows="4" placeholder="Type a note about this patient..."></textarea>
           <div style="display:flex;gap:8px;margin-top:10px">
-            <button class="qbtn" onclick="clearBpVoice()">✕ Clear</button>
-            <button class="msub" style="flex:1" onclick="saveBpVoice()">✓ Save Note</button>
+            <button class="msub" style="flex:1" onclick="saveBpNote()">&#10003; Save Note</button>
           </div>
           <div style="margin-top:14px">
             <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Saved Notes</div>
-            <div id="bp-voice-saved"></div>
+            <div id="bp-notes-saved"></div>
           </div>
         </div>
       </div>
@@ -1112,7 +1075,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
   <div class="modal">
     <div class="mh">
       <div><div class="mtitle">&#128179; Add Charge</div></div>
-      <button class="mclose" onclick="closeModal('mod-expense');stopExpVoice()">&#10005;</button>
+      <button class="mclose" onclick="closeModal('mod-expense')">&#10005;</button>
     </div>
     <div class="mb">
         <div><label class="flbl">Charge Type</label>
@@ -1121,7 +1084,6 @@ main.content{flex:1;padding:20px;overflow-y:auto}
             <option>Medicine</option><option>Lab Test</option><option>Diagnostic</option>
             <option>Procedure</option><option>Nursing</option><option>Other</option>
           </select>
-          <div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">Auto-selected from what you type or speak below — change if needed</div>
         </div>
         <div class="rx-3">
           <div><label class="flbl">Qty</label><input class="finput" id="exp-qty" type="number" value="1" min="1" oninput="calcExp()"/></div>
@@ -1145,20 +1107,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           </div>
         </div>
 
-        <!-- ChatGPT-style unified composer: type or speak, one box, mic on
-             the right. Sits immediately above Save so it reads as "the last
-             thing you do before saving" — speak or type the charge, watch
-             the fields above fill in, then save. -->
-        <div style="margin-top:16px">
-          <div id="exp-composer" style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:26px;padding:4px 4px 4px 18px;transition:border-color .15s">
-            <input id="exp-desc" placeholder="Type or speak the charge here…"
-                   style="flex:1;border:none;outline:none;background:transparent;font-size:14.5px;color:var(--text-primary);padding:10px 0;min-width:0"
-                   onkeydown="if(event.key==='Enter'){event.preventDefault();applyVoiceToExpense(this.value,this,document.getElementById('exp-voice-status'));}"/>
-            <button id="exp-mic-btn" onclick="toggleExpVoice()" title="Tap to speak the charge (any language)"
-                    style="flex-shrink:0;width:40px;height:40px;border-radius:50%;border:none;background:var(--green);color:#fff;font-size:16px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">&#127908;</button>
-          </div>
-          <div id="exp-voice-status" style="margin-top:6px;padding-left:18px;font-size:11px;color:var(--text-tertiary);min-height:14px"></div>
-        </div>
+        <div><label class="flbl">Description *</label><input class="finput" id="exp-desc" placeholder="e.g. X-Ray, CBC test, Ceftriaxone injection"/></div>
 
       <div id="exp-err" style="color:var(--red);font-size:11.5px;margin-top:8px;display:none"></div>
       <button class="msub" onclick="saveExpense()" style="margin-top:10px">&#10003; Save Charge</button>
@@ -1217,7 +1166,6 @@ function generateUHID(){
   }
   return 'NH-'+Date.now().toString().slice(-6);
 }
-var _voiceRec=false,_voiceText='';
 var _rtChan=null;
 var _cachedBeds=[];
 
@@ -2874,7 +2822,7 @@ async function openBedProfile(bedId,num,ward,status,admId,patientId,patientName,
     var firstTab = document.querySelector('.bp-tab');
     if(firstTab) bpTab('info', firstTab);
     loadBpExpenses();
-    loadBpVoiceNotes();
+    loadBpNotes();
   }
   openModal('mod-bed-profile');
 }
@@ -2886,7 +2834,7 @@ function bpTab(tab,el){
   var p = document.getElementById('bp-pnl-'+tab);
   if(p) p.classList.add('on');
   if(tab==='expenses') loadBpExpenses();
-  if(tab==='voice') loadBpVoiceNotes();
+  if(tab==='notes') loadBpNotes();
 }
 
 async function updateBpStatus(s){
@@ -2937,8 +2885,8 @@ async function loadBpDocs(){
   }).join('');
 }
 
-async function loadBpVoiceNotes(){
-  var el = document.getElementById('bp-voice-saved');
+async function loadBpNotes(){
+  var el = document.getElementById('bp-notes-saved');
   if(!el||!_bpPatientId){ return; }
   var r = await _supa.from('nh_voice_notes').select('*').eq('patient_id',_bpPatientId).order('created_at',{ascending:false}).limit(10);
   if(!r.data||!r.data.length){ el.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">No notes yet.</p>'; return; }
@@ -2949,74 +2897,20 @@ async function loadBpVoiceNotes(){
   }).join('');
 }
 
-/* ── BED PROFILE VOICE NOTE ──────────────────────────────────────────
-   These three functions were referenced by onclick handlers in the HTML
-   (toggleBpVoice, clearBpVoice, saveBpVoice) but were never actually
-   defined anywhere in this file — the button has never worked. This is
-   the fix, built on the shared, upgraded NHSpeech (Whisper-based) so it
-   gets the same long-recording, bilingual-code-switching quality as the
-   rest of the voice features. Saves into nh_voice_notes, the same table
-   the Patient Profile's Notes tab already reads from. */
-var _bpVoiceRec = false, _bpVoiceText = '';
-function toggleBpVoice(){
-  if(_bpVoiceRec){ stopBpVoice(); } else { startBpVoice(); }
-}
-function startBpVoice(){
+/* Typed patient notes for the Bed Profile. Saved to nh_notes-style table
+   nh_voice_notes (the table name is historical; it is the notes table the
+   Patient Profile's Notes box also reads from). */
+async function saveBpNote(){
   if(!_bpPatientId){ showToast('No patient linked to this bed'); return; }
-  var statusEl = document.getElementById('bp-voice-status');
-  var boxEl = document.getElementById('bp-voice-box');
-  var btn = document.getElementById('bp-voice-btn');
-  var ok = NHSpeech.start({
-    lang:'en-IN',
-    onStart:function(){
-      _bpVoiceRec = true;
-      if(btn) btn.classList.add('rec');
-      if(statusEl) statusEl.textContent = '🔴 Recording… tap mic again to stop';
-      if(boxEl) boxEl.textContent = 'Recording…';
-    },
-    onResult:function(text){ _bpVoiceText = text || ''; if(boxEl) boxEl.textContent = _bpVoiceText || 'Nothing heard.'; },
-    onError:function(e){
-      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='quota-exceeded'?'Included monthly voice minutes used up — ask the Owner to top up (Subscription page).':'Mic error: '+e));
-      stopBpVoice(true);
-    },
-    onTranscribing:function(){
-      if(statusEl) statusEl.textContent = 'Transcribing your recording…';
-      if(boxEl) boxEl.textContent = 'Transcribing…';
-    },
-    onEnd:function(){
-      _bpVoiceRec = false;
-      if(btn) btn.classList.remove('rec');
-      if(statusEl) statusEl.textContent = _bpVoiceText ? 'Review the text below, then Save or Clear.' : 'Nothing was heard. Try again.';
-      if(boxEl) boxEl.textContent = _bpVoiceText || 'Nothing recorded yet.';
-    }
-  });
-  if(!ok){ showToast('Voice not supported on this browser.'); return; }
-}
-function stopBpVoice(skipStatus){
-  NHSpeech.stop();
-  if(!skipStatus){
-    var statusEl = document.getElementById('bp-voice-status');
-    if(statusEl) statusEl.textContent = 'Transcribing your recording…';
-  }
-}
-function clearBpVoice(){
-  _bpVoiceText = '';
-  var boxEl = document.getElementById('bp-voice-box'); if(boxEl) boxEl.textContent = 'Nothing recorded yet.';
-  var statusEl = document.getElementById('bp-voice-status'); if(statusEl) statusEl.textContent = 'Tap mic to record';
-}
-async function saveBpVoice(){
-  if(!_bpPatientId){ showToast('No patient linked to this bed'); return; }
-  var boxEl = document.getElementById('bp-voice-box');
-  var liveText = boxEl ? boxEl.textContent : _bpVoiceText;
-  var text = (liveText||'').trim();
-  if(text === 'Nothing recorded yet.' || text === 'Nothing heard.') text = '';
-  if(!text){ showToast('Nothing to save — record a note first'); return; }
+  var inp = document.getElementById('bp-note-input');
+  var text = ((inp && inp.value) || '').trim();
+  if(!text){ showToast('Type a note first'); return; }
   var r = await _supa.from('nh_voice_notes').insert({ clinic_id:_clinicId, patient_id:_bpPatientId, note_text:text, created_by:_myUid });
   if(r.error){ showToast('Error: '+r.error.message); return; }
-  await _supa.from('nh_audit_log').insert({ clinic_id:_clinicId, actor_id:_myUid, action:'voice_note_saved', target_table:'nh_voice_notes', target_id:_bpPatientId });
-  showToast('Voice note saved');
-  clearBpVoice();
-  loadBpVoiceNotes();
+  await _supa.from('nh_audit_log').insert({ clinic_id:_clinicId, actor_id:_myUid, action:'note_saved', target_table:'nh_voice_notes', target_id:_bpPatientId });
+  showToast('Note saved');
+  if(inp) inp.value = '';
+  loadBpNotes();
 }
 
 async function viewBillOriginal(path){
@@ -3035,12 +2929,6 @@ async function generateAccessCode(patientId){
   if(el) el.textContent = code;
   showToast('Access code generated — share with patient');
 }
-
-/* ── VOICE NOTES stub (tab removed, keep for bed profile) ── */
-function loadVoiceNotes(id){
-  /* Voice Notes tab removed from patient profile — voice is now in billing tab */
-}
-
 
 /* ── AUTO-VACANT CHECK on page load ── */
 (async function checkAutoVacant(){
@@ -3068,196 +2956,6 @@ function loadVoiceNotes(id){
 
 init();
 
-
-/* ══════════════════════════════════════════════════════════════
-   VOICE CHARGE SYSTEM — Long recording like ChatGPT
-   Works with or without NHSpeech from nh-shared.js
-══════════════════════════════════════════════════════════════ */
-var _vcParsed = [], _vcRecording = false, _vcRecognition = null, _vcFullText = '';
-
-function openVoiceCharge(){
-  if(!_admId){
-    showToast('Select a patient first');
-    return;
-  }
-  _vcParsed = [];
-  _vcFullText = '';
-  document.getElementById('voice-parsed-list').innerHTML =
-    '<div style="text-align:center;padding:18px;color:var(--text-tertiary);font-size:12px">Tap the mic and speak naturally.<br/><b style="color:var(--text-primary)">"One injection Ceftriaxone, CBC test, doctor fee"</b></div>';
-  document.getElementById('vc-err').style.display = 'none';
-  var btn = document.getElementById('vc-mic-btn');
-  if(btn){ btn.textContent = '&#127899; Speak Charges'; btn.classList.remove('rec'); }
-  var status = document.getElementById('vc-status');
-  if(status) status.textContent = 'Tap the mic button and speak all charges at once';
-  openModal('mod-voice-charge');
-}
-
-/* Simple keyword parser — no API needed */
-var VOICE_KEYWORDS = {
-  'ceftriaxone':   {n:'Ceftriaxone Injection', cat:'Injection',   p:150},
-  'amoxicillin':   {n:'Amoxicillin',           cat:'Injection',   p:80},
-  'tramadol':      {n:'Tramadol',              cat:'Injection',   p:100},
-  'paracetamol':   {n:'Paracetamol',           cat:'Medicine',    p:20},
-  'cbc':           {n:'CBC (Blood Count)',     cat:'Lab Test',    p:250},
-  'blood sugar':   {n:'Blood Sugar',           cat:'Lab Test',    p:80},
-  'blood count':   {n:'CBC (Blood Count)',     cat:'Lab Test',    p:250},
-  'xray':          {n:'X-Ray',                cat:'Diagnostic',  p:300},
-  'x-ray':         {n:'X-Ray',                cat:'Diagnostic',  p:300},
-  'ecg':           {n:'ECG',                  cat:'Diagnostic',  p:200},
-  'ultrasound':    {n:'Ultrasound',            cat:'Diagnostic',  p:800},
-  'doctor':        {n:'Doctor Visit',          cat:'Doctor Fee',  p:300},
-  'consultation':  {n:'Doctor Consultation',  cat:'Doctor Fee',  p:500},
-  'dressing':      {n:'Dressing',             cat:'Procedure',   p:150},
-  'nebulisation':  {n:'Nebulisation',         cat:'Procedure',   p:100},
-  'nebulization':  {n:'Nebulisation',         cat:'Procedure',   p:100},
-  'oxygen':        {n:'Oxygen',               cat:'Other',       p:200},
-  'nursing':       {n:'Nursing Charges',      cat:'Nursing',     p:300},
-  'bed':           {n:'Daily Bed Charge',     cat:'Bed Charge',  p:500},
-};
-
-function parseVoiceText(text){
-  var t = text.toLowerCase();
-  var found = [];
-  /* Check each keyword */
-  Object.keys(VOICE_KEYWORDS).forEach(function(kw){
-    if(t.includes(kw)){
-      var item = VOICE_KEYWORDS[kw];
-      if(!found.find(function(f){return f.n===item.n;})){
-        /* Try to extract an explicit quantity right before the keyword —
-           leave qty null (not defaulted to 1) if none was said, per the
-           strict-null rule: a bare item name alone doesn't imply "one". */
-        var qty = null;
-        var match = t.match(new RegExp('(\\d+)\\s*'+kw.replace('-','\\-')));
-        if(match) qty = Math.min(parseInt(match[1])||1, 20);
-        else if(new RegExp('\\b(?:a|an|one)\\s+'+kw.replace('-','\\-')).test(t)) qty = 1;
-        found.push({n:item.n, cat:item.cat, p:null, qty:qty});
-      }
-    }
-  });
-  if(!found.length){
-    /* Fallback — treat the whole text as a custom entry, still strict-null:
-       we don't know a quantity or price was actually said, so don't invent
-       one just because some text was captured. */
-    var shortened = text.slice(0,60).charAt(0).toUpperCase() + text.slice(1,60);
-    found.push({n:shortened, cat:'Other', p:null, qty:null});
-  }
-  return found;
-}
-
-function renderVoiceParsed(){
-  var el = document.getElementById('voice-parsed-list');
-  if(!_vcParsed.length){
-    el.innerHTML = '<div style="padding:12px;color:var(--text-tertiary);font-size:12px">Nothing detected yet — try speaking again.</div>';
-    return;
-  }
-  el.innerHTML = '';
-  _vcParsed.forEach(function(item, i){
-    var qtyKnown = (item.qty !== null && item.qty !== undefined && item.qty > 0);
-    var priceKnown = (item.p !== null && item.p !== undefined && item.p >= 0);
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--green-border);border-radius:var(--r-sm);margin-bottom:7px;background:var(--green-bg)';
-    row.innerHTML = '<div><div style="font-size:12.5px;font-weight:600">' + esc(item.n) + '</div>'
-      + '<div style="font-size:10.5px;color:var(--text-tertiary)">' + item.cat + ' &middot; Qty: ' + (qtyKnown ? item.qty : '?')
-      + (priceKnown ? (' &middot; &#8377;' + item.p.toLocaleString('en-IN')) : '') + '</div></div>'
-      + '<div style="display:flex;align-items:center;gap:8px">'
-      + (!qtyKnown ? '<input type="number" min="1" placeholder="Qty" style="width:56px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:12px" onchange="(function(idx){return function(e){_vcParsed[idx].qty=parseInt(e.target.value,10)||null;renderVoiceParsed();};})(' + i + ')(event)"/>' : '')
-      + (!priceKnown ? '<input type="number" min="0" placeholder="&#8377;Price" style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:12px" onchange="(function(idx){return function(e){_vcParsed[idx].p=(e.target.value===\'\'?null:parseFloat(e.target.value));renderVoiceParsed();};})(' + i + ')(event)"/>' : '')
-      + '<span style="font-size:16px;cursor:pointer;color:var(--red);padding:2px 7px;border-radius:4px" onclick="removeVcItem(' + i + ')">&#10005;</span>'
-      + '</div>';
-    el.appendChild(row);
-  });
-}
-
-function removeVcItem(i){ _vcParsed.splice(i,1); renderVoiceParsed(); }
-
-function startVcRecording(){
-  if(_vcRecording) return;
-  var statusEl = document.getElementById('vc-status');
-  var btn = document.getElementById('vc-mic-btn');
-  var ok = NHSpeech.start({
-    lang:'en-IN',
-    onStart:function(){
-      _vcRecording = true;
-      if(btn){ btn.innerHTML = '&#9209; Stop'; btn.classList.add('rec'); }
-      if(statusEl) statusEl.textContent = '\uD83D\uDD34 Recording... speak all charges. Tap Stop when done.';
-    },
-    onResult:function(text){ _vcFullText = text || ''; },
-    onError:function(e){
-      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='unsupported'?'Voice not supported on this browser.':(e==='quota-exceeded'?'Included monthly voice minutes used up — ask the Owner to top up (Subscription page).':'Mic error: '+e)));
-      stopVcRecording(true);
-    },
-    onTranscribing:function(){
-      if(statusEl) statusEl.textContent = 'Transcribing your recording…';
-    },
-    onEnd:async function(){
-      _vcRecording = false;
-      if(btn){ btn.innerHTML = '&#127899; Speak Charges'; btn.classList.remove('rec'); }
-      var spoken = _vcFullText.trim();
-      if(spoken){
-        if(statusEl) statusEl.textContent = 'Understanding what was said…';
-        var aiItems = null;
-        try{
-          var res = await _supa.functions.invoke('parse-voice-charge', { body:{ text:spoken, mode:'multi' } });
-          if(!res.error && res.data && Array.isArray(res.data.items) && res.data.items.length){
-            aiItems = res.data.items.map(function(it){
-              return { n: it.name || 'Charge', cat: it.category || 'Other',
-                       p: (it.unit_price===null||it.unit_price===undefined) ? null : parseFloat(it.unit_price),
-                       qty: (it.qty===null||it.qty===undefined) ? null : parseInt(it.qty,10) };
-            });
-          }
-        }catch(e){ console.warn('AI voice-charge parsing failed, falling back to keyword parsing:', e); }
-        _vcParsed = aiItems || parseVoiceText(spoken);
-        renderVoiceParsed();
-        if(statusEl) statusEl.textContent = 'Review the detected charges below. Remove any errors, add prices, then confirm.';
-      } else {
-        if(statusEl) statusEl.textContent = 'Nothing was heard. Try again.';
-      }
-      _vcFullText = '';
-    }
-  });
-  if(!ok){ showToast('Voice not supported on this browser.'); return; }
-}
-
-function stopVcRecording(skipStatus){
-  NHSpeech.stop();
-  if(!skipStatus){
-    var statusEl = document.getElementById('vc-status');
-    if(statusEl) statusEl.textContent = 'Transcribing your recording…';
-  }
-}
-
-function toggleVcMic(){
-  if(_vcRecording){ stopVcRecording(); }
-  else { startVcRecording(); }
-}
-
-async function confirmVoiceCharges(){
-  var err = document.getElementById('vc-err');
-  err.style.display = 'none';
-  if(!_vcParsed.length){ err.textContent='Nothing to save.'; err.style.display='block'; return; }
-  var noQty = _vcParsed.filter(function(i){return !(i.qty>0);});
-  if(noQty.length){ err.textContent='Enter quantity for: '+noQty.map(function(i){return i.n;}).join(', '); err.style.display='block'; return; }
-  var noPrice = _vcParsed.filter(function(i){return i.p===null||i.p===undefined||i.p<0;});
-  if(noPrice.length){ err.textContent='Enter price for: '+noPrice.map(function(i){return i.n;}).join(', '); err.style.display='block'; return; }
-  if(!_admId){ err.textContent='No patient admission selected.'; err.style.display='block'; return; }
-  var inserts = _vcParsed.map(function(item){
-    return {clinic_id:_clinicId,admission_id:_admId,charge_type:item.cat,
-      description:item.n,quantity:item.qty,unit_price:item.p,
-      total_price:item.qty*item.p,added_by:_myUid,
-      charge_date:new Date().toISOString().slice(0,10)};
-  });
-  var r = await _supa.from('admission_charges').insert(inserts);
-  if(r.error){ err.textContent='Error: '+r.error.message; err.style.display='block'; return; }
-  await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,
-    action:'voice_charges_added',target_table:'admission_charges',target_id:_admId,
-    details:{count:inserts.length,items:_vcParsed.map(function(i){return i.n;})}});
-  closeModal('mod-voice-charge');
-  showToast(_vcParsed.length + ' charge(s) added to bill');
-  _vcParsed = [];
-  /* Refresh billing tab if open */
-  if(_pid) loadBilling(_pid);
-  loadBpExpenses();
-}
 
 /* ── PRINT BILL as PDF ── */
 async function printPatientBill(){
@@ -3324,152 +3022,7 @@ async function printPatientBill(){
 /* ══════════════════════════════════════════════════════════════
    EXPENSE FUNCTIONS — All the missing ones restored
 ══════════════════════════════════════════════════════════════ */
-var _expBillFile = null, _expVoiceRec = false;
-
-function toggleExpVoice(){
-  if(_expVoiceRec){ stopExpVoice(); } else { startExpVoice(); }
-}
-
-function startExpVoice(){
-  var statusEl = document.getElementById('exp-voice-status');
-  var btn      = document.getElementById('exp-mic-btn');
-  var descEl   = document.getElementById('exp-desc');
-  var composer = document.getElementById('exp-composer');
-  var ok = NHSpeech.start({
-    lang:'en-IN',
-    onStart:function(){
-      _expVoiceRec = true;
-      if(btn){ btn.innerHTML = '&#9209;'; btn.style.background = 'var(--red)'; }
-      if(composer) composer.style.borderColor = 'var(--red)';
-      if(statusEl) statusEl.textContent = '\uD83D\uDD34 Recording… speak in any language';
-    },
-    onResult:function(text){ applyVoiceToExpense(text, descEl, statusEl); },
-    onError:function(e){
-      showToast(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':(e==='quota-exceeded'?'Included monthly voice minutes used up — ask the Owner to top up (Subscription page).':'Mic error: '+e));
-      stopExpVoice(true);
-    },
-    onTranscribing:function(){
-      if(statusEl) statusEl.textContent = 'Transcribing…';
-    },
-    onEnd:function(){
-      _expVoiceRec = false;
-      if(btn){ btn.innerHTML = '&#127908;'; btn.style.background = 'var(--green)'; }
-      if(composer) composer.style.borderColor = 'var(--border)';
-    }
-  });
-  if(!ok){ showToast('Voice not supported.'); return; }
-}
-
-function stopExpVoice(skipStatus){
-  NHSpeech.stop();
-  if(!skipStatus){
-    var statusEl = document.getElementById('exp-voice-status');
-    if(statusEl) statusEl.textContent = 'Transcribing…';
-  }
-}
-
-/* Drops the raw transcript straight into the Description box the moment
-   it's ready (so it behaves like typing), then quietly asks the AI parser
-   to understand it — in English, Bengali, Hindi, or a mix of these — and
-   replaces it with a clean English description while filling Qty/Price if
-   they were mentioned. If that call fails, the raw transcript is left in
-   place and the old English-keyword regex is tried as a fallback. */
-async function applyVoiceToExpense(text, descEl, statusEl){
-  descEl = descEl || document.getElementById('exp-desc');
-  statusEl = statusEl || document.getElementById('exp-voice-status');
-  text = (text||'').trim();
-  if(!text) return;
-  // If the box already had DIFFERENT typed/spoken text sitting in it,
-  // append rather than overwrite. When this is called from the composer's
-  // own Enter key, `text` IS `descEl.value` already — appending it to
-  // itself would duplicate it, so only append when they actually differ.
-  var existing = descEl.value.trim();
-  var combined = (existing && existing !== text) ? existing + ', ' + text : text;
-  descEl.value = combined;
-  if(statusEl) statusEl.textContent = 'Understanding…';
-
-  var qtyEl = document.getElementById('exp-qty');
-  var priceEl = document.getElementById('exp-price');
-  var typeEl = document.getElementById('exp-type');
-  var parsed = null;
-  try{
-    var res = await _supa.functions.invoke('parse-voice-charge', { body:{ text:combined, mode:'single' } });
-    if(!res.error && res.data && !res.data.error){
-      // STRICT-NULL: qty/unit_price come back as null (not 1/0) whenever the
-      // AI didn't hear them explicitly stated — never coerce those nulls
-      // into a default number here. A missing value must stay missing so
-      // saveExpense() can catch it, instead of quietly becoming "1" or "0".
-      parsed = {
-        qty: (res.data.qty === null || res.data.qty === undefined) ? null : parseInt(res.data.qty,10),
-        price: (res.data.unit_price === null || res.data.unit_price === undefined) ? null : parseFloat(res.data.unit_price),
-        desc: (res.data.description||'').trim(),
-        category: (res.data.category||'').trim()
-      };
-    }
-  }catch(e){ console.warn('AI voice-charge parsing failed, falling back to keyword parsing:', e); }
-
-  if(parsed && parsed.desc){
-    descEl.value = parsed.desc;
-    // Auto-select the Charge Type dropdown from what the AI actually heard,
-    // instead of leaving it stuck on whatever it defaulted to (usually
-    // "Bed Charge") regardless of the real charge. Only set it when the
-    // category is one of the dropdown's real options — never force an
-    // invalid <select> value, and never overwrite it with a guess.
-    if(typeEl && parsed.category){
-      var match = Array.prototype.find.call(typeEl.options, function(o){ return o.value === parsed.category; });
-      if(match) typeEl.value = parsed.category;
-    }
-  } else {
-    parsed = parseVoiceChargeFields(combined);
-  }
-
-  // Leave the input BLANK (not 0, not 1) when the value is unknown — a
-  // blank field is visually obvious and saveExpense() will refuse to save
-  // until it's filled in, rather than silently banking a wrong number.
-  if(qtyEl) qtyEl.value = (parsed.qty !== null && parsed.qty !== undefined) ? parsed.qty : '';
-  if(priceEl) priceEl.value = (parsed.price !== null && parsed.price !== undefined) ? parsed.price : '';
-  calcExp();
-
-  var missing = [];
-  if(parsed.qty === null || parsed.qty === undefined) missing.push('quantity');
-  if(parsed.price === null || parsed.price === undefined) missing.push('unit price');
-  if(statusEl){
-    statusEl.textContent = missing.length
-      ? ('Heard "' + descEl.value + '" — please enter the ' + missing.join(' and ') + ", I couldn't catch " + (missing.length>1?'them':'it'))
-      : 'Got it — review below and save';
-  }
-}
-/* Offline fallback only, used when the AI call itself fails (network
-   issue etc) — NOT used as the primary path anymore. Kept intentionally
-   simple: same strict-null behavior as the AI path, just English-only
-   regex, since this is purely a safety net. */
-function parseVoiceChargeFields(text){
-  var qty=null, price=null;
-  var qtyMatch = text.match(/quant(?:i|a)ty\s*(?:is|of|=)?\s*(\d+)/i) || text.match(/\bqty\s*(?:is|of|=)?\s*(\d+)/i)
-               || text.match(/\b(?:a|an|one)\s+/i);
-  if(text.match(/quant(?:i|a)ty\s*(?:is|of|=)?\s*(\d+)/i) || text.match(/\bqty\s*(?:is|of|=)?\s*(\d+)/i)){
-    var m = text.match(/quant(?:i|a)ty\s*(?:is|of|=)?\s*(\d+)/i) || text.match(/\bqty\s*(?:is|of|=)?\s*(\d+)/i);
-    qty = parseInt(m[1],10);
-  } else if(/\b(?:a|an|one)\b/i.test(text)){
-    qty = 1; // explicit singular word, not a bare item name — matches the AI's strict-null rule
-  }
-  var priceMatch = text.match(/unit\s*price\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i)
-                 || text.match(/\bprice\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i)
-                 || text.match(/\brate\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i);
-  if(priceMatch){
-    price = parseInt(priceMatch[1].replace(/,/g,''),10);
-  }else{
-    var totalMatch = text.match(/\btotal\s*(?:is|of|=)?\s*(?:rs\.?|rupees?|₹)?\s*(\d[\d,]*)/i);
-    if(totalMatch && qty){
-      var total = parseInt(totalMatch[1].replace(/,/g,''),10);
-      price = Math.round(total/qty);
-    }
-    // No explicit price/rate/total wording found — leave price null rather
-    // than guessing from "the first number left over" (that guessing is
-    // exactly what caused the original quantity/price mix-up bug).
-  }
-  return {qty:qty, price:price};
-}
+var _expBillFile = null;
 
 function openExpenseModal(){
   if(!_bpAdmId){ showToast('No active admission for this bed'); return; }
@@ -3492,9 +3045,6 @@ function openExpenseModal(){
   if(prevEl)  prevEl.style.display = 'none';
   if(imgEl)   imgEl.style.display  = 'none';
   _expBillFile = null;
-  stopExpVoice(true);
-  var vStatusEl = document.getElementById('exp-voice-status');
-  if(vStatusEl) vStatusEl.textContent = '';
   openModal('mod-expense');
 }
 
@@ -3594,7 +3144,6 @@ async function saveExpense(){
     details:{type:type, desc:desc, qty:qty, price:price, total:totalPrice}
   });
   closeModal('mod-expense');
-  stopExpVoice();
   showToast(esc(desc)+' &#8212; &#8377;'+(qty*price).toLocaleString('en-IN')+' added');
   loadBpExpenses();
   if(_pid) loadBilling(_pid);
