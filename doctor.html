@@ -162,13 +162,6 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
 .ir:last-child{border-bottom:none}
 .il{color:var(--text-tertiary);font-weight:500}
 .iv{font-weight:600;text-align:right;max-width:60%}
-/* VOICE */
-.mic-wrap{border:1.5px solid var(--red-border);background:var(--red-bg);border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:12px}
-.mic-btn{width:44px;height:44px;border-radius:50%;background:var(--red-bg);border:1.5px solid var(--red-border);color:var(--red);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:18px;transition:all var(--ease)}
-.mic-btn.recording{background:var(--red);color:#fff;animation:pulseMic 1.2s infinite}
-@keyframes pulseMic{0%,100%{box-shadow:0 0 0 0 rgba(194,56,56,.4)}50%{box-shadow:0 0 0 8px rgba(194,56,56,0)}}
-.mic-label{font-weight:700;font-size:12.5px}
-.mic-status{font-size:10.5px;color:var(--text-tertiary);margin-top:2px}
 .doc-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;background:var(--surface)}
 .empty{text-align:center;padding:36px 20px;color:var(--text-tertiary)}
 .empty-ic{font-size:30px;margin-bottom:9px;opacity:.4}
@@ -379,18 +372,9 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
         <div><label class="flbl">SpO₂ (%)</label><input class="finput" id="note-spo2" placeholder="98"/></div>
         <div><label class="flbl">Weight (kg)</label><input class="finput" id="note-weight" placeholder="65"/></div>
       </div>
-      <!-- Voice mic -->
-      <div class="mic-wrap">
-        <button class="mic-btn" id="mic-btn" onclick="toggleVoice()">🎙️</button>
-        <div>
-          <div class="mic-label" id="mic-label">Start Voice Note</div>
-          <div class="mic-status" id="mic-status">Tap to dictate — transcript goes to Subjective below</div>
-        </div>
-      </div>
       <!-- SOAP -->
       <div><label class="flbl">Subjective (S) — Patient's complaints & history</label><textarea class="finput ftextarea" id="note-subj" rows="3" placeholder="Patient reports…"></textarea></div>
       <div><label class="flbl">Assessment / Plan (A/P) — Clinical findings & next steps</label><textarea class="finput ftextarea" id="note-plan" rows="3" placeholder="Assessment: … Plan: …"></textarea></div>
-      <div class="note-box note-amber" style="font-size:10.5px">Review all transcribed text before saving. Voice transcription may contain errors — always verify clinical details.</div>
       <button class="msub" onclick="saveNote()">✓ Save Note</button>
     </div>
   </div>
@@ -471,7 +455,7 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
           <span style="font-size:18px">📎</span>Upload Doc
         </button>
         <button class="qbtn" style="flex-direction:column;height:62px;gap:5px;font-size:10.5px" onclick="openNoteModalFromBed()">
-          <span style="font-size:18px">🎙️</span>Voice Note
+          <span style="font-size:18px">&#128221;</span>Add Note
         </button>
         <button class="qbtn" style="flex-direction:column;height:62px;gap:5px;font-size:10.5px" onclick="openOrderTestModal()">
           <span style="font-size:18px">🧪</span>Order Test
@@ -512,20 +496,12 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
     <div class="mb">
       <div><label class="flbl">Diagnosis / Clinical Impression</label><input class="finput" id="rx-diagnosis" placeholder="e.g. Viral fever, Pneumonia, Post-op day 2"/></div>
       <div><label class="flbl">Prescription (Drug · Dose · Frequency · Duration)</label><textarea class="finput ftextarea" id="rx-drugs" rows="5" placeholder="Tab Paracetamol 500mg — 1 tab TDS × 5 days&#10;Inj Amoxicillin 500mg IV — BD × 3 days&#10;Tab Pantoprazole 40mg — 1 tab OD before breakfast"></textarea></div>
-      <!-- Voice for prescription -->
-      <div style="border:1.5px solid var(--red-border);background:var(--red-bg);border-radius:var(--r-md);padding:12px 14px;display:flex;align-items:center;gap:12px">
-        <button class="mic-btn" id="rx-mic-btn" onclick="toggleRxVoice()" style="width:40px;height:40px;border-radius:50%;background:var(--red-bg);border:1.5px solid var(--red-border);color:var(--red);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px">🎙️</button>
-        <div>
-          <div style="font-weight:700;font-size:12.5px" id="rx-mic-label">Dictate Prescription</div>
-          <div style="font-size:10.5px;color:var(--text-tertiary)" id="rx-mic-status">Tap mic — voice goes to prescription field above</div>
-        </div>
-      </div>
       <div><label class="flbl">Treatment Instructions / Notes</label><textarea class="finput ftextarea" id="rx-instructions" rows="2" placeholder="Bed rest, plenty of fluids, avoid spicy food…"></textarea></div>
       <div class="rx-2">
         <div><label class="flbl">Follow-up Date</label><input class="finput" id="rx-followup" type="date"/></div>
         <div><label class="flbl">Follow-up Instructions</label><input class="finput" id="rx-followup-note" placeholder="e.g. Repeat CBC after 5 days"/></div>
       </div>
-      <div class="note-box note-amber" style="font-size:10.5px">Review all voice-transcribed text before saving. Always verify drug names, doses and frequencies.</div>
+      <div class="note-box note-amber" style="font-size:10.5px">Always verify drug names, doses and frequencies.</div>
       <div id="rx-err" style="color:var(--red);font-size:11.5px;display:none"></div>
       <button class="msub green" onclick="savePrescription()">✓ Save Prescription</button>
     </div>
@@ -537,7 +513,7 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
 <script>
 /* AuraScale NH — Doctor Portal v1 */
 
-var _pid=null,_admId=null,_voiceActive=false;
+var _pid=null,_admId=null;
 var _myDocName='';
 
 /* ── INIT ── */
@@ -622,8 +598,6 @@ function openNoteModal(){
   /* Reset form */
   ['note-bp','note-temp','note-pulse','note-spo2','note-weight','note-subj','note-plan'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('note-doc').value=_myDocName;
-  stopVoice();
-  document.getElementById('mic-status').textContent='Tap to dictate — transcript goes to Subjective below';
   openModal('mod-note');
 }
 async function saveNote(){
@@ -632,7 +606,6 @@ async function saveNote(){
   var subj=(document.getElementById('note-subj').value||'').trim();
   var plan=(document.getElementById('note-plan').value||'').trim();
   if(!subj&&!plan){showToast('Add at least one note (Subjective or Assessment/Plan)');return;}
-  stopVoice();
   var r=await _supa.from('progress_notes').insert({
     clinic_id:_clinicId,admission_id:_currentAdmId,patient_id:_pid||null,
     created_by:_myUid,doctor_name:doc,
@@ -650,43 +623,7 @@ async function saveNote(){
   loadNotes(_currentAdmId);
 }
 
-/* ── VOICE ── */
-function toggleVoice(){_voiceActive?stopVoice():startVoice();}
-function startVoice(){
-  var target=document.getElementById('note-subj');
-  var base=target.value?target.value+' ':'';
-  var ok=NHSpeech.start({
-    lang:'en-IN',
-    onResult:function(t){target.value=base+t;},
-    onError:function(e){
-      document.getElementById('mic-status').textContent=e==='unsupported'?'Voice not supported in this browser.':(e==='mic-denied'?'Microphone access denied — allow it in browser settings.':'Mic error: '+e+'. Please try again.');
-      stopVoice(true);
-    },
-    onTranscribing:function(){
-      document.getElementById('mic-status').textContent='Transcribing your recording…';
-    },
-    onEnd:function(){
-      if(_voiceActive){_voiceActive=false;}
-      var btn=document.getElementById('mic-btn');if(btn)btn.classList.remove('recording');
-      var lbl=document.getElementById('mic-label');if(lbl)lbl.textContent='Start Voice Note';
-      var st=document.getElementById('mic-status');if(st)st.textContent='Transcript added to Subjective — edit as needed before saving.';
-    }
-  });
-  if(!ok)return;
-  _voiceActive=true;
-  document.getElementById('mic-btn').classList.add('recording');
-  document.getElementById('mic-label').textContent='Stop Recording';
-  document.getElementById('mic-status').textContent='🔴 Recording… speak naturally, tap Stop when done.';
-}
-function stopVoice(skipStatus){
-  NHSpeech.stop();
-  _voiceActive=false;
-  var btn=document.getElementById('mic-btn');if(btn)btn.classList.remove('recording');
-  var lbl=document.getElementById('mic-label');if(lbl)lbl.textContent='Start Voice Note';
-  if(!skipStatus){
-    var st=document.getElementById('mic-status');if(st)st.textContent='Transcribing your recording…';
-  }
-}
+
 
 /* ── PATIENTS LIST ── */
 var _searchDebounce=null;
@@ -908,7 +845,6 @@ function switchTab(tab,el){
    BED OVERVIEW
 ══════════════════════════════════════════════════════════════ */
 var _bppPatientId=null,_bppAdmId=null,_bppBedId=null;
-var _rxVoiceActive=false;
 
 async function loadBeds(){
   var [bedsRes,admsRes]=await Promise.all([
@@ -1027,8 +963,6 @@ async function openPrescriptionModal(){
   ['rx-diagnosis','rx-drugs','rx-instructions','rx-followup-note'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('rx-followup').value='';
   document.getElementById('rx-err').style.display='none';
-  stopRxVoice();
-  document.getElementById('rx-mic-status').textContent='Tap mic — voice goes to prescription field above';
   openModal('mod-prescription');
 }
 async function savePrescription(){
@@ -1042,7 +976,6 @@ async function savePrescription(){
   var followupNote=(document.getElementById('rx-followup-note').value||'').trim();
   var err=document.getElementById('rx-err');err.style.display='none';
   if(!drugs){err.textContent='Prescription drugs/treatment is required';err.style.display='block';return;}
-  stopRxVoice();
   /* Save to nh_prescriptions (create table if needed, or use progress_notes with type='prescription') */
   var r=await _supa.from('nh_prescriptions').insert({
     clinic_id:_clinicId,patient_id:pid,admission_id:admid||null,
@@ -1130,43 +1063,6 @@ function renderNoteCards(notes){
   }).join('');
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PRESCRIPTION VOICE
-══════════════════════════════════════════════════════════════ */
-function toggleRxVoice(){_rxVoiceActive?stopRxVoice():startRxVoice();}
-function startRxVoice(){
-  var target=document.getElementById('rx-drugs');
-  var base=target.value?target.value+'\n':'';
-  var ok=NHSpeech.start({lang:'en-IN',
-    onResult:function(t){target.value=base+t;},
-    onError:function(e){
-      document.getElementById('rx-mic-status').textContent=e==='mic-denied'?'Microphone access denied — allow it in browser settings.':'Mic error: '+e+'. Please try again.';
-      stopRxVoice(true);
-    },
-    onTranscribing:function(){
-      document.getElementById('rx-mic-status').textContent='Transcribing your recording…';
-    },
-    onEnd:function(){
-      _rxVoiceActive=false;
-      var btn=document.getElementById('rx-mic-btn');if(btn){btn.style.background='var(--red-bg)';btn.style.color='var(--red)';}
-      var lbl=document.getElementById('rx-mic-label');if(lbl)lbl.textContent='Dictate Prescription';
-      var st=document.getElementById('rx-mic-status');if(st)st.textContent='Review drug names, doses and frequencies before saving.';
-    }
-  });
-  if(!ok){showToast('Voice not supported');return;}
-  _rxVoiceActive=true;
-  document.getElementById('rx-mic-btn').style.background='var(--red)';document.getElementById('rx-mic-btn').style.color='#fff';
-  document.getElementById('rx-mic-label').textContent='Stop Dictation';
-  document.getElementById('rx-mic-status').textContent='🔴 Recording… speak drug names clearly, tap Stop when done.';
-}
-function stopRxVoice(skipStatus){
-  NHSpeech.stop();_rxVoiceActive=false;
-  var btn=document.getElementById('rx-mic-btn');if(btn){btn.style.background='var(--red-bg)';btn.style.color='var(--red)';}
-  var lbl=document.getElementById('rx-mic-label');if(lbl)lbl.textContent='Dictate Prescription';
-  if(!skipStatus){
-    var st=document.getElementById('rx-mic-status');if(st)st.textContent='Transcribing your recording…';
-  }
-}
 
 /* ── UTILS ── */
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
