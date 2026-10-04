@@ -1803,7 +1803,9 @@ async function handleForgotPassword(){
   var ok=document.getElementById('forgot-success');
   err.style.display='none';ok.style.display='none';
   if(!email){err.textContent='Enter your email.';err.style.display='block';return;}
-  var r=await _supa.auth.resetPasswordForEmail(email);
+  /* Send the person straight to the reset page. Without redirectTo, Supabase falls back to the
+     project's default address (the "Choose your system" page), which has no reset form. */
+  var r=await _supa.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/reset-password.html'});
   if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
   ok.textContent='If an account exists for this email, a reset link has been sent — check your inbox (and spam folder).';
   ok.style.display='block';
