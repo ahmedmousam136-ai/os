@@ -569,7 +569,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
                   <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
                   <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Amount</th>
                   <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Status</th>
-                  <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Payment</th>
+                  <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Bill</th>
                 </tr>
               </thead>
               <tbody id="txn-tbody"></tbody>
@@ -587,7 +587,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
                 <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Department</th>
                 <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Amount</th>
                 <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Status</th>
-                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Payment</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Bill</th>
               </tr></thead>
               <tbody id="pending-tbody"></tbody>
             </table>
@@ -1060,32 +1060,53 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 
 <!-- RECEIVE PAYMENT MODAL — used by Recent Transactions / Pending Bills "Pay" buttons -->
 <div class="mod-ov" id="mod-transaction-payment">
-  <div class="modal" style="max-width:400px">
+  <div class="modal" style="max-width:460px">
     <div class="mh">
-      <div class="mtitle">Receive Payment</div>
-      <button class="mclose" onclick="closeModal('mod-transaction-payment')">✕</button>
+      <div class="mtitle" id="tp-title">Record payment</div>
+      <button class="mclose" onclick="tpClose()">&#10005;</button>
     </div>
-    <div class="mb">
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;display:flex;flex-direction:column;gap:3px;margin-bottom:14px">
-        <div class="ir"><span class="il">Patient Name</span><span class="iv" id="tp-patient-name">—</span></div>
-        <div class="ir"><span class="il">Charge Type</span><span class="iv" id="tp-charge-type">—</span></div>
-        <div class="ir"><span class="il">Department</span><span class="iv" id="tp-department">—</span></div>
-        <div class="ir"><span class="il">Amount Due</span><span class="iv" id="tp-due" style="font-weight:700;color:var(--red)">—</span></div>
+    <div class="mb" id="tp-form">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:14px">
+        <div id="tp-patient-name" style="font-weight:700;font-size:15px">&mdash;</div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px">
+          <div><div id="tp-l-total" style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Bill total</div><div id="tp-total" style="font-weight:700;font-size:14px">&hellip;</div></div>
+          <div><div id="tp-l-paid" style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Paid so far</div><div id="tp-paid" style="font-weight:700;font-size:14px">&hellip;</div></div>
+          <div><div id="tp-l-due" style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Balance due</div><div id="tp-due" style="font-weight:700;font-size:14px;color:var(--red)">&hellip;</div></div>
+        </div>
+        <button type="button" class="qbtn" id="tp-bill-toggle" onclick="tpToggleBill()" style="margin-top:10px;font-size:11.5px">View whole bill</button>
+        <div id="tp-bill" style="display:none;margin-top:10px;max-height:220px;overflow:auto;font-size:12px"></div>
       </div>
-      <label class="flbl">Payment Amount (₹)</label>
-      <input class="finput" id="tp-amount" type="number" placeholder="0"/>
-      <label class="flbl" style="margin-top:10px">Payment Method</label>
-      <select class="finput" id="tp-method">
-        <option>Cash</option>
-        <option>UPI</option>
-        <option>Card</option>
-        <option>Bank Transfer</option>
-      </select>
-      <div id="tp-err" style="color:var(--red);font-size:12px;display:none;margin-top:10px"></div>
-      <div style="display:flex;gap:8px;margin-top:14px">
-        <button class="qbtn" style="flex:1;justify-content:center" onclick="closeModal('mod-transaction-payment')">Cancel</button>
-        <button class="msub" id="tp-confirm-btn" style="flex:1" onclick="confirmTransactionPayment()">Confirm Payment</button>
+      <div id="tp-step1" style="font-size:12.5px;font-weight:700;color:var(--text-secondary);margin-top:6px">1. How is the patient paying?</div>
+      <div id="tp-methods" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+        <button type="button" class="qbtn" data-m="Cash" onclick="tpPickMethod('Cash')" style="justify-content:center;padding:14px 10px;font-size:14px;font-weight:700">Cash</button>
+        <button type="button" class="qbtn" data-m="UPI" onclick="tpPickMethod('UPI')" style="justify-content:center;padding:14px 10px;font-size:14px;font-weight:700">UPI</button>
+        <button type="button" class="qbtn" data-m="Card" onclick="tpPickMethod('Card')" style="justify-content:center;padding:14px 10px;font-size:14px;font-weight:700">Card</button>
+        <button type="button" class="qbtn" data-m="Bank Transfer" onclick="tpPickMethod('Bank Transfer')" style="justify-content:center;padding:14px 10px;font-size:14px;font-weight:700">Bank transfer</button>
       </div>
+      <div id="tp-step2" style="font-size:12.5px;font-weight:700;color:var(--text-secondary);margin-top:6px">2. How much is being paid now?</div>
+      <div style="display:flex;gap:8px">
+        <input class="finput" id="tp-amount" type="number" inputmode="decimal" min="0" step="any" placeholder="0" oninput="tpUpdate()" style="flex:1" disabled/>
+        <button type="button" class="qbtn" id="tp-full" onclick="tpFull()" disabled>Full</button>
+      </div>
+      <input class="finput" id="tp-ref" placeholder="Reference no. (optional)" maxlength="60" style="display:none"/>
+      <div id="tp-outcome" style="font-size:13px;font-weight:700;min-height:18px"></div>
+      <div id="tp-err" style="color:var(--red);font-size:12px;display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="qbtn" id="tp-cancel-btn" style="flex:1;justify-content:center" onclick="tpClose()">Cancel</button>
+        <button class="msub" id="tp-confirm-btn" style="flex:1" onclick="tpConfirm()" disabled>Record payment</button>
+      </div>
+    </div>
+    <div class="mb" id="tp-done" style="display:none">
+      <div id="tp-done-title" style="font-weight:700;font-size:16px;color:var(--green)"></div>
+      <div id="tp-done-line" style="font-size:13.5px"></div>
+      <div id="tp-done-status" style="font-weight:700;font-size:14px"></div>
+      <div id="tp-bill-state" style="font-size:12px;color:var(--text-secondary)"></div>
+      <div id="tp-auto-state" style="display:none;font-size:12px;color:var(--green);font-weight:700"></div>
+      <button class="msub" id="tp-wa-patient" style="background:#25D366" onclick="tpSendWhatsApp('patient')"></button>
+      <button class="msub" id="tp-wa-owner" style="background:#128C7E" onclick="tpSendWhatsApp('owner')"></button>
+      <div id="tp-wa-note" style="font-size:11px;color:var(--text-tertiary);display:none"></div>
+      <button class="qbtn" id="tp-view-bill" style="display:none;justify-content:center" onclick="auraDownloadBill(_tp.admId,this)"></button>
+      <button class="qbtn" id="tp-done-btn" style="justify-content:center" onclick="tpClose()">Done</button>
     </div>
   </div>
 </div>
@@ -2950,10 +2971,13 @@ function blTab(tab, el){
 }
 
 /* Status badge helper — shared by Recent Transactions & Pending Bills */
-function billingStatusChip(status){
-  if(status==='Paid') return '<span class="chip" style="background:var(--green-bg);color:var(--green)">Paid</span>';
-  if(status==='Overdue') return '<span class="chip" style="background:var(--red-bg);color:var(--red)">Overdue</span>';
-  return '<span class="chip" style="background:var(--amber-bg);color:var(--amber)">Pending</span>';
+/* The status IS the way in to recording a payment: tap it, choose Cash/UPI/Card first, then the amount.
+   Statuses: Pending / Overdue (nothing paid) -> Partly paid -> Paid. They follow from the money, never typed by hand. */
+function billingStatusChip(status, admId, patientName, due){
+  var map = {'Paid':['var(--green-bg)','var(--green)','st_paid'], 'Partly paid':['var(--blue-bg)','var(--blue)','st_partly'], 'Overdue':['var(--red-bg)','var(--red)','st_overdue'], 'Pending':['var(--amber-bg)','var(--amber)','st_pending']};
+  var m = map[status] || map['Pending'];
+  return '<button type="button" class="chip" title="'+esc(famT('pm_tap_hint'))+'" data-adm="'+esc(admId||'')+'" data-name="'+esc(patientName||'')+'" onclick="event.stopPropagation();openTransactionPayment(this.getAttribute(\'data-adm\'),this.getAttribute(\'data-name\'))" style="background:'+m[0]+';color:'+m[1]+';border:1px solid '+m[1]+';cursor:pointer;font-weight:700">'+esc(famT(m[2]))+' &#9998;</button>'
+    + (due>0 ? '<div style="font-size:10.5px;color:var(--text-tertiary);margin-top:3px">'+esc(auraMoney(due))+' '+esc(famT('pm_due_word'))+'</div>' : '');
 }
 
 /* Pulls the most recent charge line-items across the whole clinic, joins
@@ -2996,11 +3020,7 @@ async function loadRecentTransactions(filter){
   var rows = charges.map(function(c){
     var a = admMap[c.admission_id] || {};
     var bal = balances[c.admission_id] || {due:0};
-    var status = 'Paid';
-    if(bal.due > 0){
-      var ageDays = a.admission_date ? Math.floor((Date.now()-new Date(a.admission_date))/86400000) : 0;
-      status = ageDays >= 2 ? 'Overdue' : 'Pending';
-    }
+    var status = tpStatusOf(bal.total||0, bal.paid||0, a.admission_date);
     return { charge:c, adm:a, dept: a.bed_id ? (bedMap[a.bed_id]||c.charge_type) : c.charge_type, status:status, due: bal.due };
   });
 
@@ -3014,18 +3034,17 @@ async function loadRecentTransactions(filter){
   tbody.innerHTML = rows.map(function(r){
     var c=r.charge, a=r.adm;
     var time = c.created_at ? new Date(c.created_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—';
-    var payCell = r.status==='Paid'
-      ? '<button class="txn-view-btn" onclick="openProfile(\''+(a.patient_id||'')+'\',\''+esc(a.patient_name||'')+'\')">View</button>'
-      : '<button class="txn-pay-btn" onclick="openTransactionPayment(\''+c.admission_id+'\',\''+esc(a.patient_name||'')+'\',\''+esc(c.charge_type||'')+'\',\''+esc(r.dept||'')+'\')">Pay</button>';
+    var payCell = '<span data-bill-actions="'+esc(c.admission_id||'')+'" data-compact="2" onclick="event.stopPropagation()"></span>';
     return '<tr style="border-bottom:1px solid var(--border)">'
       + '<td style="padding:10px 14px;cursor:pointer" onclick="openProfile(\''+(a.patient_id||'')+'\',\''+esc(a.patient_name||'')+'\')"><span style="font-weight:600;color:var(--text-primary)">'+esc(a.patient_name||'—')+'</span></td>'
       + '<td style="padding:10px 14px;color:var(--text-secondary)">'+time+'</td>'
       + '<td style="padding:10px 14px;color:var(--text-secondary)">'+esc(r.dept||'—')+'</td>'
       + '<td style="padding:10px 14px;font-weight:700">₹'+Number(c.total_price||0).toLocaleString('en-IN')+'</td>'
-      + '<td style="padding:10px 14px">'+billingStatusChip(r.status)+'</td>'
+      + '<td style="padding:10px 14px">'+billingStatusChip(r.status, c.admission_id, a.patient_name, r.due)+'</td>'
       + '<td style="padding:10px 14px;text-align:right">'+payCell+'</td>'
     + '</tr>';
   }).join('');
+  if(typeof auraMountBillActions==='function') auraMountBillActions(tbody);
 }
 
 async function loadPaymentsTab(){
@@ -3073,77 +3092,6 @@ async function loadInvoicesTab(){
 }
 
 /* ── RECEIVE PAYMENT modal (triggered from the Pay button in the tables) ── */
-var _tpAdmId = null, _tpInProgress = false;
-async function openTransactionPayment(admissionId, patientName, chargeType, department){
-  if(!admissionId){ showToast('Missing admission reference'); return; }
-  _tpAdmId = admissionId;
-  document.getElementById('tp-patient-name').textContent = patientName || '—';
-  document.getElementById('tp-charge-type').textContent = chargeType || '—';
-  document.getElementById('tp-department').textContent = department || '—';
-  document.getElementById('tp-due').textContent = '…';
-  document.getElementById('tp-amount').value = '';
-  document.getElementById('tp-method').value = 'Cash';
-  document.getElementById('tp-err').style.display = 'none';
-  var btn = document.getElementById('tp-confirm-btn');
-  btn.disabled = false; btn.textContent = 'Confirm Payment';
-  openModal('mod-transaction-payment');
-
-  var [c,p] = await Promise.all([
-    _supa.from('admission_charges').select('total_price').eq('admission_id',admissionId),
-    _supa.from('nh_payments').select('amount').eq('admission_id',admissionId)
-  ]);
-  var total=(c.data||[]).reduce(function(s,x){return s+(x.total_price||0);},0);
-  var paid=(p.data||[]).reduce(function(s,x){return s+(x.amount||0);},0);
-  var due = Math.max(total-paid,0);
-  document.getElementById('tp-due').textContent = '₹'+due.toLocaleString('en-IN');
-  document.getElementById('tp-amount').value = due>0 ? due : '';
-}
-
-async function confirmTransactionPayment(){
-  if(_tpInProgress) return;
-  if(!_tpAdmId){ showToast('Missing admission reference'); return; }
-  var amtEl = document.getElementById('tp-amount');
-  var amt = parseFloat(amtEl.value)||0;
-  var method = document.getElementById('tp-method').value;
-  var errEl = document.getElementById('tp-err');
-  errEl.style.display='none';
-  if(amt<=0){ errEl.textContent='Enter a valid payment amount.'; errEl.style.display='block'; return; }
-
-  _tpInProgress = true;
-  var btn = document.getElementById('tp-confirm-btn');
-  btn.disabled = true; btn.textContent = 'Processing…';
-
-  try{
-    var today = new Date().toISOString().slice(0,10);
-    var r = await _supa.from('nh_payments').insert({
-      clinic_id:_clinicId, admission_id:_tpAdmId,
-      amount:amt, method:method, payment_date:today, recorded_by:_myUid
-    });
-    if(r.error) throw new Error(r.error.message);
-
-    _supa.from('nh_audit_log').insert({
-      clinic_id:_clinicId, actor_id:_myUid, action:'payment_recorded',
-      target_table:'nh_payments', target_id:_tpAdmId, details:{amount:amt, method:method}
-    });
-
-    showToast('₹'+amt.toLocaleString('en-IN')+' payment recorded');
-    closeModal('mod-transaction-payment');
-
-    /* Refresh whichever billing tab is currently visible */
-    var activeTab = document.querySelector('.bl-tab-btn.on');
-    var tabId = activeTab ? activeTab.getAttribute('data-bltab') : 'txns';
-    blTab(tabId, activeTab);
-    if(_pid) loadBilling(_pid);
-
-  }catch(e){
-    errEl.textContent = e.message || 'Payment failed. Please try again.';
-    errEl.style.display='block';
-    btn.disabled=false; btn.textContent='Confirm Payment';
-  } finally {
-    _tpInProgress = false;
-  }
-}
-
 async function loadBillingList(){
   var listEl = document.getElementById('billing-list');
   if(!listEl) return;
@@ -4146,10 +4094,13 @@ async function auraGenerateBillAuto(admissionId) {
 /* ---------- 5. buttons ---------- */
 function auraBillButtonsHtml(admId, bill, compact) {
   var q = esc(admId);
+  if (bill && compact === '2') {      /* tables: just one button */
+    return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; ' + esc(auraT('bt_download', 'Download bill')) + '</button>';
+  }
   if (bill) {
     return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; ' + esc(auraT('bt_download', 'Download bill')) + '</button>'
       + '<button class="qbtn" title="Rebuild the bill with the latest charges and payments" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#8635; ' + esc(auraT('bt_regenerate', 'Regenerate')) + '</button>'
-      + (compact ? '' : '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">' + esc(auraT('bt_saved', 'Saved')) + ' ' + esc(auraDateTime(bill.created_at)) + ' &middot; ' + esc(auraT('bt_balance', 'Balance')) + ' ' + esc(auraMoney(bill.due)) + '</span>');
+      + (compact === '1' ? '' : '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">' + esc(auraT('bt_saved', 'Saved')) + ' ' + esc(auraDateTime(bill.created_at)) + ' &middot; ' + esc(auraT('bt_balance', 'Balance')) + ' ' + esc(auraMoney(bill.due)) + '</span>');
   }
   return '<button class="qbtn" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#128196; ' + esc(auraT('bt_generate', 'Generate Bill')) + '</button>';
 }
@@ -4160,7 +4111,7 @@ async function auraMountBillActions(root) {
   var ids = []; els.forEach(function (e) { var v = e.getAttribute('data-bill-actions'); if (v && ids.indexOf(v) < 0) ids.push(v); });
   var map = {};
   try { var r = await _supa.from('patient_bills').select('admission_id,created_at,total,paid,due').in('admission_id', ids); (r.data || []).forEach(function (b) { map[b.admission_id] = b; }); } catch (e) {}
-  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id], e.getAttribute('data-compact') === '1'); });
+  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id], e.getAttribute('data-compact')); });
 }
 function auraAfterBill() { try { auraMountBillActions(document); } catch (e) {} }
 async function auraGenerateBillClick(admId, btn) {
@@ -4190,6 +4141,236 @@ async function auraDownloadPath(path, patientName, btn) {
   var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Opening\u2026'; }
   try { await auraOpenSigned(path, patientName, 'bill'); } catch (e) { if (typeof showToast === 'function') showToast(auraFriendlyError(e, 'storage')); }
   if (btn) { btn.disabled = false; btn.innerHTML = old; }
+}
+</script>
+
+<!-- RECORD A PAYMENT (receptionist) -->
+<script>
+/* ===== RECORD A PAYMENT (receptionist) =====
+   The status chip in the Billing table is the way in. The receptionist first chooses HOW the patient is paying
+   (Cash / UPI / Card / Bank transfer), then how much. The bill's status follows from the totals:
+   Pending / Overdue (nothing paid) -> Partly paid (some paid) -> Paid (nothing due). It is never typed by hand, so the
+   books always agree with the money received.
+   After saving: the bill PDF is rebuilt (so it shows the payment), the owner can see the payment (Notifications, Payments),
+   and one-tap WhatsApp messages are offered for the patient and for the owner, each with a "View bill" link. */
+(function () {
+  if (typeof FAM_I18N === 'undefined') return;
+  var T = {
+    en: { pm_title: 'Record payment', pm_l_total: 'Bill total', pm_l_paid: 'Paid so far', pm_l_due: 'Balance due', pm_view_bill: 'View whole bill', pm_hide_bill: 'Hide bill',
+      pm_no_charges: 'No charges yet', pm_payments_so_far: 'Payments so far', pm_step1: '1. How is the patient paying?', pm_cash: 'Cash', pm_upi: 'UPI', pm_card: 'Card', pm_bank: 'Bank transfer',
+      pm_step2: '2. How much is being paid now?', pm_pick_first: 'Choose how they are paying first', pm_full: 'Full {amt}', pm_ref_ph: 'Reference no. (optional)',
+      pm_will_paid: 'This will mark the bill as PAID \u2713', pm_will_part: 'Partly paid \u2014 {amt} will still be due', pm_will_extra: 'This is {amt} more than the balance (kept as advance)',
+      pm_confirm: 'Record payment', pm_saving: 'Saving\u2026', pm_cancel: 'Cancel', pm_err_method: 'Choose Cash, UPI, Card or Bank transfer first.', pm_err_amount: 'Enter the amount being paid.',
+      pm_err_generic: 'Could not record the payment ({e}). Nothing was saved.', pm_done_title: 'Payment recorded \u2713', pm_done_line: '{amt} received by {method}.', pm_status_paid: 'Paid in full',
+      pm_status_part_due: 'Partly paid \u00b7 {amt} still due', pm_bill_updating: 'Updating the bill\u2026', pm_bill_ready: 'Bill updated \u2713', pm_bill_failed: 'The bill could not be updated ({e}). Use Generate Bill later.',
+      pm_send_patient: 'Send to patient on WhatsApp', pm_tell_owner: 'Tell the owner on WhatsApp', pm_no_patient_phone: 'No phone number saved for this patient',
+      pm_no_owner_phone: 'Owner WhatsApp number is not set (the owner adds it in Settings \u2192 Facility details)', pm_auto_sent: 'WhatsApp messages were sent automatically \u2713', pm_done_btn: 'Done',
+      st_pending: 'Pending', st_overdue: 'Overdue', st_partly: 'Partly paid', st_paid: 'Paid', pm_tap_hint: 'Tap to record a payment', pm_due_word: 'due',
+      wa_link: 'View your bill: {url}', wa_owner_link: 'Bill: {url}',
+      wa_patient_paid: 'Dear {name}, we have received {amt} ({method}) at {hospital}. Your bill is paid in full. Thank you.{link}',
+      wa_patient_part: 'Dear {name}, we have received {amt} ({method}) at {hospital}. Balance due: {due}.{link}',
+      wa_owner_paid: '{hospital}: {amt} received by {method} from {name}. Bill is paid in full. Recorded by {staff}.{link}',
+      wa_owner_part: '{hospital}: {amt} received by {method} from {name}. Partly paid, {due} still due. Recorded by {staff}.{link}' },
+    bn: { pm_title: '\u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09c1\u09a8', pm_l_total: '\u09ac\u09bf\u09b2\u09c7\u09b0 \u09ae\u09cb\u099f', pm_l_paid: '\u098f \u09aa\u09b0\u09cd\u09af\u09a8\u09cd\u09a4 \u09a6\u09c7\u0993\u09af\u09bc\u09be \u09b9\u09af\u09bc\u09c7\u099b\u09c7', pm_l_due: '\u09ac\u09be\u0995\u09bf \u0986\u099b\u09c7', pm_view_bill: '\u09aa\u09c1\u09b0\u09cb \u09ac\u09bf\u09b2 \u09a6\u09c7\u0996\u09c1\u09a8', pm_hide_bill: '\u09ac\u09bf\u09b2 \u09b2\u09c1\u0995\u09be\u09a8',
+      pm_no_charges: '\u098f\u0996\u09a8\u0993 \u0995\u09cb\u09a8\u09cb \u099a\u09be\u09b0\u09cd\u099c \u09a8\u09c7\u0987', pm_payments_so_far: '\u098f \u09aa\u09b0\u09cd\u09af\u09a8\u09cd\u09a4 \u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f', pm_step1: '\u09e7. \u09b0\u09cb\u0997\u09c0 \u0995\u09c0\u09ad\u09be\u09ac\u09c7 \u099f\u09be\u0995\u09be \u09a6\u09bf\u099a\u09cd\u099b\u09c7\u09a8?', pm_cash: '\u09a8\u0997\u09a6', pm_upi: 'UPI', pm_card: '\u0995\u09be\u09b0\u09cd\u09a1', pm_bank: '\u09ac\u09cd\u09af\u09be\u0982\u0995 \u099f\u09cd\u09b0\u09be\u09a8\u09b8\u09ab\u09be\u09b0',
+      pm_step2: '\u09e8. \u098f\u0996\u09a8 \u0995\u09a4 \u099f\u09be\u0995\u09be \u09a6\u09bf\u099a\u09cd\u099b\u09c7\u09a8?', pm_pick_first: '\u0986\u0997\u09c7 \u0995\u09c0\u09ad\u09be\u09ac\u09c7 \u09a6\u09bf\u099a\u09cd\u099b\u09c7\u09a8 \u09a4\u09be \u09ac\u09c7\u099b\u09c7 \u09a8\u09bf\u09a8', pm_full: '\u09aa\u09c1\u09b0\u09cb\u099f\u09be {amt}', pm_ref_ph: '\u09b0\u09c7\u09ab\u09be\u09b0\u09c7\u09a8\u09cd\u09b8 \u09a8\u09ae\u09cd\u09ac\u09b0 (\u0990\u099a\u09cd\u099b\u09bf\u0995)',
+      pm_will_paid: '\u098f\u09a4\u09c7 \u09ac\u09bf\u09b2 "\u09aa\u09b0\u09bf\u09b6\u09cb\u09a7\u09bf\u09a4" \u09b9\u09af\u09bc\u09c7 \u09af\u09be\u09ac\u09c7 \u2713', pm_will_part: '\u0986\u0982\u09b6\u09bf\u0995 \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7 \u2014 {amt} \u09ac\u09be\u0995\u09bf \u09a5\u09be\u0995\u09ac\u09c7', pm_will_extra: '\u098f\u099f\u09bf \u09ac\u09be\u0995\u09bf\u09b0 \u099a\u09c7\u09af\u09bc\u09c7 {amt} \u09ac\u09c7\u09b6\u09bf (\u0985\u0997\u09cd\u09b0\u09bf\u09ae \u09b9\u09bf\u09b8\u09c7\u09ac\u09c7 \u09a5\u09be\u0995\u09ac\u09c7)',
+      pm_confirm: '\u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09c1\u09a8', pm_saving: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u09b9\u099a\u09cd\u099b\u09c7\u2026', pm_cancel: '\u09ac\u09be\u09a4\u09bf\u09b2', pm_err_method: '\u0986\u0997\u09c7 \u09a8\u0997\u09a6, UPI, \u0995\u09be\u09b0\u09cd\u09a1 \u09ac\u09be \u09ac\u09cd\u09af\u09be\u0982\u0995 \u099f\u09cd\u09b0\u09be\u09a8\u09b8\u09ab\u09be\u09b0 \u09ac\u09c7\u099b\u09c7 \u09a8\u09bf\u09a8\u0964', pm_err_amount: '\u0995\u09a4 \u099f\u09be\u0995\u09be \u09a6\u09bf\u099a\u09cd\u099b\u09c7\u09a8 \u09a4\u09be \u09b2\u09bf\u0996\u09c1\u09a8\u0964',
+      pm_err_generic: '\u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964 \u0995\u09bf\u099b\u09c1\u0987 \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u09b9\u09af\u09bc\u09a8\u09bf\u0964', pm_done_title: '\u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u09b9\u09af\u09bc\u09c7\u099b\u09c7 \u2713', pm_done_line: '{method}-\u098f {amt} \u09aa\u09be\u0993\u09af\u09bc\u09be \u0997\u09c7\u099b\u09c7\u0964', pm_status_paid: '\u09aa\u09c1\u09b0\u09cb \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7\u09bf\u09a4',
+      pm_status_part_due: '\u0986\u0982\u09b6\u09bf\u0995 \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7 \u00b7 {amt} \u09ac\u09be\u0995\u09bf', pm_bill_updating: '\u09ac\u09bf\u09b2 \u09b9\u09be\u09b2\u09a8\u09be\u0997\u09be\u09a6 \u09b9\u099a\u09cd\u099b\u09c7\u2026', pm_bill_ready: '\u09ac\u09bf\u09b2 \u09b9\u09be\u09b2\u09a8\u09be\u0997\u09be\u09a6 \u09b9\u09af\u09bc\u09c7\u099b\u09c7 \u2713', pm_bill_failed: '\u09ac\u09bf\u09b2 \u09b9\u09be\u09b2\u09a8\u09be\u0997\u09be\u09a6 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964 \u09aa\u09b0\u09c7 "Generate Bill" \u099a\u09be\u09aa\u09c1\u09a8\u0964',
+      pm_send_patient: '\u09b0\u09cb\u0997\u09c0\u0995\u09c7 \u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa\u09c7 \u09aa\u09be\u09a0\u09be\u09a8', pm_tell_owner: '\u09ae\u09be\u09b2\u09bf\u0995\u0995\u09c7 \u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa\u09c7 \u099c\u09be\u09a8\u09be\u09a8', pm_no_patient_phone: '\u098f\u0987 \u09b0\u09cb\u0997\u09c0\u09b0 \u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0 \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4 \u09a8\u09c7\u0987',
+      pm_no_owner_phone: '\u09ae\u09be\u09b2\u09bf\u0995\u09c7\u09b0 \u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a6\u09c7\u0993\u09af\u09bc\u09be \u09a8\u09c7\u0987 (\u09ae\u09be\u09b2\u09bf\u0995 Settings \u2192 Facility details-\u098f \u09a6\u09bf\u09a4\u09c7 \u09aa\u09be\u09b0\u09c7\u09a8)', pm_auto_sent: '\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u09ac\u09be\u09b0\u09cd\u09a4\u09be \u09a8\u09bf\u099c\u09c7 \u09a5\u09c7\u0995\u09c7\u0987 \u09aa\u09be\u09a0\u09be\u09a8\u09cb \u09b9\u09af\u09bc\u09c7\u099b\u09c7 \u2713', pm_done_btn: '\u09b9\u09af\u09bc\u09c7\u099b\u09c7',
+      st_pending: '\u0985\u09aa\u09c7\u0995\u09cd\u09b7\u09ae\u09be\u09a3', st_overdue: '\u09ac\u0995\u09c7\u09af\u09bc\u09be (\u09a6\u09c7\u09b0\u09bf)', st_partly: '\u0986\u0982\u09b6\u09bf\u0995 \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7', st_paid: '\u09aa\u09b0\u09bf\u09b6\u09cb\u09a7\u09bf\u09a4', pm_tap_hint: '\u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09a4\u09c7 \u099a\u09be\u09aa\u09c1\u09a8', pm_due_word: '\u09ac\u09be\u0995\u09bf',
+      wa_link: '\u0986\u09aa\u09a8\u09be\u09b0 \u09ac\u09bf\u09b2 \u09a6\u09c7\u0996\u09c1\u09a8: {url}', wa_owner_link: '\u09ac\u09bf\u09b2: {url}',
+      wa_patient_paid: '\u09aa\u09cd\u09b0\u09bf\u09af\u09bc {name}, {hospital}-\u098f \u0986\u09aa\u09a8\u09be\u09b0 {amt} ({method}) \u09aa\u09c7\u09af\u09bc\u09c7\u099b\u09bf\u0964 \u0986\u09aa\u09a8\u09be\u09b0 \u09ac\u09bf\u09b2 \u09b8\u09ae\u09cd\u09aa\u09c2\u09b0\u09cd\u09a3 \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7\u09bf\u09a4\u0964 \u09a7\u09a8\u09cd\u09af\u09ac\u09be\u09a6\u0964{link}',
+      wa_patient_part: '\u09aa\u09cd\u09b0\u09bf\u09af\u09bc {name}, {hospital}-\u098f \u0986\u09aa\u09a8\u09be\u09b0 {amt} ({method}) \u09aa\u09c7\u09af\u09bc\u09c7\u099b\u09bf\u0964 \u09ac\u09be\u0995\u09bf \u0986\u099b\u09c7: {due}\u0964{link}',
+      wa_owner_paid: '{hospital}: {name}-\u098f\u09b0 \u0995\u09be\u099b \u09a5\u09c7\u0995\u09c7 {method}-\u098f {amt} \u09aa\u09be\u0993\u09af\u09bc\u09be \u0997\u09c7\u099b\u09c7\u0964 \u09ac\u09bf\u09b2 \u09aa\u09c1\u09b0\u09cb \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7\u09bf\u09a4\u0964 \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09c7\u099b\u09c7\u09a8: {staff}\u0964{link}',
+      wa_owner_part: '{hospital}: {name}-\u098f\u09b0 \u0995\u09be\u099b \u09a5\u09c7\u0995\u09c7 {method}-\u098f {amt} \u09aa\u09be\u0993\u09af\u09bc\u09be \u0997\u09c7\u099b\u09c7\u0964 \u0986\u0982\u09b6\u09bf\u0995 \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7, {due} \u09ac\u09be\u0995\u09bf\u0964 \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09c7\u099b\u09c7\u09a8: {staff}\u0964{link}' },
+    hi: { pm_title: '\u092d\u0941\u0917\u0924\u093e\u0928 \u0926\u0930\u094d\u091c \u0915\u0930\u0947\u0902', pm_l_total: '\u092c\u093f\u0932 \u0915\u093e \u0915\u0941\u0932', pm_l_paid: '\u0905\u092c \u0924\u0915 \u091a\u0941\u0915\u093e\u092f\u093e', pm_l_due: '\u092c\u093e\u0915\u0940', pm_view_bill: '\u092a\u0942\u0930\u093e \u092c\u093f\u0932 \u0926\u0947\u0916\u0947\u0902', pm_hide_bill: '\u092c\u093f\u0932 \u091b\u093f\u092a\u093e\u090f\u0901',
+      pm_no_charges: '\u0905\u092d\u0940 \u0915\u094b\u0908 \u0936\u0941\u0932\u094d\u0915 \u0928\u0939\u0940\u0902', pm_payments_so_far: '\u0905\u092c \u0924\u0915 \u0915\u0947 \u092d\u0941\u0917\u0924\u093e\u0928', pm_step1: '1. \u092e\u0930\u0940\u091c\u093c \u0915\u0948\u0938\u0947 \u092d\u0941\u0917\u0924\u093e\u0928 \u0915\u0930 \u0930\u0939\u0947 \u0939\u0948\u0902?', pm_cash: '\u0928\u0915\u0926', pm_upi: 'UPI', pm_card: '\u0915\u093e\u0930\u094d\u0921', pm_bank: '\u092c\u0948\u0902\u0915 \u091f\u094d\u0930\u093e\u0902\u0938\u092b\u0930',
+      pm_step2: '2. \u0905\u092d\u0940 \u0915\u093f\u0924\u0928\u093e \u092d\u0941\u0917\u0924\u093e\u0928 \u0939\u094b \u0930\u0939\u093e \u0939\u0948?', pm_pick_first: '\u092a\u0939\u0932\u0947 \u091a\u0941\u0928\u0947\u0902 \u0915\u093f \u092d\u0941\u0917\u0924\u093e\u0928 \u0915\u0948\u0938\u0947 \u0939\u094b \u0930\u0939\u093e \u0939\u0948', pm_full: '\u092a\u0942\u0930\u093e {amt}', pm_ref_ph: '\u0930\u0947\u092b\u093c\u0930\u0947\u0902\u0938 \u0928\u0902\u092c\u0930 (\u0935\u0948\u0915\u0932\u094d\u092a\u093f\u0915)',
+      pm_will_paid: '\u0907\u0938\u0938\u0947 \u092c\u093f\u0932 "\u091a\u0941\u0915\u093e\u092f\u093e \u0917\u092f\u093e" \u0939\u094b \u091c\u093e\u090f\u0917\u093e \u2713', pm_will_part: '\u0906\u0902\u0936\u093f\u0915 \u092d\u0941\u0917\u0924\u093e\u0928 \u2014 {amt} \u092c\u093e\u0915\u0940 \u0930\u0939\u0947\u0902\u0917\u0947', pm_will_extra: '\u092f\u0939 \u092c\u093e\u0915\u0940 \u0938\u0947 {amt} \u091c\u093c\u094d\u092f\u093e\u0926\u093e \u0939\u0948 (\u0905\u0917\u094d\u0930\u093f\u092e \u0915\u0947 \u0930\u0942\u092a \u092e\u0947\u0902 \u0930\u0939\u0947\u0917\u093e)',
+      pm_confirm: '\u092d\u0941\u0917\u0924\u093e\u0928 \u0926\u0930\u094d\u091c \u0915\u0930\u0947\u0902', pm_saving: '\u0938\u0939\u0947\u091c\u093e \u091c\u093e \u0930\u0939\u093e \u0939\u0948\u2026', pm_cancel: '\u0930\u0926\u094d\u0926 \u0915\u0930\u0947\u0902', pm_err_method: '\u092a\u0939\u0932\u0947 \u0928\u0915\u0926, UPI, \u0915\u093e\u0930\u094d\u0921 \u092f\u093e \u092c\u0948\u0902\u0915 \u091f\u094d\u0930\u093e\u0902\u0938\u092b\u0930 \u091a\u0941\u0928\u0947\u0902\u0964', pm_err_amount: '\u092d\u0941\u0917\u0924\u093e\u0928 \u0915\u0940 \u0930\u093e\u0936\u093f \u0932\u093f\u0916\u0947\u0902\u0964',
+      pm_err_generic: '\u092d\u0941\u0917\u0924\u093e\u0928 \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u093e ({e})\u0964 \u0915\u0941\u091b \u092d\u0940 \u0938\u0939\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u0917\u092f\u093e\u0964', pm_done_title: '\u092d\u0941\u0917\u0924\u093e\u0928 \u0926\u0930\u094d\u091c \u0939\u094b \u0917\u092f\u093e \u2713', pm_done_line: '{method} \u0938\u0947 {amt} \u092e\u093f\u0932\u0947\u0964', pm_status_paid: '\u092a\u0942\u0930\u093e \u092d\u0941\u0917\u0924\u093e\u0928',
+      pm_status_part_due: '\u0906\u0902\u0936\u093f\u0915 \u092d\u0941\u0917\u0924\u093e\u0928 \u00b7 {amt} \u092c\u093e\u0915\u0940', pm_bill_updating: '\u092c\u093f\u0932 \u0905\u092a\u0921\u0947\u091f \u0939\u094b \u0930\u0939\u093e \u0939\u0948\u2026', pm_bill_ready: '\u092c\u093f\u0932 \u0905\u092a\u0921\u0947\u091f \u0939\u094b \u0917\u092f\u093e \u2713', pm_bill_failed: '\u092c\u093f\u0932 \u0905\u092a\u0921\u0947\u091f \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u093e ({e})\u0964 \u092c\u093e\u0926 \u092e\u0947\u0902 "Generate Bill" \u0926\u092c\u093e\u090f\u0901\u0964',
+      pm_send_patient: '\u092e\u0930\u0940\u091c\u093c \u0915\u094b \u0935\u094d\u0939\u093e\u091f\u094d\u0938\u0910\u092a \u092a\u0930 \u092d\u0947\u091c\u0947\u0902', pm_tell_owner: '\u092e\u093e\u0932\u093f\u0915 \u0915\u094b \u0935\u094d\u0939\u093e\u091f\u094d\u0938\u0910\u092a \u092a\u0930 \u092c\u0924\u093e\u090f\u0901', pm_no_patient_phone: '\u0907\u0938 \u092e\u0930\u0940\u091c\u093c \u0915\u093e \u092b\u093c\u094b\u0928 \u0928\u0902\u092c\u0930 \u0938\u0939\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u0939\u0948',
+      pm_no_owner_phone: '\u092e\u093e\u0932\u093f\u0915 \u0915\u093e \u0935\u094d\u0939\u093e\u091f\u094d\u0938\u0910\u092a \u0928\u0902\u092c\u0930 \u0938\u0947\u091f \u0928\u0939\u0940\u0902 \u0939\u0948 (\u092e\u093e\u0932\u093f\u0915 Settings \u2192 Facility details \u092e\u0947\u0902 \u091c\u094b\u0921\u093c \u0938\u0915\u0924\u0947 \u0939\u0948\u0902)', pm_auto_sent: '\u0935\u094d\u0939\u093e\u091f\u094d\u0938\u0910\u092a \u0938\u0902\u0926\u0947\u0936 \u0905\u092a\u0928\u0947 \u0906\u092a \u092d\u0947\u091c \u0926\u093f\u090f \u0917\u090f \u2713', pm_done_btn: '\u092a\u0942\u0930\u093e \u0939\u0941\u0906',
+      st_pending: '\u0932\u0902\u092c\u093f\u0924', st_overdue: '\u0905\u0924\u093f\u0926\u0947\u092f', st_partly: '\u0906\u0902\u0936\u093f\u0915 \u092d\u0941\u0917\u0924\u093e\u0928', st_paid: '\u091a\u0941\u0915\u093e\u092f\u093e \u0917\u092f\u093e', pm_tap_hint: '\u092d\u0941\u0917\u0924\u093e\u0928 \u0926\u0930\u094d\u091c \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0926\u092c\u093e\u090f\u0901', pm_due_word: '\u092c\u093e\u0915\u0940',
+      wa_link: '\u0905\u092a\u0928\u093e \u092c\u093f\u0932 \u0926\u0947\u0916\u0947\u0902: {url}', wa_owner_link: '\u092c\u093f\u0932: {url}',
+      wa_patient_paid: '\u092a\u094d\u0930\u093f\u092f {name}, {hospital} \u092e\u0947\u0902 \u0906\u092a\u0915\u0947 {amt} ({method}) \u092a\u094d\u0930\u093e\u092a\u094d\u0924 \u0939\u0941\u090f\u0964 \u0906\u092a\u0915\u093e \u092c\u093f\u0932 \u092a\u0942\u0930\u093e \u091a\u0941\u0915\u093e \u0926\u093f\u092f\u093e \u0917\u092f\u093e \u0939\u0948\u0964 \u0927\u0928\u094d\u092f\u0935\u093e\u0926\u0964{link}',
+      wa_patient_part: '\u092a\u094d\u0930\u093f\u092f {name}, {hospital} \u092e\u0947\u0902 \u0906\u092a\u0915\u0947 {amt} ({method}) \u092a\u094d\u0930\u093e\u092a\u094d\u0924 \u0939\u0941\u090f\u0964 \u092c\u093e\u0915\u0940 \u0930\u093e\u0936\u093f: {due}\u0964{link}',
+      wa_owner_paid: '{hospital}: {name} \u0938\u0947 {method} \u0926\u094d\u0935\u093e\u0930\u093e {amt} \u092a\u094d\u0930\u093e\u092a\u094d\u0924 \u0939\u0941\u090f\u0964 \u092c\u093f\u0932 \u092a\u0942\u0930\u093e \u091a\u0941\u0915\u093e\u092f\u093e \u0917\u092f\u093e\u0964 \u0926\u0930\u094d\u091c \u0915\u093f\u092f\u093e: {staff}\u0964{link}',
+      wa_owner_part: '{hospital}: {name} \u0938\u0947 {method} \u0926\u094d\u0935\u093e\u0930\u093e {amt} \u092a\u094d\u0930\u093e\u092a\u094d\u0924 \u0939\u0941\u090f\u0964 \u0906\u0902\u0936\u093f\u0915 \u092d\u0941\u0917\u0924\u093e\u0928, {due} \u092c\u093e\u0915\u0940\u0964 \u0926\u0930\u094d\u091c \u0915\u093f\u092f\u093e: {staff}\u0964{link}' }
+  };
+  Object.keys(T).forEach(function (l) { if (FAM_I18N[l]) for (var k in T[l]) FAM_I18N[l][k] = T[l][k]; });
+})();
+
+var _tp = null, _tpBusy = false, TP_METHODS = ['Cash', 'UPI', 'Card', 'Bank Transfer'];
+function tpMethodLabel(m) { return famT(m === 'Cash' ? 'pm_cash' : m === 'UPI' ? 'pm_upi' : m === 'Card' ? 'pm_card' : m === 'Bank Transfer' ? 'pm_bank' : '') || m; }
+function tpEl(id) { return document.getElementById(id); }
+function tpLocalDate() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function tpWaNumber(p) { var d = String(p || '').replace(/\D/g, ''); if (d.length === 11 && d.charAt(0) === '0') d = d.slice(1); if (d.length === 10) d = '91' + d; return d.length >= 11 ? d : ''; }
+/* the bill's status from the money: Paid / Partly paid / Overdue / Pending */
+function tpStatusOf(total, paid, admissionDate) {
+  var due = Math.round((total - paid) * 100) / 100;
+  if (total > 0 && due <= 0) return 'Paid';
+  if (paid > 0) return 'Partly paid';
+  var age = admissionDate ? Math.floor((Date.now() - new Date(admissionDate)) / 86400000) : 0;
+  return age >= 2 ? 'Overdue' : 'Pending';
+}
+function tpApplyLang() {
+  var set = function (id, key) { var e = tpEl(id); if (e) e.textContent = famT(key); };
+  set('tp-title', 'pm_title'); set('tp-l-total', 'pm_l_total'); set('tp-l-paid', 'pm_l_paid'); set('tp-l-due', 'pm_l_due'); set('tp-step1', 'pm_step1'); set('tp-step2', 'pm_step2');
+  set('tp-cancel-btn', 'pm_cancel'); set('tp-done-btn', 'pm_done_btn');
+  TP_METHODS.forEach(function (m) { var b = document.querySelector('#tp-methods [data-m="' + m + '"]'); if (b) b.textContent = tpMethodLabel(m); });
+  tpEl('tp-ref').placeholder = famT('pm_ref_ph');
+  tpEl('tp-bill-toggle').textContent = famT(tpEl('tp-bill').style.display === 'none' ? 'pm_view_bill' : 'pm_hide_bill');
+}
+async function openTransactionPayment(admissionId, patientName) {
+  if (!admissionId) { showToast('Missing admission reference'); return; }
+  _tp = { admId: admissionId, name: patientName || '', method: '', total: 0, paid: 0, due: 0, charges: [], payments: [], clinic: {}, phone: '', staff: (typeof _myName !== 'undefined' && _myName) || '', ready: false };
+  tpEl('tp-form').style.display = ''; tpEl('tp-done').style.display = 'none';
+  tpEl('tp-patient-name').textContent = _tp.name || '\u2014';
+  ['tp-total', 'tp-paid', 'tp-due'].forEach(function (i) { tpEl(i).textContent = '\u2026'; });
+  tpEl('tp-amount').value = ''; tpEl('tp-ref').value = ''; tpEl('tp-ref').style.display = 'none'; tpEl('tp-err').style.display = 'none';
+  tpEl('tp-bill').style.display = 'none'; tpEl('tp-bill').innerHTML = '';
+  document.querySelectorAll('#tp-methods button').forEach(function (b) { b.style.background = 'var(--surface)'; b.style.color = 'var(--text-primary)'; b.style.borderColor = 'var(--border)'; });
+  tpEl('tp-amount').disabled = true; tpEl('tp-full').disabled = true;
+  var btn = tpEl('tp-confirm-btn'); btn.disabled = true; btn.textContent = famT('pm_confirm');
+  tpApplyLang(); tpUpdate();
+  openModal('mod-transaction-payment');
+  var r = await Promise.all([
+    _supa.from('admissions').select('id,patient_name,patient_phone,admission_date,uhid').eq('id', admissionId).maybeSingle(),
+    _supa.from('admission_charges').select('*').eq('admission_id', admissionId),
+    _supa.from('nh_payments').select('*').eq('admission_id', admissionId),
+    _supa.from('clinics').select('name,whatsapp_number,phone').eq('id', _clinicId).maybeSingle()
+  ]);
+  var a = r[0].data || {};
+  _tp.name = a.patient_name || _tp.name; _tp.phone = a.patient_phone || ''; _tp.admDate = a.admission_date;
+  _tp.charges = (r[1].data || []).slice().sort(function (x, y) { return String(x.charge_date || x.created_at || '').localeCompare(String(y.charge_date || y.created_at || '')); });
+  _tp.payments = (r[2].data || []).slice().sort(function (x, y) { return String(x.created_at || '').localeCompare(String(y.created_at || '')); });
+  _tp.clinic = r[3].data || {};
+  _tp.total = _tp.charges.reduce(function (s, c) { return s + (Number(c.total_price) || 0); }, 0);
+  _tp.paid = _tp.payments.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+  _tp.due = Math.round((_tp.total - _tp.paid) * 100) / 100; _tp.ready = true;
+  tpEl('tp-patient-name').textContent = _tp.name || '\u2014';
+  tpEl('tp-total').textContent = auraMoney(_tp.total); tpEl('tp-paid').textContent = auraMoney(_tp.paid);
+  tpEl('tp-due').textContent = auraMoney(Math.max(_tp.due, 0)); tpEl('tp-due').style.color = _tp.due > 0 ? 'var(--red)' : 'var(--green)';
+  tpEl('tp-full').textContent = famT('pm_full', { amt: auraMoney(Math.max(_tp.due, 0)) });
+  tpRenderBill(); tpUpdate();
+}
+function tpRenderBill() {
+  var rows = '', f = function (d) { return typeof auraDate === 'function' ? auraDate(d) : ''; };
+  _tp.charges.forEach(function (c) { rows += '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span>' + esc(f(c.charge_date || c.created_at)) + ' &middot; ' + esc(c.description || c.charge_type || '') + (Number(c.quantity) > 1 ? ' &times; ' + esc(c.quantity) : '') + '</span><b>' + esc(auraMoney(c.total_price)) + '</b></div>'; });
+  if (!_tp.charges.length) rows += '<div style="color:var(--text-tertiary);padding:6px 0">' + esc(famT('pm_no_charges')) + '</div>';
+  rows += '<div style="display:flex;justify-content:space-between;padding:7px 0;font-weight:700"><span>' + esc(famT('pm_l_total')) + '</span><span>' + esc(auraMoney(_tp.total)) + '</span></div>';
+  if (_tp.payments.length) {
+    rows += '<div style="font-size:10.5px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-top:6px">' + esc(famT('pm_payments_so_far')) + '</div>';
+    _tp.payments.forEach(function (p) { rows += '<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span>' + esc(f(p.payment_date || p.created_at)) + ' &middot; ' + esc(tpMethodLabel(p.method) || '') + '</span><b>' + esc(auraMoney(p.amount)) + '</b></div>'; });
+  }
+  tpEl('tp-bill').innerHTML = rows;
+}
+function tpToggleBill() { var b = tpEl('tp-bill'); b.style.display = b.style.display === 'none' ? 'block' : 'none'; tpEl('tp-bill-toggle').textContent = famT(b.style.display === 'none' ? 'pm_view_bill' : 'pm_hide_bill'); }
+function tpPickMethod(m) {
+  if (!_tp) return; _tp.method = m;
+  document.querySelectorAll('#tp-methods button').forEach(function (b) { var on = b.getAttribute('data-m') === m; b.style.background = on ? 'var(--green)' : 'var(--surface)'; b.style.color = on ? '#fff' : 'var(--text-primary)'; b.style.borderColor = on ? 'var(--green)' : 'var(--border)'; });
+  tpEl('tp-ref').style.display = m === 'Cash' ? 'none' : 'block';
+  tpEl('tp-amount').disabled = false; tpEl('tp-full').disabled = false;
+  if (!tpEl('tp-amount').value && _tp.due > 0) tpEl('tp-amount').value = _tp.due;      // most people pay the whole balance: one tap fewer
+  tpEl('tp-err').style.display = 'none'; tpUpdate(); tpEl('tp-amount').focus();
+}
+function tpFull() { if (!_tp || !_tp.method) return; tpEl('tp-amount').value = Math.max(_tp.due, 0); tpUpdate(); }
+function tpUpdate() {
+  var out = tpEl('tp-outcome'), btn = tpEl('tp-confirm-btn'); if (!out) return;
+  var amt = parseFloat(tpEl('tp-amount').value) || 0;
+  if (!_tp || !_tp.method) { out.textContent = famT('pm_pick_first'); out.style.color = 'var(--text-tertiary)'; btn.disabled = true; return; }
+  btn.disabled = !(amt > 0);
+  if (!(amt > 0)) { out.textContent = ''; return; }
+  var left = Math.round((_tp.due - amt) * 100) / 100;
+  if (_tp.ready === false) { out.textContent = ''; return; }
+  if (left < 0) { out.textContent = famT('pm_will_extra', { amt: auraMoney(-left) }); out.style.color = 'var(--amber)'; }
+  else if (left === 0) { out.textContent = famT('pm_will_paid'); out.style.color = 'var(--green)'; }
+  else { out.textContent = famT('pm_will_part', { amt: auraMoney(left) }); out.style.color = 'var(--blue)'; }
+}
+function tpClose() { closeModal('mod-transaction-payment'); }
+async function tpConfirm() {
+  if (_tpBusy || !_tp) return;
+  var err = tpEl('tp-err'); err.style.display = 'none';
+  var amt = Math.round((parseFloat(tpEl('tp-amount').value) || 0) * 100) / 100, method = _tp.method;
+  if (!method) { err.textContent = famT('pm_err_method'); err.style.display = 'block'; return; }
+  if (!(amt > 0)) { err.textContent = famT('pm_err_amount'); err.style.display = 'block'; return; }
+  _tpBusy = true; var btn = tpEl('tp-confirm-btn'); btn.disabled = true; btn.textContent = famT('pm_saving');
+  try {
+    var ref = (tpEl('tp-ref').value || '').trim();
+    var row = { clinic_id: _clinicId, admission_id: _tp.admId, amount: amt, method: method, payment_date: tpLocalDate(), recorded_by: _myUid };
+    if (ref && method !== 'Cash') row.txn_id = ref;
+    var ins = await _supa.from('nh_payments').insert(row);
+    if (ins.error && row.txn_id && /txn_id/i.test(ins.error.message || '')) { delete row.txn_id; ins = await _supa.from('nh_payments').insert(row); }
+    if (ins.error) throw new Error(ins.error.message);
+    var newPaid = Math.round((_tp.paid + amt) * 100) / 100, newDue = Math.round((_tp.total - newPaid) * 100) / 100;
+    var status = newDue <= 0 ? 'Paid' : 'Partly paid';
+    /* what the owner sees in Notifications and Payments (awaited on purpose: an un-awaited Supabase call is never sent) */
+    try { await _supa.from('nh_audit_log').insert({ clinic_id: _clinicId, actor_id: _myUid, action: 'payment_recorded', target_table: 'nh_payments', target_id: _tp.admId,
+      details: { amount: amt, method: method, patient_name: _tp.name, status: status, due: Math.max(newDue, 0), total: _tp.total, paid: newPaid, reference: ref || null, recorded_by_name: _tp.staff || null } }); } catch (e) {}
+    _tp.lastAmt = amt; _tp.lastMethod = method; _tp.paid = newPaid; _tp.due = newDue; _tp.status = status;
+    tpShowDone();
+    tpRefreshScreens();
+    tpUpdateBillAfterPayment();
+  } catch (e) {
+    err.textContent = famT('pm_err_generic', { e: (e && e.message) || e }); err.style.display = 'block'; btn.disabled = false; btn.textContent = famT('pm_confirm');
+  } finally { _tpBusy = false; }
+}
+function tpShowDone() {
+  tpEl('tp-form').style.display = 'none'; tpEl('tp-done').style.display = '';
+  tpEl('tp-done-title').textContent = famT('pm_done_title');
+  tpEl('tp-done-line').textContent = famT('pm_done_line', { amt: auraMoney(_tp.lastAmt), method: tpMethodLabel(_tp.lastMethod) });
+  var paid = _tp.due <= 0, st = tpEl('tp-done-status');
+  st.textContent = paid ? famT('pm_status_paid') : famT('pm_status_part_due', { amt: auraMoney(_tp.due) });
+  st.style.color = paid ? 'var(--green)' : 'var(--blue)';
+  tpEl('tp-bill-state').textContent = famT('pm_bill_updating'); tpEl('tp-auto-state').style.display = 'none';
+  tpEl('tp-view-bill').style.display = 'none';
+  tpPrepareWhatsApp();
+}
+function tpRefreshScreens() {
+  try {
+    var activeTab = document.querySelector('.bl-tab-btn.on'), tabId = activeTab ? activeTab.getAttribute('data-bltab') : 'txns';
+    if (typeof blTab === 'function' && document.getElementById('v-billing') && document.getElementById('v-billing').classList.contains('on')) blTab(tabId, activeTab);
+    if (typeof _pid !== 'undefined' && _pid && typeof loadBilling === 'function') loadBilling(_pid);
+  } catch (e) {}
+}
+function tpMessage(kind, billUrl) {
+  var paid = _tp.due <= 0, c = _tp.clinic || {};
+  var linkKey = kind === 'owner' ? 'wa_owner_link' : 'wa_link';
+  var link = billUrl ? '\n\n' + famT(linkKey, { url: billUrl }) : '';
+  var key = (kind === 'owner' ? 'wa_owner_' : 'wa_patient_') + (paid ? 'paid' : 'part');
+  return famT(key, { name: _tp.name, amt: auraMoney(_tp.lastAmt), method: tpMethodLabel(_tp.lastMethod), hospital: c.name || '', due: auraMoney(Math.max(_tp.due, 0)), staff: _tp.staff || '-', link: link });
+}
+function tpPrepareWhatsApp() {
+  var c = _tp.clinic || {}, pn = tpWaNumber(_tp.phone), on = tpWaNumber(c.whatsapp_number);
+  var bp = tpEl('tp-wa-patient'), bo = tpEl('tp-wa-owner');
+  bp.textContent = '\ud83d\udcac ' + famT('pm_send_patient'); bo.textContent = '\ud83d\udcac ' + famT('pm_tell_owner');
+  bp.disabled = !pn; bo.disabled = !on;
+  tpEl('tp-wa-note').textContent = !pn ? famT('pm_no_patient_phone') : (!on ? famT('pm_no_owner_phone') : '');
+  tpEl('tp-wa-note').style.display = (!pn || !on) ? 'block' : 'none';
+}
+function tpSendWhatsApp(who) {
+  if (!_tp) return;
+  var num = who === 'owner' ? tpWaNumber((_tp.clinic || {}).whatsapp_number) : tpWaNumber(_tp.phone); if (!num) return;
+  window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(tpMessage(who, _tp.billUrl)), '_blank');
+}
+async function tpUpdateBillAfterPayment() {
+  var admId = _tp.admId, state = tpEl('tp-bill-state');
+  var r = (typeof auraGenerateBill === 'function') ? await auraGenerateBill(admId) : { ok: false, error: 'bill tools missing' };
+  if (!_tp || _tp.admId !== admId) return;
+  if (r.ok) {
+    _tp.billUrl = r.row && r.row.pdf_url; state.textContent = famT('pm_bill_ready');
+    tpEl('tp-view-bill').style.display = ''; tpEl('tp-view-bill').textContent = '\u2b07 ' + famT('bt_download');
+  } else { state.textContent = famT('pm_bill_failed', { e: r.error }); }
+  /* optional: let the server send both WhatsApp messages by itself, if the owner has switched that on (see the notify-payment function) */
+  try {
+    var n = await _supa.functions.invoke('notify-payment', { body: { admission_id: admId, bill_url: _tp.billUrl || null, lang: famLang() } });
+    if (n && n.data && n.data.sent) { tpEl('tp-auto-state').textContent = famT('pm_auto_sent'); tpEl('tp-auto-state').style.display = 'block'; }
+  } catch (e) {}
 }
 </script>
 </body>
