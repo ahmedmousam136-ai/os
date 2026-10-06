@@ -907,6 +907,41 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-settings" class="view owner-only">
         <div class="sh"><div><h1 class="st">Settings</h1><p class="ss">Manage your account</p></div></div>
 
+        <div class="panel" id="facility-panel">
+          <div class="ph"><div class="pt" id="fd-title"><span>&#127973;</span> <span id="fd-title-txt">Facility details</span></div></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
+            <p class="ss" id="fd-intro" style="margin:0">These details are printed at the top of every bill.</p>
+            <div>
+              <label class="flbl" id="fd-l-name">Nursing home name</label>
+              <div id="fd-name" class="finput" style="background:var(--surface2);color:var(--text-secondary);min-height:40px;display:flex;align-items:center"></div>
+              <p class="ss" id="fd-name-note" style="margin-top:4px">To change the name, contact AuraScale.</p>
+            </div>
+            <div>
+              <label class="flbl" id="fd-l-address">Address</label>
+              <textarea class="finput ftextarea" id="fd-address" rows="3" maxlength="300" oninput="fdPreview()" placeholder="Street, town, district, PIN code"></textarea>
+            </div>
+            <div>
+              <label class="flbl" id="fd-l-phone">Phone number</label>
+              <input class="finput" id="fd-phone" type="tel" inputmode="tel" maxlength="20" oninput="fdPreview()" placeholder="e.g. 9830012345"/>
+            </div>
+            <div>
+              <label class="flbl" id="fd-l-gstin">GSTIN (optional)</label>
+              <input class="finput" id="fd-gstin" maxlength="15" autocapitalize="characters" autocomplete="off" oninput="fdPreview()" placeholder="e.g. 19ABCDE1234F1Z5"/>
+              <div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px">
+                <p class="ss" id="fd-gstin-help" style="margin:0">15 letters and numbers. Leave it empty if you do not have a GSTIN.</p>
+                <span id="fd-gstin-state" style="font-size:11.5px;font-weight:600;white-space:nowrap"></span>
+              </div>
+            </div>
+            <div>
+              <div id="fd-preview-lbl" style="font-size:10.5px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">How the top of your bill will look</div>
+              <div id="fd-preview-box" style="border:1px dashed var(--border);border-left:4px solid #12976A;border-radius:var(--r-md);padding:12px 14px;background:#fff"></div>
+            </div>
+            <div id="fd-error" style="color:var(--red);font-size:12px;display:none"></div>
+            <div id="fd-success" style="color:var(--green);font-size:12px;display:none"></div>
+            <button class="add-btn" id="fd-save" style="width:100%;justify-content:center" onclick="saveFacilityDetails()">Save details</button>
+          </div>
+        </div>
+
         <div class="panel">
           <div class="ph"><div class="pt">Change Password</div></div>
           <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
@@ -1208,7 +1243,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div id="dup-rel-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
         <input class="finput" id="dup-rel-other" maxlength="30" placeholder="Type the relation (for example Cousin)" style="display:none" oninput="dupRelCheck()"/>
         <button class="msub" id="dup-rel-go" disabled onclick="dupAnswer('relgo')">Continue</button>
-        <button class="qbtn" style="align-self:center;font-size:11px;padding:8px 12px" onclick="dupAnswer('relback')">&larr; Back</button>
+        <button class="qbtn" id="dup-rel-back" style="align-self:center;font-size:11px;padding:8px 12px" onclick="dupAnswer('relback')">&larr; Back</button>
       </div>
     </div>
   </div>
@@ -1555,6 +1590,8 @@ function setLanguage(lang){
     if(I18N[lang][key])el.textContent=I18N[lang][key];
   });
   var sw=document.getElementById('lang-switcher');if(sw)sw.value=lang;
+  if(typeof FAM_I18N!=='undefined' && typeof famApplyStaticLang==='function')famApplyStaticLang();   // family window, Families tab and its texts follow the chosen language (waits until the family code has loaded)
+  if(typeof fdApplyLang==='function'&&typeof FAM_I18N!=='undefined')fdApplyLang();   // the Facility details form follows the language too
   // Covers: sidebar navigation + the full Dashboard (Overview/Payments/Revenue/Reports tabs).
   // Other pages (Patients, Bed Management, Billing, etc.) are not yet covered by this pass —
   // extend by wrapping text in data-i18n="key" and adding that key to I18N above.
@@ -1587,6 +1624,7 @@ function nav(id,btn){
   if(id==='ayushman')loadAyushmanView();
   if(id==='staff')loadStaffList();
   if(id==='subscription')loadSubscriptionStatus();
+  if(id==='settings'&&typeof loadFacilityDetails==='function')loadFacilityDetails();
   /* auto-close sidebar on mobile after navigating */
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
@@ -2509,6 +2547,111 @@ function autofillBedRate(){
                                              A NEW patient (new id, new UHID) is created with the same phone, the relation is
                                              saved, an alert row is written, and the admission is linked to the NEW patient.
    An admission can only be linked to an existing patient who was explicitly picked in this window. */
+/* ===== LANGUAGE for the family feature (English / Bengali / Hindi) =====
+   Reads the same saved choice as the owner portal's language box (localStorage 'aurascale_lang'), so a receptionist who picks
+   Bengali sees the whole "is this the same person?" question in Bengali. Names, IDs and phone numbers are never translated.
+   Please have a Bengali / Hindi speaker on your team read the wording once before going live. */
+var FAM_I18N={
+ en:{
+  dlg_title:'Family found', dlg_fam:'The {head} family \u00b7 {n} members on this number', dlg_fam_1:'The {head} family \u00b7 1 member on this number', dlg_msg:'This number is already registered to the patient(s) below. Is this one of them?',
+  rel_head:'Family head (first registered)', rel_none:'Relation not recorded', rel_of:'{rel} of {head}', rel_shared:'{rel} (not a relative) \u00b7 shares this number',
+  age:'Age {n}', age_unset:'Age not set', gender_unset:'gender not set', uhid_lbl:'UHID {x}', uhid_unset:'UHID not set',
+  btn_yes:"Yes, it's {name}", btn_no:'No, this is a different person', btn_back:'Go back and edit',
+  rel_title:'How are they connected?', rel_q:'How is {name} connected to {head} (first registered on this number)?',
+  grp_rel:'A relative', grp_shared:'Not a relative (uses the same number)',
+  'rel_Wife':'Wife','rel_Husband':'Husband','rel_Son':'Son','rel_Daughter':'Daughter','rel_Father':'Father','rel_Mother':'Mother','rel_Brother':'Brother','rel_Sister':'Sister','rel_Other':'Other relative',
+  'rel_Friend':'Friend','rel_Neighbour':'Neighbour','rel_Caretaker':'Caretaker','rel_Other person':'Other person',
+  ph_rel:'Type the relation (for example Cousin)', ph_shared:'Type who they are (for example Cook)', btn_continue:'Continue', btn_relback:'\u2190 Back',
+  ban_same:'\u2713 Existing patient: {name}', ban_perm:'Permanent ID (UHID): {uhid}', ban_same_note:'This admission will be added to their record, and their ID stays the same.',
+  ban_new_family:'New family member: {rel} of {head}', ban_new_shared:'New person on this number: {rel} (not a relative)', ban_new_id:'New ID (UHID): {uhid}', ban_fam_on:'Family on this number: {list}',
+  err_check:'Could not check whether this number is already registered ({e}). Please try again.', err_check_nosave:'Could not check whether this number is already registered ({e}). Nothing was saved. Please try again.',
+  toast_existing:'{name} admitted (existing patient, {uhid})', toast_new:'{name} registered & admitted ({uhid})', toast_alert_fail:'Saved, but the duplicate-number alert could not be recorded. Tell the owner.',
+  tab_all:'All patients', tab_fam:'Families', fam_loading:'Loading families\u2026', fam_err:'Could not load families ({e})',
+  fam_none:'No families yet', fam_nomatch:'No family matches your search', fam_none_note:'A family appears here when two or more patients are registered on the same phone number.',
+  fam_card_title:'{head} family', fam_members:'{n} members', fam_win_title:'The {head} family',
+  fam_win_phone:'Phone: {phone} \u00b7 {n} people share this number. Each person has their own ID and their own record.',
+  fam_id_lbl:'ID (UHID)', fam_id_unset:'not set', fam_hist:'Admission history', fam_no_adm:'No admissions yet', fam_now:'now', fam_bed_unset:'Bed not set',
+  fam_profile:'Open full profile', fam_loading_win:'Loading\u2026', status_Active:'Active', status_Discharged:'Discharged', age_years:'{n}y',
+  g_Male:'Male', g_Female:'Female', g_Other:'Other'
+ },
+ bn:{
+  dlg_title:'\u09aa\u09b0\u09bf\u09ac\u09be\u09b0 \u09aa\u09be\u0993\u09af\u09bc\u09be \u0997\u09c7\u099b\u09c7', dlg_fam:'{head}-\u098f\u09b0 \u09aa\u09b0\u09bf\u09ac\u09be\u09b0 \u00b7 \u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 {n} \u099c\u09a8', dlg_fam_1:'{head}-\u098f\u09b0 \u09aa\u09b0\u09bf\u09ac\u09be\u09b0 \u00b7 \u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 1 \u099c\u09a8',
+  dlg_msg:'\u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0\u099f\u09bf \u0986\u0997\u09c7 \u09a5\u09c7\u0995\u09c7\u0987 \u09a8\u09bf\u099a\u09c7\u09b0 \u09b0\u09cb\u0997\u09c0(\u09a6\u09c7\u09b0) \u09a8\u09be\u09ae\u09c7 \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0986\u099b\u09c7\u0964 \u0987\u09a8\u09bf \u0995\u09bf \u09a4\u09be\u0981\u09a6\u09c7\u09b0\u0987 \u098f\u0995\u099c\u09a8?',
+  rel_head:'\u09aa\u09b0\u09bf\u09ac\u09be\u09b0\u09c7\u09b0 \u09aa\u09cd\u09b0\u09a7\u09be\u09a8 (\u09aa\u09cd\u09b0\u09a5\u09ae \u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09bf\u09a4)', rel_none:'\u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995 \u09b2\u09c7\u0996\u09be \u09a8\u09c7\u0987',
+  rel_of:'{head}-\u098f\u09b0 {rel}', rel_shared:'{rel} (\u0986\u09a4\u09cd\u09ae\u09c0\u09af\u09bc \u09a8\u09a8) \u00b7 \u098f\u0995\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0 \u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u0995\u09b0\u09c7\u09a8',
+  age:'\u09ac\u09af\u09bc\u09b8 {n}', age_unset:'\u09ac\u09af\u09bc\u09b8 \u09b2\u09c7\u0996\u09be \u09a8\u09c7\u0987', gender_unset:'\u09b2\u09bf\u0999\u09cd\u0997 \u09b2\u09c7\u0996\u09be \u09a8\u09c7\u0987', uhid_lbl:'\u0986\u0987\u09a1\u09bf (UHID) {x}', uhid_unset:'\u0986\u0987\u09a1\u09bf (UHID) \u09a8\u09c7\u0987',
+  btn_yes:'\u09b9\u09cd\u09af\u09be\u0981, \u0987\u09a8\u09bf\u0987 {name}', btn_no:'\u09a8\u09be, \u0987\u09a8\u09bf \u0985\u09a8\u09cd\u09af \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf', btn_back:'\u09ab\u09bf\u09b0\u09c7 \u0997\u09bf\u09af\u09bc\u09c7 \u09a0\u09bf\u0995 \u0995\u09b0\u09c1\u09a8',
+  rel_title:'\u0993\u0981\u09a6\u09c7\u09b0 \u09ae\u09a7\u09cd\u09af\u09c7 \u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995 \u0995\u09c0?', rel_q:'\u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 \u09aa\u09cd\u09b0\u09a5\u09ae \u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09bf\u09a4 {head}-\u098f\u09b0 \u09b8\u09be\u09a5\u09c7 {name}-\u098f\u09b0 \u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995 \u0995\u09c0?',
+  grp_rel:'\u0986\u09a4\u09cd\u09ae\u09c0\u09af\u09bc', grp_shared:'\u0986\u09a4\u09cd\u09ae\u09c0\u09af\u09bc \u09a8\u09a8 (\u098f\u0995\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0 \u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u0995\u09b0\u09c7\u09a8)',
+  'rel_Wife':'\u09b8\u09cd\u09a4\u09cd\u09b0\u09c0','rel_Husband':'\u09b8\u09cd\u09ac\u09be\u09ae\u09c0','rel_Son':'\u099b\u09c7\u09b2\u09c7','rel_Daughter':'\u09ae\u09c7\u09af\u09bc\u09c7','rel_Father':'\u09ac\u09be\u09ac\u09be','rel_Mother':'\u09ae\u09be','rel_Brother':'\u09ad\u09be\u0987','rel_Sister':'\u09ac\u09cb\u09a8','rel_Other':'\u0985\u09a8\u09cd\u09af \u0986\u09a4\u09cd\u09ae\u09c0\u09af\u09bc',
+  'rel_Friend':'\u09ac\u09a8\u09cd\u09a7\u09c1','rel_Neighbour':'\u09aa\u09cd\u09b0\u09a4\u09bf\u09ac\u09c7\u09b6\u09c0','rel_Caretaker':'\u09a6\u09c7\u0996\u09be\u09b6\u09cb\u09a8\u09be\u09b0 \u09b2\u09cb\u0995','rel_Other person':'\u0985\u09a8\u09cd\u09af \u0995\u09c7\u0989',
+  ph_rel:'\u09b8\u09ae\u09cd\u09aa\u09b0\u09cd\u0995 \u09b2\u09bf\u0996\u09c1\u09a8 (\u09af\u09c7\u09ae\u09a8: \u0995\u09be\u099c\u09bf\u09a8)', ph_shared:'\u0989\u09a8\u09bf \u0995\u09c7 \u09b2\u09bf\u0996\u09c1\u09a8 (\u09af\u09c7\u09ae\u09a8: \u09b0\u09be\u0981\u09a7\u09c1\u09a8\u09bf)', btn_continue:'\u098f\u0997\u09bf\u09af\u09bc\u09c7 \u09af\u09be\u09a8', btn_relback:'\u2190 \u09aa\u09bf\u099b\u09a8\u09c7',
+  ban_same:'\u2713 \u0986\u0997\u09c7\u09b0 \u09b0\u09cb\u0997\u09c0: {name}', ban_perm:'\u09b8\u09cd\u09a5\u09be\u09af\u09bc\u09c0 \u0986\u0987\u09a1\u09bf (UHID): {uhid}', ban_same_note:'\u098f\u0987 \u09ad\u09b0\u09cd\u09a4\u09bf \u0993\u0981\u09b0 \u0986\u0997\u09c7\u09b0 \u09b0\u09c7\u0995\u09b0\u09cd\u09a1\u09c7\u0987 \u09af\u09cb\u0997 \u09b9\u09ac\u09c7\u0964 \u0986\u0987\u09a1\u09bf \u098f\u0995\u0987 \u09a5\u09be\u0995\u09ac\u09c7\u0964',
+  ban_new_family:'\u09aa\u09b0\u09bf\u09ac\u09be\u09b0\u09c7\u09b0 \u09a8\u09a4\u09c1\u09a8 \u09b8\u09a6\u09b8\u09cd\u09af: {head}-\u098f\u09b0 {rel}', ban_new_shared:'\u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 \u09a8\u09a4\u09c1\u09a8 \u09ac\u09cd\u09af\u0995\u09cd\u09a4\u09bf: {rel} (\u0986\u09a4\u09cd\u09ae\u09c0\u09af\u09bc \u09a8\u09a8)', ban_new_id:'\u09a8\u09a4\u09c1\u09a8 \u0986\u0987\u09a1\u09bf (UHID): {uhid}', ban_fam_on:'\u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4: {list}',
+  err_check:'\u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0 \u0986\u0997\u09c7 \u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09bf\u09a4 \u0995\u09bf \u09a8\u09be \u09af\u09be\u099a\u09be\u0987 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964 \u0986\u09ac\u09be\u09b0 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964',
+  err_check_nosave:'\u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0 \u0986\u0997\u09c7 \u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09bf\u09a4 \u0995\u09bf \u09a8\u09be \u09af\u09be\u099a\u09be\u0987 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964 \u0995\u09bf\u099b\u09c1\u0987 \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u09b9\u09af\u09bc\u09a8\u09bf\u0964 \u0986\u09ac\u09be\u09b0 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964',
+  toast_existing:'{name} \u09ad\u09b0\u09cd\u09a4\u09bf \u09b9\u09b2\u09c7\u09a8 (\u0986\u0997\u09c7\u09b0 \u09b0\u09cb\u0997\u09c0, {uhid})', toast_new:'{name} \u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09bf\u09a4 \u0993 \u09ad\u09b0\u09cd\u09a4\u09bf \u09b9\u09b2\u09c7\u09a8 ({uhid})', toast_alert_fail:'\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4 \u09b9\u09af\u09bc\u09c7\u099b\u09c7, \u0995\u09bf\u09a8\u09cd\u09a4\u09c1 \u098f\u0995\u0987-\u09a8\u09ae\u09cd\u09ac\u09b0\u09c7\u09b0 \u09b8\u09a4\u09b0\u09cd\u0995\u09ac\u09be\u09b0\u09cd\u09a4\u09be \u09b2\u09c7\u0996\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf\u0964 \u09ae\u09be\u09b2\u09bf\u0995\u0995\u09c7 \u099c\u09be\u09a8\u09be\u09a8\u0964',
+  tab_all:'\u09b8\u09ac \u09b0\u09cb\u0997\u09c0', tab_fam:'\u09aa\u09b0\u09bf\u09ac\u09be\u09b0', fam_loading:'\u09aa\u09b0\u09bf\u09ac\u09be\u09b0 \u09b2\u09cb\u09a1 \u09b9\u099a\u09cd\u099b\u09c7\u2026', fam_err:'\u09aa\u09b0\u09bf\u09ac\u09be\u09b0 \u09b2\u09cb\u09a1 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})',
+  fam_none:'\u098f\u0996\u09a8\u0993 \u0995\u09cb\u09a8\u09cb \u09aa\u09b0\u09bf\u09ac\u09be\u09b0 \u09a8\u09c7\u0987', fam_nomatch:'\u0986\u09aa\u09a8\u09be\u09b0 \u0996\u09cb\u0981\u099c\u09c7\u09b0 \u09b8\u09be\u09a5\u09c7 \u0995\u09cb\u09a8\u09cb \u09aa\u09b0\u09bf\u09ac\u09be\u09b0 \u09ae\u09c7\u09b2\u09c7\u09a8\u09bf', fam_none_note:'\u098f\u0995\u0987 \u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 \u09a6\u09c1\u2019\u099c\u09a8 \u09ac\u09be \u09a4\u09be\u09b0 \u09ac\u09c7\u09b6\u09bf \u09b0\u09cb\u0997\u09c0 \u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09bf\u09a4 \u09b9\u09b2\u09c7 \u098f\u0996\u09be\u09a8\u09c7 \u09aa\u09b0\u09bf\u09ac\u09be\u09b0 \u09a6\u09c7\u0996\u09be \u09af\u09be\u09ac\u09c7\u0964',
+  fam_card_title:'{head}-\u098f\u09b0 \u09aa\u09b0\u09bf\u09ac\u09be\u09b0', fam_members:'{n} \u099c\u09a8 \u09b8\u09a6\u09b8\u09cd\u09af', fam_win_title:'{head}-\u098f\u09b0 \u09aa\u09b0\u09bf\u09ac\u09be\u09b0',
+  fam_win_phone:'\u09ab\u09cb\u09a8: {phone} \u00b7 \u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0 {n} \u099c\u09a8 \u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u0995\u09b0\u09c7\u09a8\u0964 \u09aa\u09cd\u09b0\u09a4\u09cd\u09af\u09c7\u0995\u09c7\u09b0 \u0986\u09b2\u09be\u09a6\u09be \u0986\u0987\u09a1\u09bf \u0993 \u0986\u09b2\u09be\u09a6\u09be \u09b0\u09c7\u0995\u09b0\u09cd\u09a1 \u0986\u099b\u09c7\u0964',
+  fam_id_lbl:'\u0986\u0987\u09a1\u09bf (UHID)', fam_id_unset:'\u09a8\u09c7\u0987', fam_hist:'\u09ad\u09b0\u09cd\u09a4\u09bf\u09b0 \u0987\u09a4\u09bf\u09b9\u09be\u09b8', fam_no_adm:'\u098f\u0996\u09a8\u0993 \u0995\u09cb\u09a8\u09cb \u09ad\u09b0\u09cd\u09a4\u09bf \u09a8\u09c7\u0987', fam_now:'\u098f\u0996\u09a8', fam_bed_unset:'\u09ac\u09c7\u09a1 \u09b2\u09c7\u0996\u09be \u09a8\u09c7\u0987',
+  fam_profile:'\u09aa\u09c2\u09b0\u09cd\u09a3 \u09aa\u09cd\u09b0\u09cb\u09ab\u09be\u0987\u09b2 \u09a6\u09c7\u0996\u09c1\u09a8', fam_loading_win:'\u09b2\u09cb\u09a1 \u09b9\u099a\u09cd\u099b\u09c7\u2026', status_Active:'\u09ad\u09b0\u09cd\u09a4\u09bf \u0986\u099b\u09c7\u09a8', status_Discharged:'\u099b\u09be\u09a1\u09bc\u09be \u09b9\u09af\u09bc\u09c7\u099b\u09c7\u09a8', age_years:'{n} \u09ac\u099b\u09b0',
+  g_Male:'\u09aa\u09c1\u09b0\u09c1\u09b7', g_Female:'\u09ae\u09b9\u09bf\u09b2\u09be', g_Other:'\u0985\u09a8\u09cd\u09af\u09be\u09a8\u09cd\u09af'
+ },
+ hi:{
+  dlg_title:'\u092a\u0930\u093f\u0935\u093e\u0930 \u092e\u093f\u0932\u093e', dlg_fam:'{head} \u0915\u093e \u092a\u0930\u093f\u0935\u093e\u0930 \u00b7 \u0907\u0938 \u0928\u0902\u092c\u0930 \u092a\u0930 {n} \u0938\u0926\u0938\u094d\u092f', dlg_fam_1:'{head} \u0915\u093e \u092a\u0930\u093f\u0935\u093e\u0930 \u00b7 \u0907\u0938 \u0928\u0902\u092c\u0930 \u092a\u0930 1 \u0938\u0926\u0938\u094d\u092f',
+  dlg_msg:'\u092f\u0939 \u0928\u0902\u092c\u0930 \u092a\u0939\u0932\u0947 \u0938\u0947 \u0928\u0940\u091a\u0947 \u0926\u093f\u090f \u092e\u0930\u0940\u091c\u093c (\u092e\u0930\u0940\u091c\u093c\u094b\u0902) \u0915\u0947 \u0928\u093e\u092e \u092a\u0930 \u0926\u0930\u094d\u091c \u0939\u0948\u0964 \u0915\u094d\u092f\u093e \u092f\u0939 \u0909\u0928\u092e\u0947\u0902 \u0938\u0947 \u090f\u0915 \u0939\u0948\u0902?',
+  rel_head:'\u092a\u0930\u093f\u0935\u093e\u0930 \u0915\u0947 \u092e\u0941\u0916\u093f\u092f\u093e (\u0938\u092c\u0938\u0947 \u092a\u0939\u0932\u0947 \u0926\u0930\u094d\u091c)', rel_none:'\u0930\u093f\u0936\u094d\u0924\u093e \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902',
+  rel_of:'{head} \u0938\u0947 \u0938\u0902\u092c\u0902\u0927: {rel}', rel_shared:'{rel} (\u0930\u093f\u0936\u094d\u0924\u0947\u0926\u093e\u0930 \u0928\u0939\u0940\u0902) \u00b7 \u092f\u0939\u0940 \u0928\u0902\u092c\u0930 \u0907\u0938\u094d\u0924\u0947\u092e\u093e\u0932 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902',
+  age:'\u0909\u092e\u094d\u0930 {n}', age_unset:'\u0909\u092e\u094d\u0930 \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902', gender_unset:'\u0932\u093f\u0902\u0917 \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902', uhid_lbl:'\u0906\u0908\u0921\u0940 (UHID) {x}', uhid_unset:'\u0906\u0908\u0921\u0940 (UHID) \u0928\u0939\u0940\u0902',
+  btn_yes:'\u0939\u093e\u0901, \u092f\u0939\u0940 \u0939\u0948\u0902 {name}', btn_no:'\u0928\u0939\u0940\u0902, \u092f\u0939 \u0926\u0942\u0938\u0930\u093e \u0935\u094d\u092f\u0915\u094d\u0924\u093f \u0939\u0948', btn_back:'\u0935\u093e\u092a\u0938 \u091c\u093e\u0915\u0930 \u0938\u0941\u0927\u093e\u0930\u0947\u0902',
+  rel_title:'\u0907\u0928\u0915\u093e \u0906\u092a\u0938 \u092e\u0947\u0902 \u0915\u094d\u092f\u093e \u0930\u093f\u0936\u094d\u0924\u093e \u0939\u0948?', rel_q:'\u0907\u0938 \u0928\u0902\u092c\u0930 \u092a\u0930 \u0938\u092c\u0938\u0947 \u092a\u0939\u0932\u0947 \u0926\u0930\u094d\u091c {head} \u0938\u0947 {name} \u0915\u093e \u0915\u094d\u092f\u093e \u0938\u0902\u092c\u0902\u0927 \u0939\u0948?',
+  grp_rel:'\u0930\u093f\u0936\u094d\u0924\u0947\u0926\u093e\u0930', grp_shared:'\u0930\u093f\u0936\u094d\u0924\u0947\u0926\u093e\u0930 \u0928\u0939\u0940\u0902 (\u0935\u0939\u0940 \u0928\u0902\u092c\u0930 \u0907\u0938\u094d\u0924\u0947\u092e\u093e\u0932 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902)',
+  'rel_Wife':'\u092a\u0924\u094d\u0928\u0940','rel_Husband':'\u092a\u0924\u093f','rel_Son':'\u092c\u0947\u091f\u093e','rel_Daughter':'\u092c\u0947\u091f\u0940','rel_Father':'\u092a\u093f\u0924\u093e','rel_Mother':'\u092e\u093e\u0924\u093e','rel_Brother':'\u092d\u093e\u0908','rel_Sister':'\u092c\u0939\u0928','rel_Other':'\u0905\u0928\u094d\u092f \u0930\u093f\u0936\u094d\u0924\u0947\u0926\u093e\u0930',
+  'rel_Friend':'\u0926\u094b\u0938\u094d\u0924','rel_Neighbour':'\u092a\u0921\u093c\u094b\u0938\u0940','rel_Caretaker':'\u0926\u0947\u0916\u092d\u093e\u0932 \u0915\u0930\u0928\u0947 \u0935\u093e\u0932\u093e','rel_Other person':'\u0915\u094b\u0908 \u0914\u0930',
+  ph_rel:'\u0930\u093f\u0936\u094d\u0924\u093e \u0932\u093f\u0916\u0947\u0902 (\u091c\u0948\u0938\u0947: \u091a\u091a\u0947\u0930\u093e \u092d\u093e\u0908)', ph_shared:'\u0935\u0939 \u0915\u094c\u0928 \u0939\u0948\u0902 \u0932\u093f\u0916\u0947\u0902 (\u091c\u0948\u0938\u0947: \u0930\u0938\u094b\u0907\u092f\u093e)', btn_continue:'\u0906\u0917\u0947 \u092c\u0922\u093c\u0947\u0902', btn_relback:'\u2190 \u092a\u0940\u091b\u0947',
+  ban_same:'\u2713 \u092a\u0939\u0932\u0947 \u0938\u0947 \u0926\u0930\u094d\u091c \u092e\u0930\u0940\u091c\u093c: {name}', ban_perm:'\u0938\u094d\u0925\u093e\u092f\u0940 \u0906\u0908\u0921\u0940 (UHID): {uhid}', ban_same_note:'\u092f\u0939 \u092d\u0930\u094d\u0924\u0940 \u0909\u0928\u0915\u0947 \u092a\u0941\u0930\u093e\u0928\u0947 \u0930\u093f\u0915\u0949\u0930\u094d\u0921 \u092e\u0947\u0902 \u091c\u0941\u0921\u093c\u0947\u0917\u0940\u0964 \u0906\u0908\u0921\u0940 \u0935\u0939\u0940 \u0930\u0939\u0947\u0917\u0940\u0964',
+  ban_new_family:'\u092a\u0930\u093f\u0935\u093e\u0930 \u0915\u093e \u0928\u092f\u093e \u0938\u0926\u0938\u094d\u092f: {head} \u0938\u0947 \u0938\u0902\u092c\u0902\u0927 \u2014 {rel}', ban_new_shared:'\u0907\u0938 \u0928\u0902\u092c\u0930 \u092a\u0930 \u0928\u092f\u093e \u0935\u094d\u092f\u0915\u094d\u0924\u093f: {rel} (\u0930\u093f\u0936\u094d\u0924\u0947\u0926\u093e\u0930 \u0928\u0939\u0940\u0902)', ban_new_id:'\u0928\u0908 \u0906\u0908\u0921\u0940 (UHID): {uhid}', ban_fam_on:'\u0907\u0938 \u0928\u0902\u092c\u0930 \u092a\u0930 \u0926\u0930\u094d\u091c: {list}',
+  err_check:'\u092f\u0939 \u0928\u0902\u092c\u0930 \u092a\u0939\u0932\u0947 \u0938\u0947 \u0926\u0930\u094d\u091c \u0939\u0948 \u092f\u093e \u0928\u0939\u0940\u0902, \u091c\u093e\u0901\u091a \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u0940 ({e})\u0964 \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964',
+  err_check_nosave:'\u092f\u0939 \u0928\u0902\u092c\u0930 \u092a\u0939\u0932\u0947 \u0938\u0947 \u0926\u0930\u094d\u091c \u0939\u0948 \u092f\u093e \u0928\u0939\u0940\u0902, \u091c\u093e\u0901\u091a \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u0940 ({e})\u0964 \u0915\u0941\u091b \u092d\u0940 \u0938\u0939\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u0917\u092f\u093e\u0964 \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964',
+  toast_existing:'{name} \u092d\u0930\u094d\u0924\u0940 \u0939\u0941\u090f (\u092a\u0939\u0932\u0947 \u0938\u0947 \u0926\u0930\u094d\u091c \u092e\u0930\u0940\u091c\u093c, {uhid})', toast_new:'{name} \u0926\u0930\u094d\u091c \u0914\u0930 \u092d\u0930\u094d\u0924\u0940 \u0939\u0941\u090f ({uhid})', toast_alert_fail:'\u0938\u0939\u0947\u091c\u093e \u0917\u092f\u093e, \u0932\u0947\u0915\u093f\u0928 \u090f\u0915-\u0928\u0902\u092c\u0930 \u0915\u0940 \u091a\u0947\u0924\u093e\u0935\u0928\u0940 \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u0940\u0964 \u092e\u093e\u0932\u093f\u0915 \u0915\u094b \u092c\u0924\u093e\u090f\u0901\u0964',
+  tab_all:'\u0938\u092d\u0940 \u092e\u0930\u0940\u091c\u093c', tab_fam:'\u092a\u0930\u093f\u0935\u093e\u0930', fam_loading:'\u092a\u0930\u093f\u0935\u093e\u0930 \u0932\u094b\u0921 \u0939\u094b \u0930\u0939\u0947 \u0939\u0948\u0902\u2026', fam_err:'\u092a\u0930\u093f\u0935\u093e\u0930 \u0932\u094b\u0921 \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u0947 ({e})',
+  fam_none:'\u0905\u092d\u0940 \u0915\u094b\u0908 \u092a\u0930\u093f\u0935\u093e\u0930 \u0928\u0939\u0940\u0902', fam_nomatch:'\u0906\u092a\u0915\u0940 \u0916\u094b\u091c \u0938\u0947 \u0915\u094b\u0908 \u092a\u0930\u093f\u0935\u093e\u0930 \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e', fam_none_note:'\u090f\u0915 \u0939\u0940 \u092b\u093c\u094b\u0928 \u0928\u0902\u092c\u0930 \u092a\u0930 \u0926\u094b \u092f\u093e \u0905\u0927\u093f\u0915 \u092e\u0930\u0940\u091c\u093c \u0926\u0930\u094d\u091c \u0939\u094b\u0928\u0947 \u092a\u0930 \u092a\u0930\u093f\u0935\u093e\u0930 \u092f\u0939\u093e\u0901 \u0926\u093f\u0916\u0947\u0917\u093e\u0964',
+  fam_card_title:'{head} \u0915\u093e \u092a\u0930\u093f\u0935\u093e\u0930', fam_members:'{n} \u0938\u0926\u0938\u094d\u092f', fam_win_title:'{head} \u0915\u093e \u092a\u0930\u093f\u0935\u093e\u0930',
+  fam_win_phone:'\u092b\u093c\u094b\u0928: {phone} \u00b7 \u0907\u0938 \u0928\u0902\u092c\u0930 \u0915\u094b {n} \u0932\u094b\u0917 \u0907\u0938\u094d\u0924\u0947\u092e\u093e\u0932 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902\u0964 \u0939\u0930 \u0935\u094d\u092f\u0915\u094d\u0924\u093f \u0915\u0940 \u0905\u092a\u0928\u0940 \u0905\u0932\u0917 \u0906\u0908\u0921\u0940 \u0914\u0930 \u0905\u092a\u0928\u093e \u0905\u0932\u0917 \u0930\u093f\u0915\u0949\u0930\u094d\u0921 \u0939\u0948\u0964',
+  fam_id_lbl:'\u0906\u0908\u0921\u0940 (UHID)', fam_id_unset:'\u0928\u0939\u0940\u0902', fam_hist:'\u092d\u0930\u094d\u0924\u0940 \u0915\u093e \u0907\u0924\u093f\u0939\u093e\u0938', fam_no_adm:'\u0905\u092d\u0940 \u0915\u094b\u0908 \u092d\u0930\u094d\u0924\u0940 \u0928\u0939\u0940\u0902', fam_now:'\u0905\u092c \u0924\u0915', fam_bed_unset:'\u092c\u0947\u0921 \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902',
+  fam_profile:'\u092a\u0942\u0930\u0940 \u092a\u094d\u0930\u094b\u092b\u093c\u093e\u0907\u0932 \u0926\u0947\u0916\u0947\u0902', fam_loading_win:'\u0932\u094b\u0921 \u0939\u094b \u0930\u0939\u093e \u0939\u0948\u2026', status_Active:'\u092d\u0930\u094d\u0924\u0940 \u0939\u0948\u0902', status_Discharged:'\u091b\u0941\u091f\u094d\u091f\u0940 \u0939\u094b \u091a\u0941\u0915\u0940', age_years:'{n} \u0935\u0930\u094d\u0937',
+  g_Male:'\u092a\u0941\u0930\u0941\u0937', g_Female:'\u092e\u0939\u093f\u0932\u093e', g_Other:'\u0905\u0928\u094d\u092f'
+ }
+};
+function famLang(){ var l='en'; try{ l=localStorage.getItem('aurascale_lang')||'en'; }catch(e){} return FAM_I18N[l] ? l : 'en'; }
+function famT(key, vars){
+  var s=FAM_I18N[famLang()][key]; if(s===undefined) s=FAM_I18N.en[key]; if(s===undefined) return key;
+  if(vars) Object.keys(vars).forEach(function(k){ s=s.split('{'+k+'}').join(vars[k]); });
+  return s;
+}
+function famRelName(r){ var v=FAM_I18N[famLang()]['rel_'+r]; return v!==undefined ? v : r; }       // typed relations (Cousin, Cook) stay as typed
+function famGenderName(g){ var v=FAM_I18N[famLang()]['g_'+g]; return v!==undefined ? v : (g||''); }
+function famStatusName(s){ var v=FAM_I18N[famLang()]['status_'+s]; return v!==undefined ? v : (s||''); }
+function famApplyDialogLang(){
+  var set=function(id, key){ var e=document.getElementById(id); if(e) e.textContent=famT(key); };
+  set('dup-no','btn_no'); set('dup-back','btn_back'); set('dup-rel-go','btn_continue'); set('dup-rel-back','btn_relback');
+}
+function famApplyStaticLang(){
+  famApplyDialogLang();
+  var pa=document.getElementById('pv-all'); if(pa) pa.textContent=famT('tab_all');
+  var pf=document.getElementById('pv-fam'); if(pf) pf.textContent='\u{1F46A} '+famT('tab_fam');
+  var sw=document.getElementById('lang-switcher'); if(sw) sw.value=famLang();
+  var fl=document.getElementById('families-list');
+  if(typeof _patientsView!=='undefined' && _patientsView==='families' && fl && fl.offsetParent!==null) loadFamilies();
+}
+function setFamLanguage(lang){
+  if(!FAM_I18N[lang]) lang='en';
+  try{ localStorage.setItem('aurascale_lang', lang); }catch(e){}
+  if(typeof setLanguage==='function') setLanguage(lang); else famApplyStaticLang();
+}
+
 function normPhone(p){ var d=String(p||'').replace(/\D/g,''); return d.length>10 ? d.slice(-10) : d; }
 var FAMILY_RELATIONS=['Wife','Husband','Son','Daughter','Father','Mother','Brother','Sister','Other'];
 var SHARED_RELATIONS=['Friend','Neighbour','Caretaker','Other person'];
@@ -2521,10 +2664,10 @@ function famRelationInfo(p){
   return null;
 }
 function famRelationLine(m, head, isHead){
-  if(isHead) return 'Family head (first registered)';
-  var r=famRelationInfo(m), hn=(head&&head.full_name)||'the family head';
-  if(!r) return 'Relation not recorded';
-  return r.kind==='family' ? (r.text+' of '+hn) : (r.text+' (not a relative) \u00b7 shares this number');
+  if(isHead) return famT('rel_head');
+  var r=famRelationInfo(m), hn=(head&&head.full_name)||'';
+  if(!r) return famT('rel_none');
+  return r.kind==='family' ? famT('rel_of',{rel:famRelName(r.text), head:hn}) : famT('rel_shared',{rel:famRelName(r.text)});
 }
 function famGuardianText(rel, kind){ return rel ? ((kind==='shared'?'Shares number (':'Family member (')+rel+')') : ''; }
 var _famGenUhid=(typeof generateUHID==='function') ? generateUHID : function(){ return 'NH-'+Date.now().toString().slice(-6); };
@@ -2532,7 +2675,7 @@ var _dupResolve=null, _dupState=null;
 function dupFinish(ans){ var f=_dupResolve; _dupResolve=null; closeModal('mod-dup-phone'); if(f) f(ans); }
 function dupShowList(){
   document.getElementById('dup-v1').style.display='flex'; document.getElementById('dup-v2').style.display='none';
-  document.getElementById('dup-title').innerHTML='&#128106; Family found';
+  document.getElementById('dup-title').innerHTML='&#128106; '+esc(famT('dlg_title'));
 }
 function dupNeedsTyping(){ var s=_dupState||{}; return s.rel==='Other' || s.rel==='Other person'; }
 function dupRelValue(){
@@ -2548,25 +2691,26 @@ function dupPickRelation(label, kind){
     c.style.background=on?'var(--green)':'var(--surface)'; c.style.color=on?'#fff':'var(--text-primary)'; c.style.borderColor=on?'var(--green)':'var(--border)';
   });
   var oth=document.getElementById('dup-rel-other'); oth.style.display=dupNeedsTyping()?'block':'none';
-  oth.placeholder = (kind==='shared') ? 'Type who they are (for example Cook)' : 'Type the relation (for example Cousin)';
+  oth.placeholder = famT(kind==='shared' ? 'ph_shared' : 'ph_rel');
   if(dupNeedsTyping()) oth.focus();
   dupRelCheck();
 }
 function dupShowRelation(){
   var s=_dupState; s.rel=''; s.kind='';
+  famApplyDialogLang();
   document.getElementById('dup-v1').style.display='none'; document.getElementById('dup-v2').style.display='flex';
-  document.getElementById('dup-title').innerHTML='&#128106; How are they connected?';
-  document.getElementById('dup-rel-q').innerHTML='How is <b>'+esc(s.typedName)+'</b> connected to <b>'+esc(s.head.full_name||'the first registered person')+'</b> (first registered on this number)?';
+  document.getElementById('dup-title').innerHTML='&#128106; '+esc(famT('rel_title'));
+  document.getElementById('dup-rel-q').innerHTML=esc(famT('rel_q',{name:'\u0001', head:'\u0002'})).replace('\u0001','<b>'+esc(s.typedName)+'</b>').replace('\u0002','<b>'+esc(s.head.full_name||'')+'</b>');
   var box=document.getElementById('dup-rel-chips'); box.innerHTML='';
   function group(title, items, kind){
     var h=document.createElement('div'); h.style.cssText='width:100%;font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-top:2px'; h.textContent=title; box.appendChild(h);
     items.forEach(function(r){
       var b=document.createElement('button'); b.type='button'; b.className='qbtn'; b.setAttribute('data-rel', r); b.setAttribute('data-kind', kind);
-      b.style.cssText='font-size:13px;padding:10px 14px;min-height:42px'; b.textContent=(r==='Other')?'Other relative':r; b.onclick=function(){ dupPickRelation(r, kind); }; box.appendChild(b);
+      b.style.cssText='font-size:13px;padding:10px 14px;min-height:42px'; b.textContent=famRelName(r); b.onclick=function(){ dupPickRelation(r, kind); }; box.appendChild(b);
     });
   }
-  group('A relative', FAMILY_RELATIONS, 'family');
-  group('Not a relative (uses the same number)', SHARED_RELATIONS, 'shared');
+  group(famT('grp_rel'), FAMILY_RELATIONS, 'family');
+  group(famT('grp_shared'), SHARED_RELATIONS, 'shared');
   var oth=document.getElementById('dup-rel-other'); oth.value=''; oth.style.display='none';
   dupRelCheck();
 }
@@ -2577,22 +2721,28 @@ function dupAnswer(choice, idx){
   if(choice==='relback') return dupShowList();
   if(choice==='relgo'){ var rel=dupRelValue(); if(!rel) return; return dupFinish({choice:'no', relation:rel, kind:_dupState.kind||'family'}); }
 }
+function famInfoLine(m){
+  var agePart=(m.age!==null&&m.age!==undefined&&m.age!=='') ? famT('age',{n:m.age}) : famT('age_unset');
+  var genderPart=m.gender ? famGenderName(m.gender) : famT('gender_unset');
+  var uhidPart=m.uhid ? famT('uhid_lbl',{x:m.uhid}) : famT('uhid_unset');
+  return agePart+' \u00b7 '+genderPart+' \u00b7 '+uhidPart;
+}
 function askWhichPatient(matches, typedName){
   return new Promise(function(resolve){
     var head=matches[0];
     _dupState={matches:matches, typedName:(typedName||'This person'), head:head, rel:''};
-    document.getElementById('dup-fam').textContent='The '+(head.full_name||'')+' family \u00b7 '+matches.length+' member'+(matches.length>1?'s':'')+' on this number';
+    famApplyDialogLang();
+    document.getElementById('dup-msg').textContent=famT('dlg_msg');
+    document.getElementById('dup-fam').textContent=famT(matches.length>1?'dlg_fam':'dlg_fam_1',{head:(head.full_name||''), n:matches.length});
     var list=document.getElementById('dup-list'); list.innerHTML='';
     matches.forEach(function(m, i){
       var card=document.createElement('div');
       card.style.cssText='border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;background:var(--bg)';
       var nm=document.createElement('div'); nm.style.cssText='font-weight:700;font-size:13.5px'; nm.textContent=m.full_name||'(no name)';
-      var rel=document.createElement('div'); rel.style.cssText='font-size:11px;color:var(--text-tertiary);margin-top:2px';
-      rel.textContent = famRelationLine(m, head, i===0);
-      var info=document.createElement('div'); info.style.cssText='font-size:11.5px;color:var(--text-secondary);margin:3px 0 9px';
-      info.textContent='Age '+((m.age!==null&&m.age!==undefined&&m.age!=='')?m.age:'not set')+' \u00b7 '+(m.gender||'gender not set')+' \u00b7 UHID '+(m.uhid||'not set');
+      var rel=document.createElement('div'); rel.style.cssText='font-size:11px;color:var(--text-tertiary);margin-top:2px'; rel.textContent=famRelationLine(m, head, i===0);
+      var info=document.createElement('div'); info.style.cssText='font-size:11.5px;color:var(--text-secondary);margin:3px 0 9px'; info.textContent=famInfoLine(m);
       var btn=document.createElement('button'); btn.className='msub green'; btn.type='button'; btn.setAttribute('data-dup-yes', String(i));
-      btn.textContent="Yes, it's "+(m.full_name||'this patient');
+      btn.textContent=famT('btn_yes',{name:(m.full_name||'')});
       btn.onclick=function(){ dupAnswer('yes', i); };
       card.appendChild(nm); card.appendChild(rel); card.appendChild(info); card.appendChild(btn); list.appendChild(card);
     });
@@ -2710,17 +2860,19 @@ async function resolvePatientForRegistration(name, phone, age, gender, docLogin,
   return {pid:pid, uhid:newUhid, existing:false, relation:relation, kind:kind, phoneCheck:(declined.length?'different_person':'no_match'), sharedWith:declined.map(function(m){return m.id;}), alertFailed:alertFailed};
 }
 
-/* ===== FAMILIES VIEW (Patients page) =====
+/* ===== FAMILIES VIEW (Patients page, owner AND receptionist) =====
    A family = every patient saved on the same phone number. The first registered is the family head. Each person keeps their
-   own ID and their own admission history. Nothing here asks the owner to do anything: it only shows what receptionists saved. */
+   own ID and their own admission history. It only shows what has been saved; nobody has to maintain it. */
 var _patientsView='all', _famGroups={};
+function famRefreshPatients(){ if(typeof loadPatientsList==='function') return loadPatientsList(); if(typeof loadPatients==='function') return loadPatients(); }
 function setPatientsView(v){
   _patientsView=v;
   var all=document.getElementById('pv-all'), fam=document.getElementById('pv-fam');
   [[all,'all'],[fam,'families']].forEach(function(x){ if(!x[0]) return; var on=(x[1]===v); x[0].style.background=on?'var(--green)':'var(--surface)'; x[0].style.color=on?'#fff':'var(--text-secondary)'; x[0].style.borderColor=on?'var(--green)':'var(--border)'; });
   document.getElementById('patients-list').style.display=(v==='all')?'block':'none';
   document.getElementById('families-list').style.display=(v==='families')?'block':'none';
-  loadPatientsList();
+  famApplyStaticLang();
+  return famRefreshPatients();
 }
 async function fetchAllClinicPatients(){
   var out=[], from=0, step=1000;
@@ -2735,10 +2887,10 @@ async function fetchAllClinicPatients(){
 }
 async function loadFamilies(){
   var list=document.getElementById('families-list');
-  list.innerHTML='<div class="empty"><p class="empty-t">Loading families\u2026</p></div>';
+  list.innerHTML='<div class="empty"><p class="empty-t">'+esc(famT('fam_loading'))+'</p></div>';
   var all;
   try{ all=await fetchAllClinicPatients(); }
-  catch(e){ list.innerHTML='<div class="empty"><p class="empty-t">Could not load families ('+esc((e&&e.message)||e)+')</p></div>'; return; }
+  catch(e){ list.innerHTML='<div class="empty"><p class="empty-t">'+esc(famT('fam_err',{e:((e&&e.message)||e)}))+'</p></div>'; return; }
   var groups={};
   all.forEach(function(p){ var k=normPhone(p.phone); if(!k) return; (groups[k]=groups[k]||[]).push(p); });
   _famGroups=groups;
@@ -2747,25 +2899,30 @@ async function loadFamilies(){
   if(q) fams=fams.filter(function(f){ return f.members.some(function(m){ return (m.full_name||'').toLowerCase().indexOf(q)>=0 || (qd && normPhone(m.phone).indexOf(qd)>=0); }); });
   fams.sort(function(a,b){ return String(b.members[b.members.length-1].created_at).localeCompare(String(a.members[a.members.length-1].created_at)); });
   if(!fams.length){
-    list.innerHTML='<div class="empty"><div class="empty-ic">&#128106;</div><p class="empty-t">'+(q?'No family matches your search':'No families yet')+'</p><p style="font-size:12px;color:var(--text-tertiary)">A family appears here when two or more patients are registered on the same phone number.</p></div>';
+    list.innerHTML='<div class="empty"><div class="empty-ic">&#128106;</div><p class="empty-t">'+esc(famT(q?'fam_nomatch':'fam_none'))+'</p><p style="font-size:12px;color:var(--text-tertiary)">'+esc(famT('fam_none_note'))+'</p></div>';
     return;
   }
   list.innerHTML=fams.map(function(f){
     var head=f.members[0];
     return '<div class="adm-row" style="cursor:pointer" onclick="openFamily(\''+f.key+'\')">'
       +'<div class="adm-av">&#128106;</div>'
-      +'<div style="flex:1"><div class="adm-name">'+esc(head.full_name||'')+' family</div>'
-      +'<div class="adm-meta">'+f.members.length+' members \u00b7 '+esc(head.phone||'')+'</div>'
+      +'<div style="flex:1"><div class="adm-name">'+esc(famT('fam_card_title',{head:(head.full_name||'')}))+'</div>'
+      +'<div class="adm-meta">'+esc(famT('fam_members',{n:f.members.length}))+' \u00b7 '+esc(head.phone||'')+'</div>'
       +'<div class="adm-meta">'+f.members.map(function(m){ return esc(m.full_name||''); }).join(', ')+'</div></div>'
       +'</div>';
   }).join('');
 }
+function famOpenProfile(btn){
+  var id=btn.getAttribute('data-id'), name=btn.getAttribute('data-name')||'';
+  closeModal('mod-family');
+  if(typeof openProfile==='function') openProfile(id,name); else if(typeof openPatientProfile==='function') openPatientProfile(id,name);
+}
 async function openFamily(key){
   var members=_famGroups[key]; if(!members||!members.length) return;
   var head=members[0];
-  document.getElementById('fam-title').textContent='The '+(head.full_name||'')+' family';
+  document.getElementById('fam-title').textContent=famT('fam_win_title',{head:(head.full_name||'')});
   var body=document.getElementById('fam-body');
-  body.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">Loading\u2026</p>';
+  body.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">'+esc(famT('fam_loading_win'))+'</p>';
   openModal('mod-family');
   var ids=members.map(function(m){ return m.id; });
   var ar=await _supa.from('admissions').select('id,patient_id,admission_date,discharge_date,status,admission_diagnosis,bed_id,uhid').in('patient_id',ids).order('admission_date',{ascending:false});
@@ -2773,7 +2930,7 @@ async function openFamily(key){
   var bedName={}; (br.data||[]).forEach(function(b){ bedName[b.id]=(b.ward?b.ward+' \u00b7 ':'')+(b.bed_number||''); });
   var byPatient={}; (ar.data||[]).forEach(function(a){ (byPatient[a.patient_id]=byPatient[a.patient_id]||[]).push(a); });
   var fmt=function(d){ return d?new Date(d).toLocaleDateString('en-GB'):''; };
-  var html='<p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px">Phone: <b>'+esc(head.phone||'')+'</b> \u00b7 '+members.length+' people share this number. Each person has their own ID and their own record.</p>';
+  var html='<p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px">'+famT('fam_win_phone',{phone:'<b>'+esc(head.phone||'')+'</b>', n:members.length})+'</p>';
   members.forEach(function(m, i){
     var relLine=famRelationLine(m, head, i===0);
     var adms=byPatient[m.id]||[];
@@ -2781,23 +2938,24 @@ async function openFamily(key){
       +'<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">'
       +'<div><div style="font-weight:700;font-size:14px">'+esc(m.full_name||'')+'</div>'
       +'<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">'+esc(relLine)+'</div>'
-      +'<div style="font-size:11.5px;color:var(--text-secondary);margin-top:3px">'+(m.age?esc(m.age)+'y \u00b7 ':'')+esc(m.gender||'gender not set')+'</div></div>'
-      +'<div style="text-align:right"><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">ID (UHID)</div><div style="font-weight:700;font-size:12.5px">'+esc(m.uhid||'not set')+'</div></div></div>'
+      +'<div style="font-size:11.5px;color:var(--text-secondary);margin-top:3px">'+(m.age?esc(famT('age_years',{n:m.age}))+' \u00b7 ':'')+esc(m.gender?famGenderName(m.gender):famT('gender_unset'))+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">'+esc(famT('fam_id_lbl'))+'</div><div style="font-weight:700;font-size:12.5px">'+esc(m.uhid||famT('fam_id_unset'))+'</div></div></div>'
       +'<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">'
-      +'<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Admission history</div>';
-    if(!adms.length) html+='<div style="font-size:12px;color:var(--text-tertiary)">No admissions yet</div>';
+      +'<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">'+esc(famT('fam_hist'))+'</div>';
+    if(!adms.length) html+='<div style="font-size:12px;color:var(--text-tertiary)">'+esc(famT('fam_no_adm'))+'</div>';
     adms.forEach(function(a){
       var active=(a.status==='Active');
       html+='<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(228,224,216,.5)">'
-        +'<div><b>'+fmt(a.admission_date)+(a.discharge_date?' \u2192 '+fmt(a.discharge_date):' \u2192 now')+'</b>'
-        +'<div style="color:var(--text-tertiary)">'+esc((bedName[a.bed_id]||'Bed not set')+(a.admission_diagnosis?' \u00b7 '+a.admission_diagnosis:''))+'</div></div>'
-        +'<span style="align-self:flex-start;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:'+(active?'var(--green-bg)':'var(--surface)')+';color:'+(active?'var(--green)':'var(--text-secondary)')+';border:1px solid '+(active?'var(--green-border)':'var(--border)')+'">'+esc(a.status||'')+'</span></div>';
+        +'<div><b>'+fmt(a.admission_date)+(a.discharge_date?' \u2192 '+fmt(a.discharge_date):' \u2192 '+esc(famT('fam_now')))+'</b>'
+        +'<div style="color:var(--text-tertiary)">'+esc((bedName[a.bed_id]||famT('fam_bed_unset'))+(a.admission_diagnosis?' \u00b7 '+a.admission_diagnosis:''))+'</div></div>'
+        +'<span style="align-self:flex-start;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:'+(active?'var(--green-bg)':'var(--surface)')+';color:'+(active?'var(--green)':'var(--text-secondary)')+';border:1px solid '+(active?'var(--green-border)':'var(--border)')+'">'+esc(famStatusName(a.status||''))+'</span></div>';
     });
-    html+='<button class="qbtn" style="margin-top:8px;font-size:11px;padding:7px 12px" onclick="closeModal(\'mod-family\');openPatientProfile(\''+m.id+'\',\''+String(m.full_name||'').replace(/'/g,"\\'")+'\')">Open full profile</button>'
+    html+='<button class="qbtn" style="margin-top:8px;font-size:11px;padding:7px 12px" data-id="'+esc(m.id)+'" data-name="'+esc(m.full_name||'')+'" onclick="famOpenProfile(this)">'+esc(famT('fam_profile'))+'</button>'
       +'</div></div>';
   });
   body.innerHTML=html;
 }
+try{ famApplyStaticLang(); }catch(e){}
 
 async function admitPatient(){
   var name=(document.getElementById('adm-name').value||'').trim();
@@ -2820,7 +2978,7 @@ async function admitPatient(){
   var uhid=_famGenUhid();
   var res=null;
   try{ res=await resolvePatientForRegistration(name,phone,age,gender,assignedDoctorId,uhid,null); }
-  catch(e){ err.textContent='Could not check whether this number is already registered ('+((e&&e.message)||e)+'). Nothing was saved. Please try again.'; err.style.display='block'; return; }
+  catch(e){ err.textContent=famT('err_check_nosave',{e:((e&&e.message)||e)}); err.style.display='block'; return; }
   if(res===null) return;                                   // "Go back and edit"
   if(!res.pid){ err.textContent='Could not create the patient record. Please try again.'; err.style.display='block'; return; }
   var patientId=res.pid, regUhid=res.uhid||uhid, admName=name, admPhone=phone, admAge=age, admGender=gender;
@@ -2855,11 +3013,13 @@ async function loadAdmissions(){
         +'<div class="adm-meta">'+a.admitting_doctor+' · Day '+(days+1)+' · '+(a.admission_diagnosis||'No diagnosis entered')+'</div>'
         +'<div class="adm-meta">'+(a.patient_age?a.patient_age+'y':'')+' '+(a.patient_gender||'')+(a.patient_phone?' · '+a.patient_phone:'')+'</div>'
       +'</div>'
-      +'<div class="adm-actions">'
+      +'<div class="adm-actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end">'
+        +'<span data-bill-actions="'+a.id+'"></span>'
         +'<button class="qbtn" onclick="openDischargeModal(\''+a.id+'\')">Discharge</button>'
       +'</div>'
       +'</div>';
   }).join('');
+  if(typeof auraMountBillActions==='function') auraMountBillActions(list);
 }
 async function loadDischarges(){
   var r=await _supa.from('admissions').select('*').eq('clinic_id',_clinicId).eq('status','Discharged').order('discharge_date',{ascending:false}).limit(10);
@@ -2870,9 +3030,11 @@ async function loadDischarges(){
       +'<div class="adm-av" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">'+(a.patient_name||'?').charAt(0)+'</div>'
       +'<div style="flex:1"><div class="adm-name">'+a.patient_name+'</div>'
       +'<div class="adm-meta">Discharged · '+(a.admitting_doctor||'')+'</div></div>'
+      +'<span data-bill-actions="'+a.id+'"></span>'
       +'<span class="chip ch-dis">Discharged</span>'
       +'</div>';
   }).join('');
+  if(typeof auraMountBillActions==='function') auraMountBillActions(list);
 }
 
 /* ── PROGRESS NOTES ── */
@@ -3018,6 +3180,7 @@ async function openDischargeModal(admId){
 }
 async function generateDischarge(){
   if(!_currentDischargeId)return;
+  var billAdmId=_currentDischargeId;     // remembered for the final bill built after discharge
   var diag=(document.getElementById('dis-diag').value||'').trim();
   var summary=(document.getElementById('dis-summary').value||'').trim();
   var meds=(document.getElementById('dis-meds').value||'').trim();
@@ -3070,6 +3233,8 @@ async function generateDischarge(){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
   }
   closeModal('mod-discharge');
+  /* Final bill: built and saved in the background. A problem here never undoes or delays the discharge. */
+  if(typeof auraGenerateBillAuto==='function') setTimeout(function(){ auraGenerateBillAuto(billAdmId); }, 300);
   showToast('Discharge complete · PDF generated · WhatsApp sent');
   loadDashboard();loadAdmissions();loadDischarges();loadDischargeList();loadBeds();
 }
@@ -4197,6 +4362,423 @@ async function openPatientFromBed(patientId, patientName, bedNum, ward){
   if(typeof loadPatientDocuments==='function' && patientId) loadPatientDocuments(patientId);
 }
 
+</script>
+
+<!-- FINAL BILL PDF (generate, store privately, download) -->
+<script>
+/* ===== FINAL BILL PDF =====
+   Builds an itemised A4 bill for ONE admission, stores it privately and records it:
+     1. PDF  -> private Storage bucket "bills" at  {clinic_id}/{admission_id}.pdf   (generating again replaces the file)
+     2. a signed link valid for 7 days  -> saved in public.patient_bills.pdf_url (handy for sending to the family)
+     3. one row per admission in public.patient_bills (generating again updates that row)
+   Runs automatically right after a successful discharge, and from the "Generate Bill" button. A bill that fails to build
+   NEVER blocks or undoes a discharge. The "Download bill" button makes a fresh short-lived link each time, so it keeps
+   working after the stored 7-day link has expired.
+   The pages are drawn by the browser (HTML -> image -> PDF) so that Bengali names and the rupee sign print correctly. */
+var AURA_BILL_BUCKET = 'bills', AURA_BILL_LINK_SECONDS = 7 * 24 * 60 * 60;
+var AURA_BILL_LIBS = {
+  jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  html2canvas: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+};
+var _auraBillBusy = {};
+/* a one-line hint (English / Bengali / Hindi) shown when the bill had to leave the address off */
+(function () {
+  if (typeof FAM_I18N === 'undefined') return;
+  var add = {
+    en: 'Tip: your address is not set, so the bill has no address line. The owner can add it in Settings \u2192 Facility details.',
+    bn: '\u099f\u09bf\u09aa: \u0986\u09aa\u09a8\u09be\u09b0 \u09a0\u09bf\u0995\u09be\u09a8\u09be \u09b2\u09c7\u0996\u09be \u09a8\u09c7\u0987, \u09a4\u09be\u0987 \u09ac\u09bf\u09b2\u09c7 \u09a0\u09bf\u0995\u09be\u09a8\u09be \u09a8\u09c7\u0987\u0964 \u09ae\u09be\u09b2\u09bf\u0995 Settings \u2192 Facility details-\u098f \u09af\u09cb\u0997 \u0995\u09b0\u09a4\u09c7 \u09aa\u09be\u09b0\u09c7\u09a8\u0964',
+    hi: '\u0938\u0941\u091d\u093e\u0935: \u0906\u092a\u0915\u093e \u092a\u0924\u093e \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902 \u0939\u0948, \u0907\u0938\u0932\u093f\u090f \u092c\u093f\u0932 \u092e\u0947\u0902 \u092a\u0924\u093e \u0928\u0939\u0940\u0902 \u0939\u0948\u0964 \u092e\u093e\u0932\u093f\u0915 \u0907\u0938\u0947 Settings \u2192 Facility details \u092e\u0947\u0902 \u091c\u094b\u0921\u093c \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964'
+  };
+  Object.keys(add).forEach(function (l) { if (FAM_I18N[l]) FAM_I18N[l].fd_missing_hint = add[l]; });
+})();
+function auraAddressHint(r) {
+  if (!r || !r.missingAddress) return '';
+  return ' ' + (typeof famT === 'function' ? famT('fd_missing_hint') : 'Tip: your address is not set. The owner can add it in Settings \u2192 Facility details.');
+}
+
+function auraLoadScript(url, ready) {
+  return new Promise(function (resolve, reject) {
+    if (ready()) return resolve();
+    var s = document.createElement('script'); s.src = url;
+    s.onload = function () { ready() ? resolve() : reject(new Error('A bill library did not start')); };
+    s.onerror = function () { reject(new Error('Could not load the PDF tools (check the internet connection)')); };
+    document.head.appendChild(s);
+  });
+}
+async function auraLoadBillLibs() {
+  await auraLoadScript(AURA_BILL_LIBS.jspdf, function () { return !!(window.jspdf && window.jspdf.jsPDF); });
+  await auraLoadScript(AURA_BILL_LIBS.html2canvas, function () { return typeof window.html2canvas === 'function'; });
+}
+function auraMoney(n) {
+  n = Number(n) || 0; var neg = n < 0; n = Math.abs(n);
+  var whole = Math.round(n * 100) % 100 === 0;
+  var s = whole ? n.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (neg ? '-' : '') + '\u20B9' + s;
+}
+function auraP2(x) { return ('0' + x).slice(-2); }
+function auraDate(d) {
+  if (!d) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(d))) { var p = String(d).split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+  var x = new Date(d); if (isNaN(x)) return '';
+  return auraP2(x.getDate()) + '/' + auraP2(x.getMonth() + 1) + '/' + x.getFullYear();
+}
+function auraDateTime(d) { var x = new Date(d); if (!d || isNaN(x)) return ''; return auraDate(x) + ' ' + auraP2(x.getHours()) + ':' + auraP2(x.getMinutes()); }
+function auraYmd(d) { var x = new Date(d); if (!d || isNaN(x)) return 'NODATE'; return '' + x.getFullYear() + auraP2(x.getMonth() + 1) + auraP2(x.getDate()); }
+function auraPick(row, keys) { for (var i = 0; i < keys.length; i++) { if (row && row[keys[i]]) return String(row[keys[i]]); } return ''; }
+function auraRound2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+/* ---------- 1. gather everything the bill needs ---------- */
+async function auraBillData(admissionId) {
+  var ar = await _supa.from('admissions').select('*').eq('id', admissionId).single();
+  if (ar.error || !ar.data) throw new Error('Could not load this admission.');
+  var a = ar.data;
+  if (a.clinic_id && typeof _clinicId !== 'undefined' && _clinicId && a.clinic_id !== _clinicId) throw new Error('This admission belongs to another facility.');
+  var clinicId = a.clinic_id || _clinicId;
+  var res = await Promise.all([
+    _supa.from('clinics').select('*').eq('id', clinicId).single(),
+    a.patient_id ? _supa.from('nh_patients').select('id,full_name,age,gender,phone,uhid').eq('id', a.patient_id).maybeSingle() : Promise.resolve({ data: null }),
+    _supa.from('admission_charges').select('*').eq('admission_id', admissionId),
+    _supa.from('nh_payments').select('*').eq('admission_id', admissionId)
+  ]);
+  if (res[2].error) throw new Error('Could not read the charges: ' + res[2].error.message);
+  if (res[3].error) throw new Error('Could not read the payments: ' + res[3].error.message);
+  var c = res[0].data || {}, p = res[1].data || {};
+  var charges = (res[2].data || []).slice().sort(function (x, y) {
+    var dx = String(x.charge_date || x.created_at || ''), dy = String(y.charge_date || y.created_at || '');
+    return dx < dy ? -1 : dx > dy ? 1 : String(x.created_at || '').localeCompare(String(y.created_at || ''));
+  });
+  var payments = (res[3].data || []).slice().sort(function (x, y) {
+    return String(x.payment_date || x.created_at || '').localeCompare(String(y.payment_date || y.created_at || ''));
+  });
+  var total = auraRound2(charges.reduce(function (s, r) { return s + (Number(r.total_price) || 0); }, 0));
+  var paid = auraRound2(payments.reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0));
+  var uhid = a.uhid || p.uhid || '';
+  return {
+    clinicId: clinicId, adm: a, charges: charges, payments: payments,
+    clinic: { name: c.name || 'Nursing Home', address: auraPick(c, ['address', 'clinic_address', 'facility_address', 'location']), phone: auraPick(c, ['phone', 'contact_phone', 'mobile']), gstin: auraPick(c, ['gstin', 'gst_number', 'gst_no', 'gst', 'gstin_number']) },
+    patient: { name: a.patient_name || p.full_name || 'Patient', uhid: uhid, age: (a.patient_age !== null && a.patient_age !== undefined && a.patient_age !== '') ? a.patient_age : (p.age || ''), gender: a.patient_gender || p.gender || '', phone: a.patient_phone || p.phone || '' },
+    total: total, paid: paid, due: auraRound2(total - paid),
+    billNo: (uhid || ('ADM-' + String(a.id).slice(0, 8))) + '-' + auraYmd(a.admission_date),
+    discharged: a.status === 'Discharged', generatedAt: new Date()
+  };
+}
+
+/* ---------- 2. the page design ---------- */
+function auraBillCss() {
+  return '.ab-page{box-sizing:border-box;width:794px;height:1123px;padding:40px 44px 34px;background:#fff;color:#14201b;font-family:"Noto Sans","Noto Sans Bengali","Hind Siliguri",Mukta,Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.45;position:relative;overflow:hidden}'
+    + '.ab-meas{box-sizing:border-box;width:794px;padding:0 44px;background:#fff;font-family:"Noto Sans","Noto Sans Bengali","Hind Siliguri",Mukta,Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.45;color:#14201b}'
+    + '.ab-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid #12976A;padding-bottom:14px}'
+    + '.ab-clinic{font-size:22px;font-weight:700;color:#0b4f3a;line-height:1.2}'
+    + '.ab-sub{font-size:11.5px;color:#4a5b53;margin-top:4px}'
+    + '.ab-title{text-align:right;flex-shrink:0}.ab-title b{display:block;font-size:19px;letter-spacing:.06em;color:#12976A}.ab-title span{display:block;font-size:11.5px;color:#4a5b53;margin-top:3px}'
+    + '.ab-chead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #12976A;padding-bottom:8px;font-size:12px;color:#4a5b53}.ab-chead b{font-size:15px;color:#0b4f3a}'
+    + '.ab-pt{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin:16px 0 14px;padding:12px 14px;background:#f4f8f6;border:1px solid #dbe7e1;border-radius:8px}'
+    + '.ab-pt div{display:flex;gap:8px}.ab-pt .l{color:#6b7a73;min-width:92px;flex-shrink:0}.ab-pt .v{font-weight:600;overflow-wrap:anywhere}'
+    + 'table.ab-t{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}'
+    + '.ab-t th{background:#12976A;color:#fff;text-align:left;padding:7px 8px;font-weight:600}'
+    + '.ab-t td{padding:6px 8px;border-bottom:1px solid #e3ebe7;vertical-align:top;overflow-wrap:anywhere}'
+    + '.ab-t th.ab-r,.ab-t td.ab-r,.ab-r{text-align:right}.ab-c{color:#4a5b53}'
+    + '.ab-none{padding:14px 8px;color:#6b7a73;font-style:italic;border-bottom:1px solid #e3ebe7}'
+    + '.ab-grand{display:flex;justify-content:space-between;margin-top:10px;padding:9px 8px;background:#eef6f2;border-radius:6px;font-size:14px;font-weight:700}'
+    + '.ab-ph{margin-top:16px;padding-bottom:5px;border-bottom:2px solid #12976A;font-weight:700;color:#0b4f3a;font-size:13px}'
+    + '.ab-prow{display:flex;gap:8px;padding:6px 8px;border-bottom:1px solid #e3ebe7;font-size:12px}.ab-prow span{overflow-wrap:anywhere}'
+    + '.ab-final{margin:12px 0 0 auto;width:330px}.ab-final .row{display:flex;justify-content:space-between;padding:5px 8px}'
+    + '.ab-final .due{margin-top:4px;padding:10px 8px;border-radius:6px;font-size:16px;font-weight:700;display:flex;justify-content:space-between}'
+    + '.ab-due-red{background:#fdecec;color:#b42318}.ab-due-green{background:#e6f6ee;color:#0f7a4f}'
+    + '.ab-foot{position:absolute;left:44px;right:44px;bottom:16px;font-size:10px;color:#7a8a83;display:flex;justify-content:space-between;gap:12px;border-top:1px solid #e3ebe7;padding-top:6px}';
+}
+function auraColgroup() { return '<colgroup><col style="width:5%"><col style="width:12%"><col style="width:15%"><col style="width:31%"><col style="width:7%"><col style="width:15%"><col style="width:15%"></colgroup>'; }
+function auraTheadHtml() {
+  return '<thead><tr><th>#</th><th>Date</th><th>Charge type</th><th>Description</th><th class="ab-r">Qty</th><th class="ab-r">Unit price</th><th class="ab-r">Total</th></tr></thead>';
+}
+function auraHeaderFull(d) {
+  var sub = [];
+  if (d.clinic.address) sub.push(esc(d.clinic.address));
+  var line2 = []; if (d.clinic.phone) line2.push('Phone: ' + esc(d.clinic.phone)); if (d.clinic.gstin) line2.push('GSTIN: ' + esc(d.clinic.gstin));
+  if (line2.length) sub.push(line2.join(' &nbsp;&middot;&nbsp; '));
+  return '<div class="ab-head"><div><div class="ab-clinic">' + esc(d.clinic.name) + '</div>'
+    + sub.map(function (x) { return '<div class="ab-sub">' + x + '</div>'; }).join('') + '</div>'
+    + '<div class="ab-title"><b>' + (d.discharged ? 'FINAL BILL' : 'INTERIM BILL') + '</b><span>Bill No: <b style="display:inline;font-size:12px;letter-spacing:0;color:#14201b">' + esc(d.billNo) + '</b></span>'
+    + '<span>Date: ' + auraDate(d.generatedAt) + '</span>' + (d.discharged ? '' : '<span>(patient still admitted)</span>') + '</div></div>';
+}
+function auraHeaderCompact(d, n) {
+  return '<div class="ab-chead"><span><b>' + esc(d.clinic.name) + '</b> &nbsp;&middot;&nbsp; ' + esc(d.patient.name) + '</span><span>Bill No: ' + esc(d.billNo) + ' (continued, page ' + n + ')</span></div>';
+}
+function auraPatientBlock(d) {
+  var p = d.patient, a = d.adm;
+  var ageGender = [p.age !== '' && p.age !== null ? esc(p.age) + ' yrs' : '', esc(p.gender || '')].filter(Boolean).join(' / ');
+  return '<div class="ab-pt">'
+    + '<div><span class="l">Patient</span><span class="v">' + esc(p.name) + '</span></div>'
+    + '<div><span class="l">Admission date</span><span class="v">' + esc(auraDate(a.admission_date) || '-') + '</span></div>'
+    + '<div><span class="l">UHID</span><span class="v">' + esc(p.uhid || '-') + '</span></div>'
+    + '<div><span class="l">Discharge date</span><span class="v">' + (d.discharged ? esc(auraDate(a.discharge_date) || '-') : 'Not yet discharged') + '</span></div>'
+    + '<div><span class="l">Age / Gender</span><span class="v">' + (ageGender || '-') + '</span></div>'
+    + '<div><span class="l">Phone</span><span class="v">' + esc(p.phone || '-') + '</span></div>'
+    + '</div>';
+}
+function auraBillItems(d) {
+  var items = [];
+  d.charges.forEach(function (c, i) {
+    var qty = (c.quantity !== null && c.quantity !== undefined && c.quantity !== '') ? c.quantity : 1;
+    items.push({ t: 'crow', html: '<tr><td class="ab-c">' + (i + 1) + '</td><td>' + esc(auraDate(c.charge_date || c.created_at)) + '</td><td>' + esc(c.charge_type || '') + '</td><td>' + esc(c.description || '') + '</td>'
+      + '<td class="ab-r">' + esc(qty) + '</td><td class="ab-r">' + auraMoney(c.unit_price) + '</td><td class="ab-r"><b>' + auraMoney(c.total_price) + '</b></td></tr>' });
+  });
+  if (!d.charges.length) items.push({ t: 'cnone', html: '<div class="ab-none">No charges have been recorded for this admission.</div>' });
+  items.push({ t: 'grand', html: '<div class="ab-grand"><span>Grand total</span><span>' + auraMoney(d.total) + '</span></div>' });
+  items.push({ t: 'phead', keep: true, html: '<div class="ab-ph">Payments received</div>' });
+  d.payments.forEach(function (p) {
+    items.push({ t: 'prow', html: '<div class="ab-prow"><span style="width:16%">' + esc(auraDate(p.payment_date || p.created_at)) + '</span><span style="width:26%">' + esc(p.method || '') + '</span><span style="flex:1">' + esc(p.txn_id ? 'Ref: ' + p.txn_id : (p.notes || '')) + '</span><span style="width:20%;text-align:right"><b>' + auraMoney(p.amount) + '</b></span></div>' });
+  });
+  if (!d.payments.length) items.push({ t: 'pnone', html: '<div class="ab-none">No payments received yet.</div>' });
+  var settled = d.due <= 0;
+  items.push({ t: 'final', html: '<div class="ab-final"><div class="row"><span>Grand total</span><span>' + auraMoney(d.total) + '</span></div>'
+    + '<div class="row"><span>Total payments received</span><span>' + auraMoney(d.paid) + '</span></div>'
+    + '<div class="due ' + (settled ? 'ab-due-green' : 'ab-due-red') + '"><span>' + (d.due < 0 ? 'Paid in excess' : 'Balance due') + '</span><span>' + auraMoney(Math.abs(d.due)) + '</span></div></div>' });
+  return items;
+}
+
+/* ---------- 3. measure, split into A4 pages, draw, assemble ---------- */
+async function auraRenderPdf(d) {
+  await auraLoadBillLibs();
+  var PAGE_H = 1123, PAD_T = 40, PAD_B = 34, FOOT = 26, CONTENT = PAGE_H - PAD_T - PAD_B - FOOT, SAFETY = 6;
+  var host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-12000px;top:0;width:794px;background:#fff;pointer-events:none';
+  host.innerHTML = '<style>' + auraBillCss() + '</style>';
+  document.body.appendChild(host);
+  try {
+    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+    var items = auraBillItems(d);
+    var meas = document.createElement('div'); meas.className = 'ab-meas'; host.appendChild(meas);
+    function measure(html, asRow) {
+      var box = document.createElement('div');
+      box.innerHTML = asRow ? '<table class="ab-t">' + auraColgroup() + '<tbody>' + html + '</tbody></table>' : html;
+      meas.appendChild(box); var h = box.getBoundingClientRect().height; meas.removeChild(box); return h;
+    }
+    var hFull = measure(auraHeaderFull(d) + auraPatientBlock(d)), hCompact = measure(auraHeaderCompact(d, 2));
+    var hThead = measure('<table class="ab-t">' + auraColgroup() + auraTheadHtml() + '</table>');
+    items.forEach(function (it) { it.h = measure(it.html, it.t === 'crow') + 1; });
+
+    var pages = [], pg = { items: [], used: hFull + SAFETY, rows: false };
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i], own = it.h + ((it.t === 'crow' && !pg.rows) ? hThead : 0);
+      var need = own + ((it.keep && items[i + 1]) ? items[i + 1].h : 0);
+      if (pg.items.length && pg.used + need > CONTENT) { pages.push(pg); pg = { items: [], used: hCompact + SAFETY, rows: false }; own = it.h + (it.t === 'crow' ? hThead : 0); }
+      pg.items.push(it); pg.used += own; if (it.t === 'crow') pg.rows = true;
+    }
+    pages.push(pg);
+
+    var n = pages.length, stamp = auraDateTime(d.generatedAt), html = '';
+    pages.forEach(function (p, idx) {
+      var body = '', k = 0;
+      while (k < p.items.length) {
+        if (p.items[k].t === 'crow') { var rows = ''; while (k < p.items.length && p.items[k].t === 'crow') { rows += p.items[k].html; k++; } body += '<table class="ab-t">' + auraColgroup() + auraTheadHtml() + '<tbody>' + rows + '</tbody></table>'; }
+        else { body += p.items[k].html; k++; }
+      }
+      html += '<div class="ab-page" id="aura-bill-pg-' + idx + '">' + (idx === 0 ? auraHeaderFull(d) + auraPatientBlock(d) : auraHeaderCompact(d, idx + 1)) + body
+        + '<div class="ab-foot"><span>Computer-generated bill &middot; ' + esc(d.billNo) + ' &middot; ' + esc(stamp) + '</span><span>Page ' + (idx + 1) + ' of ' + n + '</span></div></div>';
+    });
+    var out = document.createElement('div'); out.innerHTML = html; host.appendChild(out);
+
+    var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
+    for (var j = 0; j < n; j++) {
+      var el = document.getElementById('aura-bill-pg-' + j);
+      var canvas = await window.html2canvas(el, { scale: 2, backgroundColor: '#ffffff', logging: false, windowWidth: 794, scrollX: 0, scrollY: 0 });
+      if (j > 0) doc.addPage();
+      doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+    }
+    return { blob: doc.output('blob'), pages: n };
+  } finally { if (host.parentNode) host.parentNode.removeChild(host); }
+}
+
+/* ---------- 4. build, store, link, record ---------- */
+function auraFriendlyError(e, where) {
+  var m = String((e && e.message) || e || 'Unknown error');
+  if (/bucket not found/i.test(m)) return 'The private "bills" storage is not set up yet. Run the bills SQL file once, then try again.';
+  if (where === 'table' && /does not exist|schema cache|could not find the table/i.test(m)) return 'The patient_bills table is not set up yet. Run the bills SQL file once, then try again.';
+  if (/row-level security|violates|not authorized|permission|policy|unauthorized/i.test(m)) return 'No permission to save bills yet. Run the bills SQL file once (it adds the access rules), then try again.';
+  return m;
+}
+async function auraGenerateBill(admissionId, opts) {
+  opts = opts || {};
+  if (!admissionId) return { ok: false, error: 'No admission selected.' };
+  if (_auraBillBusy[admissionId]) return { ok: false, error: 'A bill is already being made for this admission.' };
+  _auraBillBusy[admissionId] = true;
+  var stage = 'build';
+  try {
+    var d = await auraBillData(admissionId);
+    var made = await auraRenderPdf(d);
+    var path = d.clinicId + '/' + admissionId + '.pdf';
+    stage = 'storage';
+    var up = await _supa.storage.from(AURA_BILL_BUCKET).upload(path, made.blob, { contentType: 'application/pdf', upsert: true, cacheControl: '3600' });
+    if (up.error) throw up.error;
+    var sg = await _supa.storage.from(AURA_BILL_BUCKET).createSignedUrl(path, AURA_BILL_LINK_SECONDS);
+    if (sg.error || !sg.data) throw (sg.error || new Error('Could not make the link'));
+    stage = 'table';
+    var row = { clinic_id: d.clinicId, admission_id: admissionId, patient_name: d.patient.name, patient_phone: d.patient.phone || null,
+      total: d.total, paid: d.paid, due: d.due, pdf_path: path, pdf_url: sg.data.signedUrl || sg.data.signedURL, created_at: new Date().toISOString() };
+    var ex = await _supa.from('patient_bills').select('id').eq('admission_id', admissionId).maybeSingle();
+    if (ex.error && !/no rows/i.test(String(ex.error.message))) throw ex.error;
+    var wr = (ex.data && ex.data.id) ? await _supa.from('patient_bills').update(row).eq('id', ex.data.id) : await _supa.from('patient_bills').insert(row);
+    if (wr.error) throw wr.error;
+    try { await _supa.from('nh_audit_log').insert({ clinic_id: d.clinicId, actor_id: (typeof _myUid !== 'undefined' ? _myUid : null), action: 'bill_generated', target_table: 'patient_bills', target_id: admissionId, details: { total: d.total, paid: d.paid, due: d.due, bill_no: d.billNo } }); } catch (e) {}
+    return { ok: true, row: row, billNo: d.billNo, pages: made.pages, missingAddress: !d.clinic.address };
+  } catch (e) {
+    return { ok: false, error: auraFriendlyError(e, stage) };
+  } finally { delete _auraBillBusy[admissionId]; }
+}
+/* Used right after a discharge: never throws, never blocks, only tells the user what happened. */
+async function auraGenerateBillAuto(admissionId) {
+  try {
+    var r = await auraGenerateBill(admissionId);
+    if (typeof showToast === 'function') showToast(r.ok ? 'Final bill saved. Use "Download bill" on the admission page.' + auraAddressHint(r) : 'Discharged, but the bill was not saved: ' + r.error + ' (use Generate Bill to try again)');
+    auraAfterBill();
+  } catch (e) { /* a bill problem must never disturb a discharge */ }
+}
+
+/* ---------- 5. buttons ---------- */
+function auraBillButtonsHtml(admId, bill) {
+  var q = esc(admId);
+  if (bill) {
+    return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; Download bill</button>'
+      + '<button class="qbtn" title="Rebuild the bill with the latest charges and payments" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#8635; Regenerate</button>'
+      + '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">Saved ' + esc(auraDateTime(bill.created_at)) + ' &middot; Balance ' + esc(auraMoney(bill.due)) + '</span>';
+  }
+  return '<button class="qbtn" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#128196; Generate Bill</button>';
+}
+/* Fills every <span data-bill-actions="ADMISSION_ID"> under `root` (default: whole page) with the right buttons, in one query. */
+async function auraMountBillActions(root) {
+  var els = [].slice.call((root || document).querySelectorAll('[data-bill-actions]'));
+  if (!els.length) return;
+  var ids = []; els.forEach(function (e) { var v = e.getAttribute('data-bill-actions'); if (v && ids.indexOf(v) < 0) ids.push(v); });
+  var map = {};
+  try { var r = await _supa.from('patient_bills').select('admission_id,created_at,total,paid,due').in('admission_id', ids); (r.data || []).forEach(function (b) { map[b.admission_id] = b; }); } catch (e) {}
+  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id]); });
+}
+function auraAfterBill() { try { auraMountBillActions(document); } catch (e) {} }
+async function auraGenerateBillClick(admId, btn) {
+  var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Making the bill\u2026'; }
+  var r = await auraGenerateBill(admId);
+  if (typeof showToast === 'function') showToast(r.ok ? 'Bill saved (' + r.pages + (r.pages > 1 ? ' pages' : ' page') + ') \u2014 tap Download bill.' + auraAddressHint(r) : r.error);
+  if (btn && !r.ok) { btn.disabled = false; btn.innerHTML = old; }
+  auraAfterBill();
+}
+async function auraDownloadBill(admId, btn) {
+  var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Opening\u2026'; }
+  try {
+    var r = await _supa.from('patient_bills').select('pdf_path,patient_name').eq('admission_id', admId).maybeSingle();
+    if (!r.data) throw new Error('No saved bill yet. Tap Generate Bill first.');
+    var safe = String(r.data.patient_name || '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || String(admId).slice(0, 8);
+    var s = await _supa.storage.from(AURA_BILL_BUCKET).createSignedUrl(r.data.pdf_path, 3600, { download: 'Bill-' + safe + '.pdf' });
+    if (s.error || !s.data) throw (s.error || new Error('Could not open the bill'));
+    var a = document.createElement('a'); a.href = s.data.signedUrl || s.data.signedURL; a.download = 'Bill-' + safe + '.pdf'; a.rel = 'noopener'; a.target = '_blank';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  } catch (e) { if (typeof showToast === 'function') showToast(auraFriendlyError(e, 'storage')); }
+  if (btn) { btn.disabled = false; btn.innerHTML = old; }
+}
+</script>
+
+<!-- FACILITY DETAILS (owner Settings) -->
+<script>
+/* ===== FACILITY DETAILS (owner, Settings) =====
+   Address, phone and GSTIN printed at the top of every bill. Saved through the database function
+   update_facility_details, which can change ONLY these three fields of the owner's own facility. */
+(function () {
+  if (typeof FAM_I18N === 'undefined') return;
+  var T = {
+    en: { fd_title: 'Facility details', fd_intro: 'These details are printed at the top of every bill.', fd_l_name: 'Nursing home name', fd_name_note: 'To change the name, contact AuraScale.',
+      fd_l_address: 'Address', fd_ph_address: 'Street, town, district, PIN code', fd_l_phone: 'Phone number', fd_ph_phone: 'e.g. 9830012345',
+      fd_l_gstin: 'GSTIN (optional)', fd_ph_gstin: 'e.g. 19ABCDE1234F1Z5', fd_gstin_help: '15 letters and numbers. Leave it empty if you do not have a GSTIN.',
+      fd_preview: 'How the top of your bill will look', fd_prev_noaddr: 'Your address will appear here', fd_save: 'Save details', fd_saving: 'Saving\u2026',
+      fd_saved: 'Saved. New bills will show these details. A bill that was already made keeps its old top part until you tap Regenerate on it.',
+      fd_gstin_ok: '\u2713 Looks right', fd_err_gstin: 'The GSTIN looks wrong. It has 15 characters, like 19ABCDE1234F1Z5.', fd_err_phone: 'The phone number looks wrong. Use 8 to 15 digits.',
+      fd_err_address: 'The address is too long (most 300 characters).', fd_err_setup: 'One-time setup is missing: run the facility-details SQL file in Supabase, then try again.',
+      fd_err_perm: 'Only the owner of this nursing home can change these details.', fd_err_generic: 'Could not save ({e}). Please try again.', fd_phone_lbl: 'Phone', fd_loading_err: 'Could not load the details ({e}).' },
+    bn: { fd_title: '\u09aa\u09cd\u09b0\u09a4\u09bf\u09b7\u09cd\u09a0\u09be\u09a8\u09c7\u09b0 \u09a4\u09a5\u09cd\u09af', fd_intro: '\u098f\u0987 \u09a4\u09a5\u09cd\u09af \u09aa\u09cd\u09b0\u09a4\u09bf\u099f\u09bf \u09ac\u09bf\u09b2\u09c7\u09b0 \u0989\u09aa\u09b0\u09c7 \u099b\u09be\u09aa\u09be \u09b9\u09ac\u09c7\u0964', fd_l_name: '\u09a8\u09be\u09b0\u09cd\u09b8\u09bf\u0982 \u09b9\u09cb\u09ae\u09c7\u09b0 \u09a8\u09be\u09ae', fd_name_note: '\u09a8\u09be\u09ae \u09ac\u09a6\u09b2\u09be\u09a4\u09c7 AuraScale-\u098f\u09b0 \u09b8\u09be\u09a5\u09c7 \u09af\u09cb\u0997\u09be\u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8\u0964',
+      fd_l_address: '\u09a0\u09bf\u0995\u09be\u09a8\u09be', fd_ph_address: '\u09b0\u09be\u09b8\u09cd\u09a4\u09be, \u09b6\u09b9\u09b0/\u0997\u09cd\u09b0\u09be\u09ae, \u099c\u09c7\u09b2\u09be, \u09aa\u09bf\u09a8 \u0995\u09cb\u09a1', fd_l_phone: '\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0', fd_ph_phone: '\u09af\u09c7\u09ae\u09a8: 9830012345',
+      fd_l_gstin: '\u099c\u09bf\u098f\u09b8\u099f\u09bf\u0986\u0987\u098f\u09a8 (GSTIN) (\u0990\u099a\u09cd\u099b\u09bf\u0995)', fd_ph_gstin: '\u09af\u09c7\u09ae\u09a8: 19ABCDE1234F1Z5', fd_gstin_help: '\u09e7\u09eb\u099f\u09bf \u0985\u0995\u09cd\u09b7\u09b0 \u0993 \u09b8\u0982\u0996\u09cd\u09af\u09be\u0964 \u09a8\u09be \u09a5\u09be\u0995\u09b2\u09c7 \u09ab\u09be\u0981\u0995\u09be \u09b0\u09be\u0996\u09c1\u09a8\u0964',
+      fd_preview: '\u0986\u09aa\u09a8\u09be\u09b0 \u09ac\u09bf\u09b2\u09c7\u09b0 \u0989\u09aa\u09b0\u09c7\u09b0 \u0985\u0982\u09b6 \u09a6\u09c7\u0996\u09a4\u09c7 \u098f\u09ae\u09a8 \u09b9\u09ac\u09c7', fd_prev_noaddr: '\u098f\u0996\u09be\u09a8\u09c7 \u0986\u09aa\u09a8\u09be\u09b0 \u09a0\u09bf\u0995\u09be\u09a8\u09be \u09a6\u09c7\u0996\u09be \u09af\u09be\u09ac\u09c7', fd_save: '\u09a4\u09a5\u09cd\u09af \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u0995\u09b0\u09c1\u09a8', fd_saving: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u09b9\u099a\u09cd\u099b\u09c7\u2026',
+      fd_saved: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4 \u09b9\u09af\u09bc\u09c7\u099b\u09c7\u0964 \u09a8\u09a4\u09c1\u09a8 \u09ac\u09bf\u09b2\u09c7 \u098f\u0987 \u09a4\u09a5\u09cd\u09af \u09a5\u09be\u0995\u09ac\u09c7\u0964 \u0986\u0997\u09c7 \u09ac\u09be\u09a8\u09be\u09a8\u09cb \u09ac\u09bf\u09b2 \u09ac\u09a6\u09b2\u09be\u09a4\u09c7 \u09b8\u09c7\u0987 \u09ac\u09bf\u09b2\u09c7 "Regenerate" \u099a\u09be\u09aa\u09c1\u09a8\u0964',
+      fd_gstin_ok: '\u2713 \u09a0\u09bf\u0995 \u0986\u099b\u09c7', fd_err_gstin: 'GSTIN \u09a0\u09bf\u0995 \u09a8\u09af\u09bc\u0964 \u098f\u09a4\u09c7 \u09e7\u09eb\u099f\u09bf \u0985\u0995\u09cd\u09b7\u09b0 \u09a5\u09be\u0995\u09c7, \u09af\u09c7\u09ae\u09a8 19ABCDE1234F1Z5\u0964', fd_err_phone: '\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a0\u09bf\u0995 \u09a8\u09af\u09bc\u0964 \u09ee \u09a5\u09c7\u0995\u09c7 \u09e7\u09eb\u099f\u09bf \u09b8\u0982\u0996\u09cd\u09af\u09be \u09a6\u09bf\u09a8\u0964',
+      fd_err_address: '\u09a0\u09bf\u0995\u09be\u09a8\u09be \u0996\u09c1\u09ac \u09ac\u09a1\u09bc (\u09b8\u09b0\u09cd\u09ac\u09cb\u099a\u09cd\u099a \u09e9\u09e6\u09e6 \u0985\u0995\u09cd\u09b7\u09b0)\u0964', fd_err_setup: '\u098f\u0995\u09ac\u09be\u09b0\u09c7\u09b0 \u09b8\u09c7\u099f\u0986\u09aa \u09ac\u09be\u0995\u09bf \u0986\u099b\u09c7: Supabase-\u098f facility-details SQL \u09ab\u09be\u0987\u09b2\u099f\u09bf \u099a\u09be\u09b2\u09be\u09a8, \u09a4\u09be\u09b0\u09aa\u09b0 \u0986\u09ac\u09be\u09b0 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964',
+      fd_err_perm: '\u09b6\u09c1\u09a7\u09c1 \u098f\u0987 \u09a8\u09be\u09b0\u09cd\u09b8\u09bf\u0982 \u09b9\u09cb\u09ae\u09c7\u09b0 \u09ae\u09be\u09b2\u09bf\u0995\u0987 \u098f\u0987 \u09a4\u09a5\u09cd\u09af \u09ac\u09a6\u09b2\u09be\u09a4\u09c7 \u09aa\u09be\u09b0\u09c7\u09a8\u0964', fd_err_generic: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964 \u0986\u09ac\u09be\u09b0 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964', fd_phone_lbl: '\u09ab\u09cb\u09a8', fd_loading_err: '\u09a4\u09a5\u09cd\u09af \u09b2\u09cb\u09a1 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964' },
+    hi: { fd_title: '\u0938\u0902\u0938\u094d\u0925\u093e \u0915\u093e \u0935\u093f\u0935\u0930\u0923', fd_intro: '\u092f\u0939 \u091c\u093e\u0928\u0915\u093e\u0930\u0940 \u0939\u0930 \u092c\u093f\u0932 \u0915\u0947 \u090a\u092a\u0930 \u091b\u092a\u0947\u0917\u0940\u0964', fd_l_name: '\u0928\u0930\u094d\u0938\u093f\u0902\u0917 \u0939\u094b\u092e \u0915\u093e \u0928\u093e\u092e', fd_name_note: '\u0928\u093e\u092e \u092c\u0926\u0932\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f AuraScale \u0938\u0947 \u0938\u0902\u092a\u0930\u094d\u0915 \u0915\u0930\u0947\u0902\u0964',
+      fd_l_address: '\u092a\u0924\u093e', fd_ph_address: '\u0938\u0921\u093c\u0915, \u0936\u0939\u0930, \u091c\u093c\u093f\u0932\u093e, \u092a\u093f\u0928 \u0915\u094b\u0921', fd_l_phone: '\u092b\u093c\u094b\u0928 \u0928\u0902\u092c\u0930', fd_ph_phone: '\u091c\u0948\u0938\u0947: 9830012345',
+      fd_l_gstin: '\u091c\u0940\u090f\u0938\u091f\u0940\u0906\u0908\u090f\u0928 (GSTIN) (\u0935\u0948\u0915\u0932\u094d\u092a\u093f\u0915)', fd_ph_gstin: '\u091c\u0948\u0938\u0947: 19ABCDE1234F1Z5', fd_gstin_help: '15 \u0905\u0915\u094d\u0937\u0930 \u0914\u0930 \u0905\u0902\u0915\u0964 \u0928 \u0939\u094b \u0924\u094b \u0916\u093e\u0932\u0940 \u091b\u094b\u0921\u093c\u0947\u0902\u0964',
+      fd_preview: '\u0906\u092a\u0915\u0947 \u092c\u093f\u0932 \u0915\u093e \u090a\u092a\u0930\u0940 \u0939\u093f\u0938\u094d\u0938\u093e \u0910\u0938\u093e \u0926\u093f\u0916\u0947\u0917\u093e', fd_prev_noaddr: '\u092f\u0939\u093e\u0901 \u0906\u092a\u0915\u093e \u092a\u0924\u093e \u0926\u093f\u0916\u0947\u0917\u093e', fd_save: '\u0935\u093f\u0935\u0930\u0923 \u0938\u0939\u0947\u091c\u0947\u0902', fd_saving: '\u0938\u0939\u0947\u091c\u093e \u091c\u093e \u0930\u0939\u093e \u0939\u0948\u2026',
+      fd_saved: '\u0938\u0939\u0947\u091c \u0932\u093f\u092f\u093e \u0917\u092f\u093e\u0964 \u0928\u090f \u092c\u093f\u0932\u094b\u0902 \u092e\u0947\u0902 \u092f\u0939 \u091c\u093e\u0928\u0915\u093e\u0930\u0940 \u0926\u093f\u0916\u0947\u0917\u0940\u0964 \u092a\u0939\u0932\u0947 \u092c\u0928\u0947 \u092c\u093f\u0932 \u092c\u0926\u0932\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0909\u0938 \u092c\u093f\u0932 \u092a\u0930 "Regenerate" \u0926\u092c\u093e\u090f\u0901\u0964',
+      fd_gstin_ok: '\u2713 \u0938\u0939\u0940 \u0932\u0917\u0924\u093e \u0939\u0948', fd_err_gstin: 'GSTIN \u0938\u0939\u0940 \u0928\u0939\u0940\u0902 \u0932\u0917\u0924\u093e\u0964 \u0907\u0938\u092e\u0947\u0902 15 \u0905\u0915\u094d\u0937\u0930 \u0939\u094b\u0924\u0947 \u0939\u0948\u0902, \u091c\u0948\u0938\u0947 19ABCDE1234F1Z5\u0964', fd_err_phone: '\u092b\u093c\u094b\u0928 \u0928\u0902\u092c\u0930 \u0938\u0939\u0940 \u0928\u0939\u0940\u0902 \u0932\u0917\u0924\u093e\u0964 8 \u0938\u0947 15 \u0905\u0902\u0915 \u0932\u093f\u0916\u0947\u0902\u0964',
+      fd_err_address: '\u092a\u0924\u093e \u092c\u0939\u0941\u0924 \u0932\u0902\u092c\u093e \u0939\u0948 (\u0905\u0927\u093f\u0915\u0924\u092e 300 \u0905\u0915\u094d\u0937\u0930)\u0964', fd_err_setup: '\u090f\u0915 \u092c\u093e\u0930 \u0915\u093e \u0938\u0947\u091f\u0905\u092a \u092c\u093e\u0915\u0940 \u0939\u0948: Supabase \u092e\u0947\u0902 facility-details SQL \u092b\u093c\u093e\u0907\u0932 \u091a\u0932\u093e\u090f\u0901, \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964',
+      fd_err_perm: '\u0915\u0947\u0935\u0932 \u0907\u0938 \u0928\u0930\u094d\u0938\u093f\u0902\u0917 \u0939\u094b\u092e \u0915\u0947 \u092e\u093e\u0932\u093f\u0915 \u0939\u0940 \u092f\u0939 \u091c\u093e\u0928\u0915\u093e\u0930\u0940 \u092c\u0926\u0932 \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964', fd_err_generic: '\u0938\u0939\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u091c\u093e \u0938\u0915\u093e ({e})\u0964 \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964', fd_phone_lbl: '\u092b\u093c\u094b\u0928', fd_loading_err: '\u0935\u093f\u0935\u0930\u0923 \u0932\u094b\u0921 \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u093e ({e})\u0964' }
+  };
+  Object.keys(T).forEach(function (l) { if (FAM_I18N[l]) for (var k in T[l]) FAM_I18N[l][k] = T[l][k]; });
+})();
+
+var _fdName = '';
+var FD_GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+function fdEl(id) { return document.getElementById(id); }
+function fdGstinOf() { return (fdEl('fd-gstin').value || '').toUpperCase().replace(/[^0-9A-Z]/g, ''); }
+function fdPhoneOk(p) { var d = String(p || '').replace(/\D/g, ''); return d.length >= 8 && d.length <= 15; }
+
+function fdApplyLang() {
+  if (!fdEl('fd-title')) return;
+  var set = function (id, key) { var e = fdEl(id); if (e) e.textContent = famT(key); };
+  set('fd-title-txt', 'fd_title'); set('fd-intro', 'fd_intro'); set('fd-l-name', 'fd_l_name'); set('fd-name-note', 'fd_name_note'); set('fd-l-address', 'fd_l_address');
+  set('fd-l-phone', 'fd_l_phone'); set('fd-l-gstin', 'fd_l_gstin'); set('fd-gstin-help', 'fd_gstin_help'); set('fd-preview-lbl', 'fd_preview'); set('fd-save', 'fd_save');
+  fdEl('fd-address').placeholder = famT('fd_ph_address'); fdEl('fd-phone').placeholder = famT('fd_ph_phone'); fdEl('fd-gstin').placeholder = famT('fd_ph_gstin');
+  fdPreview();
+}
+/* live preview of the top of the bill + gentle checking while typing */
+function fdPreview() {
+  if (!fdEl('fd-preview-box')) return;
+  var g = fdEl('fd-gstin'); var gv = fdGstinOf(); if (g.value !== gv) g.value = gv;
+  var addr = (fdEl('fd-address').value || '').trim(), phone = (fdEl('fd-phone').value || '').trim();
+  var line2 = []; if (phone) line2.push(esc(famT('fd_phone_lbl')) + ': ' + esc(phone)); if (gv) line2.push('GSTIN: ' + esc(gv));
+  fdEl('fd-preview-box').innerHTML = '<div style="font-size:16px;font-weight:700;color:#0b4f3a;line-height:1.25">' + esc(_fdName || '') + '</div>'
+    + '<div style="font-size:11.5px;color:' + (addr ? '#4a5b53' : '#a1a8a4') + ';margin-top:3px">' + (addr ? esc(addr).replace(/\n/g, '<br>') : esc(famT('fd_prev_noaddr'))) + '</div>'
+    + (line2.length ? '<div style="font-size:11.5px;color:#4a5b53;margin-top:2px">' + line2.join(' &nbsp;&middot;&nbsp; ') + '</div>' : '');
+  var st = fdEl('fd-gstin-state');
+  if (!gv) { st.textContent = ''; } else if (FD_GSTIN_RE.test(gv)) { st.textContent = famT('fd_gstin_ok'); st.style.color = 'var(--green)'; } else { st.textContent = gv.length < 15 ? gv.length + ' / 15' : famT('fd_err_gstin'); st.style.color = gv.length < 15 ? 'var(--text-tertiary)' : 'var(--red)'; }
+  fdEl('fd-error').style.display = 'none'; fdEl('fd-success').style.display = 'none';
+}
+async function loadFacilityDetails() {
+  if (!fdEl('fd-title') || typeof _clinicId === 'undefined' || !_clinicId) return;
+  fdApplyLang();
+  var r = await _supa.from('clinics').select('name,address,gstin,phone').eq('id', _clinicId).single();
+  if (r.error || !r.data) {
+    var r2 = await _supa.from('clinics').select('name,phone').eq('id', _clinicId).single();   // address / gstin columns not added yet
+    if (r2.data) { _fdName = r2.data.name || ''; fdEl('fd-phone').value = r2.data.phone || ''; fdEl('fd-address').value = ''; fdEl('fd-gstin').value = ''; fdEl('fd-name').textContent = _fdName; fdPreview(); fdEl('fd-error').textContent = famT('fd_err_setup'); fdEl('fd-error').style.display = 'block'; }
+    else { fdEl('fd-error').textContent = famT('fd_loading_err', { e: (r.error && r.error.message) || '' }); fdEl('fd-error').style.display = 'block'; }
+    return;
+  }
+  _fdName = r.data.name || '';
+  fdEl('fd-name').textContent = _fdName; fdEl('fd-address').value = r.data.address || ''; fdEl('fd-phone').value = r.data.phone || ''; fdEl('fd-gstin').value = r.data.gstin || '';
+  fdPreview();
+}
+async function saveFacilityDetails() {
+  var addr = (fdEl('fd-address').value || '').trim(), phone = (fdEl('fd-phone').value || '').trim(), gstin = fdGstinOf();
+  var err = fdEl('fd-error'), ok = fdEl('fd-success'), btn = fdEl('fd-save');
+  err.style.display = 'none'; ok.style.display = 'none';
+  var problem = '';
+  if (addr.length > 300) problem = famT('fd_err_address');
+  else if (phone && !fdPhoneOk(phone)) problem = famT('fd_err_phone');
+  else if (gstin && !FD_GSTIN_RE.test(gstin)) problem = famT('fd_err_gstin');
+  if (problem) { err.textContent = problem; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = famT('fd_saving');
+  try {
+    var r = await _supa.rpc('update_facility_details', { p_clinic_id: _clinicId, p_address: addr, p_gstin: gstin, p_phone: phone });
+    if (r.error) throw r.error;
+    ok.textContent = famT('fd_saved'); ok.style.display = 'block';
+    if (typeof showToast === 'function') showToast('\u2713 ' + famT('fd_title'));
+  } catch (e) {
+    var m = String((e && e.message) || e || '');
+    var text = /could not find the function|schema cache|does not exist|PGRST202/i.test(m + ' ' + ((e && e.code) || '')) ? famT('fd_err_setup')
+      : /only the owner/i.test(m) ? famT('fd_err_perm')
+      : /gstin looks wrong/i.test(m) ? famT('fd_err_gstin') : /phone number looks wrong/i.test(m) ? famT('fd_err_phone') : /address is too long/i.test(m) ? famT('fd_err_address')
+      : famT('fd_err_generic', { e: m });
+    err.textContent = text; err.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = famT('fd_save');
+}
 </script>
 </body>
 </html>
