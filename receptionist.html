@@ -540,6 +540,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <div class="ir"><span class="il">Discharged Date</span><span class="iv" id="dd-dis-date">—</span></div>
           <div class="ir"><span class="il">Discharged Time</span><span class="iv" id="dd-dis-time">—</span></div>
           <button class="msub" style="margin-top:18px" onclick="printVisitHistory()">&#128196; Visit History (PDF)</button>
+          <div style="margin-top:12px"><span id="dd-bill-actions"></span></div>
         </div>
       </div>
 
@@ -2505,12 +2506,13 @@ async function loadBilling(id){
   el.innerHTML='<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total Billed</div><div class="bill-amt">₹'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">₹'+due.toLocaleString('en-IN')+'</div></div></div>'
     +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
     +'<button class="qbtn" onclick="openTransactionPayment(\''+_admId+'\',\''+esc(patientName)+'\',\'Payment\',\'Billing\')" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">&#128176; Receive Payment</button>'
-    +'<button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Generate Bill / View Invoice</button>'
+    +'<span data-bill-actions="'+_admId+'"></span><button class="qbtn" onclick="printPatientBill()" title="Open a printable copy">&#128424; Print</button>'
     +'<button class="qbtn" onclick="toggleFinancingPanel()">&#128179; Financing Options</button>'
     +'</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Payment History</div>'
     +(pay.data&&pay.data.length?pay.data.map(function(p){return '<div style="display:flex;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.4);font-size:12px"><div style="flex:1"><b>'+p.method+'</b> — ₹'+Number(p.amount).toLocaleString('en-IN')+' · '+new Date(p.payment_date||p.created_at).toLocaleDateString('en-GB')+(p.txn_id?' · TXN:'+p.txn_id:'')+'</div></div>';}).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No payments recorded</p>');
 
+  if(typeof auraMountBillActions==='function') auraMountBillActions(el);
   /* Keep the Charges tab in sync whenever Billing is loaded, since they
      share the same underlying admission/charges data (single source of truth). */
   renderChargesTab(ch.data||[], due);
@@ -2760,6 +2762,8 @@ async function confirmDischarge(){
 
     showToast('Patient discharged successfully.');
     closeModal('mod-discharge-confirm');
+    /* Final bill: built and saved in the background. A problem here never undoes or delays the discharge. */
+    if(typeof auraGenerateBillAuto==='function'){ var billAdmId=_dcAdmId; setTimeout(function(){ auraGenerateBillAuto(billAdmId); }, 300); }
 
     /* 5. Refresh every screen that could show stale state */
     var bedModal = document.getElementById('mod-bed-profile');
@@ -2820,6 +2824,7 @@ async function openDischargeDetail(admissionId){
   document.getElementById('dd-dis-date').textContent = disDate ? disDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
   document.getElementById('dd-dis-time').textContent = disDate ? disDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
 
+  var ddb=document.getElementById('dd-bill-actions'); if(ddb){ ddb.setAttribute('data-bill-actions', admissionId); ddb.innerHTML=''; if(typeof auraMountBillActions==='function') auraMountBillActions(ddb.parentNode); }
   showDischargeDetailView();
 }
 
@@ -3388,7 +3393,7 @@ async function loadBpExpenses(){
   var due = total - paid;
   if(!charges.length){ el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-ic">&#128179;</div><p class="empty-t">No charges yet</p></div>'; return; }
   el.innerHTML = '<div class="bill-bar" style="margin-bottom:12px"><div><div class="bill-lbl">Total</div><div class="bill-amt">&#8377;'+total.toLocaleString('en-IN')+'</div></div><div style="text-align:right"><div class="bill-lbl">Due</div><div class="bill-amt" style="color:'+(due>0?'var(--red)':'var(--green)')+'">&#8377;'+due.toLocaleString('en-IN')+'</div></div></div>'
-    + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="qbtn" onclick="openExpenseModal()">+ Add Charge</button><button class="qbtn" onclick="printPatientBill()" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">&#128196; Print Bill</button></div>'
+    + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="qbtn" onclick="openExpenseModal()">+ Add Charge</button><span data-bill-actions="'+_bpAdmId+'"></span><button class="qbtn" onclick="printPatientBill()">&#128424; Print</button></div>'
     + charges.map(function(c){
         return '<div class="exp-card">'
           + '<div class="exp-ic">&#128179;</div>'
@@ -3397,6 +3402,7 @@ async function loadBpExpenses(){
           + (c.bill_path ? '<button class="qbtn" style="margin-top:5px" data-bill-path="'+(c.bill_path||'')+'">&#128206; View Bill</button>' : '')
           + '</div><div class="exp-amt">&#8377;' + Number(c.total_price).toLocaleString('en-IN') + '</div></div>';
       }).join('');
+  if(typeof auraMountBillActions==='function') auraMountBillActions(el);
 }
 
 async function loadBpDocs(){
@@ -3851,5 +3857,318 @@ async function savePaymentRecord(){
     </div>
   </div>
 </div>
+
+<!-- FINAL BILL PDF (generate, store privately, download) -->
+<script>
+/* ===== FINAL BILL PDF =====
+   Builds an itemised A4 bill for ONE admission, stores it privately and records it:
+     1. PDF  -> private Storage bucket "bills" at  {clinic_id}/{admission_id}.pdf   (generating again replaces the file)
+     2. a signed link valid for 7 days  -> saved in public.patient_bills.pdf_url (handy for sending to the family)
+     3. one row per admission in public.patient_bills (generating again updates that row)
+   Runs automatically right after a successful discharge, and from the "Generate Bill" button. A bill that fails to build
+   NEVER blocks or undoes a discharge. The "Download bill" button makes a fresh short-lived link each time, so it keeps
+   working after the stored 7-day link has expired.
+   The pages are drawn by the browser (HTML -> image -> PDF) so that Bengali names and the rupee sign print correctly. */
+var AURA_BILL_BUCKET = 'bills', AURA_BILL_LINK_SECONDS = 7 * 24 * 60 * 60;
+var AURA_BILL_LIBS = {
+  jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  html2canvas: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+};
+var _auraBillBusy = {};
+/* a one-line hint (English / Bengali / Hindi) shown when the bill had to leave the address off */
+(function () {
+  if (typeof FAM_I18N === 'undefined') return;
+  var add = {
+    en: 'Tip: your address is not set, so the bill has no address line. The owner can add it in Settings \u2192 Facility details.',
+    bn: '\u099f\u09bf\u09aa: \u0986\u09aa\u09a8\u09be\u09b0 \u09a0\u09bf\u0995\u09be\u09a8\u09be \u09b2\u09c7\u0996\u09be \u09a8\u09c7\u0987, \u09a4\u09be\u0987 \u09ac\u09bf\u09b2\u09c7 \u09a0\u09bf\u0995\u09be\u09a8\u09be \u09a8\u09c7\u0987\u0964 \u09ae\u09be\u09b2\u09bf\u0995 Settings \u2192 Facility details-\u098f \u09af\u09cb\u0997 \u0995\u09b0\u09a4\u09c7 \u09aa\u09be\u09b0\u09c7\u09a8\u0964',
+    hi: '\u0938\u0941\u091d\u093e\u0935: \u0906\u092a\u0915\u093e \u092a\u0924\u093e \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902 \u0939\u0948, \u0907\u0938\u0932\u093f\u090f \u092c\u093f\u0932 \u092e\u0947\u0902 \u092a\u0924\u093e \u0928\u0939\u0940\u0902 \u0939\u0948\u0964 \u092e\u093e\u0932\u093f\u0915 \u0907\u0938\u0947 Settings \u2192 Facility details \u092e\u0947\u0902 \u091c\u094b\u0921\u093c \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964'
+  };
+  Object.keys(add).forEach(function (l) { if (FAM_I18N[l]) FAM_I18N[l].fd_missing_hint = add[l]; });
+})();
+function auraAddressHint(r) {
+  if (!r || !r.missingAddress) return '';
+  return ' ' + (typeof famT === 'function' ? famT('fd_missing_hint') : 'Tip: your address is not set. The owner can add it in Settings \u2192 Facility details.');
+}
+
+function auraLoadScript(url, ready) {
+  return new Promise(function (resolve, reject) {
+    if (ready()) return resolve();
+    var s = document.createElement('script'); s.src = url;
+    s.onload = function () { ready() ? resolve() : reject(new Error('A bill library did not start')); };
+    s.onerror = function () { reject(new Error('Could not load the PDF tools (check the internet connection)')); };
+    document.head.appendChild(s);
+  });
+}
+async function auraLoadBillLibs() {
+  await auraLoadScript(AURA_BILL_LIBS.jspdf, function () { return !!(window.jspdf && window.jspdf.jsPDF); });
+  await auraLoadScript(AURA_BILL_LIBS.html2canvas, function () { return typeof window.html2canvas === 'function'; });
+}
+function auraMoney(n) {
+  n = Number(n) || 0; var neg = n < 0; n = Math.abs(n);
+  var whole = Math.round(n * 100) % 100 === 0;
+  var s = whole ? n.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (neg ? '-' : '') + '\u20B9' + s;
+}
+function auraP2(x) { return ('0' + x).slice(-2); }
+function auraDate(d) {
+  if (!d) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(d))) { var p = String(d).split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+  var x = new Date(d); if (isNaN(x)) return '';
+  return auraP2(x.getDate()) + '/' + auraP2(x.getMonth() + 1) + '/' + x.getFullYear();
+}
+function auraDateTime(d) { var x = new Date(d); if (!d || isNaN(x)) return ''; return auraDate(x) + ' ' + auraP2(x.getHours()) + ':' + auraP2(x.getMinutes()); }
+function auraYmd(d) { var x = new Date(d); if (!d || isNaN(x)) return 'NODATE'; return '' + x.getFullYear() + auraP2(x.getMonth() + 1) + auraP2(x.getDate()); }
+function auraPick(row, keys) { for (var i = 0; i < keys.length; i++) { if (row && row[keys[i]]) return String(row[keys[i]]); } return ''; }
+function auraRound2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+/* ---------- 1. gather everything the bill needs ---------- */
+async function auraBillData(admissionId) {
+  var ar = await _supa.from('admissions').select('*').eq('id', admissionId).single();
+  if (ar.error || !ar.data) throw new Error('Could not load this admission.');
+  var a = ar.data;
+  if (a.clinic_id && typeof _clinicId !== 'undefined' && _clinicId && a.clinic_id !== _clinicId) throw new Error('This admission belongs to another facility.');
+  var clinicId = a.clinic_id || _clinicId;
+  var res = await Promise.all([
+    _supa.from('clinics').select('*').eq('id', clinicId).single(),
+    a.patient_id ? _supa.from('nh_patients').select('id,full_name,age,gender,phone,uhid').eq('id', a.patient_id).maybeSingle() : Promise.resolve({ data: null }),
+    _supa.from('admission_charges').select('*').eq('admission_id', admissionId),
+    _supa.from('nh_payments').select('*').eq('admission_id', admissionId)
+  ]);
+  if (res[2].error) throw new Error('Could not read the charges: ' + res[2].error.message);
+  if (res[3].error) throw new Error('Could not read the payments: ' + res[3].error.message);
+  var c = res[0].data || {}, p = res[1].data || {};
+  var charges = (res[2].data || []).slice().sort(function (x, y) {
+    var dx = String(x.charge_date || x.created_at || ''), dy = String(y.charge_date || y.created_at || '');
+    return dx < dy ? -1 : dx > dy ? 1 : String(x.created_at || '').localeCompare(String(y.created_at || ''));
+  });
+  var payments = (res[3].data || []).slice().sort(function (x, y) {
+    return String(x.payment_date || x.created_at || '').localeCompare(String(y.payment_date || y.created_at || ''));
+  });
+  var total = auraRound2(charges.reduce(function (s, r) { return s + (Number(r.total_price) || 0); }, 0));
+  var paid = auraRound2(payments.reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0));
+  var uhid = a.uhid || p.uhid || '';
+  return {
+    clinicId: clinicId, adm: a, charges: charges, payments: payments,
+    clinic: { name: c.name || 'Nursing Home', address: auraPick(c, ['address', 'clinic_address', 'facility_address', 'location']), phone: auraPick(c, ['phone', 'contact_phone', 'mobile']), gstin: auraPick(c, ['gstin', 'gst_number', 'gst_no', 'gst', 'gstin_number']) },
+    patient: { name: a.patient_name || p.full_name || 'Patient', uhid: uhid, age: (a.patient_age !== null && a.patient_age !== undefined && a.patient_age !== '') ? a.patient_age : (p.age || ''), gender: a.patient_gender || p.gender || '', phone: a.patient_phone || p.phone || '' },
+    total: total, paid: paid, due: auraRound2(total - paid),
+    billNo: (uhid || ('ADM-' + String(a.id).slice(0, 8))) + '-' + auraYmd(a.admission_date),
+    discharged: a.status === 'Discharged', generatedAt: new Date()
+  };
+}
+
+/* ---------- 2. the page design ---------- */
+function auraBillCss() {
+  return '.ab-page{box-sizing:border-box;width:794px;height:1123px;padding:40px 44px 34px;background:#fff;color:#14201b;font-family:"Noto Sans","Noto Sans Bengali","Hind Siliguri",Mukta,Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.45;position:relative;overflow:hidden}'
+    + '.ab-meas{box-sizing:border-box;width:794px;padding:0 44px;background:#fff;font-family:"Noto Sans","Noto Sans Bengali","Hind Siliguri",Mukta,Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.45;color:#14201b}'
+    + '.ab-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid #12976A;padding-bottom:14px}'
+    + '.ab-clinic{font-size:22px;font-weight:700;color:#0b4f3a;line-height:1.2}'
+    + '.ab-sub{font-size:11.5px;color:#4a5b53;margin-top:4px}'
+    + '.ab-title{text-align:right;flex-shrink:0}.ab-title b{display:block;font-size:19px;letter-spacing:.06em;color:#12976A}.ab-title span{display:block;font-size:11.5px;color:#4a5b53;margin-top:3px}'
+    + '.ab-chead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #12976A;padding-bottom:8px;font-size:12px;color:#4a5b53}.ab-chead b{font-size:15px;color:#0b4f3a}'
+    + '.ab-pt{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin:16px 0 14px;padding:12px 14px;background:#f4f8f6;border:1px solid #dbe7e1;border-radius:8px}'
+    + '.ab-pt div{display:flex;gap:8px}.ab-pt .l{color:#6b7a73;min-width:92px;flex-shrink:0}.ab-pt .v{font-weight:600;overflow-wrap:anywhere}'
+    + 'table.ab-t{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}'
+    + '.ab-t th{background:#12976A;color:#fff;text-align:left;padding:7px 8px;font-weight:600}'
+    + '.ab-t td{padding:6px 8px;border-bottom:1px solid #e3ebe7;vertical-align:top;overflow-wrap:anywhere}'
+    + '.ab-t th.ab-r,.ab-t td.ab-r,.ab-r{text-align:right}.ab-c{color:#4a5b53}'
+    + '.ab-none{padding:14px 8px;color:#6b7a73;font-style:italic;border-bottom:1px solid #e3ebe7}'
+    + '.ab-grand{display:flex;justify-content:space-between;margin-top:10px;padding:9px 8px;background:#eef6f2;border-radius:6px;font-size:14px;font-weight:700}'
+    + '.ab-ph{margin-top:16px;padding-bottom:5px;border-bottom:2px solid #12976A;font-weight:700;color:#0b4f3a;font-size:13px}'
+    + '.ab-prow{display:flex;gap:8px;padding:6px 8px;border-bottom:1px solid #e3ebe7;font-size:12px}.ab-prow span{overflow-wrap:anywhere}'
+    + '.ab-final{margin:12px 0 0 auto;width:330px}.ab-final .row{display:flex;justify-content:space-between;padding:5px 8px}'
+    + '.ab-final .due{margin-top:4px;padding:10px 8px;border-radius:6px;font-size:16px;font-weight:700;display:flex;justify-content:space-between}'
+    + '.ab-due-red{background:#fdecec;color:#b42318}.ab-due-green{background:#e6f6ee;color:#0f7a4f}'
+    + '.ab-foot{position:absolute;left:44px;right:44px;bottom:16px;font-size:10px;color:#7a8a83;display:flex;justify-content:space-between;gap:12px;border-top:1px solid #e3ebe7;padding-top:6px}';
+}
+function auraColgroup() { return '<colgroup><col style="width:5%"><col style="width:12%"><col style="width:15%"><col style="width:31%"><col style="width:7%"><col style="width:15%"><col style="width:15%"></colgroup>'; }
+function auraTheadHtml() {
+  return '<thead><tr><th>#</th><th>Date</th><th>Charge type</th><th>Description</th><th class="ab-r">Qty</th><th class="ab-r">Unit price</th><th class="ab-r">Total</th></tr></thead>';
+}
+function auraHeaderFull(d) {
+  var sub = [];
+  if (d.clinic.address) sub.push(esc(d.clinic.address));
+  var line2 = []; if (d.clinic.phone) line2.push('Phone: ' + esc(d.clinic.phone)); if (d.clinic.gstin) line2.push('GSTIN: ' + esc(d.clinic.gstin));
+  if (line2.length) sub.push(line2.join(' &nbsp;&middot;&nbsp; '));
+  return '<div class="ab-head"><div><div class="ab-clinic">' + esc(d.clinic.name) + '</div>'
+    + sub.map(function (x) { return '<div class="ab-sub">' + x + '</div>'; }).join('') + '</div>'
+    + '<div class="ab-title"><b>' + (d.discharged ? 'FINAL BILL' : 'INTERIM BILL') + '</b><span>Bill No: <b style="display:inline;font-size:12px;letter-spacing:0;color:#14201b">' + esc(d.billNo) + '</b></span>'
+    + '<span>Date: ' + auraDate(d.generatedAt) + '</span>' + (d.discharged ? '' : '<span>(patient still admitted)</span>') + '</div></div>';
+}
+function auraHeaderCompact(d, n) {
+  return '<div class="ab-chead"><span><b>' + esc(d.clinic.name) + '</b> &nbsp;&middot;&nbsp; ' + esc(d.patient.name) + '</span><span>Bill No: ' + esc(d.billNo) + ' (continued, page ' + n + ')</span></div>';
+}
+function auraPatientBlock(d) {
+  var p = d.patient, a = d.adm;
+  var ageGender = [p.age !== '' && p.age !== null ? esc(p.age) + ' yrs' : '', esc(p.gender || '')].filter(Boolean).join(' / ');
+  return '<div class="ab-pt">'
+    + '<div><span class="l">Patient</span><span class="v">' + esc(p.name) + '</span></div>'
+    + '<div><span class="l">Admission date</span><span class="v">' + esc(auraDate(a.admission_date) || '-') + '</span></div>'
+    + '<div><span class="l">UHID</span><span class="v">' + esc(p.uhid || '-') + '</span></div>'
+    + '<div><span class="l">Discharge date</span><span class="v">' + (d.discharged ? esc(auraDate(a.discharge_date) || '-') : 'Not yet discharged') + '</span></div>'
+    + '<div><span class="l">Age / Gender</span><span class="v">' + (ageGender || '-') + '</span></div>'
+    + '<div><span class="l">Phone</span><span class="v">' + esc(p.phone || '-') + '</span></div>'
+    + '</div>';
+}
+function auraBillItems(d) {
+  var items = [];
+  d.charges.forEach(function (c, i) {
+    var qty = (c.quantity !== null && c.quantity !== undefined && c.quantity !== '') ? c.quantity : 1;
+    items.push({ t: 'crow', html: '<tr><td class="ab-c">' + (i + 1) + '</td><td>' + esc(auraDate(c.charge_date || c.created_at)) + '</td><td>' + esc(c.charge_type || '') + '</td><td>' + esc(c.description || '') + '</td>'
+      + '<td class="ab-r">' + esc(qty) + '</td><td class="ab-r">' + auraMoney(c.unit_price) + '</td><td class="ab-r"><b>' + auraMoney(c.total_price) + '</b></td></tr>' });
+  });
+  if (!d.charges.length) items.push({ t: 'cnone', html: '<div class="ab-none">No charges have been recorded for this admission.</div>' });
+  items.push({ t: 'grand', html: '<div class="ab-grand"><span>Grand total</span><span>' + auraMoney(d.total) + '</span></div>' });
+  items.push({ t: 'phead', keep: true, html: '<div class="ab-ph">Payments received</div>' });
+  d.payments.forEach(function (p) {
+    items.push({ t: 'prow', html: '<div class="ab-prow"><span style="width:16%">' + esc(auraDate(p.payment_date || p.created_at)) + '</span><span style="width:26%">' + esc(p.method || '') + '</span><span style="flex:1">' + esc(p.txn_id ? 'Ref: ' + p.txn_id : (p.notes || '')) + '</span><span style="width:20%;text-align:right"><b>' + auraMoney(p.amount) + '</b></span></div>' });
+  });
+  if (!d.payments.length) items.push({ t: 'pnone', html: '<div class="ab-none">No payments received yet.</div>' });
+  var settled = d.due <= 0;
+  items.push({ t: 'final', html: '<div class="ab-final"><div class="row"><span>Grand total</span><span>' + auraMoney(d.total) + '</span></div>'
+    + '<div class="row"><span>Total payments received</span><span>' + auraMoney(d.paid) + '</span></div>'
+    + '<div class="due ' + (settled ? 'ab-due-green' : 'ab-due-red') + '"><span>' + (d.due < 0 ? 'Paid in excess' : 'Balance due') + '</span><span>' + auraMoney(Math.abs(d.due)) + '</span></div></div>' });
+  return items;
+}
+
+/* ---------- 3. measure, split into A4 pages, draw, assemble ---------- */
+async function auraRenderPdf(d) {
+  await auraLoadBillLibs();
+  var PAGE_H = 1123, PAD_T = 40, PAD_B = 34, FOOT = 26, CONTENT = PAGE_H - PAD_T - PAD_B - FOOT, SAFETY = 6;
+  var host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-12000px;top:0;width:794px;background:#fff;pointer-events:none';
+  host.innerHTML = '<style>' + auraBillCss() + '</style>';
+  document.body.appendChild(host);
+  try {
+    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+    var items = auraBillItems(d);
+    var meas = document.createElement('div'); meas.className = 'ab-meas'; host.appendChild(meas);
+    function measure(html, asRow) {
+      var box = document.createElement('div');
+      box.innerHTML = asRow ? '<table class="ab-t">' + auraColgroup() + '<tbody>' + html + '</tbody></table>' : html;
+      meas.appendChild(box); var h = box.getBoundingClientRect().height; meas.removeChild(box); return h;
+    }
+    var hFull = measure(auraHeaderFull(d) + auraPatientBlock(d)), hCompact = measure(auraHeaderCompact(d, 2));
+    var hThead = measure('<table class="ab-t">' + auraColgroup() + auraTheadHtml() + '</table>');
+    items.forEach(function (it) { it.h = measure(it.html, it.t === 'crow') + 1; });
+
+    var pages = [], pg = { items: [], used: hFull + SAFETY, rows: false };
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i], own = it.h + ((it.t === 'crow' && !pg.rows) ? hThead : 0);
+      var need = own + ((it.keep && items[i + 1]) ? items[i + 1].h : 0);
+      if (pg.items.length && pg.used + need > CONTENT) { pages.push(pg); pg = { items: [], used: hCompact + SAFETY, rows: false }; own = it.h + (it.t === 'crow' ? hThead : 0); }
+      pg.items.push(it); pg.used += own; if (it.t === 'crow') pg.rows = true;
+    }
+    pages.push(pg);
+
+    var n = pages.length, stamp = auraDateTime(d.generatedAt), html = '';
+    pages.forEach(function (p, idx) {
+      var body = '', k = 0;
+      while (k < p.items.length) {
+        if (p.items[k].t === 'crow') { var rows = ''; while (k < p.items.length && p.items[k].t === 'crow') { rows += p.items[k].html; k++; } body += '<table class="ab-t">' + auraColgroup() + auraTheadHtml() + '<tbody>' + rows + '</tbody></table>'; }
+        else { body += p.items[k].html; k++; }
+      }
+      html += '<div class="ab-page" id="aura-bill-pg-' + idx + '">' + (idx === 0 ? auraHeaderFull(d) + auraPatientBlock(d) : auraHeaderCompact(d, idx + 1)) + body
+        + '<div class="ab-foot"><span>Computer-generated bill &middot; ' + esc(d.billNo) + ' &middot; ' + esc(stamp) + '</span><span>Page ' + (idx + 1) + ' of ' + n + '</span></div></div>';
+    });
+    var out = document.createElement('div'); out.innerHTML = html; host.appendChild(out);
+
+    var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
+    for (var j = 0; j < n; j++) {
+      var el = document.getElementById('aura-bill-pg-' + j);
+      var canvas = await window.html2canvas(el, { scale: 2, backgroundColor: '#ffffff', logging: false, windowWidth: 794, scrollX: 0, scrollY: 0 });
+      if (j > 0) doc.addPage();
+      doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+    }
+    return { blob: doc.output('blob'), pages: n };
+  } finally { if (host.parentNode) host.parentNode.removeChild(host); }
+}
+
+/* ---------- 4. build, store, link, record ---------- */
+function auraFriendlyError(e, where) {
+  var m = String((e && e.message) || e || 'Unknown error');
+  if (/bucket not found/i.test(m)) return 'The private "bills" storage is not set up yet. Run the bills SQL file once, then try again.';
+  if (where === 'table' && /does not exist|schema cache|could not find the table/i.test(m)) return 'The patient_bills table is not set up yet. Run the bills SQL file once, then try again.';
+  if (/row-level security|violates|not authorized|permission|policy|unauthorized/i.test(m)) return 'No permission to save bills yet. Run the bills SQL file once (it adds the access rules), then try again.';
+  return m;
+}
+async function auraGenerateBill(admissionId, opts) {
+  opts = opts || {};
+  if (!admissionId) return { ok: false, error: 'No admission selected.' };
+  if (_auraBillBusy[admissionId]) return { ok: false, error: 'A bill is already being made for this admission.' };
+  _auraBillBusy[admissionId] = true;
+  var stage = 'build';
+  try {
+    var d = await auraBillData(admissionId);
+    var made = await auraRenderPdf(d);
+    var path = d.clinicId + '/' + admissionId + '.pdf';
+    stage = 'storage';
+    var up = await _supa.storage.from(AURA_BILL_BUCKET).upload(path, made.blob, { contentType: 'application/pdf', upsert: true, cacheControl: '3600' });
+    if (up.error) throw up.error;
+    var sg = await _supa.storage.from(AURA_BILL_BUCKET).createSignedUrl(path, AURA_BILL_LINK_SECONDS);
+    if (sg.error || !sg.data) throw (sg.error || new Error('Could not make the link'));
+    stage = 'table';
+    var row = { clinic_id: d.clinicId, admission_id: admissionId, patient_name: d.patient.name, patient_phone: d.patient.phone || null,
+      total: d.total, paid: d.paid, due: d.due, pdf_path: path, pdf_url: sg.data.signedUrl || sg.data.signedURL, created_at: new Date().toISOString() };
+    var ex = await _supa.from('patient_bills').select('id').eq('admission_id', admissionId).maybeSingle();
+    if (ex.error && !/no rows/i.test(String(ex.error.message))) throw ex.error;
+    var wr = (ex.data && ex.data.id) ? await _supa.from('patient_bills').update(row).eq('id', ex.data.id) : await _supa.from('patient_bills').insert(row);
+    if (wr.error) throw wr.error;
+    try { await _supa.from('nh_audit_log').insert({ clinic_id: d.clinicId, actor_id: (typeof _myUid !== 'undefined' ? _myUid : null), action: 'bill_generated', target_table: 'patient_bills', target_id: admissionId, details: { total: d.total, paid: d.paid, due: d.due, bill_no: d.billNo } }); } catch (e) {}
+    return { ok: true, row: row, billNo: d.billNo, pages: made.pages, missingAddress: !d.clinic.address };
+  } catch (e) {
+    return { ok: false, error: auraFriendlyError(e, stage) };
+  } finally { delete _auraBillBusy[admissionId]; }
+}
+/* Used right after a discharge: never throws, never blocks, only tells the user what happened. */
+async function auraGenerateBillAuto(admissionId) {
+  try {
+    var r = await auraGenerateBill(admissionId);
+    if (typeof showToast === 'function') showToast(r.ok ? 'Final bill saved. Use "Download bill" on the admission page.' + auraAddressHint(r) : 'Discharged, but the bill was not saved: ' + r.error + ' (use Generate Bill to try again)');
+    auraAfterBill();
+  } catch (e) { /* a bill problem must never disturb a discharge */ }
+}
+
+/* ---------- 5. buttons ---------- */
+function auraBillButtonsHtml(admId, bill) {
+  var q = esc(admId);
+  if (bill) {
+    return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; Download bill</button>'
+      + '<button class="qbtn" title="Rebuild the bill with the latest charges and payments" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#8635; Regenerate</button>'
+      + '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">Saved ' + esc(auraDateTime(bill.created_at)) + ' &middot; Balance ' + esc(auraMoney(bill.due)) + '</span>';
+  }
+  return '<button class="qbtn" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#128196; Generate Bill</button>';
+}
+/* Fills every <span data-bill-actions="ADMISSION_ID"> under `root` (default: whole page) with the right buttons, in one query. */
+async function auraMountBillActions(root) {
+  var els = [].slice.call((root || document).querySelectorAll('[data-bill-actions]'));
+  if (!els.length) return;
+  var ids = []; els.forEach(function (e) { var v = e.getAttribute('data-bill-actions'); if (v && ids.indexOf(v) < 0) ids.push(v); });
+  var map = {};
+  try { var r = await _supa.from('patient_bills').select('admission_id,created_at,total,paid,due').in('admission_id', ids); (r.data || []).forEach(function (b) { map[b.admission_id] = b; }); } catch (e) {}
+  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id]); });
+}
+function auraAfterBill() { try { auraMountBillActions(document); } catch (e) {} }
+async function auraGenerateBillClick(admId, btn) {
+  var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Making the bill\u2026'; }
+  var r = await auraGenerateBill(admId);
+  if (typeof showToast === 'function') showToast(r.ok ? 'Bill saved (' + r.pages + (r.pages > 1 ? ' pages' : ' page') + ') \u2014 tap Download bill.' + auraAddressHint(r) : r.error);
+  if (btn && !r.ok) { btn.disabled = false; btn.innerHTML = old; }
+  auraAfterBill();
+}
+async function auraDownloadBill(admId, btn) {
+  var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Opening\u2026'; }
+  try {
+    var r = await _supa.from('patient_bills').select('pdf_path,patient_name').eq('admission_id', admId).maybeSingle();
+    if (!r.data) throw new Error('No saved bill yet. Tap Generate Bill first.');
+    var safe = String(r.data.patient_name || '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || String(admId).slice(0, 8);
+    var s = await _supa.storage.from(AURA_BILL_BUCKET).createSignedUrl(r.data.pdf_path, 3600, { download: 'Bill-' + safe + '.pdf' });
+    if (s.error || !s.data) throw (s.error || new Error('Could not open the bill'));
+    var a = document.createElement('a'); a.href = s.data.signedUrl || s.data.signedURL; a.download = 'Bill-' + safe + '.pdf'; a.rel = 'noopener'; a.target = '_blank';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  } catch (e) { if (typeof showToast === 'function') showToast(auraFriendlyError(e, 'storage')); }
+  if (btn) { btn.disabled = false; btn.innerHTML = old; }
+}
+</script>
 </body>
 </html>
