@@ -860,8 +860,16 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-bills" class="view owner-only">
         <div class="sh"><div><h1 class="st" id="bills-title">Bills</h1><p class="ss" id="bills-sub">Every final bill that has been saved. Tap Download to open the PDF.</p></div></div>
         <div class="panel">
-          <div class="ph"><input class="finput" id="bills-search" placeholder="Search by patient name or phone..." oninput="loadBillsPage()" style="max-width:340px"/></div>
+          <div class="ph" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <div style="display:flex;gap:6px">
+              <button class="qbtn" id="bills-tab-bills" onclick="billsTab('bills')" style="font-size:12px;padding:8px 14px">Bills</button>
+              <button class="qbtn" id="bills-tab-pay" onclick="billsTab('payments')" style="font-size:12px;padding:8px 14px">Payments received</button>
+            </div>
+            <input class="finput" id="bills-search" placeholder="Search by patient name or phone..." oninput="loadBillsPage()" style="max-width:340px"/>
+          </div>
+          <div id="pay-today-strip" style="display:none;gap:8px;flex-wrap:wrap;padding:0 15px 12px"></div>
           <div id="bills-list"></div>
+          <div id="payments-feed" style="display:none"></div>
         </div>
       </div>
 
@@ -936,6 +944,11 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             <div>
               <label class="flbl" id="fd-l-phone">Phone number</label>
               <input class="finput" id="fd-phone" type="tel" inputmode="tel" maxlength="20" oninput="fdPreview()" placeholder="e.g. 9830012345"/>
+            </div>
+            <div>
+              <label class="flbl" id="fd-l-whatsapp">Owner's WhatsApp number</label>
+              <input class="finput" id="fd-whatsapp" type="tel" inputmode="tel" maxlength="20" placeholder="e.g. 9830012345"/>
+              <p class="ss" id="fd-whatsapp-help" style="margin-top:4px">Payment alerts and daily reports are sent here. Leave it empty to turn this off.</p>
             </div>
             <div>
               <label class="flbl" id="fd-l-gstin">GSTIN (optional)</label>
@@ -1638,7 +1651,7 @@ function nav(id,btn){
   if(id==='ayushman')loadAyushmanView();
   if(id==='staff')loadStaffList();
   if(id==='subscription')loadSubscriptionStatus();
-  if(id==='bills'){ var tb=document.getElementById('tab-title'); if(tb&&typeof famT==='function')tb.textContent=famT('bp_title'); if(typeof loadBillsPage==='function')loadBillsPage(); }
+  if(id==='bills'){ var tb=document.getElementById('tab-title'); if(tb&&typeof famT==='function')tb.textContent=famT('bp_title'); if(typeof billsTab==='function')billsTab(_billsTab); }
   if(id==='settings'&&typeof loadFacilityDetails==='function')loadFacilityDetails();
   /* auto-close sidebar on mobile after navigating */
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
@@ -3593,7 +3606,8 @@ function loadReportsPage(){
 
 async function generateDailyReport(){
   var dateStr = document.getElementById('report-daily-date').value || new Date().toISOString().slice(0,10);
-  var from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
+  /* the owner's own local day (an early-morning payment must not land on the previous day) */
+  var from = new Date(dateStr+'T00:00:00').toISOString(), to = new Date(dateStr+'T23:59:59.999').toISOString();
 
   var [chargesRes, paymentsRes, admRes, disRes, expRes, clinicRes] = await Promise.all([
     _supa.from('admission_charges').select('*').eq('clinic_id',_clinicId).gte('created_at',from).lte('created_at',to),
@@ -3614,6 +3628,11 @@ async function generateDailyReport(){
 
   var byType = {};
   charges.forEach(function(c){ var t=c.charge_type||'Other'; byType[t]=(byType[t]||0)+(c.total_price||0); });
+  /* payments received that day, by how they were paid */
+  var methodSums = {Cash:0, UPI:0, Card:0, 'Bank transfer':0, Other:0};
+  payments.forEach(function(p){ var m=String(p.method||'').toLowerCase(); var k = m.indexOf('cash')>=0?'Cash':m.indexOf('upi')>=0?'UPI':m.indexOf('card')>=0?'Card':(m.indexOf('bank')>=0||m.indexOf('transfer')>=0||m.indexOf('net')>=0)?'Bank transfer':'Other'; methodSums[k]+=(Number(p.amount)||0); });
+  var methodRows = [{label:'Payments received (count)', value:payments.length}];
+  Object.keys(methodSums).forEach(function(k){ if(methodSums[k]>0) methodRows.push({label:'Collected \u2014 '+k, value:'\u20b9'+methodSums[k].toLocaleString('en-IN')}); });
 
   printReportWindow('Daily Hospital Report', new Date(dateStr).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}), (clinicRes.data||{}).name,
     [
@@ -3624,7 +3643,7 @@ async function generateDailyReport(){
       {label:'Admissions', value:(admRes.data||[]).length},
       {label:'Discharges', value:(disRes.data||[]).length},
       {label:'Occupied Beds', value:occupied+' / '+totalBeds}
-    ],
+    ].concat(methodRows),
     byType
   );
 }
@@ -3755,6 +3774,14 @@ async function loadOwnerNotifications(){
   }).join('') : '<div class="empty" style="padding:20px"><div class="empty-ic">✅</div><p class="empty-t">No alerts — everything looks normal</p></div>';
 
   var activityHtml = (activityRes.data||[]).map(function(a){
+    var d = a.details || {};
+    if(a.action==='payment_recorded' && d.amount){      /* a payment: say who paid, how much, how, and what is still due */
+      var st = d.status==='Paid' ? 'Paid in full' : ('Partly paid'+(d.due>0 ? ' ('+auraMoney(d.due)+' due)' : ''));
+      return '<div class="adm-row"><div class="adm-av" style="background:var(--green-bg);color:var(--green)">&#8377;</div>'
+        + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(auraMoney(d.amount)+' received \u00b7 '+(d.method||''))+'</div>'
+        + '<div class="adm-meta">'+esc((d.patient_name||'Patient')+' \u00b7 '+st+(d.recorded_by_name ? ' \u00b7 by '+d.recorded_by_name : ''))+'</div>'
+        + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div></div>';
+    }
     var label = (a.action||'Activity').replace(/_/g,' ');
     return '<div class="adm-row"><div class="adm-av">📋</div>'
       + '<div style="flex:1;min-width:0"><div class="adm-name" style="text-transform:capitalize">'+esc(label)+'</div>'
@@ -4662,10 +4689,13 @@ async function auraGenerateBillAuto(admissionId) {
 /* ---------- 5. buttons ---------- */
 function auraBillButtonsHtml(admId, bill, compact) {
   var q = esc(admId);
+  if (bill && compact === '2') {      /* tables: just one button */
+    return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; ' + esc(auraT('bt_download', 'Download bill')) + '</button>';
+  }
   if (bill) {
     return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; ' + esc(auraT('bt_download', 'Download bill')) + '</button>'
       + '<button class="qbtn" title="Rebuild the bill with the latest charges and payments" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#8635; ' + esc(auraT('bt_regenerate', 'Regenerate')) + '</button>'
-      + (compact ? '' : '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">' + esc(auraT('bt_saved', 'Saved')) + ' ' + esc(auraDateTime(bill.created_at)) + ' &middot; ' + esc(auraT('bt_balance', 'Balance')) + ' ' + esc(auraMoney(bill.due)) + '</span>');
+      + (compact === '1' ? '' : '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">' + esc(auraT('bt_saved', 'Saved')) + ' ' + esc(auraDateTime(bill.created_at)) + ' &middot; ' + esc(auraT('bt_balance', 'Balance')) + ' ' + esc(auraMoney(bill.due)) + '</span>');
   }
   return '<button class="qbtn" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#128196; ' + esc(auraT('bt_generate', 'Generate Bill')) + '</button>';
 }
@@ -4676,7 +4706,7 @@ async function auraMountBillActions(root) {
   var ids = []; els.forEach(function (e) { var v = e.getAttribute('data-bill-actions'); if (v && ids.indexOf(v) < 0) ids.push(v); });
   var map = {};
   try { var r = await _supa.from('patient_bills').select('admission_id,created_at,total,paid,due').in('admission_id', ids); (r.data || []).forEach(function (b) { map[b.admission_id] = b; }); } catch (e) {}
-  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id], e.getAttribute('data-compact') === '1'); });
+  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id], e.getAttribute('data-compact')); });
 }
 function auraAfterBill() { try { auraMountBillActions(document); } catch (e) {} }
 async function auraGenerateBillClick(admId, btn) {
@@ -4724,7 +4754,8 @@ async function auraDownloadPath(path, patientName, btn) {
       fd_saved: 'Saved. New bills will show these details. A bill that was already made keeps its old top part until you tap Regenerate on it.',
       fd_gstin_ok: '\u2713 Looks right', fd_err_gstin: 'The GSTIN looks wrong. It has 15 characters, like 19ABCDE1234F1Z5.', fd_err_phone: 'The phone number looks wrong. Use 8 to 15 digits.',
       fd_err_address: 'The address is too long (most 300 characters).', fd_err_setup: 'One-time setup is missing: run the facility-details SQL file in Supabase, then try again.',
-      fd_err_perm: 'Only the owner of this nursing home can change these details.', fd_err_generic: 'Could not save ({e}). Please try again.', fd_phone_lbl: 'Phone', fd_loading_err: 'Could not load the details ({e}).' },
+      fd_err_perm: 'Only the owner of this nursing home can change these details.', fd_err_generic: 'Could not save ({e}). Please try again.', fd_phone_lbl: 'Phone', fd_loading_err: 'Could not load the details ({e}).',
+      fd_l_whatsapp: "Owner's WhatsApp number", fd_ph_whatsapp: 'e.g. 9830012345', fd_whatsapp_help: 'Payment alerts and daily reports are sent here. Leave it empty to turn this off.', fd_err_whatsapp: 'The WhatsApp number looks wrong. Use 10 to 15 digits.' },
     bn: { fd_title: '\u09aa\u09cd\u09b0\u09a4\u09bf\u09b7\u09cd\u09a0\u09be\u09a8\u09c7\u09b0 \u09a4\u09a5\u09cd\u09af', fd_intro: '\u098f\u0987 \u09a4\u09a5\u09cd\u09af \u09aa\u09cd\u09b0\u09a4\u09bf\u099f\u09bf \u09ac\u09bf\u09b2\u09c7\u09b0 \u0989\u09aa\u09b0\u09c7 \u099b\u09be\u09aa\u09be \u09b9\u09ac\u09c7\u0964', fd_l_name: '\u09a8\u09be\u09b0\u09cd\u09b8\u09bf\u0982 \u09b9\u09cb\u09ae\u09c7\u09b0 \u09a8\u09be\u09ae', fd_name_note: '\u09a8\u09be\u09ae \u09ac\u09a6\u09b2\u09be\u09a4\u09c7 AuraScale-\u098f\u09b0 \u09b8\u09be\u09a5\u09c7 \u09af\u09cb\u0997\u09be\u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8\u0964',
       fd_l_address: '\u09a0\u09bf\u0995\u09be\u09a8\u09be', fd_ph_address: '\u09b0\u09be\u09b8\u09cd\u09a4\u09be, \u09b6\u09b9\u09b0/\u0997\u09cd\u09b0\u09be\u09ae, \u099c\u09c7\u09b2\u09be, \u09aa\u09bf\u09a8 \u0995\u09cb\u09a1', fd_l_phone: '\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0', fd_ph_phone: '\u09af\u09c7\u09ae\u09a8: 9830012345',
       fd_l_gstin: '\u099c\u09bf\u098f\u09b8\u099f\u09bf\u0986\u0987\u098f\u09a8 (GSTIN) (\u0990\u099a\u09cd\u099b\u09bf\u0995)', fd_ph_gstin: '\u09af\u09c7\u09ae\u09a8: 19ABCDE1234F1Z5', fd_gstin_help: '\u09e7\u09eb\u099f\u09bf \u0985\u0995\u09cd\u09b7\u09b0 \u0993 \u09b8\u0982\u0996\u09cd\u09af\u09be\u0964 \u09a8\u09be \u09a5\u09be\u0995\u09b2\u09c7 \u09ab\u09be\u0981\u0995\u09be \u09b0\u09be\u0996\u09c1\u09a8\u0964',
@@ -4732,7 +4763,8 @@ async function auraDownloadPath(path, patientName, btn) {
       fd_saved: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4 \u09b9\u09af\u09bc\u09c7\u099b\u09c7\u0964 \u09a8\u09a4\u09c1\u09a8 \u09ac\u09bf\u09b2\u09c7 \u098f\u0987 \u09a4\u09a5\u09cd\u09af \u09a5\u09be\u0995\u09ac\u09c7\u0964 \u0986\u0997\u09c7 \u09ac\u09be\u09a8\u09be\u09a8\u09cb \u09ac\u09bf\u09b2 \u09ac\u09a6\u09b2\u09be\u09a4\u09c7 \u09b8\u09c7\u0987 \u09ac\u09bf\u09b2\u09c7 "Regenerate" \u099a\u09be\u09aa\u09c1\u09a8\u0964',
       fd_gstin_ok: '\u2713 \u09a0\u09bf\u0995 \u0986\u099b\u09c7', fd_err_gstin: 'GSTIN \u09a0\u09bf\u0995 \u09a8\u09af\u09bc\u0964 \u098f\u09a4\u09c7 \u09e7\u09eb\u099f\u09bf \u0985\u0995\u09cd\u09b7\u09b0 \u09a5\u09be\u0995\u09c7, \u09af\u09c7\u09ae\u09a8 19ABCDE1234F1Z5\u0964', fd_err_phone: '\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a0\u09bf\u0995 \u09a8\u09af\u09bc\u0964 \u09ee \u09a5\u09c7\u0995\u09c7 \u09e7\u09eb\u099f\u09bf \u09b8\u0982\u0996\u09cd\u09af\u09be \u09a6\u09bf\u09a8\u0964',
       fd_err_address: '\u09a0\u09bf\u0995\u09be\u09a8\u09be \u0996\u09c1\u09ac \u09ac\u09a1\u09bc (\u09b8\u09b0\u09cd\u09ac\u09cb\u099a\u09cd\u099a \u09e9\u09e6\u09e6 \u0985\u0995\u09cd\u09b7\u09b0)\u0964', fd_err_setup: '\u098f\u0995\u09ac\u09be\u09b0\u09c7\u09b0 \u09b8\u09c7\u099f\u0986\u09aa \u09ac\u09be\u0995\u09bf \u0986\u099b\u09c7: Supabase-\u098f facility-details SQL \u09ab\u09be\u0987\u09b2\u099f\u09bf \u099a\u09be\u09b2\u09be\u09a8, \u09a4\u09be\u09b0\u09aa\u09b0 \u0986\u09ac\u09be\u09b0 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964',
-      fd_err_perm: '\u09b6\u09c1\u09a7\u09c1 \u098f\u0987 \u09a8\u09be\u09b0\u09cd\u09b8\u09bf\u0982 \u09b9\u09cb\u09ae\u09c7\u09b0 \u09ae\u09be\u09b2\u09bf\u0995\u0987 \u098f\u0987 \u09a4\u09a5\u09cd\u09af \u09ac\u09a6\u09b2\u09be\u09a4\u09c7 \u09aa\u09be\u09b0\u09c7\u09a8\u0964', fd_err_generic: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964 \u0986\u09ac\u09be\u09b0 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964', fd_phone_lbl: '\u09ab\u09cb\u09a8', fd_loading_err: '\u09a4\u09a5\u09cd\u09af \u09b2\u09cb\u09a1 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964' },
+      fd_err_perm: '\u09b6\u09c1\u09a7\u09c1 \u098f\u0987 \u09a8\u09be\u09b0\u09cd\u09b8\u09bf\u0982 \u09b9\u09cb\u09ae\u09c7\u09b0 \u09ae\u09be\u09b2\u09bf\u0995\u0987 \u098f\u0987 \u09a4\u09a5\u09cd\u09af \u09ac\u09a6\u09b2\u09be\u09a4\u09c7 \u09aa\u09be\u09b0\u09c7\u09a8\u0964', fd_err_generic: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964 \u0986\u09ac\u09be\u09b0 \u099a\u09c7\u09b7\u09cd\u099f\u09be \u0995\u09b0\u09c1\u09a8\u0964', fd_phone_lbl: '\u09ab\u09cb\u09a8', fd_loading_err: '\u09a4\u09a5\u09cd\u09af \u09b2\u09cb\u09a1 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})\u0964',
+      fd_l_whatsapp: '\u09ae\u09be\u09b2\u09bf\u0995\u09c7\u09b0 \u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u09a8\u09ae\u09cd\u09ac\u09b0', fd_ph_whatsapp: '\u09af\u09c7\u09ae\u09a8: 9830012345', fd_whatsapp_help: '\u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u0985\u09cd\u09af\u09be\u09b2\u09be\u09b0\u09cd\u099f \u0993 \u09a6\u09c8\u09a8\u09bf\u0995 \u09b0\u09bf\u09aa\u09cb\u09b0\u09cd\u099f \u098f\u0987 \u09a8\u09ae\u09cd\u09ac\u09b0\u09c7 \u09af\u09be\u09ac\u09c7\u0964 \u09ac\u09a8\u09cd\u09a7 \u09b0\u09be\u0996\u09a4\u09c7 \u09ab\u09be\u0981\u0995\u09be \u09b0\u09be\u0996\u09c1\u09a8\u0964', fd_err_whatsapp: '\u09b9\u09cb\u09af\u09bc\u09be\u099f\u09b8\u0985\u09cd\u09af\u09be\u09aa \u09a8\u09ae\u09cd\u09ac\u09b0 \u09a0\u09bf\u0995 \u09a8\u09af\u09bc\u0964 \u09e7\u09e6 \u09a5\u09c7\u0995\u09c7 \u09e7\u09eb\u099f\u09bf \u09b8\u0982\u0996\u09cd\u09af\u09be \u09a6\u09bf\u09a8\u0964' },
     hi: { fd_title: '\u0938\u0902\u0938\u094d\u0925\u093e \u0915\u093e \u0935\u093f\u0935\u0930\u0923', fd_intro: '\u092f\u0939 \u091c\u093e\u0928\u0915\u093e\u0930\u0940 \u0939\u0930 \u092c\u093f\u0932 \u0915\u0947 \u090a\u092a\u0930 \u091b\u092a\u0947\u0917\u0940\u0964', fd_l_name: '\u0928\u0930\u094d\u0938\u093f\u0902\u0917 \u0939\u094b\u092e \u0915\u093e \u0928\u093e\u092e', fd_name_note: '\u0928\u093e\u092e \u092c\u0926\u0932\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f AuraScale \u0938\u0947 \u0938\u0902\u092a\u0930\u094d\u0915 \u0915\u0930\u0947\u0902\u0964',
       fd_l_address: '\u092a\u0924\u093e', fd_ph_address: '\u0938\u0921\u093c\u0915, \u0936\u0939\u0930, \u091c\u093c\u093f\u0932\u093e, \u092a\u093f\u0928 \u0915\u094b\u0921', fd_l_phone: '\u092b\u093c\u094b\u0928 \u0928\u0902\u092c\u0930', fd_ph_phone: '\u091c\u0948\u0938\u0947: 9830012345',
       fd_l_gstin: '\u091c\u0940\u090f\u0938\u091f\u0940\u0906\u0908\u090f\u0928 (GSTIN) (\u0935\u0948\u0915\u0932\u094d\u092a\u093f\u0915)', fd_ph_gstin: '\u091c\u0948\u0938\u0947: 19ABCDE1234F1Z5', fd_gstin_help: '15 \u0905\u0915\u094d\u0937\u0930 \u0914\u0930 \u0905\u0902\u0915\u0964 \u0928 \u0939\u094b \u0924\u094b \u0916\u093e\u0932\u0940 \u091b\u094b\u0921\u093c\u0947\u0902\u0964',
@@ -4740,12 +4772,14 @@ async function auraDownloadPath(path, patientName, btn) {
       fd_saved: '\u0938\u0939\u0947\u091c \u0932\u093f\u092f\u093e \u0917\u092f\u093e\u0964 \u0928\u090f \u092c\u093f\u0932\u094b\u0902 \u092e\u0947\u0902 \u092f\u0939 \u091c\u093e\u0928\u0915\u093e\u0930\u0940 \u0926\u093f\u0916\u0947\u0917\u0940\u0964 \u092a\u0939\u0932\u0947 \u092c\u0928\u0947 \u092c\u093f\u0932 \u092c\u0926\u0932\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0909\u0938 \u092c\u093f\u0932 \u092a\u0930 "Regenerate" \u0926\u092c\u093e\u090f\u0901\u0964',
       fd_gstin_ok: '\u2713 \u0938\u0939\u0940 \u0932\u0917\u0924\u093e \u0939\u0948', fd_err_gstin: 'GSTIN \u0938\u0939\u0940 \u0928\u0939\u0940\u0902 \u0932\u0917\u0924\u093e\u0964 \u0907\u0938\u092e\u0947\u0902 15 \u0905\u0915\u094d\u0937\u0930 \u0939\u094b\u0924\u0947 \u0939\u0948\u0902, \u091c\u0948\u0938\u0947 19ABCDE1234F1Z5\u0964', fd_err_phone: '\u092b\u093c\u094b\u0928 \u0928\u0902\u092c\u0930 \u0938\u0939\u0940 \u0928\u0939\u0940\u0902 \u0932\u0917\u0924\u093e\u0964 8 \u0938\u0947 15 \u0905\u0902\u0915 \u0932\u093f\u0916\u0947\u0902\u0964',
       fd_err_address: '\u092a\u0924\u093e \u092c\u0939\u0941\u0924 \u0932\u0902\u092c\u093e \u0939\u0948 (\u0905\u0927\u093f\u0915\u0924\u092e 300 \u0905\u0915\u094d\u0937\u0930)\u0964', fd_err_setup: '\u090f\u0915 \u092c\u093e\u0930 \u0915\u093e \u0938\u0947\u091f\u0905\u092a \u092c\u093e\u0915\u0940 \u0939\u0948: Supabase \u092e\u0947\u0902 facility-details SQL \u092b\u093c\u093e\u0907\u0932 \u091a\u0932\u093e\u090f\u0901, \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964',
-      fd_err_perm: '\u0915\u0947\u0935\u0932 \u0907\u0938 \u0928\u0930\u094d\u0938\u093f\u0902\u0917 \u0939\u094b\u092e \u0915\u0947 \u092e\u093e\u0932\u093f\u0915 \u0939\u0940 \u092f\u0939 \u091c\u093e\u0928\u0915\u093e\u0930\u0940 \u092c\u0926\u0932 \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964', fd_err_generic: '\u0938\u0939\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u091c\u093e \u0938\u0915\u093e ({e})\u0964 \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964', fd_phone_lbl: '\u092b\u093c\u094b\u0928', fd_loading_err: '\u0935\u093f\u0935\u0930\u0923 \u0932\u094b\u0921 \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u093e ({e})\u0964' }
+      fd_err_perm: '\u0915\u0947\u0935\u0932 \u0907\u0938 \u0928\u0930\u094d\u0938\u093f\u0902\u0917 \u0939\u094b\u092e \u0915\u0947 \u092e\u093e\u0932\u093f\u0915 \u0939\u0940 \u092f\u0939 \u091c\u093e\u0928\u0915\u093e\u0930\u0940 \u092c\u0926\u0932 \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964', fd_err_generic: '\u0938\u0939\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u091c\u093e \u0938\u0915\u093e ({e})\u0964 \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964', fd_phone_lbl: '\u092b\u093c\u094b\u0928', fd_loading_err: '\u0935\u093f\u0935\u0930\u0923 \u0932\u094b\u0921 \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u093e ({e})\u0964',
+      fd_l_whatsapp: '\u092e\u093e\u0932\u093f\u0915 \u0915\u093e \u0935\u094d\u0939\u093e\u091f\u094d\u0938\u0910\u092a \u0928\u0902\u092c\u0930', fd_ph_whatsapp: '\u091c\u0948\u0938\u0947: 9830012345', fd_whatsapp_help: '\u092d\u0941\u0917\u0924\u093e\u0928 \u0905\u0932\u0930\u094d\u091f \u0914\u0930 \u0926\u0948\u0928\u093f\u0915 \u0930\u093f\u092a\u094b\u0930\u094d\u091f \u092f\u0939\u0940\u0902 \u092d\u0947\u091c\u0947 \u091c\u093e\u0924\u0947 \u0939\u0948\u0902\u0964 \u092c\u0902\u0926 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0916\u093e\u0932\u0940 \u091b\u094b\u0921\u093c\u0947\u0902\u0964', fd_err_whatsapp: '\u0935\u094d\u0939\u093e\u091f\u094d\u0938\u0910\u092a \u0928\u0902\u092c\u0930 \u0938\u0939\u0940 \u0928\u0939\u0940\u0902 \u0932\u0917\u0924\u093e\u0964 10 \u0938\u0947 15 \u0905\u0902\u0915 \u0932\u093f\u0916\u0947\u0902\u0964' }
   };
   Object.keys(T).forEach(function (l) { if (FAM_I18N[l]) for (var k in T[l]) FAM_I18N[l][k] = T[l][k]; });
 })();
 
-var _fdName = '';
+var _fdName = '', _fdWaLoaded = '';
+function fdWaOk(p) { var d = String(p || '').replace(/\D/g, ''); return d.length >= 10 && d.length <= 15; }
 var FD_GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 function fdEl(id) { return document.getElementById(id); }
 function fdGstinOf() { return (fdEl('fd-gstin').value || '').toUpperCase().replace(/[^0-9A-Z]/g, ''); }
@@ -4755,8 +4789,8 @@ function fdApplyLang() {
   if (!fdEl('fd-title')) return;
   var set = function (id, key) { var e = fdEl(id); if (e) e.textContent = famT(key); };
   set('fd-title-txt', 'fd_title'); set('fd-intro', 'fd_intro'); set('fd-l-name', 'fd_l_name'); set('fd-name-note', 'fd_name_note'); set('fd-l-address', 'fd_l_address');
-  set('fd-l-phone', 'fd_l_phone'); set('fd-l-gstin', 'fd_l_gstin'); set('fd-gstin-help', 'fd_gstin_help'); set('fd-preview-lbl', 'fd_preview'); set('fd-save', 'fd_save');
-  fdEl('fd-address').placeholder = famT('fd_ph_address'); fdEl('fd-phone').placeholder = famT('fd_ph_phone'); fdEl('fd-gstin').placeholder = famT('fd_ph_gstin');
+  set('fd-l-phone', 'fd_l_phone'); set('fd-l-whatsapp', 'fd_l_whatsapp'); set('fd-whatsapp-help', 'fd_whatsapp_help'); set('fd-l-gstin', 'fd_l_gstin'); set('fd-gstin-help', 'fd_gstin_help'); set('fd-preview-lbl', 'fd_preview'); set('fd-save', 'fd_save');
+  fdEl('fd-address').placeholder = famT('fd_ph_address'); fdEl('fd-phone').placeholder = famT('fd_ph_phone'); fdEl('fd-whatsapp').placeholder = famT('fd_ph_whatsapp'); fdEl('fd-gstin').placeholder = famT('fd_ph_gstin');
   fdPreview();
 }
 /* live preview of the top of the bill + gentle checking while typing */
@@ -4775,7 +4809,7 @@ function fdPreview() {
 async function loadFacilityDetails() {
   if (!fdEl('fd-title') || typeof _clinicId === 'undefined' || !_clinicId) return;
   fdApplyLang();
-  var r = await _supa.from('clinics').select('name,address,gstin,phone').eq('id', _clinicId).single();
+  var r = await _supa.from('clinics').select('name,address,gstin,phone,whatsapp_number').eq('id', _clinicId).single();
   if (r.error || !r.data) {
     var r2 = await _supa.from('clinics').select('name,phone').eq('id', _clinicId).single();   // address / gstin columns not added yet
     if (r2.data) { _fdName = r2.data.name || ''; fdEl('fd-phone').value = r2.data.phone || ''; fdEl('fd-address').value = ''; fdEl('fd-gstin').value = ''; fdEl('fd-name').textContent = _fdName; fdPreview(); fdEl('fd-error').textContent = famT('fd_err_setup'); fdEl('fd-error').style.display = 'block'; }
@@ -4784,28 +4818,32 @@ async function loadFacilityDetails() {
   }
   _fdName = r.data.name || '';
   fdEl('fd-name').textContent = _fdName; fdEl('fd-address').value = r.data.address || ''; fdEl('fd-phone').value = r.data.phone || ''; fdEl('fd-gstin').value = r.data.gstin || '';
+  _fdWaLoaded = r.data.whatsapp_number || ''; fdEl('fd-whatsapp').value = _fdWaLoaded;
   fdPreview();
 }
 async function saveFacilityDetails() {
-  var addr = (fdEl('fd-address').value || '').trim(), phone = (fdEl('fd-phone').value || '').trim(), gstin = fdGstinOf();
+  var addr = (fdEl('fd-address').value || '').trim(), phone = (fdEl('fd-phone').value || '').trim(), gstin = fdGstinOf(), wa = (fdEl('fd-whatsapp').value || '').trim();
   var err = fdEl('fd-error'), ok = fdEl('fd-success'), btn = fdEl('fd-save');
   err.style.display = 'none'; ok.style.display = 'none';
   var problem = '';
   if (addr.length > 300) problem = famT('fd_err_address');
   else if (phone && !fdPhoneOk(phone)) problem = famT('fd_err_phone');
   else if (gstin && !FD_GSTIN_RE.test(gstin)) problem = famT('fd_err_gstin');
+  else if (wa && !fdWaOk(wa)) problem = famT('fd_err_whatsapp');
   if (problem) { err.textContent = problem; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = famT('fd_saving');
   try {
-    var r = await _supa.rpc('update_facility_details', { p_clinic_id: _clinicId, p_address: addr, p_gstin: gstin, p_phone: phone });
+    var args = { p_clinic_id: _clinicId, p_address: addr, p_gstin: gstin, p_phone: phone };
+    if (wa !== _fdWaLoaded) args.p_whatsapp = wa;      /* only sent when changed, so the older 4-field function keeps working until the SQL update is run */
+    var r = await _supa.rpc('update_facility_details', args);
     if (r.error) throw r.error;
-    ok.textContent = famT('fd_saved'); ok.style.display = 'block';
+    _fdWaLoaded = wa; ok.textContent = famT('fd_saved'); ok.style.display = 'block';
     if (typeof showToast === 'function') showToast('\u2713 ' + famT('fd_title'));
   } catch (e) {
     var m = String((e && e.message) || e || '');
     var text = /could not find the function|schema cache|does not exist|PGRST202/i.test(m + ' ' + ((e && e.code) || '')) ? famT('fd_err_setup')
       : /only the owner/i.test(m) ? famT('fd_err_perm')
-      : /gstin looks wrong/i.test(m) ? famT('fd_err_gstin') : /phone number looks wrong/i.test(m) ? famT('fd_err_phone') : /address is too long/i.test(m) ? famT('fd_err_address')
+      : /gstin looks wrong/i.test(m) ? famT('fd_err_gstin') : /whatsapp number looks wrong/i.test(m) ? famT('fd_err_whatsapp') : /phone number looks wrong/i.test(m) ? famT('fd_err_phone') : /address is too long/i.test(m) ? famT('fd_err_address')
       : famT('fd_err_generic', { e: m });
     err.textContent = text; err.style.display = 'block';
   }
@@ -4830,22 +4868,47 @@ async function saveFacilityDetails() {
       bp_none_note: '\u092e\u0930\u0940\u091c\u093c \u0915\u0940 \u091b\u0941\u091f\u094d\u091f\u0940 (\u0921\u093f\u0938\u094d\u091a\u093e\u0930\u094d\u091c) \u0939\u094b\u0928\u0947 \u092a\u0930 \u0905\u0902\u0924\u093f\u092e \u092c\u093f\u0932 \u0905\u092a\u0928\u0947 \u0906\u092a \u092c\u0928 \u091c\u093e\u0924\u093e \u0939\u0948\u0964', bp_nomatch: '\u0906\u092a\u0915\u0940 \u0916\u094b\u091c \u0938\u0947 \u0915\u094b\u0908 \u092c\u093f\u0932 \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e', bp_saved: '\u0938\u0939\u0947\u091c\u093e \u0917\u092f\u093e', bp_total: '\u0915\u0941\u0932', bp_paid: '\u091a\u0941\u0915\u093e\u092f\u093e', bp_due: '\u092c\u093e\u0915\u0940',
       bp_clear: '\u092a\u0942\u0930\u093e \u092d\u0941\u0917\u0924\u093e\u0928', bp_loading: '\u092c\u093f\u0932 \u0932\u094b\u0921 \u0939\u094b \u0930\u0939\u0947 \u0939\u0948\u0902\u2026', bp_err: '\u092c\u093f\u0932 \u0932\u094b\u0921 \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u0947 ({e})', bp_download: '\u0921\u093e\u0909\u0928\u0932\u094b\u0921' }
   };
+  var P = {
+    en: { pf_tab_bills: 'Bills', pf_tab_pay: 'Payments received', pf_sub_pay: 'Every payment the receptionists record, newest first.', pf_today: 'Collected today', pf_total: 'Total', pf_none: 'No payments yet',
+      pf_none_note: 'Every payment the receptionist records appears here straight away.', pf_by: 'by {name}', pf_ref: 'Ref {ref}', pf_part: 'Partly paid \u00b7 {due} due', pf_paid: 'Paid in full',
+      pf_cash: 'Cash', pf_upi: 'UPI', pf_card: 'Card', pf_bank: 'Bank transfer', pf_other: 'Other' },
+    bn: { pf_tab_bills: '\u09ac\u09bf\u09b2', pf_tab_pay: '\u09aa\u09be\u0993\u09af\u09bc\u09be \u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f', pf_sub_pay: '\u09b0\u09bf\u09b8\u09c7\u09aa\u09b6\u09a8\u09bf\u09b8\u09cd\u099f\u09b0\u09be \u09af\u09c7 \u09aa\u09cd\u09b0\u09a4\u09bf\u099f\u09bf \u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09c7\u09a8, \u09b8\u09b0\u09cd\u09ac\u09b6\u09c7\u09b7\u099f\u09bf \u0986\u0997\u09c7\u0964', pf_today: '\u0986\u099c \u09b8\u0982\u0997\u09c3\u09b9\u09c0\u09a4', pf_total: '\u09ae\u09cb\u099f', pf_none: '\u098f\u0996\u09a8\u0993 \u0995\u09cb\u09a8\u09cb \u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09c7\u0987',
+      pf_none_note: '\u09b0\u09bf\u09b8\u09c7\u09aa\u09b6\u09a8\u09bf\u09b8\u09cd\u099f \u09af\u09c7 \u09aa\u09c7\u09ae\u09c7\u09a8\u09cd\u099f \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09c7\u09a8 \u09a4\u09be \u09b8\u0999\u09cd\u0997\u09c7 \u09b8\u0999\u09cd\u0997\u09c7 \u098f\u0996\u09be\u09a8\u09c7 \u09a6\u09c7\u0996\u09be \u09af\u09be\u09af\u09bc\u0964', pf_by: '{name} \u09a8\u09a5\u09bf\u09ad\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09c7\u099b\u09c7\u09a8', pf_ref: '\u09b0\u09c7\u09ab\u09be\u09b0\u09c7\u09a8\u09cd\u09b8 {ref}', pf_part: '\u0986\u0982\u09b6\u09bf\u0995 \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7 \u00b7 {due} \u09ac\u09be\u0995\u09bf', pf_paid: '\u09aa\u09c1\u09b0\u09cb \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7\u09bf\u09a4',
+      pf_cash: '\u09a8\u0997\u09a6', pf_upi: 'UPI', pf_card: '\u0995\u09be\u09b0\u09cd\u09a1', pf_bank: '\u09ac\u09cd\u09af\u09be\u0982\u0995 \u099f\u09cd\u09b0\u09be\u09a8\u09b8\u09ab\u09be\u09b0', pf_other: '\u0985\u09a8\u09cd\u09af\u09be\u09a8\u09cd\u09af' },
+    hi: { pf_tab_bills: '\u092c\u093f\u0932', pf_tab_pay: '\u092a\u094d\u0930\u093e\u092a\u094d\u0924 \u092d\u0941\u0917\u0924\u093e\u0928', pf_sub_pay: '\u0930\u093f\u0938\u0947\u092a\u094d\u0936\u0928\u093f\u0938\u094d\u091f \u0926\u094d\u0935\u093e\u0930\u093e \u0926\u0930\u094d\u091c \u0939\u0930 \u092d\u0941\u0917\u0924\u093e\u0928, \u0928\u092f\u093e \u092a\u0939\u0932\u0947\u0964', pf_today: '\u0906\u091c \u0935\u0938\u0942\u0932\u0940', pf_total: '\u0915\u0941\u0932', pf_none: '\u0905\u092d\u0940 \u0915\u094b\u0908 \u092d\u0941\u0917\u0924\u093e\u0928 \u0928\u0939\u0940\u0902',
+      pf_none_note: '\u0930\u093f\u0938\u0947\u092a\u094d\u0936\u0928\u093f\u0938\u094d\u091f \u091c\u094b \u092d\u0941\u0917\u0924\u093e\u0928 \u0926\u0930\u094d\u091c \u0915\u0930\u0924\u093e \u0939\u0948 \u0935\u0939 \u0924\u0941\u0930\u0902\u0924 \u092f\u0939\u093e\u0901 \u0926\u093f\u0916\u0924\u093e \u0939\u0948\u0964', pf_by: '{name} \u0926\u094d\u0935\u093e\u0930\u093e \u0926\u0930\u094d\u091c', pf_ref: '\u0930\u0947\u092b\u093c\u0930\u0947\u0902\u0938 {ref}', pf_part: '\u0906\u0902\u0936\u093f\u0915 \u092d\u0941\u0917\u0924\u093e\u0928 \u00b7 {due} \u092c\u093e\u0915\u0940', pf_paid: '\u092a\u0942\u0930\u093e \u092d\u0941\u0917\u0924\u093e\u0928',
+      pf_cash: '\u0928\u0915\u0926', pf_upi: 'UPI', pf_card: '\u0915\u093e\u0930\u094d\u0921', pf_bank: '\u092c\u0948\u0902\u0915 \u091f\u094d\u0930\u093e\u0902\u0938\u092b\u0930', pf_other: '\u0905\u0928\u094d\u092f' }
+  };
+  Object.keys(P).forEach(function (l) { if (FAM_I18N[l]) for (var k in P[l]) FAM_I18N[l][k] = P[l][k]; });
   Object.keys(T).forEach(function (l) { if (FAM_I18N[l]) for (var k in T[l]) FAM_I18N[l][k] = T[l][k]; });
   if (typeof I18N !== 'undefined') { I18N.en.nav_bills = 'Bills'; I18N.bn.nav_bills = '\u09ac\u09bf\u09b2'; I18N.hi.nav_bills = '\u092c\u093f\u0932'; }
 })();
 
+var _billsTab = 'bills';
+function billsTab(t) {
+  _billsTab = t;
+  [['bills-tab-bills', 'bills'], ['bills-tab-pay', 'payments']].forEach(function (x) {
+    var e = document.getElementById(x[0]); if (!e) return; var on = x[1] === t;
+    e.style.background = on ? 'var(--green)' : 'var(--surface)'; e.style.color = on ? '#fff' : 'var(--text-secondary)'; e.style.borderColor = on ? 'var(--green)' : 'var(--border)';
+  });
+  var bl = document.getElementById('bills-list'), pf = document.getElementById('payments-feed'), st = document.getElementById('pay-today-strip');
+  if (bl) bl.style.display = t === 'bills' ? 'block' : 'none'; if (pf) pf.style.display = t === 'payments' ? 'block' : 'none'; if (st) st.style.display = t === 'payments' ? 'flex' : 'none';
+  billsApplyLang();
+}
 function billsApplyLang() {
   if (typeof famT !== 'function') return;
   var set = function (id, key) { var e = document.getElementById(id); if (e) e.textContent = famT(key); };
-  set('bills-title', 'bp_title'); set('bills-sub', 'bp_sub');
+  set('bills-title', 'bp_title'); set('bills-sub', _billsTab === 'payments' ? 'pf_sub_pay' : 'bp_sub');
+  set('bills-tab-bills', 'pf_tab_bills'); set('bills-tab-pay', 'pf_tab_pay');
   var s = document.getElementById('bills-search'); if (s) s.placeholder = famT('bp_ph');
   var v = document.getElementById('v-bills'); if (v && v.classList.contains('on')) loadBillsPage();
 }
 async function loadBillsPage() {
+  if (_billsTab === 'payments') return loadPaymentsFeed();
   var list = document.getElementById('bills-list'); if (!list || typeof _clinicId === 'undefined' || !_clinicId) return;
   var s = document.getElementById('bills-search');
   var set = function (id, key) { var e = document.getElementById(id); if (e) e.textContent = famT(key); };
-  set('bills-title', 'bp_title'); set('bills-sub', 'bp_sub'); if (s) s.placeholder = famT('bp_ph');
+  set('bills-title', 'bp_title'); set('bills-sub', 'bp_sub'); set('bills-tab-bills', 'pf_tab_bills'); set('bills-tab-pay', 'pf_tab_pay'); if (s) s.placeholder = famT('bp_ph');
   list.innerHTML = '<div class="empty"><p class="empty-t">' + esc(famT('bp_loading')) + '</p></div>';
   var r = await _supa.from('patient_bills').select('id,admission_id,patient_name,patient_phone,total,paid,due,pdf_path,created_at').eq('clinic_id', _clinicId).order('created_at', { ascending: false }).limit(300);
   if (r.error) { list.innerHTML = '<div class="empty"><p class="empty-t">' + esc(famT('bp_err', { e: r.error.message || '' })) + '</p></div>'; return; }
@@ -4871,6 +4934,48 @@ async function loadBillsPage() {
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end">' + action + '</div></div>';
   }).join('');
   auraMountBillActions(list);
+}
+/* PAYMENTS RECEIVED: every payment the receptionists record, newest first, with today's collection by method. */
+function pfMethodKey(m) { m = String(m || '').toLowerCase(); return m.indexOf('cash') >= 0 ? 'cash' : m.indexOf('upi') >= 0 ? 'upi' : m.indexOf('card') >= 0 ? 'card' : (m.indexOf('bank') >= 0 || m.indexOf('transfer') >= 0 || m.indexOf('net') >= 0) ? 'bank' : 'other'; }
+async function loadPaymentsFeed() {
+  var feed = document.getElementById('payments-feed'), strip = document.getElementById('pay-today-strip'); if (!feed || typeof _clinicId === 'undefined' || !_clinicId) return;
+  var s = document.getElementById('bills-search');
+  feed.innerHTML = '<div class="empty"><p class="empty-t">' + esc(famT('bp_loading')) + '</p></div>';
+  var r = await _supa.from('nh_payments').select('*').eq('clinic_id', _clinicId).order('created_at', { ascending: false }).limit(200);
+  if (r.error) { feed.innerHTML = '<div class="empty"><p class="empty-t">' + esc(famT('bp_err', { e: r.error.message || '' })) + '</p></div>'; return; }
+  var pays = r.data || [];
+  var admIds = [], staffIds = []; pays.forEach(function (p) { if (p.admission_id && admIds.indexOf(p.admission_id) < 0) admIds.push(p.admission_id); if (p.recorded_by && staffIds.indexOf(p.recorded_by) < 0) staffIds.push(p.recorded_by); });
+  var q = await Promise.all([
+    admIds.length ? _supa.from('admissions').select('id,patient_name,patient_phone').in('id', admIds) : { data: [] },
+    staffIds.length ? _supa.from('nh_staff').select('id,full_name').in('id', staffIds) : { data: [] },
+    admIds.length ? _supa.from('admission_charges').select('admission_id,total_price').in('admission_id', admIds) : { data: [] },
+    admIds.length ? _supa.from('nh_payments').select('admission_id,amount').in('admission_id', admIds) : { data: [] }
+  ]);
+  var adm = {}, staff = {}, tot = {}, paid = {};
+  (q[0].data || []).forEach(function (a) { adm[a.id] = a; }); (q[1].data || []).forEach(function (u) { staff[u.id] = u.full_name; });
+  (q[2].data || []).forEach(function (c) { tot[c.admission_id] = (tot[c.admission_id] || 0) + (Number(c.total_price) || 0); });
+  (q[3].data || []).forEach(function (p) { paid[p.admission_id] = (paid[p.admission_id] || 0) + (Number(p.amount) || 0); });
+  /* today's collection by method (the owner's own local day) */
+  var today = auraDate(new Date()), sums = { cash: 0, upi: 0, card: 0, bank: 0, other: 0 }, all = 0;
+  pays.forEach(function (p) { if (auraDate(p.created_at) === today) { var v = Number(p.amount) || 0; sums[pfMethodKey(p.method)] += v; all += v; } });
+  if (strip) {
+    var chip = function (label, v, strong) { return '<div style="flex:1;min-width:92px;border:1px solid ' + (strong ? 'var(--green-border)' : 'var(--border)') + ';background:' + (strong ? 'var(--green-bg)' : 'var(--bg)') + ';border-radius:var(--r-md);padding:9px 11px"><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">' + esc(label) + '</div><div style="font-weight:700;font-size:14px">' + esc(auraMoney(v)) + '</div></div>'; };
+    strip.innerHTML = '<div style="width:100%;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em">' + esc(famT('pf_today')) + '</div>'
+      + chip(famT('pf_total'), all, true) + chip(famT('pf_cash'), sums.cash) + chip(famT('pf_upi'), sums.upi) + chip(famT('pf_card'), sums.card) + chip(famT('pf_bank'), sums.bank) + (sums.other ? chip(famT('pf_other'), sums.other) : '');
+    strip.style.display = 'flex';
+  }
+  var qq = ((s && s.value) || '').trim().toLowerCase();
+  var rows = pays.filter(function (p) { var a = adm[p.admission_id] || {}; return !qq || String(a.patient_name || '').toLowerCase().indexOf(qq) >= 0; });
+  if (!rows.length) { feed.innerHTML = '<div class="empty"><div class="empty-ic">&#128176;</div><p class="empty-t">' + esc(famT(qq ? 'bp_nomatch' : 'pf_none')) + '</p><p style="font-size:12px;color:var(--text-tertiary)">' + esc(famT('pf_none_note')) + '</p></div>'; return; }
+  feed.innerHTML = rows.map(function (p) {
+    var a = adm[p.admission_id] || {}, nm = String(a.patient_name || ''), due = Math.round(((tot[p.admission_id] || 0) - (paid[p.admission_id] || 0)) * 100) / 100, k = pfMethodKey(p.method);
+    var methodLabel = famT('pf_' + k) + (k === 'other' && p.method ? ' (' + p.method + ')' : '');
+    var meta = [auraDateTime(p.created_at)]; if (p.recorded_by && staff[p.recorded_by]) meta.push(famT('pf_by', { name: staff[p.recorded_by] })); if (p.txn_id) meta.push(famT('pf_ref', { ref: p.txn_id }));
+    return '<div class="adm-row"><div class="adm-av">&#8377;</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">' + esc(auraMoney(p.amount)) + ' &middot; ' + esc(methodLabel) + '</div>'
+      + '<div class="adm-meta" style="font-weight:600">' + esc(nm) + '</div><div class="adm-meta">' + esc(meta.join(' \u00b7 ')) + '</div></div>'
+      + '<span style="align-self:flex-start;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap;background:' + (due <= 0 ? 'var(--green-bg)' : 'var(--blue-bg)') + ';color:' + (due <= 0 ? 'var(--green)' : 'var(--blue)') + '">' + esc(due <= 0 ? famT('pf_paid') : famT('pf_part', { due: auraMoney(due) })) + '</span></div>';
+  }).join('');
 }
 /* re-apply the saved language to the sidebar label once everything above has loaded */
 try { if (typeof setLanguage === 'function') setLanguage(localStorage.getItem('aurascale_lang') || 'en'); } catch (e) {}
