@@ -472,6 +472,10 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
         <span data-i18n="nav_discharge">Discharge</span>
       </button>
+      <button class="nb owner-only" onclick="nav('bills',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+        <span data-i18n="nav_bills">Bills</span>
+      </button>
       <p class="nav-sec" data-i18n="sec_programs">Programs</p>
       <button class="nb owner-only" onclick="nav('audit',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span data-i18n="nav_audit">Audit</span>
@@ -852,6 +856,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       </div>
 
       <!-- NOTIFICATIONS (owner) -->
+      <!-- BILLS (owner): every saved final bill -->
+      <div id="v-bills" class="view owner-only">
+        <div class="sh"><div><h1 class="st" id="bills-title">Bills</h1><p class="ss" id="bills-sub">Every final bill that has been saved. Tap Download to open the PDF.</p></div></div>
+        <div class="panel">
+          <div class="ph"><input class="finput" id="bills-search" placeholder="Search by patient name or phone..." oninput="loadBillsPage()" style="max-width:340px"/></div>
+          <div id="bills-list"></div>
+        </div>
+      </div>
+
       <div id="v-notifications" class="view owner-only">
         <div class="sh"><div><h1 class="st">Notifications</h1><p class="ss">Alerts and recent business activity</p></div></div>
         <div class="panel"><div id="owner-alerts-list"></div></div>
@@ -1591,7 +1604,8 @@ function setLanguage(lang){
   });
   var sw=document.getElementById('lang-switcher');if(sw)sw.value=lang;
   if(typeof FAM_I18N!=='undefined' && typeof famApplyStaticLang==='function')famApplyStaticLang();   // family window, Families tab and its texts follow the chosen language (waits until the family code has loaded)
-  if(typeof fdApplyLang==='function'&&typeof FAM_I18N!=='undefined')fdApplyLang();   // the Facility details form follows the language too
+  if(typeof fdApplyLang==='function'&&typeof FAM_I18N!=='undefined')fdApplyLang();
+  if(typeof billsApplyLang==='function'&&typeof FAM_I18N!=='undefined')billsApplyLang();   // the Facility details form follows the language too
   // Covers: sidebar navigation + the full Dashboard (Overview/Payments/Revenue/Reports tabs).
   // Other pages (Patients, Bed Management, Billing, etc.) are not yet covered by this pass —
   // extend by wrapping text in data-i18n="key" and adding that key to I18N above.
@@ -1624,6 +1638,7 @@ function nav(id,btn){
   if(id==='ayushman')loadAyushmanView();
   if(id==='staff')loadStaffList();
   if(id==='subscription')loadSubscriptionStatus();
+  if(id==='bills'){ var tb=document.getElementById('tab-title'); if(tb&&typeof famT==='function')tb.textContent=famT('bp_title'); if(typeof loadBillsPage==='function')loadBillsPage(); }
   if(id==='settings'&&typeof loadFacilityDetails==='function')loadFacilityDetails();
   /* auto-close sidebar on mobile after navigating */
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
@@ -4390,7 +4405,16 @@ var _auraBillBusy = {};
     hi: '\u0938\u0941\u091d\u093e\u0935: \u0906\u092a\u0915\u093e \u092a\u0924\u093e \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902 \u0939\u0948, \u0907\u0938\u0932\u093f\u090f \u092c\u093f\u0932 \u092e\u0947\u0902 \u092a\u0924\u093e \u0928\u0939\u0940\u0902 \u0939\u0948\u0964 \u092e\u093e\u0932\u093f\u0915 \u0907\u0938\u0947 Settings \u2192 Facility details \u092e\u0947\u0902 \u091c\u094b\u0921\u093c \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964'
   };
   Object.keys(add).forEach(function (l) { if (FAM_I18N[l]) FAM_I18N[l].fd_missing_hint = add[l]; });
+  var btn = {
+    en: { bt_generate: 'Generate Bill', bt_download: 'Download bill', bt_regenerate: 'Regenerate', bt_saved: 'Saved', bt_balance: 'Balance' },
+    bn: { bt_generate: '\u09ac\u09bf\u09b2 \u09a4\u09c8\u09b0\u09bf \u0995\u09b0\u09c1\u09a8', bt_download: '\u09ac\u09bf\u09b2 \u09a1\u09be\u0989\u09a8\u09b2\u09cb\u09a1', bt_regenerate: '\u0986\u09ac\u09be\u09b0 \u09a4\u09c8\u09b0\u09bf \u0995\u09b0\u09c1\u09a8', bt_saved: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4', bt_balance: '\u09ac\u09be\u0995\u09bf' },
+    hi: { bt_generate: '\u092c\u093f\u0932 \u092c\u0928\u093e\u090f\u0901', bt_download: '\u092c\u093f\u0932 \u0921\u093e\u0909\u0928\u0932\u094b\u0921 \u0915\u0930\u0947\u0902', bt_regenerate: '\u092b\u093f\u0930 \u0938\u0947 \u092c\u0928\u093e\u090f\u0901', bt_saved: '\u0938\u0939\u0947\u091c\u093e \u0917\u092f\u093e', bt_balance: '\u092c\u093e\u0915\u0940' }
+  };
+  Object.keys(btn).forEach(function (l) { if (FAM_I18N[l]) for (var k in btn[l]) FAM_I18N[l][k] = btn[l][k]; });
 })();
+function auraT(key, fallback) { return (typeof famT === 'function') ? famT(key) : fallback; }
+/* where the finished bill can be found, depending on which portal this is */
+function auraWhereToFind() { return document.getElementById('v-bills') ? 'Open Bills in the menu to download it.' : 'Find it under Discharge (Bill column) or Billing \u2192 Invoices.'; }
 function auraAddressHint(r) {
   if (!r || !r.missingAddress) return '';
   return ' ' + (typeof famT === 'function' ? famT('fd_missing_hint') : 'Tip: your address is not set. The owner can add it in Settings \u2192 Facility details.');
@@ -4630,20 +4654,20 @@ async function auraGenerateBill(admissionId, opts) {
 async function auraGenerateBillAuto(admissionId) {
   try {
     var r = await auraGenerateBill(admissionId);
-    if (typeof showToast === 'function') showToast(r.ok ? 'Final bill saved. Use "Download bill" on the admission page.' + auraAddressHint(r) : 'Discharged, but the bill was not saved: ' + r.error + ' (use Generate Bill to try again)');
+    if (typeof showToast === 'function') showToast(r.ok ? 'Final bill saved. ' + auraWhereToFind() + auraAddressHint(r) : 'Discharged, but the bill was not saved: ' + r.error + ' (use Generate Bill to try again)');
     auraAfterBill();
   } catch (e) { /* a bill problem must never disturb a discharge */ }
 }
 
 /* ---------- 5. buttons ---------- */
-function auraBillButtonsHtml(admId, bill) {
+function auraBillButtonsHtml(admId, bill, compact) {
   var q = esc(admId);
   if (bill) {
-    return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; Download bill</button>'
-      + '<button class="qbtn" title="Rebuild the bill with the latest charges and payments" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#8635; Regenerate</button>'
-      + '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">Saved ' + esc(auraDateTime(bill.created_at)) + ' &middot; Balance ' + esc(auraMoney(bill.due)) + '</span>';
+    return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; ' + esc(auraT('bt_download', 'Download bill')) + '</button>'
+      + '<button class="qbtn" title="Rebuild the bill with the latest charges and payments" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#8635; ' + esc(auraT('bt_regenerate', 'Regenerate')) + '</button>'
+      + (compact ? '' : '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">' + esc(auraT('bt_saved', 'Saved')) + ' ' + esc(auraDateTime(bill.created_at)) + ' &middot; ' + esc(auraT('bt_balance', 'Balance')) + ' ' + esc(auraMoney(bill.due)) + '</span>');
   }
-  return '<button class="qbtn" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#128196; Generate Bill</button>';
+  return '<button class="qbtn" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#128196; ' + esc(auraT('bt_generate', 'Generate Bill')) + '</button>';
 }
 /* Fills every <span data-bill-actions="ADMISSION_ID"> under `root` (default: whole page) with the right buttons, in one query. */
 async function auraMountBillActions(root) {
@@ -4652,7 +4676,7 @@ async function auraMountBillActions(root) {
   var ids = []; els.forEach(function (e) { var v = e.getAttribute('data-bill-actions'); if (v && ids.indexOf(v) < 0) ids.push(v); });
   var map = {};
   try { var r = await _supa.from('patient_bills').select('admission_id,created_at,total,paid,due').in('admission_id', ids); (r.data || []).forEach(function (b) { map[b.admission_id] = b; }); } catch (e) {}
-  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id]); });
+  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id], e.getAttribute('data-compact') === '1'); });
 }
 function auraAfterBill() { try { auraMountBillActions(document); } catch (e) {} }
 async function auraGenerateBillClick(admId, btn) {
@@ -4662,17 +4686,25 @@ async function auraGenerateBillClick(admId, btn) {
   if (btn && !r.ok) { btn.disabled = false; btn.innerHTML = old; }
   auraAfterBill();
 }
+async function auraOpenSigned(path, patientName, fallbackId) {
+  var safe = String(patientName || '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || String(fallbackId || 'bill').slice(0, 8);
+  var s = await _supa.storage.from(AURA_BILL_BUCKET).createSignedUrl(path, 3600, { download: 'Bill-' + safe + '.pdf' });
+  if (s.error || !s.data) throw (s.error || new Error('Could not open the bill'));
+  var a = document.createElement('a'); a.href = s.data.signedUrl || s.data.signedURL; a.download = 'Bill-' + safe + '.pdf'; a.rel = 'noopener'; a.target = '_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
 async function auraDownloadBill(admId, btn) {
   var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Opening\u2026'; }
   try {
     var r = await _supa.from('patient_bills').select('pdf_path,patient_name').eq('admission_id', admId).maybeSingle();
     if (!r.data) throw new Error('No saved bill yet. Tap Generate Bill first.');
-    var safe = String(r.data.patient_name || '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || String(admId).slice(0, 8);
-    var s = await _supa.storage.from(AURA_BILL_BUCKET).createSignedUrl(r.data.pdf_path, 3600, { download: 'Bill-' + safe + '.pdf' });
-    if (s.error || !s.data) throw (s.error || new Error('Could not open the bill'));
-    var a = document.createElement('a'); a.href = s.data.signedUrl || s.data.signedURL; a.download = 'Bill-' + safe + '.pdf'; a.rel = 'noopener'; a.target = '_blank';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    await auraOpenSigned(r.data.pdf_path, r.data.patient_name, admId);
   } catch (e) { if (typeof showToast === 'function') showToast(auraFriendlyError(e, 'storage')); }
+  if (btn) { btn.disabled = false; btn.innerHTML = old; }
+}
+async function auraDownloadPath(path, patientName, btn) {
+  var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Opening\u2026'; }
+  try { await auraOpenSigned(path, patientName, 'bill'); } catch (e) { if (typeof showToast === 'function') showToast(auraFriendlyError(e, 'storage')); }
   if (btn) { btn.disabled = false; btn.innerHTML = old; }
 }
 </script>
@@ -4779,6 +4811,69 @@ async function saveFacilityDetails() {
   }
   btn.disabled = false; btn.textContent = famT('fd_save');
 }
+</script>
+
+<!-- BILLS PAGE (owner) -->
+<script>
+/* ===== BILLS PAGE (owner) =====
+   One obvious place to find every saved final bill: newest first, searchable, with a Download button on each row. */
+(function () {
+  if (typeof FAM_I18N === 'undefined') return;
+  var T = {
+    en: { bp_title: 'Bills', bp_sub: 'Every final bill that has been saved. Tap Download to open the PDF.', bp_ph: 'Search by patient name or phone\u2026', bp_none: 'No bills yet',
+      bp_none_note: 'A final bill is made automatically when a patient is discharged.', bp_nomatch: 'No bill matches your search', bp_saved: 'Saved', bp_total: 'Total', bp_paid: 'Paid', bp_due: 'Due',
+      bp_clear: 'Paid in full', bp_loading: 'Loading bills\u2026', bp_err: 'Could not load the bills ({e})', bp_download: 'Download' },
+    bn: { bp_title: '\u09ac\u09bf\u09b2', bp_sub: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4 \u09b8\u09ac \u099a\u09c2\u09a1\u09bc\u09be\u09a8\u09cd\u09a4 \u09ac\u09bf\u09b2\u0964 PDF \u0996\u09c1\u09b2\u09a4\u09c7 Download \u099a\u09be\u09aa\u09c1\u09a8\u0964', bp_ph: '\u09b0\u09cb\u0997\u09c0\u09b0 \u09a8\u09be\u09ae \u09ac\u09be \u09ab\u09cb\u09a8 \u09a6\u09bf\u09af\u09bc\u09c7 \u0996\u09c1\u0981\u099c\u09c1\u09a8\u2026', bp_none: '\u098f\u0996\u09a8\u0993 \u0995\u09cb\u09a8\u09cb \u09ac\u09bf\u09b2 \u09a8\u09c7\u0987',
+      bp_none_note: '\u09b0\u09cb\u0997\u09c0 \u099b\u09be\u09a1\u09bc\u09be \u09aa\u09c7\u09b2\u09c7 (\u09a1\u09bf\u09b8\u099a\u09be\u09b0\u09cd\u099c) \u099a\u09c2\u09a1\u09bc\u09be\u09a8\u09cd\u09a4 \u09ac\u09bf\u09b2 \u09a8\u09bf\u099c\u09c7 \u09a5\u09c7\u0995\u09c7\u0987 \u09a4\u09c8\u09b0\u09bf \u09b9\u09af\u09bc\u0964', bp_nomatch: '\u0986\u09aa\u09a8\u09be\u09b0 \u0996\u09cb\u0981\u099c\u09c7\u09b0 \u09b8\u09be\u09a5\u09c7 \u0995\u09cb\u09a8\u09cb \u09ac\u09bf\u09b2 \u09ae\u09c7\u09b2\u09c7\u09a8\u09bf', bp_saved: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4', bp_total: '\u09ae\u09cb\u099f', bp_paid: '\u09aa\u09b0\u09bf\u09b6\u09cb\u09a7', bp_due: '\u09ac\u09be\u0995\u09bf',
+      bp_clear: '\u09aa\u09c1\u09b0\u09cb \u099f\u09be\u0995\u09be \u09aa\u09b0\u09bf\u09b6\u09cb\u09a7', bp_loading: '\u09ac\u09bf\u09b2 \u09b2\u09cb\u09a1 \u09b9\u099a\u09cd\u099b\u09c7\u2026', bp_err: '\u09ac\u09bf\u09b2 \u09b2\u09cb\u09a1 \u0995\u09b0\u09be \u09af\u09be\u09af\u09bc\u09a8\u09bf ({e})', bp_download: '\u09a1\u09be\u0989\u09a8\u09b2\u09cb\u09a1' },
+    hi: { bp_title: '\u092c\u093f\u0932', bp_sub: '\u0938\u0939\u0947\u091c\u0947 \u0917\u090f \u0938\u092d\u0940 \u0905\u0902\u0924\u093f\u092e \u092c\u093f\u0932\u0964 PDF \u0916\u094b\u0932\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f Download \u0926\u092c\u093e\u090f\u0901\u0964', bp_ph: '\u092e\u0930\u0940\u091c\u093c \u0915\u093e \u0928\u093e\u092e \u092f\u093e \u092b\u093c\u094b\u0928 \u0938\u0947 \u0916\u094b\u091c\u0947\u0902\u2026', bp_none: '\u0905\u092d\u0940 \u0915\u094b\u0908 \u092c\u093f\u0932 \u0928\u0939\u0940\u0902',
+      bp_none_note: '\u092e\u0930\u0940\u091c\u093c \u0915\u0940 \u091b\u0941\u091f\u094d\u091f\u0940 (\u0921\u093f\u0938\u094d\u091a\u093e\u0930\u094d\u091c) \u0939\u094b\u0928\u0947 \u092a\u0930 \u0905\u0902\u0924\u093f\u092e \u092c\u093f\u0932 \u0905\u092a\u0928\u0947 \u0906\u092a \u092c\u0928 \u091c\u093e\u0924\u093e \u0939\u0948\u0964', bp_nomatch: '\u0906\u092a\u0915\u0940 \u0916\u094b\u091c \u0938\u0947 \u0915\u094b\u0908 \u092c\u093f\u0932 \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e', bp_saved: '\u0938\u0939\u0947\u091c\u093e \u0917\u092f\u093e', bp_total: '\u0915\u0941\u0932', bp_paid: '\u091a\u0941\u0915\u093e\u092f\u093e', bp_due: '\u092c\u093e\u0915\u0940',
+      bp_clear: '\u092a\u0942\u0930\u093e \u092d\u0941\u0917\u0924\u093e\u0928', bp_loading: '\u092c\u093f\u0932 \u0932\u094b\u0921 \u0939\u094b \u0930\u0939\u0947 \u0939\u0948\u0902\u2026', bp_err: '\u092c\u093f\u0932 \u0932\u094b\u0921 \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u0947 ({e})', bp_download: '\u0921\u093e\u0909\u0928\u0932\u094b\u0921' }
+  };
+  Object.keys(T).forEach(function (l) { if (FAM_I18N[l]) for (var k in T[l]) FAM_I18N[l][k] = T[l][k]; });
+  if (typeof I18N !== 'undefined') { I18N.en.nav_bills = 'Bills'; I18N.bn.nav_bills = '\u09ac\u09bf\u09b2'; I18N.hi.nav_bills = '\u092c\u093f\u0932'; }
+})();
+
+function billsApplyLang() {
+  if (typeof famT !== 'function') return;
+  var set = function (id, key) { var e = document.getElementById(id); if (e) e.textContent = famT(key); };
+  set('bills-title', 'bp_title'); set('bills-sub', 'bp_sub');
+  var s = document.getElementById('bills-search'); if (s) s.placeholder = famT('bp_ph');
+  var v = document.getElementById('v-bills'); if (v && v.classList.contains('on')) loadBillsPage();
+}
+async function loadBillsPage() {
+  var list = document.getElementById('bills-list'); if (!list || typeof _clinicId === 'undefined' || !_clinicId) return;
+  var s = document.getElementById('bills-search');
+  var set = function (id, key) { var e = document.getElementById(id); if (e) e.textContent = famT(key); };
+  set('bills-title', 'bp_title'); set('bills-sub', 'bp_sub'); if (s) s.placeholder = famT('bp_ph');
+  list.innerHTML = '<div class="empty"><p class="empty-t">' + esc(famT('bp_loading')) + '</p></div>';
+  var r = await _supa.from('patient_bills').select('id,admission_id,patient_name,patient_phone,total,paid,due,pdf_path,created_at').eq('clinic_id', _clinicId).order('created_at', { ascending: false }).limit(300);
+  if (r.error) { list.innerHTML = '<div class="empty"><p class="empty-t">' + esc(famT('bp_err', { e: r.error.message || '' })) + '</p></div>'; return; }
+  var q = ((s && s.value) || '').trim().toLowerCase(), qd = q.replace(/\D/g, '');
+  var rows = (r.data || []).filter(function (b) {
+    if (!q) return true;
+    return String(b.patient_name || '').toLowerCase().indexOf(q) >= 0 || (qd && String(b.patient_phone || '').replace(/\D/g, '').indexOf(qd) >= 0);
+  });
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ic">&#128196;</div><p class="empty-t">' + esc(famT(q ? 'bp_nomatch' : 'bp_none')) + '</p><p style="font-size:12px;color:var(--text-tertiary)">' + esc(famT('bp_none_note')) + '</p></div>';
+    return;
+  }
+  list.innerHTML = rows.map(function (b) {
+    var clear = Number(b.due) <= 0, nm = String(b.patient_name || '');
+    var action = b.admission_id
+      ? '<span data-bill-actions="' + esc(b.admission_id) + '" data-compact="1"></span>'
+      : '<button class="qbtn" data-path="' + esc(b.pdf_path) + '" data-name="' + esc(nm) + '" onclick="auraDownloadPath(this.getAttribute(\'data-path\'),this.getAttribute(\'data-name\'),this)">&#11015; ' + esc(famT('bp_download')) + '</button>';
+    return '<div class="adm-row">'
+      + '<div class="adm-av">' + esc(nm.charAt(0).toUpperCase() || '?') + '</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">' + esc(nm) + '</div>'
+      + '<div class="adm-meta">' + esc(famT('bp_saved')) + ' ' + esc(auraDateTime(b.created_at)) + ' &middot; ' + esc(famT('bp_total')) + ' ' + esc(auraMoney(b.total)) + ' &middot; ' + esc(famT('bp_paid')) + ' ' + esc(auraMoney(b.paid)) + '</div>'
+      + '<div class="adm-meta" style="font-weight:700;color:' + (clear ? 'var(--green)' : 'var(--red)') + '">' + esc(clear ? famT('bp_clear') : famT('bp_due') + ' ' + auraMoney(b.due)) + '</div></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end">' + action + '</div></div>';
+  }).join('');
+  auraMountBillActions(list);
+}
+/* re-apply the saved language to the sidebar label once everything above has loaded */
+try { if (typeof setLanguage === 'function') setLanguage(localStorage.getItem('aurascale_lang') || 'en'); } catch (e) {}
 </script>
 </body>
 </html>
