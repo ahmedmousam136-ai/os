@@ -710,8 +710,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <button class="add-btn reception-only" onclick="openAdmitModal()">+ Register / Admit</button>
         </div>
         <div class="panel">
-          <div class="ph"><input class="finput" id="patient-search" placeholder="Search by name or phone…" oninput="loadPatientsList()" style="max-width:320px"/></div>
+          <div class="ph" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <input class="finput" id="patient-search" placeholder="Search by name or phone…" oninput="loadPatientsList()" style="max-width:320px"/>
+            <div style="display:flex;gap:6px">
+              <button class="qbtn" id="pv-all" onclick="setPatientsView('all')" style="font-size:12px;padding:8px 14px">All patients</button>
+              <button class="qbtn" id="pv-fam" onclick="setPatientsView('families')" style="font-size:12px;padding:8px 14px">&#128106; Families</button>
+            </div>
+          </div>
           <div id="patients-list"></div>
+          <div id="families-list" style="display:none"></div>
         </div>
       </div>
 
@@ -1183,6 +1190,38 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 </div>
 
 <!-- PATIENT PROFILE MODAL -->
+<!-- FAMILY CHECK: shown when the phone number typed already belongs to saved patients (people sharing one number are a "family").
+     The receptionist/owner must answer; nothing is linked or created until they do. -->
+<div class="mod-ov" id="mod-dup-phone" style="z-index:80">
+  <div class="modal" style="max-width:460px">
+    <div class="mh"><div class="mtitle" id="dup-title">&#128106; Family found</div></div>
+    <div class="mb">
+      <div id="dup-v1" style="display:flex;flex-direction:column;gap:10px">
+        <div id="dup-fam" style="font-size:12px;font-weight:700;color:var(--text-secondary)"></div>
+        <p id="dup-msg" style="font-size:13.5px;line-height:1.6;color:var(--text-primary);margin:0">This number is already registered to the patient(s) below. Is this one of them?</p>
+        <div id="dup-list" style="display:flex;flex-direction:column;gap:9px"></div>
+        <button class="msub" id="dup-no" style="background:var(--surface);color:var(--text-primary);border:1px solid var(--border)" onclick="dupAnswer('no')">No, this is a different person</button>
+        <button class="qbtn" id="dup-back" style="align-self:center;font-size:11px;padding:8px 12px" onclick="dupAnswer('cancel')">Go back and edit</button>
+      </div>
+      <div id="dup-v2" style="display:none;flex-direction:column;gap:12px">
+        <p id="dup-rel-q" style="font-size:13.5px;line-height:1.6;color:var(--text-primary);margin:0"></p>
+        <div id="dup-rel-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <input class="finput" id="dup-rel-other" maxlength="30" placeholder="Type the relation (for example Cousin)" style="display:none" oninput="dupRelCheck()"/>
+        <button class="msub" id="dup-rel-go" disabled onclick="dupAnswer('relgo')">Continue</button>
+        <button class="qbtn" style="align-self:center;font-size:11px;padding:8px 12px" onclick="dupAnswer('relback')">&larr; Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAMILY VIEW: everyone saved on one phone number, with each person's own ID and admission history -->
+<div class="mod-ov" id="mod-family">
+  <div class="modal" style="max-width:620px">
+    <div class="mh"><div class="mtitle" id="fam-title">Family</div><button class="mclose" onclick="closeModal('mod-family')">&#10005;</button></div>
+    <div class="mb" id="fam-body"></div>
+  </div>
+</div>
+
 <div class="mod-ov" id="mod-patient-profile">
   <div class="modal" style="max-width:560px">
     <div class="mh"><div class="mtitle" id="pp-title">Patient</div><span id="pp-status-dot" style="margin-right:10px"></span><button class="mclose" onclick="closeModal('mod-patient-profile')">✕</button></div>
@@ -2459,6 +2498,307 @@ function autofillBedRate(){
 }
 
 /* ── ADMISSIONS ── */
+/* ===== FAMILY CHECK (several people on one phone number) =====
+   Families often share one phone. A saved patient is NEVER picked just because the number matches:
+     - No saved patient has this number            -> normal registration.
+     - Saved patients have it (they form a "family", the first registered is the family head):
+         "Yes, it's [name]"               -> the new admission is linked to THAT patient, who keeps their permanent ID. The
+                                             admission copies that patient's saved name / phone / age / gender.
+         "No, this is a different person" -> the person MUST say how they are connected to the family head: a relative (Wife, Son ...)
+                                             or NOT a relative (Friend, Neighbour, Caretaker ...) who simply shares the number.
+                                             A NEW patient (new id, new UHID) is created with the same phone, the relation is
+                                             saved, an alert row is written, and the admission is linked to the NEW patient.
+   An admission can only be linked to an existing patient who was explicitly picked in this window. */
+function normPhone(p){ var d=String(p||'').replace(/\D/g,''); return d.length>10 ? d.slice(-10) : d; }
+var FAMILY_RELATIONS=['Wife','Husband','Son','Daughter','Father','Mother','Brother','Sister','Other'];
+var SHARED_RELATIONS=['Friend','Neighbour','Caretaker','Other person'];
+/* Stored in nh_patients.guardian (no database change needed): "Family member (Son)" for a relative,
+   "Shares number (Neighbour)" for someone who is not a relative but uses the same phone. */
+function famRelationInfo(p){
+  var g=String((p&&p.guardian)||'').trim(), m;
+  if((m=/^Family member \((.+)\)$/.exec(g))) return {kind:'family', text:m[1]};
+  if((m=/^Shares number \((.+)\)$/.exec(g))) return {kind:'shared', text:m[1]};
+  return null;
+}
+function famRelationLine(m, head, isHead){
+  if(isHead) return 'Family head (first registered)';
+  var r=famRelationInfo(m), hn=(head&&head.full_name)||'the family head';
+  if(!r) return 'Relation not recorded';
+  return r.kind==='family' ? (r.text+' of '+hn) : (r.text+' (not a relative) \u00b7 shares this number');
+}
+function famGuardianText(rel, kind){ return rel ? ((kind==='shared'?'Shares number (':'Family member (')+rel+')') : ''; }
+var _famGenUhid=(typeof generateUHID==='function') ? generateUHID : function(){ return 'NH-'+Date.now().toString().slice(-6); };
+var _dupResolve=null, _dupState=null;
+function dupFinish(ans){ var f=_dupResolve; _dupResolve=null; closeModal('mod-dup-phone'); if(f) f(ans); }
+function dupShowList(){
+  document.getElementById('dup-v1').style.display='flex'; document.getElementById('dup-v2').style.display='none';
+  document.getElementById('dup-title').innerHTML='&#128106; Family found';
+}
+function dupNeedsTyping(){ var s=_dupState||{}; return s.rel==='Other' || s.rel==='Other person'; }
+function dupRelValue(){
+  var s=_dupState||{}; if(!s.rel) return '';
+  if(dupNeedsTyping()) return (document.getElementById('dup-rel-other').value||'').trim().slice(0,30);
+  return s.rel;
+}
+function dupRelCheck(){ document.getElementById('dup-rel-go').disabled = !dupRelValue(); }
+function dupPickRelation(label, kind){
+  _dupState.rel=label; _dupState.kind=kind;
+  document.querySelectorAll('#dup-rel-chips button').forEach(function(c){
+    var on=(c.getAttribute('data-rel')===label && c.getAttribute('data-kind')===kind);
+    c.style.background=on?'var(--green)':'var(--surface)'; c.style.color=on?'#fff':'var(--text-primary)'; c.style.borderColor=on?'var(--green)':'var(--border)';
+  });
+  var oth=document.getElementById('dup-rel-other'); oth.style.display=dupNeedsTyping()?'block':'none';
+  oth.placeholder = (kind==='shared') ? 'Type who they are (for example Cook)' : 'Type the relation (for example Cousin)';
+  if(dupNeedsTyping()) oth.focus();
+  dupRelCheck();
+}
+function dupShowRelation(){
+  var s=_dupState; s.rel=''; s.kind='';
+  document.getElementById('dup-v1').style.display='none'; document.getElementById('dup-v2').style.display='flex';
+  document.getElementById('dup-title').innerHTML='&#128106; How are they connected?';
+  document.getElementById('dup-rel-q').innerHTML='How is <b>'+esc(s.typedName)+'</b> connected to <b>'+esc(s.head.full_name||'the first registered person')+'</b> (first registered on this number)?';
+  var box=document.getElementById('dup-rel-chips'); box.innerHTML='';
+  function group(title, items, kind){
+    var h=document.createElement('div'); h.style.cssText='width:100%;font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-top:2px'; h.textContent=title; box.appendChild(h);
+    items.forEach(function(r){
+      var b=document.createElement('button'); b.type='button'; b.className='qbtn'; b.setAttribute('data-rel', r); b.setAttribute('data-kind', kind);
+      b.style.cssText='font-size:13px;padding:10px 14px;min-height:42px'; b.textContent=(r==='Other')?'Other relative':r; b.onclick=function(){ dupPickRelation(r, kind); }; box.appendChild(b);
+    });
+  }
+  group('A relative', FAMILY_RELATIONS, 'family');
+  group('Not a relative (uses the same number)', SHARED_RELATIONS, 'shared');
+  var oth=document.getElementById('dup-rel-other'); oth.value=''; oth.style.display='none';
+  dupRelCheck();
+}
+function dupAnswer(choice, idx){
+  if(choice==='yes') return dupFinish({choice:'yes', index:idx});
+  if(choice==='cancel') return dupFinish({choice:'cancel'});
+  if(choice==='no') return dupShowRelation();
+  if(choice==='relback') return dupShowList();
+  if(choice==='relgo'){ var rel=dupRelValue(); if(!rel) return; return dupFinish({choice:'no', relation:rel, kind:_dupState.kind||'family'}); }
+}
+function askWhichPatient(matches, typedName){
+  return new Promise(function(resolve){
+    var head=matches[0];
+    _dupState={matches:matches, typedName:(typedName||'This person'), head:head, rel:''};
+    document.getElementById('dup-fam').textContent='The '+(head.full_name||'')+' family \u00b7 '+matches.length+' member'+(matches.length>1?'s':'')+' on this number';
+    var list=document.getElementById('dup-list'); list.innerHTML='';
+    matches.forEach(function(m, i){
+      var card=document.createElement('div');
+      card.style.cssText='border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;background:var(--bg)';
+      var nm=document.createElement('div'); nm.style.cssText='font-weight:700;font-size:13.5px'; nm.textContent=m.full_name||'(no name)';
+      var rel=document.createElement('div'); rel.style.cssText='font-size:11px;color:var(--text-tertiary);margin-top:2px';
+      rel.textContent = famRelationLine(m, head, i===0);
+      var info=document.createElement('div'); info.style.cssText='font-size:11.5px;color:var(--text-secondary);margin:3px 0 9px';
+      info.textContent='Age '+((m.age!==null&&m.age!==undefined&&m.age!=='')?m.age:'not set')+' \u00b7 '+(m.gender||'gender not set')+' \u00b7 UHID '+(m.uhid||'not set');
+      var btn=document.createElement('button'); btn.className='msub green'; btn.type='button'; btn.setAttribute('data-dup-yes', String(i));
+      btn.textContent="Yes, it's "+(m.full_name||'this patient');
+      btn.onclick=function(){ dupAnswer('yes', i); };
+      card.appendChild(nm); card.appendChild(rel); card.appendChild(info); card.appendChild(btn); list.appendChild(card);
+    });
+    dupShowList(); _dupResolve=resolve; openModal('mod-dup-phone');
+  });
+}
+/* Saved patients in THIS clinic (clinic_id) with the same number, ignoring spaces, dashes and +91 / 0 prefixes, first
+   registered first. Throws on a lookup error: if we cannot check, we must not guess. */
+async function findPatientsWithPhone(phone){
+  var d=normPhone(phone); if(!d) return [];
+  var pattern='%'+d.split('').join('%')+'%';
+  var r=await _supa.from('nh_patients').select('id,full_name,age,gender,uhid,phone,guardian,created_at').eq('clinic_id',_clinicId).ilike('phone',pattern).order('created_at',{ascending:true}).limit(50);
+  if(r.error) throw r.error;
+  return (r.data||[]).filter(function(m){ return normPhone(m.phone)===d; });
+}
+async function createPatientRecord(name, phone, age, gender, docLogin, uhid, relation, kind){
+  var row={clinic_id:_clinicId, full_name:name, phone:phone, age:age, gender:gender, assigned_doctor_id:docLogin||null, needs_review:!!docLogin};
+  if(relation) row.guardian=famGuardianText(relation, kind);
+  var cur=uhid;
+  for(var attempt=0; attempt<4; attempt++){
+    if(cur) row.uhid=cur;
+    var c=await _supa.from('nh_patients').insert(row).select('id').single();
+    if(c && c.data) return {id:c.data.id, uhid:cur};
+    var code=(c&&c.error&&c.error.code)||'', msg=String((c&&c.error&&c.error.message)||'');
+    if(cur && (code==='23505' || /duplicate key|unique constraint/i.test(msg))){ cur=await uniqueUhid(_famGenUhid()); continue; }   // someone just took this ID
+    return null;
+  }
+  return null;
+}
+/* Every patient must have their OWN UHID. Checks the ID is unused in this clinic; if it is taken, makes another and checks again. */
+async function uniqueUhid(wanted){
+  var u=wanted;
+  for(var i=0;i<12;i++){
+    var r=await _supa.from('nh_patients').select('id').eq('clinic_id',_clinicId).eq('uhid',u).limit(1);
+    if(r.error) return u;                       // cannot verify right now: keep it (a database rule, if any, still refuses a duplicate)
+    if(!r.data||!r.data.length) return u;       // nobody has it: safe
+    u=_famGenUhid();                            // taken: try another one
+    if(i>=5) u=u+String(Math.floor(Math.random()*10));   // widen the choice if clashes keep happening
+  }
+  return u;
+}
+/* Inserts rows, and if the table does not have one of the columns we try to fill, drops that column and retries,
+   so a different table layout can never block a registration. Returns {ok, dropped, error}. */
+async function insertDroppingUnknownColumns(table, rows){
+  var cur=rows.map(function(r){ return Object.assign({}, r); }), dropped=[];
+  for(var attempt=0; attempt<10; attempt++){
+    var r=await _supa.from(table).insert(cur);
+    if(!r.error) return {ok:true, dropped:dropped};
+    var m=/Could not find the '([^']+)' column/i.exec(r.error.message||'');
+    if(m && cur.length && Object.prototype.hasOwnProperty.call(cur[0], m[1])){
+      cur.forEach(function(x){ delete x[m[1]]; }); dropped.push(m[1]); continue;
+    }
+    return {ok:false, dropped:dropped, error:r.error};
+  }
+  return {ok:false, dropped:dropped, error:{message:'too many unknown columns'}};
+}
+/* Writes to the existing duplicate_patient_alerts table, using ITS real columns (see the notes in the SQL file):
+   patient_name = the person registered now; existing_mobile / new_mobile; existing_nh_patient_id / new_nh_patient_id.
+   The table's existing_patient_id / new_patient_id point at the Clinic OS table `patients`, so they are never written.
+   `status` is not sent (the table default 'Pending' applies). One row per saved patient sharing the number. */
+async function recordDuplicateAlerts(declined, newPid, newName, newUhid, phone){
+  var now=new Date().toISOString();
+  var rows=declined.map(function(m){ return {
+    clinic_id:_clinicId, patient_name:newName,
+    existing_mobile:(m.phone||phone), new_mobile:phone,
+    existing_nh_patient_id:m.id, new_nh_patient_id:newPid,
+    created_at:now
+  }; });
+  var res=await insertDroppingUnknownColumns('duplicate_patient_alerts', rows);
+  if(res.dropped.length) console.warn('duplicate_patient_alerts has no column(s):', res.dropped.join(', '));
+  if(!res.ok){
+    console.warn('duplicate_patient_alerts insert failed:', res.error && res.error.message);
+    await _supa.from('nh_audit_log').insert({clinic_id:_clinicId, actor_id:_myUid, action:'duplicate_phone_new_patient', target_table:'nh_patients', target_id:newPid,
+      details:{phone:phone, existing_patient_ids:declined.map(function(m){return m.id;}), alert_table_error:(res.error&&res.error.message)||null}});
+    return false;
+  }
+  return true;
+}
+/* Returns null if the person chose "Go back and edit"; {pid:null} if the record could not be created.
+   `pre` is an answer already given for THIS number (receptionist: at "Continue to Admission"); if present it is reused. */
+async function resolvePatientForRegistration(name, phone, age, gender, docLogin, uhid, pre){
+  var matches, ans=null;
+  if(pre && pre.phoneKey===normPhone(phone) && (pre.choice==='same'||pre.choice==='different')){
+    matches=pre.matches.slice();
+    if(pre.choice==='same'){
+      var fr=await _supa.from('nh_patients').select('id,full_name,age,gender,uhid,phone,guardian,created_at').eq('id',pre.patient.id).eq('clinic_id',_clinicId).single();
+      if(fr && fr.data) matches=matches.map(function(m){ return m.id===fr.data.id ? fr.data : m; });
+      ans={choice:'yes', index:matches.findIndex(function(m){ return m.id===pre.patient.id; })};
+    } else ans={choice:'no', relation:pre.relation||'', kind:pre.kind||'family'};
+  } else {
+    matches=await findPatientsWithPhone(phone);
+    if(matches.length) ans=await askWhichPatient(matches, name);
+  }
+  var declined=[], relation='', kind='family';
+  if(ans){
+    if(ans.choice==='cancel') return null;
+    if(ans.choice==='yes'){
+      var picked=matches[ans.index];
+      if(!picked) return null;
+      if(docLogin) await _supa.from('nh_patients').update({assigned_doctor_id:docLogin}).eq('id',picked.id);
+      var keptUhid = picked.uhid || await uniqueUhid(uhid);      // an existing ID is NEVER changed; a first-ever ID is checked
+      return {pid:picked.id, uhid:keptUhid, existing:true, patient:picked, phoneCheck:'same_patient', sharedWith:[picked.id], alertFailed:false};
+    }
+    declined=matches; relation=ans.relation||''; kind=ans.kind||'family';      // "No, this is a different person" (+ how they are connected)
+  }
+  var newUhid = await uniqueUhid(uhid);                      // every NEW patient gets an ID nobody else has
+  var created=await createPatientRecord(name, phone, age, gender, docLogin, newUhid, relation, kind);
+  if(!created) return {pid:null};
+  var pid=created.id; newUhid=created.uhid;
+  var alertFailed=false;
+  if(declined.length){
+    if(declined.some(function(m){ return m.id===pid; })) return {pid:null};   // can never happen; belt and braces
+    alertFailed = !(await recordDuplicateAlerts(declined, pid, name, newUhid, phone));
+  }
+  return {pid:pid, uhid:newUhid, existing:false, relation:relation, kind:kind, phoneCheck:(declined.length?'different_person':'no_match'), sharedWith:declined.map(function(m){return m.id;}), alertFailed:alertFailed};
+}
+
+/* ===== FAMILIES VIEW (Patients page) =====
+   A family = every patient saved on the same phone number. The first registered is the family head. Each person keeps their
+   own ID and their own admission history. Nothing here asks the owner to do anything: it only shows what receptionists saved. */
+var _patientsView='all', _famGroups={};
+function setPatientsView(v){
+  _patientsView=v;
+  var all=document.getElementById('pv-all'), fam=document.getElementById('pv-fam');
+  [[all,'all'],[fam,'families']].forEach(function(x){ if(!x[0]) return; var on=(x[1]===v); x[0].style.background=on?'var(--green)':'var(--surface)'; x[0].style.color=on?'#fff':'var(--text-secondary)'; x[0].style.borderColor=on?'var(--green)':'var(--border)'; });
+  document.getElementById('patients-list').style.display=(v==='all')?'block':'none';
+  document.getElementById('families-list').style.display=(v==='families')?'block':'none';
+  loadPatientsList();
+}
+async function fetchAllClinicPatients(){
+  var out=[], from=0, step=1000;
+  while(true){
+    var r=await _supa.from('nh_patients').select('id,full_name,phone,age,gender,uhid,guardian,created_at').eq('clinic_id',_clinicId).order('created_at',{ascending:true}).range(from,from+step-1);
+    if(r.error) throw r.error;
+    out=out.concat(r.data||[]);
+    if(!r.data||r.data.length<step) break;
+    from+=step;
+  }
+  return out;
+}
+async function loadFamilies(){
+  var list=document.getElementById('families-list');
+  list.innerHTML='<div class="empty"><p class="empty-t">Loading families\u2026</p></div>';
+  var all;
+  try{ all=await fetchAllClinicPatients(); }
+  catch(e){ list.innerHTML='<div class="empty"><p class="empty-t">Could not load families ('+esc((e&&e.message)||e)+')</p></div>'; return; }
+  var groups={};
+  all.forEach(function(p){ var k=normPhone(p.phone); if(!k) return; (groups[k]=groups[k]||[]).push(p); });
+  _famGroups=groups;
+  var q=((document.getElementById('patient-search').value)||'').trim().toLowerCase(), qd=q.replace(/\D/g,'');
+  var fams=Object.keys(groups).filter(function(k){ return groups[k].length>=2; }).map(function(k){ return {key:k, members:groups[k]}; });
+  if(q) fams=fams.filter(function(f){ return f.members.some(function(m){ return (m.full_name||'').toLowerCase().indexOf(q)>=0 || (qd && normPhone(m.phone).indexOf(qd)>=0); }); });
+  fams.sort(function(a,b){ return String(b.members[b.members.length-1].created_at).localeCompare(String(a.members[a.members.length-1].created_at)); });
+  if(!fams.length){
+    list.innerHTML='<div class="empty"><div class="empty-ic">&#128106;</div><p class="empty-t">'+(q?'No family matches your search':'No families yet')+'</p><p style="font-size:12px;color:var(--text-tertiary)">A family appears here when two or more patients are registered on the same phone number.</p></div>';
+    return;
+  }
+  list.innerHTML=fams.map(function(f){
+    var head=f.members[0];
+    return '<div class="adm-row" style="cursor:pointer" onclick="openFamily(\''+f.key+'\')">'
+      +'<div class="adm-av">&#128106;</div>'
+      +'<div style="flex:1"><div class="adm-name">'+esc(head.full_name||'')+' family</div>'
+      +'<div class="adm-meta">'+f.members.length+' members \u00b7 '+esc(head.phone||'')+'</div>'
+      +'<div class="adm-meta">'+f.members.map(function(m){ return esc(m.full_name||''); }).join(', ')+'</div></div>'
+      +'</div>';
+  }).join('');
+}
+async function openFamily(key){
+  var members=_famGroups[key]; if(!members||!members.length) return;
+  var head=members[0];
+  document.getElementById('fam-title').textContent='The '+(head.full_name||'')+' family';
+  var body=document.getElementById('fam-body');
+  body.innerHTML='<p style="font-size:12px;color:var(--text-tertiary)">Loading\u2026</p>';
+  openModal('mod-family');
+  var ids=members.map(function(m){ return m.id; });
+  var ar=await _supa.from('admissions').select('id,patient_id,admission_date,discharge_date,status,admission_diagnosis,bed_id,uhid').in('patient_id',ids).order('admission_date',{ascending:false});
+  var br=await _supa.from('beds').select('id,bed_number,ward').eq('clinic_id',_clinicId);
+  var bedName={}; (br.data||[]).forEach(function(b){ bedName[b.id]=(b.ward?b.ward+' \u00b7 ':'')+(b.bed_number||''); });
+  var byPatient={}; (ar.data||[]).forEach(function(a){ (byPatient[a.patient_id]=byPatient[a.patient_id]||[]).push(a); });
+  var fmt=function(d){ return d?new Date(d).toLocaleDateString('en-GB'):''; };
+  var html='<p style="font-size:12px;color:var(--text-secondary);margin:0 0 4px">Phone: <b>'+esc(head.phone||'')+'</b> \u00b7 '+members.length+' people share this number. Each person has their own ID and their own record.</p>';
+  members.forEach(function(m, i){
+    var relLine=famRelationLine(m, head, i===0);
+    var adms=byPatient[m.id]||[];
+    html+='<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-top:10px;background:var(--bg)">'
+      +'<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">'
+      +'<div><div style="font-weight:700;font-size:14px">'+esc(m.full_name||'')+'</div>'
+      +'<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">'+esc(relLine)+'</div>'
+      +'<div style="font-size:11.5px;color:var(--text-secondary);margin-top:3px">'+(m.age?esc(m.age)+'y \u00b7 ':'')+esc(m.gender||'gender not set')+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">ID (UHID)</div><div style="font-weight:700;font-size:12.5px">'+esc(m.uhid||'not set')+'</div></div></div>'
+      +'<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Admission history</div>';
+    if(!adms.length) html+='<div style="font-size:12px;color:var(--text-tertiary)">No admissions yet</div>';
+    adms.forEach(function(a){
+      var active=(a.status==='Active');
+      html+='<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(228,224,216,.5)">'
+        +'<div><b>'+fmt(a.admission_date)+(a.discharge_date?' \u2192 '+fmt(a.discharge_date):' \u2192 now')+'</b>'
+        +'<div style="color:var(--text-tertiary)">'+esc((bedName[a.bed_id]||'Bed not set')+(a.admission_diagnosis?' \u00b7 '+a.admission_diagnosis:''))+'</div></div>'
+        +'<span style="align-self:flex-start;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:'+(active?'var(--green-bg)':'var(--surface)')+';color:'+(active?'var(--green)':'var(--text-secondary)')+';border:1px solid '+(active?'var(--green-border)':'var(--border)')+'">'+esc(a.status||'')+'</span></div>';
+    });
+    html+='<button class="qbtn" style="margin-top:8px;font-size:11px;padding:7px 12px" onclick="closeModal(\'mod-family\');openPatientProfile(\''+m.id+'\',\''+String(m.full_name||'').replace(/'/g,"\\'")+'\')">Open full profile</button>'
+      +'</div></div>';
+  });
+  body.innerHTML=html;
+}
+
 async function admitPatient(){
   var name=(document.getElementById('adm-name').value||'').trim();
   var phone=(document.getElementById('adm-phone').value||'').trim();
@@ -2473,11 +2813,23 @@ async function admitPatient(){
   if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
   if(!bedId){err.textContent='Please select a bed';err.style.display='block';return;}
   if(!doctor){err.textContent='Admitting doctor is required';err.style.display='block';return;}
-  /* Find-or-create a persistent patient record so this person has a
-     real profile/history across visits, not just a one-off admission row. */
+  /* A persistent patient record, so this person has a real profile/history across visits.
+     A saved patient is never picked just because the phone number matches: people sharing a number are a family and the
+     owner is asked who this is (same logic as the receptionist screen). */
   var assignedDoctorId=document.getElementById('adm-assigned-doctor').value||null;
-  var patientId=await findOrCreatePatient(name,phone,age,gender,assignedDoctorId);
-  var r=await _supa.from('admissions').insert({clinic_id:_clinicId,patient_id:patientId,patient_name:name,patient_phone:phone,patient_age:age,patient_gender:gender,bed_id:bedId,admitting_doctor:doctor,admission_diagnosis:diag,daily_rate:rate,status:'Active'}).select('id').single();
+  var uhid=_famGenUhid();
+  var res=null;
+  try{ res=await resolvePatientForRegistration(name,phone,age,gender,assignedDoctorId,uhid,null); }
+  catch(e){ err.textContent='Could not check whether this number is already registered ('+((e&&e.message)||e)+'). Nothing was saved. Please try again.'; err.style.display='block'; return; }
+  if(res===null) return;                                   // "Go back and edit"
+  if(!res.pid){ err.textContent='Could not create the patient record. Please try again.'; err.style.display='block'; return; }
+  var patientId=res.pid, regUhid=res.uhid||uhid, admName=name, admPhone=phone, admAge=age, admGender=gender;
+  if(res.existing && res.patient){                         // linked to a saved patient: copy THEIR details, not what was typed
+    admName=res.patient.full_name||name; admPhone=res.patient.phone||phone;
+    admAge=(res.patient.age===undefined?null:res.patient.age); admGender=(res.patient.gender===undefined?null:res.patient.gender);
+    if(!res.patient.uhid) await _supa.from('nh_patients').update({uhid:regUhid}).eq('id',patientId);   // first time this patient gets an ID: keep it forever
+  }
+  var r=await _supa.from('admissions').insert({clinic_id:_clinicId,patient_id:patientId,patient_name:admName,patient_phone:admPhone,patient_age:admAge,patient_gender:admGender,bed_id:bedId,admitting_doctor:doctor,admission_diagnosis:diag,daily_rate:rate,status:'Active',uhid:regUhid}).select('id').single();
   if(r.error){err.textContent=r.error.message;err.style.display='block';return;}
   await _supa.from('beds').update({status:'Occupied',current_admission_id:r.data.id}).eq('id',bedId);
   if(rate>0){
@@ -2485,7 +2837,7 @@ async function admitPatient(){
   }
   closeModal('mod-admit');
   ['adm-name','adm-phone','adm-age','adm-doctor','adm-diagnosis','adm-rate'].forEach(function(id){document.getElementById(id).value='';});
-  showToast(name+' admitted successfully');
+  showToast(admName+' admitted successfully');
   loadDashboard();loadBeds();loadAdmissions();
 }
 async function loadAdmissions(){
@@ -3332,6 +3684,7 @@ async function findOrCreatePatient(name,phone,age,gender,assignedDoctorId){
 }
 async function loadPatientsList(){
   if(!_clinicId)return;
+  if(_patientsView==='families'){ return loadFamilies(); }
   var q=(document.getElementById('patient-search').value||'').trim();
   var query=_supa.from('nh_patients').select('id,full_name,phone,age,gender').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(50);
   if(q)query=query.or('full_name.ilike.%'+q+'%,phone.ilike.%'+q+'%');
