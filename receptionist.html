@@ -516,6 +516,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
                 <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Admission</th>
                 <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700">Discharge</th>
                 <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Visit History</th>
+                <th style="padding:10px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700;text-align:right">Bill</th>
               </tr>
             </thead>
             <tbody id="discharge-tbody"></tbody>
@@ -2876,7 +2877,7 @@ async function printVisitHistory(patientId, patientName){
 async function loadDischarge(){
   var tbody = document.getElementById('discharge-tbody');
   if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:12px">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:12px">Loading…</td></tr>';
 
   var q = (document.getElementById('discharge-search') ? document.getElementById('discharge-search').value : '').trim().toLowerCase();
 
@@ -2900,7 +2901,7 @@ async function loadDischarge(){
   }
 
   if(!discharged.length){
-    tbody.innerHTML = '<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:12px">No discharged patients found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text-tertiary);font-size:12px">No discharged patients found</td></tr>';
     return;
   }
 
@@ -2916,8 +2917,10 @@ async function loadDischarge(){
       + '<td style="padding:10px 14px;color:var(--text-secondary)">'+admDateStr+'<div style="font-size:10.5px;color:var(--text-tertiary)">'+admTimeStr+'</div></td>'
       + '<td style="padding:10px 14px;color:var(--text-secondary)">'+disDateStr+'<div style="font-size:10.5px;color:var(--text-tertiary)">'+disTimeStr+'</div></td>'
       + '<td style="padding:10px 14px;text-align:right"><button class="txn-pay-btn" onclick="printVisitHistory(\''+a.patient_id+'\',\''+esc(a.patient_name||'')+'\')">&#128196; PDF</button></td>'
+      + '<td style="padding:10px 14px;text-align:right"><span data-bill-actions="'+a.id+'" data-compact="1" onclick="event.stopPropagation()"></span></td>'
     + '</tr>';
   }).join('');
+  if(typeof auraMountBillActions==='function') auraMountBillActions(tbody);
 }
 
 /* ── BILLING LIST PAGE (sidebar "Billing") ──
@@ -3062,9 +3065,11 @@ async function loadInvoicesTab(){
       + '<div class="adm-av">'+esc((a.patient_name||'?').charAt(0).toUpperCase())+'</div>'
       + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(a.patient_name||'—')+'</div>'
       + '<div class="adm-meta">Admitted '+(a.admission_date?new Date(a.admission_date).toLocaleDateString('en-GB'):'—')+' · '+(isActive?'Active':'Discharged')+'</div></div>'
+      + '<span data-bill-actions="'+a.id+'" data-compact="1" onclick="event.stopPropagation()" style="margin-right:6px"></span>'
       + '<button class="txn-view-btn" onclick="event.stopPropagation();openProfile(\''+(a.patient_id||'')+'\',\''+esc(a.patient_name||'')+'\')">Open Bill</button>'
     + '</div>';
   }).join('');
+  if(typeof auraMountBillActions==='function') auraMountBillActions(el);
 }
 
 /* ── RECEIVE PAYMENT modal (triggered from the Pay button in the tables) ── */
@@ -3884,7 +3889,16 @@ var _auraBillBusy = {};
     hi: '\u0938\u0941\u091d\u093e\u0935: \u0906\u092a\u0915\u093e \u092a\u0924\u093e \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902 \u0939\u0948, \u0907\u0938\u0932\u093f\u090f \u092c\u093f\u0932 \u092e\u0947\u0902 \u092a\u0924\u093e \u0928\u0939\u0940\u0902 \u0939\u0948\u0964 \u092e\u093e\u0932\u093f\u0915 \u0907\u0938\u0947 Settings \u2192 Facility details \u092e\u0947\u0902 \u091c\u094b\u0921\u093c \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964'
   };
   Object.keys(add).forEach(function (l) { if (FAM_I18N[l]) FAM_I18N[l].fd_missing_hint = add[l]; });
+  var btn = {
+    en: { bt_generate: 'Generate Bill', bt_download: 'Download bill', bt_regenerate: 'Regenerate', bt_saved: 'Saved', bt_balance: 'Balance' },
+    bn: { bt_generate: '\u09ac\u09bf\u09b2 \u09a4\u09c8\u09b0\u09bf \u0995\u09b0\u09c1\u09a8', bt_download: '\u09ac\u09bf\u09b2 \u09a1\u09be\u0989\u09a8\u09b2\u09cb\u09a1', bt_regenerate: '\u0986\u09ac\u09be\u09b0 \u09a4\u09c8\u09b0\u09bf \u0995\u09b0\u09c1\u09a8', bt_saved: '\u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4', bt_balance: '\u09ac\u09be\u0995\u09bf' },
+    hi: { bt_generate: '\u092c\u093f\u0932 \u092c\u0928\u093e\u090f\u0901', bt_download: '\u092c\u093f\u0932 \u0921\u093e\u0909\u0928\u0932\u094b\u0921 \u0915\u0930\u0947\u0902', bt_regenerate: '\u092b\u093f\u0930 \u0938\u0947 \u092c\u0928\u093e\u090f\u0901', bt_saved: '\u0938\u0939\u0947\u091c\u093e \u0917\u092f\u093e', bt_balance: '\u092c\u093e\u0915\u0940' }
+  };
+  Object.keys(btn).forEach(function (l) { if (FAM_I18N[l]) for (var k in btn[l]) FAM_I18N[l][k] = btn[l][k]; });
 })();
+function auraT(key, fallback) { return (typeof famT === 'function') ? famT(key) : fallback; }
+/* where the finished bill can be found, depending on which portal this is */
+function auraWhereToFind() { return document.getElementById('v-bills') ? 'Open Bills in the menu to download it.' : 'Find it under Discharge (Bill column) or Billing \u2192 Invoices.'; }
 function auraAddressHint(r) {
   if (!r || !r.missingAddress) return '';
   return ' ' + (typeof famT === 'function' ? famT('fd_missing_hint') : 'Tip: your address is not set. The owner can add it in Settings \u2192 Facility details.');
@@ -4124,20 +4138,20 @@ async function auraGenerateBill(admissionId, opts) {
 async function auraGenerateBillAuto(admissionId) {
   try {
     var r = await auraGenerateBill(admissionId);
-    if (typeof showToast === 'function') showToast(r.ok ? 'Final bill saved. Use "Download bill" on the admission page.' + auraAddressHint(r) : 'Discharged, but the bill was not saved: ' + r.error + ' (use Generate Bill to try again)');
+    if (typeof showToast === 'function') showToast(r.ok ? 'Final bill saved. ' + auraWhereToFind() + auraAddressHint(r) : 'Discharged, but the bill was not saved: ' + r.error + ' (use Generate Bill to try again)');
     auraAfterBill();
   } catch (e) { /* a bill problem must never disturb a discharge */ }
 }
 
 /* ---------- 5. buttons ---------- */
-function auraBillButtonsHtml(admId, bill) {
+function auraBillButtonsHtml(admId, bill, compact) {
   var q = esc(admId);
   if (bill) {
-    return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; Download bill</button>'
-      + '<button class="qbtn" title="Rebuild the bill with the latest charges and payments" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#8635; Regenerate</button>'
-      + '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">Saved ' + esc(auraDateTime(bill.created_at)) + ' &middot; Balance ' + esc(auraMoney(bill.due)) + '</span>';
+    return '<button class="qbtn" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)" onclick="auraDownloadBill(\'' + q + '\',this)">&#11015; ' + esc(auraT('bt_download', 'Download bill')) + '</button>'
+      + '<button class="qbtn" title="Rebuild the bill with the latest charges and payments" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#8635; ' + esc(auraT('bt_regenerate', 'Regenerate')) + '</button>'
+      + (compact ? '' : '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">' + esc(auraT('bt_saved', 'Saved')) + ' ' + esc(auraDateTime(bill.created_at)) + ' &middot; ' + esc(auraT('bt_balance', 'Balance')) + ' ' + esc(auraMoney(bill.due)) + '</span>');
   }
-  return '<button class="qbtn" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#128196; Generate Bill</button>';
+  return '<button class="qbtn" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" onclick="auraGenerateBillClick(\'' + q + '\',this)">&#128196; ' + esc(auraT('bt_generate', 'Generate Bill')) + '</button>';
 }
 /* Fills every <span data-bill-actions="ADMISSION_ID"> under `root` (default: whole page) with the right buttons, in one query. */
 async function auraMountBillActions(root) {
@@ -4146,7 +4160,7 @@ async function auraMountBillActions(root) {
   var ids = []; els.forEach(function (e) { var v = e.getAttribute('data-bill-actions'); if (v && ids.indexOf(v) < 0) ids.push(v); });
   var map = {};
   try { var r = await _supa.from('patient_bills').select('admission_id,created_at,total,paid,due').in('admission_id', ids); (r.data || []).forEach(function (b) { map[b.admission_id] = b; }); } catch (e) {}
-  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id]); });
+  els.forEach(function (e) { var id = e.getAttribute('data-bill-actions'); e.style.cssText = 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap'; e.innerHTML = auraBillButtonsHtml(id, map[id], e.getAttribute('data-compact') === '1'); });
 }
 function auraAfterBill() { try { auraMountBillActions(document); } catch (e) {} }
 async function auraGenerateBillClick(admId, btn) {
@@ -4156,17 +4170,25 @@ async function auraGenerateBillClick(admId, btn) {
   if (btn && !r.ok) { btn.disabled = false; btn.innerHTML = old; }
   auraAfterBill();
 }
+async function auraOpenSigned(path, patientName, fallbackId) {
+  var safe = String(patientName || '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || String(fallbackId || 'bill').slice(0, 8);
+  var s = await _supa.storage.from(AURA_BILL_BUCKET).createSignedUrl(path, 3600, { download: 'Bill-' + safe + '.pdf' });
+  if (s.error || !s.data) throw (s.error || new Error('Could not open the bill'));
+  var a = document.createElement('a'); a.href = s.data.signedUrl || s.data.signedURL; a.download = 'Bill-' + safe + '.pdf'; a.rel = 'noopener'; a.target = '_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
 async function auraDownloadBill(admId, btn) {
   var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Opening\u2026'; }
   try {
     var r = await _supa.from('patient_bills').select('pdf_path,patient_name').eq('admission_id', admId).maybeSingle();
     if (!r.data) throw new Error('No saved bill yet. Tap Generate Bill first.');
-    var safe = String(r.data.patient_name || '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') || String(admId).slice(0, 8);
-    var s = await _supa.storage.from(AURA_BILL_BUCKET).createSignedUrl(r.data.pdf_path, 3600, { download: 'Bill-' + safe + '.pdf' });
-    if (s.error || !s.data) throw (s.error || new Error('Could not open the bill'));
-    var a = document.createElement('a'); a.href = s.data.signedUrl || s.data.signedURL; a.download = 'Bill-' + safe + '.pdf'; a.rel = 'noopener'; a.target = '_blank';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    await auraOpenSigned(r.data.pdf_path, r.data.patient_name, admId);
   } catch (e) { if (typeof showToast === 'function') showToast(auraFriendlyError(e, 'storage')); }
+  if (btn) { btn.disabled = false; btn.innerHTML = old; }
+}
+async function auraDownloadPath(path, patientName, btn) {
+  var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Opening\u2026'; }
+  try { await auraOpenSigned(path, patientName, 'bill'); } catch (e) { if (typeof showToast === 'function') showToast(auraFriendlyError(e, 'storage')); }
   if (btn) { btn.disabled = false; btn.innerHTML = old; }
 }
 </script>
