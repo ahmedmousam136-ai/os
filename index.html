@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNjQwIiB3aWR0aD0iNjQwIiBoZWlnaHQ9IjY0MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzFCQjg4MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwQTZCNEIiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iNjQwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0gMjI3IDEzMyBBIDExOCAxMTggMCAwIDEgNDEzIDEzMyIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC4zOCIvPgogICAgPHBhdGggZD0iTSAyNjIgMTU0IEEgNzggNzggMCAwIDEgMzc4IDE1NCIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC43Ii8+CiAgPC9nPgogIDxwYXRoIGQ9Ik0gMTk2IDQ1MiBMIDMyMCAyMTQgTCA0NDQgNDUyIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iNTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiM3Q0U2QkMiPgogICAgPHJlY3QgeD0iMjg0IiB5PSIzNDgiIHdpZHRoPSI3MiIgaGVpZ2h0PSIyNCIgcng9IjEyIi8+CiAgICA8cmVjdCB4PSIzMDgiIHk9IjMyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjcyIiByeD0iMTIiLz4KICA8L2c+Cjwvc3ZnPgo="/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <title>AuraScale — Choose your system</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
@@ -76,14 +79,53 @@ body{
 .arr{font-size:22px;color:#253648;flex-shrink:0;line-height:1}
 /* ── FOOTER ── */
 .foot{font-size:12.5px;color:#1E2D3D;font-weight:500;letter-spacing:.03em}
+/* ===== AuraScale mark (first logo) — calm, soft, consistent across portals ===== */
+:root{--aura-mark:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNjQwIiB3aWR0aD0iNjQwIiBoZWlnaHQ9IjY0MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzFCQjg4MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwQTZCNEIiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iNjQwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0gMjI3IDEzMyBBIDExOCAxMTggMCAwIDEgNDEzIDEzMyIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC4zOCIvPgogICAgPHBhdGggZD0iTSAyNjIgMTU0IEEgNzggNzggMCAwIDEgMzc4IDE1NCIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC43Ii8+CiAgPC9nPgogIDxwYXRoIGQ9Ik0gMTk2IDQ1MiBMIDMyMCAyMTQgTCA0NDQgNDUyIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iNTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiM3Q0U2QkMiPgogICAgPHJlY3QgeD0iMjg0IiB5PSIzNDgiIHdpZHRoPSI3MiIgaGVpZ2h0PSIyNCIgcng9IjEyIi8+CiAgICA8cmVjdCB4PSIzMDgiIHk9IjMyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjcyIiByeD0iMTIiLz4KICA8L2c+Cjwvc3ZnPgo=")}
+.aura-mark{display:inline-block;width:36px;height:36px;border-radius:22%;background:var(--aura-mark) center/126% no-repeat;flex-shrink:0;box-shadow:0 3px 10px rgba(10,107,75,.35),inset 0 0 0 1px rgba(255,255,255,.14)}
+.sb-brand{display:flex;align-items:center;gap:11px}
+.sb-brand-txt{min-width:0}
+.sb-logo .sb-mark{line-height:1.05}
+.sb-logo .sb-mark .s{color:#37C493}
+.sb-logo .sb-tag{margin-top:4px;letter-spacing:.07em}
+.aura-hero{display:flex;justify-content:center;margin-bottom:14px}
+.aura-mark-lg{width:78px;height:78px;border-radius:22px;box-shadow:0 8px 26px rgba(10,107,75,.30),inset 0 0 0 1px rgba(255,255,255,.16)}
+.auth-word .a,.auth-word .s{font-size:28px!important}
+.auth-word .a{color:var(--text-primary)!important}
+.auth-word .s{color:#12976A!important}
+.auth-word .os{font-size:11px!important}
+@keyframes auraRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes auraIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+@keyframes auraBreathe{0%,100%{box-shadow:0 8px 26px rgba(10,107,75,.28),0 0 0 0 rgba(27,184,128,0),inset 0 0 0 1px rgba(255,255,255,.16)}50%{box-shadow:0 10px 32px rgba(10,107,75,.38),0 0 0 12px rgba(27,184,128,.08),inset 0 0 0 1px rgba(255,255,255,.16)}}
+#auth-screen .auth-card{animation:auraRise .8s cubic-bezier(.2,.7,.2,1) both}
+#auth-screen .aura-mark-lg{animation:auraIn 1s cubic-bezier(.2,.7,.2,1) both,auraBreathe 6.5s ease-in-out 1.2s infinite}
+#auth-screen{background:radial-gradient(1100px 560px at 50% -8%,rgba(27,184,128,.15),transparent 62%),radial-gradient(800px 480px at 100% 108%,rgba(27,184,128,.10),transparent 58%),var(--bg)}
+@media (prefers-reduced-motion:reduce){#auth-screen .auth-card,#auth-screen .aura-mark-lg{animation:none}}
+
+.logo{margin-bottom:34px}.aura-mark-lg{width:96px;height:96px;border-radius:26px;animation:auraIn 1s both,auraBreathe 6.5s ease-in-out 1.2s infinite}
+.aura-hero{margin-bottom:16px}.brand .s{color:#12976A!important}
+body{background:radial-gradient(1100px 560px at 50% -8%,rgba(27,184,128,.15),transparent 62%),radial-gradient(800px 480px at 100% 108%,rgba(27,184,128,.10),transparent 58%),var(--bg,#F8F9FB)!important}
+.wrap{animation:auraRise .8s cubic-bezier(.2,.7,.2,1) both}
+.card{transition:transform .25s,box-shadow .25s,border-color .25s,background .2s}.card:hover{transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){.aura-mark-lg,.wrap{animation:none!important}}
+
+
+html,body{background:#F6FBF8!important;color:#17332b}
+.a{color:#17332b!important}.sub{color:#5f7a71!important}
+.card{background:#fff!important;border:1px solid #dcefe6!important;box-shadow:0 2px 10px rgba(18,151,106,.07)}
+.card:hover{background:#fff!important;border-color:#8fd6b8!important;box-shadow:0 10px 26px rgba(18,151,106,.16)!important}
+.card-title{color:#17332b!important}.card-sub{color:#5f7a71!important}.arr{color:#7fc7a9!important}.foot{color:#8aa299!important}
+.icon-c,.icon-n{background:linear-gradient(145deg,#e4f7ee,#cfeee0)!important}
+.icon-c svg,.icon-n svg{stroke:#0f7a56!important}
+body::before,body::after{background:none!important}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="logo">
+    <div class="aura-hero"><span class="aura-mark aura-mark-lg" role="img" aria-label="AuraScale"></span></div>
     <div class="brand"><span class="a">Aura</span><span class="s">Scale</span></div>
-    <div class="sub">Choose your system</div>
+    <div class="sub">Welcome — choose your system</div>
   </div>
 
   <div class="cards">
