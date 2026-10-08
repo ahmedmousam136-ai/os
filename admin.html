@@ -598,6 +598,9 @@ header{
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings
       </button>
+      <button class="nb" onclick="nav('invoices',this)">
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg></span>Invoices &amp; Payments
+      </button>
     </nav>
     <div class="sb-foot">
       <div class="sb-out" onclick="doLogout()">
@@ -755,6 +758,25 @@ header{
       <div id="v-approvals" class="view">
         <div class="sh"><div><h1 class="st">Pending Approvals</h1><p class="ss">Nursing homes awaiting platform activation</p></div></div>
         <div class="panel" id="approvals-panel"><div id="approvals-list"></div></div>
+      </div>
+
+      <!-- INVOICES & PAYMENTS -->
+      <div id="v-invoices" class="view">
+        <div class="sh"><div><h1 class="st">Invoices &amp; Payments</h1><p class="ss">AuraScale tax invoices to nursing homes. One is created automatically for every payment.</p></div></div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Record a UPI / cash payment you received</div></div>
+          <div style="padding:16px;display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:10px;align-items:end">
+            <div><label class="ss">Nursing home</label><select class="finput" id="inv-clinic"></select></div>
+            <div><label class="ss">Method</label><select class="finput" id="inv-method"><option>UPI</option><option>Bank transfer</option><option>Cash</option></select></div>
+            <div><label class="ss">UTR / reference</label><input class="finput" id="inv-ref" placeholder="e.g. 4321 8765 1234"/></div>
+            <button class="btn-green" onclick="recordPayment()">Record &#8377;4,999 payment</button>
+          </div>
+          <p class="ss" style="padding:0 16px 14px;margin:0">This extends their subscription by one month, unlocks the account if it was locked, and issues the tax invoice.</p>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">All invoices</div><span class="ss" id="inv-summary"></span></div>
+          <div id="inv-list" style="padding:12px 16px"></div>
+        </div>
       </div>
 
       <!-- SETTINGS -->
@@ -926,6 +948,7 @@ function nav(id,btn){
   if(id==='patients')loadPatientAnalytics();
   if(id==='staff')loadAllStaff();
   if(id==='approvals')loadApprovals();
+  if(id==='invoices')loadInvoices();
   if(id==='settings'){
     var emailEl=document.getElementById('settings-email');
     if(emailEl)emailEl.textContent=_saEmail||'—';
@@ -1358,6 +1381,40 @@ function syncHeaderIdentity(){
   var sav=document.getElementById('sb-admin-av');if(sav)sav.textContent=initial;
 }
 setInterval(syncHeaderIdentity, 1500);
+</script>
+<script>
+/* ===== AURASCALE INVOICES & PAYMENTS ===== */
+async function loadInvoices() {
+  var list = document.getElementById('inv-list'), sel = document.getElementById('inv-clinic');
+  list.innerHTML = '<p class="ss">Loading&hellip;</p>';
+  var cl = await _supa.from('clinics').select('id,name').eq('facility_type', 'nursing_home').order('name');
+  if (cl.data) sel.innerHTML = cl.data.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name || c.id) + '</option>'; }).join('');
+  var r = await _supa.from('aurascale_invoices').select('*').order('invoice_date', { ascending: false }).limit(500);
+  if (r.error) { list.innerHTML = '<p class="ss">Could not load invoices (' + esc(r.error.message) + '). Has aurascale-invoices.sql been run?</p>'; return; }
+  var rows = r.data || [], total = rows.reduce(function (a, v) { return a + Number(v.total || 0); }, 0);
+  document.getElementById('inv-summary').textContent = rows.length + ' invoices · ₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+  if (!rows.length) { list.innerHTML = '<p class="ss">No invoices yet.</p>'; return; }
+  list.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="text-align:left;color:var(--text-tertiary)">'
+    + '<th style="padding:6px">Invoice</th><th>Date</th><th>Nursing home</th><th>For</th><th style="text-align:right">Taxable</th><th style="text-align:right">GST</th><th style="text-align:right">Total</th><th>Paid by</th></tr></thead><tbody>'
+    + rows.map(function (v) {
+      var gst = Number(v.cgst) + Number(v.sgst) + Number(v.igst);
+      return '<tr style="border-top:1px solid var(--border)"><td style="padding:7px 6px;font-weight:700">' + esc(v.invoice_no) + '</td><td>' + new Date(v.invoice_date).toLocaleDateString('en-GB') + '</td><td>' + esc(v.buyer_name)
+        + '</td><td>' + (v.kind === 'topup' ? 'Top-up' : 'Subscription') + '</td><td style="text-align:right">' + Number(v.taxable).toFixed(2) + '</td><td style="text-align:right">' + gst.toFixed(2)
+        + '</td><td style="text-align:right;font-weight:700">' + Number(v.total).toFixed(2) + '</td><td>' + esc(v.payment_method || '') + (v.payment_ref ? ' · ' + esc(v.payment_ref) : '') + '</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+async function recordPayment() {
+  var id = document.getElementById('inv-clinic').value, sel = document.getElementById('inv-clinic');
+  var name = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  var method = document.getElementById('inv-method').value, ref = (document.getElementById('inv-ref').value || '').trim();
+  if (!id) return;
+  if (!confirm('Record ₹4,999 received from ' + name + ' by ' + method + (ref ? ' (ref ' + ref + ')' : '') + '?\n\nThis issues a tax invoice and cannot be undone.')) return;
+  var r = await _supa.rpc('admin_record_payment', { p_clinic_id: id, p_method: method, p_ref: ref || null });
+  if (r.error) { alert('Not recorded: ' + r.error.message); return; }
+  alert('Recorded. Invoice ' + ((r.data && r.data.invoice_no) || '') + ' issued.');
+  document.getElementById('inv-ref').value = '';
+  loadInvoices();
+}
 </script>
 </body>
 </html>
