@@ -1061,11 +1061,16 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="panel">
           <div class="ph"><div class="pt">Pay by UPI</div></div>
           <div style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
-            <p class="ss" style="margin:0">Prefer UPI? Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;4,999</b> to AuraScale.</p>
+            <div style="display:flex;gap:8px;width:100%">
+              <button type="button" id="aura-upi-sub" class="add-btn" style="flex:1;justify-content:center" onclick="auraUpiChoose(4999)">Subscription &#8377;4,999</button>
+              <button type="button" id="aura-upi-top" class="add-btn" style="flex:1;justify-content:center;background:transparent;color:var(--text-primary);border:1px solid var(--border)" onclick="auraUpiChoose(499)">ID-scan top-up &#8377;499</button>
+            </div>
+            <p class="ss" style="margin:0" id="aura-upi-note">Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;4,999</b> to AuraScale.</p>
             <div id="aura-upi-qr" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
             <div style="font-size:12.5px;font-weight:600">UPI ID: <span id="aura-upi-id">8017465987-3@ybl</span></div>
             <a id="aura-upi-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none">Open UPI app</a>
-            <p class="ss" style="margin:0">After paying, send the payment screenshot on WhatsApp. AuraScale confirms it within one working day and your tax invoice appears below.</p>
+            <a id="aura-upi-wa" href="#" target="_blank" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:#25D366">Send payment screenshot on WhatsApp</a>
+            <p class="ss" style="margin:0">AuraScale confirms your payment within one working day. Your renewal date then updates and the tax invoice appears below.</p>
           </div>
         </div>
 
@@ -1088,6 +1093,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               </div>
             </div>
             <div id="usage-bonus-note" class="ss" style="display:none"></div>
+            <p class="ss" style="margin:0">To buy a top-up pack now, use <b>Pay by UPI</b> above and choose <b>ID-scan top-up &#8377;499</b>.</p>
             <button onclick="payUsageTopup()" id="pay-topup-btn" class="add-btn" style="width:100%;justify-content:center;background:var(--purple,#6B3FA0)">⚡ Buy Top-Up Pack — ₹499 incl. GST (+100 scans)</button>
           </div>
         </div>
@@ -2219,7 +2225,8 @@ async function _initApp(){
     if(cl.data.subscription_status==='frozen'){
       document.getElementById('app-shell').classList.remove('authenticated');
       document.getElementById('auth-screen').classList.remove('hidden');
-      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">🔒</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Subscription Payment Due</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale subscription\'s grace period has ended. Renew now to restore access — your doctors can still access patient records as normal.</p><a href="https://wa.me/919330660325?text=Hi, I need to renew my AuraScale subscription." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 Renew via WhatsApp</a></div></div>';
+      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">🔒</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Subscription Payment Due</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale subscription\'s grace period has ended. Renew now to restore access — your doctors can still access patient records as normal.</p><a href="https://wa.me/919330660325?text=Hi, I need to renew my AuraScale subscription." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 Renew via WhatsApp</a><div style="margin-top:18px;font-size:13px;font-weight:600">Or pay &#8377;4,999 by UPI</div><div id="aura-lock-qr" style="width:180px;height:180px;margin:10px auto;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;padding:8px"></div><div style="font-size:12px">UPI ID: 8017465987-3@ybl</div><p style="font-size:12px;color:var(--text-secondary);margin-top:8px">After paying, send the screenshot on WhatsApp. Access returns as soon as AuraScale confirms it.</p></div></div>';
+      setTimeout(function(){ if (typeof auraDrawUpiQr === 'function') auraDrawUpiQr('aura-lock-qr', 4999, 'AuraScale subscription - ' + String(cl.data.name || '').slice(0, 40)); }, 0);
       return;
     }
     /* Expose renewal/grace-period info for the top banner (renderSubscriptionBanner). */
@@ -5048,15 +5055,39 @@ function auraDate(d) { if (!d) return ''; var x = new Date(d); return isNaN(x) ?
 function auraUpiUrl(amount, note) {
   return 'upi://pay?pa=' + encodeURIComponent(AURA_UPI_ID) + '&pn=' + encodeURIComponent(AURA_UPI_NAME) + '&am=' + Number(amount).toFixed(2) + '&cu=INR&tn=' + encodeURIComponent(note || 'AuraScale subscription');
 }
-async function auraShowUpiQr() {
-  var box = document.getElementById('aura-upi-qr'); if (!box) return;
-  var nameEl = document.getElementById('sb-nh-name');
-  var url = auraUpiUrl(4999, 'AuraScale subscription - ' + ((nameEl && nameEl.textContent) || '').slice(0, 40));
-  var link = document.getElementById('aura-upi-link'); if (link) link.href = url;
+/* Cashfree is switched off until the Cashfree account is approved. To turn it back on, change false to true. */
+var AURA_CASHFREE_ON = false;
+(function () {
+  if (AURA_CASHFREE_ON) return;
+  ['pay-sub-btn', 'pay-topup-btn'].forEach(function (id) { var b = document.getElementById(id); if (b) b.style.display = 'none'; });
+})();
+var AURA_WA = '919330660325', _auraUpiAmount = 4999;
+async function auraDrawUpiQr(boxId, amount, note) {
+  var box = document.getElementById(boxId); if (!box) return;
+  var url = auraUpiUrl(amount, note);
   try {
     await auraLoadScript(AURA_QR_LIB, function () { return typeof window.QRCode === 'function'; });
     box.innerHTML = ''; new QRCode(box, { text: url, width: 164, height: 164, correctLevel: QRCode.CorrectLevel.M });
   } catch (e) { box.innerHTML = '<span class="ss">QR could not load. Use the UPI ID below.</span>'; }
+  return url;
+}
+function auraUpiChoose(amount) {
+  _auraUpiAmount = amount;
+  var on = { flex: '1', justifyContent: 'center' };
+  var a = document.getElementById('aura-upi-sub'), b = document.getElementById('aura-upi-top');
+  [[a, amount === 4999], [b, amount === 499]].forEach(function (x) { if (!x[0]) return; x[0].style.background = x[1] ? '' : 'transparent'; x[0].style.color = x[1] ? '' : 'var(--text-primary)'; x[0].style.border = x[1] ? '' : '1px solid var(--border)'; });
+  auraShowUpiQr();
+}
+async function auraShowUpiQr() {
+  if (!document.getElementById('aura-upi-qr')) return;
+  var nameEl = document.getElementById('sb-nh-name'), nh = ((nameEl && nameEl.textContent) || '').slice(0, 40);
+  var what = _auraUpiAmount === 499 ? 'ID-scan top-up' : 'subscription';
+  var note = document.getElementById('aura-upi-note');
+  if (note) note.innerHTML = 'Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;' + _auraUpiAmount.toLocaleString('en-IN') + '</b> to AuraScale for the ' + what + '.';
+  var url = await auraDrawUpiQr('aura-upi-qr', _auraUpiAmount, 'AuraScale ' + what + ' - ' + nh);
+  var link = document.getElementById('aura-upi-link'); if (link) link.href = url || auraUpiUrl(_auraUpiAmount, 'AuraScale ' + what);
+  var wa = document.getElementById('aura-upi-wa');
+  if (wa) wa.href = 'https://wa.me/' + AURA_WA + '?text=' + encodeURIComponent('Hi, I have paid Rs ' + _auraUpiAmount + ' by UPI for the AuraScale ' + what + ' of ' + nh + '. Screenshot attached.');
 }
 var _auraInvoices = [];
 async function auraLoadInvoices() {
