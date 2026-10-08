@@ -379,6 +379,9 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <button class="nb" onclick="nav('discharge',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span data-fi="nav_discharge">Discharge</span>
       </button>
+      <button class="nb" onclick="nav('stock',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span><span>Stock</span>
+      </button>
       <p class="nav-sec" style="margin-top:10px;border-top:1px solid var(--sidebar-border);padding-top:14px"></p>
       <button class="nb" onclick="nav('notifications',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span><span data-fi="nav_activity">Activity Log</span>
@@ -658,6 +661,24 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       </div>
 
       <!-- NOTIFICATIONS -->
+      <!-- STOCK -->
+      <div id="v-stock" class="view">
+        <div class="sh"><div><h1 class="st">Stock</h1><p class="ss">Add each supply once. When you add it as a charge to a bed (Bed Management &rarr; Add Charge), the stock goes down by itself.</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="qbtn" onclick="stockOpenNew()" style="background:var(--green);color:#fff;border-color:var(--green);font-weight:700;padding:8px 14px;font-size:12px">+ New item</button>
+          </div>
+        </div>
+        
+        <div class="panel">
+          <div class="ph"><div class="pt">Items in stock</div><span class="ss" id="stock-summary"></span></div>
+          <div id="stock-list" style="padding:6px 0"></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Today&rsquo;s movements</div></div>
+          <div id="stock-moves" style="padding:6px 0"></div>
+        </div>
+      </div>
+
       <div id="v-notifications" class="view">
         <div class="sh"><div><h1 class="st" data-fi="pg_activity">Activity Log</h1><p class="ss" data-fi="pg_activity_s">Recent activity on your account</p></div></div>
         <div class="panel"><div id="notifications-list"></div></div>
@@ -1184,6 +1205,11 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <button class="mclose" onclick="closeModal('mod-expense')">&#10005;</button>
     </div>
     <div class="mb">
+        <div id="exp-stock-wrap" style="display:none;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:10px">
+          <label class="flbl">From stock (optional)</label>
+          <select class="finput" id="exp-stock" onchange="expPickStock()" style="margin-bottom:4px"><option value="">&mdash; Not a stock item &mdash;</option></select>
+          <div id="exp-stock-hint" style="font-size:11px;color:var(--text-secondary)">Pick an item such as an oxygen cylinder; the stock goes down by the quantity you charge.</div>
+        </div>
         <div><label class="flbl">Charge Type</label>
           <select class="finput" id="exp-type">
             <option>Bed Charge</option><option>Doctor Fee</option><option>Injection</option>
@@ -1369,11 +1395,11 @@ async function init(){
   var _subCheck = await _supa.from('clinics').select('subscription_status,subscription_expires_at').eq('id',_clinicId).single();
   if(_subCheck.error) _subCheck = await _supa.from('clinics').select('subscription_status').eq('id',_clinicId).single();
   var _subExp = _subCheck.data && _subCheck.data.subscription_expires_at;
-  if(_subCheck.data && (_subCheck.data.subscription_status==='frozen' || (_subExp && Date.now() > new Date(_subExp).getTime() + 7*86400000))){
+  if(_subCheck.data && (_subCheck.data.subscription_status==='frozen' || (_subExp && Date.now() > new Date(_subExp).getTime() + 5*86400000))){
     document.body.innerHTML = '<div style="position:fixed;inset:0;background:var(--bg,#F7F6F3);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:sans-serif">'
       +'<div style="max-width:420px"><div style="font-size:44px;margin-bottom:16px">🔒</div>'
       +'<h2 style="font-size:19px;font-weight:700;margin-bottom:10px;color:#18170F">Account temporarily locked</h2>'
-      +'<p style="font-size:13.5px;color:#64605A;line-height:1.6;margin-bottom:20px">This nursing home\'s AuraScale subscription renewal is overdue and the 7-day grace period has ended. Please ask the owner to renew the subscription from the owner portal (Subscription page). Access returns automatically once the payment is confirmed. Patient records are safe.</p></div></div>';
+      +'<p style="font-size:13.5px;color:#64605A;line-height:1.6;margin-bottom:20px">This nursing home\'s AuraScale subscription renewal is overdue and the 5-day grace period has ended. Please ask the owner to renew the subscription from the owner portal (Subscription page). Access returns automatically once the payment is confirmed. Patient records are safe.</p></div></div>';
     return;
   }
   _authInfo = g;
@@ -1494,7 +1520,7 @@ function nav(id,btn){
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var t={home:'Home',patients:'Patients',beds:'Bed Management',discharge:'Discharge',billing:'Billing',notifications:'Activity Log',help:'Help & Support',settings:'Profile / Settings'};
+  var t={stock:'Stock',home:'Home',patients:'Patients',beds:'Bed Management',discharge:'Discharge',billing:'Billing',notifications:'Activity Log',help:'Help & Support',settings:'Profile / Settings'};
   document.getElementById('tab-title').textContent=t[id]||id;
   if(id==='home')loadHome();
   if(id==='patients')loadPatients();
@@ -1502,6 +1528,7 @@ function nav(id,btn){
   if(id==='discharge')loadDischarge();
   if(id==='billing')loadBillingPage();
   if(id==='notifications')loadNotifications();
+  if(id==='stock')loadStock();
   if(id==='settings')loadSettingsView();
   if(id==='help'&&typeof renderHelp==='function')renderHelp();
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
@@ -3632,10 +3659,44 @@ function openExpenseModal(){
   if(prevEl)  prevEl.style.display = 'none';
   if(imgEl)   imgEl.style.display  = 'none';
   _expBillFile = null;
+  expLoadStock();
   openModal('mod-expense');
+}
+/* ── STOCK in Add Charge: picking an item fills the charge, and saving it takes the item out of stock ── */
+var _expStock = [];
+async function expLoadStock(){
+  var wrap = document.getElementById('exp-stock-wrap'), sel = document.getElementById('exp-stock'); if(!wrap||!sel) return;
+  sel.value = ''; expStockHint();
+  try {
+    var r = await _supa.from('nh_stock_items').select('id,name,unit,quantity,price,charge_type').eq('clinic_id',_clinicId).eq('is_active',true).order('name');
+    _expStock = r.error ? [] : (r.data||[]);
+  } catch(e){ _expStock = []; }
+  wrap.style.display = _expStock.length ? 'block' : 'none';
+  sel.innerHTML = '<option value="">&mdash; Not a stock item &mdash;</option>' + _expStock.map(function(i){
+    return '<option value="'+i.id+'"'+(Number(i.quantity)<=0?' disabled':'')+'>'+esc(i.name)+' ('+Number(i.quantity).toLocaleString('en-IN')+' '+esc(i.unit)+' left'+(Number(i.price)>0?', \u20B9'+Number(i.price).toLocaleString('en-IN'):'')+')</option>';
+  }).join('');
+}
+function expStockHint(){
+  var h = document.getElementById('exp-stock-hint'), id = (document.getElementById('exp-stock')||{}).value; if(!h) return;
+  var it = _expStock.filter(function(i){ return i.id===id; })[0];
+  if(!it){ h.innerHTML = 'Pick an item such as an oxygen cylinder; the stock goes down by the quantity you charge.'; return; }
+  var q = parseFloat((document.getElementById('exp-qty')||{}).value)||0, left = Number(it.quantity) - q;
+  h.innerHTML = left < 0 ? '<span style="color:var(--red)">Only '+Number(it.quantity).toLocaleString('en-IN')+' '+esc(it.unit)+' in stock.</span>'
+    : 'Stock after this charge: <b>'+left.toLocaleString('en-IN')+' '+esc(it.unit)+'</b>';
+}
+function expPickStock(){
+  var id = document.getElementById('exp-stock').value, it = _expStock.filter(function(i){ return i.id===id; })[0];
+  if(it){
+    var t = document.getElementById('exp-type'); if(t){ var ok=[].some.call(t.options,function(o){return o.value===it.charge_type||o.text===it.charge_type;}); t.value = ok ? it.charge_type : 'Other'; }
+    document.getElementById('exp-desc').value = it.name;
+    if(Number(it.price)>0) document.getElementById('exp-price').value = Number(it.price);
+    calcExp();
+  }
+  expStockHint();
 }
 
 function calcExp(){
+  if(typeof expStockHint==='function') expStockHint();
   var qRaw = (document.getElementById('exp-qty')||{value:''}).value;
   var pRaw = (document.getElementById('exp-price')||{value:''}).value;
   var el = document.getElementById('exp-total');
@@ -3716,15 +3777,18 @@ async function saveExpense(){
       });
     }
   }
-  var r = await _supa.from('admission_charges').insert({
+  var _chRow = {
     clinic_id:_clinicId, admission_id:_bpAdmId,
     charge_type:type, description:desc,
     quantity:qty, unit_price:price, total_price:totalPrice,
     notes:notes, bill_path:billPath,
     charge_date:expDate||new Date().toISOString().slice(0,10),
     added_by:_myUid
-  });
-  if(r.error){ if(errEl){errEl.textContent=r.error.message;errEl.style.display='block';} return; }
+  };
+  var _stkId = (document.getElementById('exp-stock')||{}).value || '';
+  if(_stkId) _chRow.stock_item_id = _stkId;          /* the database takes it out of stock (stock-from-charges.sql) */
+  var r = await _supa.from('admission_charges').insert(_chRow);
+  if(r.error){ if(errEl){ var _m=String(r.error.message||''); errEl.textContent = /not enough stock/i.test(_m) ? _m.replace(/^.*?(Not enough stock)/i,'$1') + '. Add new stock in Stock \u2192 Edit first.' : _m; errEl.style.display='block'; } return; }
   await _supa.from('nh_audit_log').insert({
     clinic_id:_clinicId, actor_id:_myUid, action:'charge_added',
     target_table:'admission_charges', target_id:_bpAdmId,
@@ -4850,6 +4914,144 @@ function waProfileText(d){
   return waStatusText(!!d.whatsapp_consent, d.whatsapp_consent_at, d.whatsapp_consent_status);
 }
 document.addEventListener('change',function(e){ if(e.target&&(e.target.id==='reg-wa-consent'||e.target.id==='adm-wa-consent')) _waTouched=true; });
+</script>
+
+<!-- STOCK: new item / received / use / correct -->
+<div class="mod-ov" id="mod-stock-new">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">New stock item</div><button class="mclose" onclick="closeModal('mod-stock-new')">&#10005;</button></div>
+    <div class="mb">
+      <div><label class="flbl">Item name *</label><input class="finput" id="stk-new-name" maxlength="80" placeholder="e.g. Oxygen cylinder, Syringe 5 ml, Gloves"/></div>
+      <div class="rx-2">
+        <div><label class="flbl">Unit</label><input class="finput" id="stk-new-unit" maxlength="20" placeholder="pcs, cylinders, boxes" value="pcs"/></div>
+        <div><label class="flbl">Quantity in stock now</label><input class="finput" id="stk-new-qty" type="number" min="0" step="1" value="0"/></div>
+      </div>
+      <div class="rx-2">
+        <div><label class="flbl">Price per unit (&#8377;) for the bill</label><input class="finput" id="stk-new-price" type="number" min="0" step="1" placeholder="e.g. 1200"/></div>
+        <div><label class="flbl">Charge type on the bill</label><select class="finput" id="stk-new-cat"><option>Other</option><option>Medicine</option><option>Injection</option><option>Procedure</option><option>Lab Test</option><option>Diagnostic</option><option>Nursing</option><option>Bed Charge</option><option>Doctor Fee</option></select></div>
+      </div>
+      <div><label class="flbl">Warn the owner when it falls to</label><input class="finput" id="stk-new-low" type="number" min="0" step="1" value="0"/></div>
+      <div id="stk-new-err" style="color:var(--red);font-size:12px;display:none"></div>
+      <button class="msub" onclick="stockSaveNew()">Add item</button>
+    </div>
+  </div>
+</div>
+<div class="mod-ov" id="mod-stock-fix">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">Edit stock item</div><button class="mclose" onclick="closeModal('mod-stock-fix')">&#10005;</button></div>
+    <div class="mb">
+      <div class="ss" id="stk-fix-name" style="margin:0;font-weight:700"></div>
+      <div><label class="flbl">New stock received (adds to the count)</label><input class="finput" id="stk-fix-recv" type="number" min="0" step="1" placeholder="e.g. 10"/></div>
+      <div class="rx-2">
+        <div><label class="flbl">Price per unit (&#8377;)</label><input class="finput" id="stk-fix-price" type="number" min="0" step="1"/></div>
+        <div><label class="flbl">Charge type</label><select class="finput" id="stk-fix-cat"><option>Other</option><option>Medicine</option><option>Injection</option><option>Procedure</option><option>Lab Test</option><option>Diagnostic</option><option>Nursing</option><option>Bed Charge</option><option>Doctor Fee</option></select></div>
+      </div>
+      <div class="rx-2">
+        <div><label class="flbl">Correct the count to</label><input class="finput" id="stk-fix-qty" type="number" min="0" step="1"/></div>
+        <div><label class="flbl">Warn when it falls to</label><input class="finput" id="stk-fix-low" type="number" min="0" step="1"/></div>
+      </div>
+      <div><label class="flbl">Reason (needed when correcting the count)</label><input class="finput" id="stk-fix-reason" maxlength="200" placeholder="e.g. physical count, damaged, expired"/></div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:12.5px"><input type="checkbox" id="stk-fix-hide"/> Stop using this item (hide it)</label>
+      <div id="stk-fix-err" style="color:var(--red);font-size:12px;display:none"></div>
+      <button class="msub" onclick="stockSaveFix()">Save</button>
+    </div>
+  </div>
+</div>
+<script>
+/* ===== STOCK ===== (shared by the reception and owner portals) */
+var STOCK_IS_OWNER = false, STOCK_CAN_EDIT = !STOCK_IS_OWNER;
+var _stockItems = [], _stockFixId = null;
+function stockQty(n) { return Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+function stockEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function stockErr(id, msg) { var e = document.getElementById(id); if (!e) return; e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
+function stockMsg(e) {
+  var m = String((e && e.message) || e || '');
+  if (/could not find the function|schema cache|does not exist|PGRST202/i.test(m)) return 'Stock is not set up yet. Run stock.sql in Supabase first.';
+  if (/not enough stock/i.test(m)) return m.replace(/^.*not enough stock/i, 'Not enough stock').replace(/\.00\b/g, '');
+  if (/already exists/i.test(m)) return 'An item with this name already exists.';
+  if (/only the owner/i.test(m)) return 'Only the owner can do this.';
+  if (/not allowed/i.test(m)) return 'Your login is not allowed to change stock.';
+  return m || 'Something went wrong. Please try again.';
+}
+function stockDayStart(d) { var x = d ? new Date(d + 'T00:00:00+05:30') : new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) + 'T00:00:00+05:30'); return x; }
+async function loadStock() {
+  var list = document.getElementById('stock-list'); if (!list || !_clinicId) return;
+  var rd = document.getElementById('stock-rep-date'); if (rd && !rd.value) rd.value = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  var r = await _supa.from('nh_stock_items').select('*').eq('clinic_id', _clinicId).order('name');
+  if (r.error) { list.innerHTML = '<p class="ss" style="padding:12px 16px">' + stockEsc(stockMsg(r.error)) + '</p>'; return; }
+  _stockItems = r.data || [];
+  var active = _stockItems.filter(function (i) { return i.is_active; });
+  var low = active.filter(function (i) { return Number(i.quantity) <= Number(i.low_level); });
+  document.getElementById('stock-summary').textContent = active.length + ' items' + (low.length ? ' · ' + low.length + ' low' : '');
+  list.innerHTML = active.length ? active.map(function (i) {
+    var isLow = Number(i.quantity) <= Number(i.low_level), zero = Number(i.quantity) <= 0;
+    return '<div class="adm-row" style="align-items:center"><div class="adm-av" style="background:' + (isLow ? 'var(--red-bg)' : 'var(--green-bg)') + ';color:' + (isLow ? 'var(--red)' : 'var(--green)') + ';font-weight:700;font-size:11px">' + stockEsc(stockQty(i.quantity)) + '</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">' + stockEsc(i.name) + '</div><div class="adm-meta">' + stockEsc(stockQty(i.quantity) + ' ' + i.unit + ' left') + (Number(i.price) > 0 ? ' \u00b7 \u20B9' + stockEsc(stockQty(i.price)) + ' each' : '') + (Number(i.low_level) > 0 ? ' · warn at ' + stockEsc(stockQty(i.low_level)) : '') + '</div></div>'
+      + (isLow ? '<span style="font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--red-bg);color:var(--red);white-space:nowrap">' + (zero ? 'OUT OF STOCK' : 'LOW') + '</span>' : '')
+      + (STOCK_CAN_EDIT ? '<button class="qbtn" onclick="stockOpenFix(\'' + i.id + '\')">Edit</button>' : '') + '</div>';
+  }).join('') : '<div class="empty" style="padding:20px"><p class="empty-t">No items yet</p>' + (STOCK_CAN_EDIT ? '<p class="ss">Tap <b>+ New item</b> to add oxygen cylinders, syringes and other supplies.</p>' : '<p class="ss">Reception adds the items. They will appear here.</p>') + '</div>';
+  var m = await _supa.from('nh_stock_moves').select('*').eq('clinic_id', _clinicId).gte('created_at', stockDayStart().toISOString()).order('created_at', { ascending: false }).limit(200);
+  var mv = document.getElementById('stock-moves');
+  var rows = (m.data || []);
+  mv.innerHTML = rows.length ? rows.map(stockMoveRow).join('') : '<div class="empty" style="padding:18px"><p class="empty-t">No stock movements today</p></div>';
+}
+function stockMoveRow(x) {
+  var used = x.kind === 'used', add = x.kind === 'received' || x.kind === 'opening';
+  var what = used ? 'Used' : add ? (x.kind === 'opening' ? 'Opening stock' : 'Received') : x.kind === 'returned' ? 'Returned (charge removed)' : 'Corrected';
+  var ch = Number(x.change), sign = ch > 0 ? '+' : '';
+  var forTxt = x.bed_label || x.patient_name ? ' · ' + [x.bed_label, x.patient_name].filter(Boolean).join(' · ') : (used ? ' · general use' : '');
+  return '<div class="adm-row"><div class="adm-av" style="background:' + (used ? 'var(--amber-bg)' : 'var(--green-bg)') + ';color:' + (used ? 'var(--amber)' : 'var(--green)') + ';font-weight:700;font-size:11px">' + sign + stockEsc(stockQty(ch)) + '</div>'
+    + '<div style="flex:1;min-width:0"><div class="adm-name">' + stockEsc(what + ': ' + x.item_name) + stockEsc(forTxt) + '</div>'
+    + '<div class="adm-meta">' + stockEsc(stockQty(x.balance_after) + ' ' + x.unit + ' left · ' + new Date(x.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + (x.created_by_name ? ' · by ' + x.created_by_name : '') + (x.note ? ' · ' + x.note : '')) + '</div></div></div>';
+}
+function stockFillItems(selId, chosen) {
+  var s = document.getElementById(selId); if (!s) return;
+  var act = _stockItems.filter(function (i) { return i.is_active; });
+  s.innerHTML = act.length ? act.map(function (i) { return '<option value="' + i.id + '"' + (i.id === chosen ? ' selected' : '') + '>' + stockEsc(i.name + ' (' + stockQty(i.quantity) + ' ' + i.unit + ' left)') + '</option>'; }).join('') : '<option value="">Add an item first</option>';
+}
+async function stockEnsureItems() { if (!_stockItems.length) await loadStock(); }
+function stockOpenNew() { ['stk-new-name'].forEach(function (id) { document.getElementById(id).value = ''; }); document.getElementById('stk-new-unit').value = 'pcs'; document.getElementById('stk-new-qty').value = '0'; document.getElementById('stk-new-low').value = '0'; document.getElementById('stk-new-price').value = ''; document.getElementById('stk-new-cat').value = 'Other'; stockErr('stk-new-err'); openModal('mod-stock-new'); }
+async function stockSaveNew() {
+  var name = document.getElementById('stk-new-name').value.trim(), unit = document.getElementById('stk-new-unit').value.trim() || 'pcs';
+  var qty = Number(document.getElementById('stk-new-qty').value || 0), low = Number(document.getElementById('stk-new-low').value || 0);
+  if (!name) return stockErr('stk-new-err', 'Please enter the item name.');
+  if (qty < 0 || low < 0) return stockErr('stk-new-err', 'Quantities cannot be negative.');
+  var price = Number(document.getElementById('stk-new-price').value || 0), cat = document.getElementById('stk-new-cat').value || 'Other';
+  if (price < 0) return stockErr('stk-new-err', 'Price cannot be negative.');
+  var r = await _supa.rpc('stock_add_item', { p_clinic_id: _clinicId, p_name: name, p_unit: unit, p_low_level: low, p_opening: qty, p_price: price, p_charge_type: cat });
+  if (r.error) return stockErr('stk-new-err', stockMsg(r.error));
+  closeModal('mod-stock-new'); if (typeof showToast === 'function') showToast('✓ ' + name + ' added'); loadStock();
+}
+function stockOpenFix(id) {
+  var it = _stockItems.filter(function (i) { return i.id === id; })[0]; if (!it) return; _stockFixId = id;
+  document.getElementById('stk-fix-name').textContent = it.name + ' \u00b7 ' + stockQty(it.quantity) + ' ' + it.unit + ' in stock now';
+  document.getElementById('stk-fix-recv').value = '';
+  document.getElementById('stk-fix-qty').value = Number(it.quantity); document.getElementById('stk-fix-low').value = Number(it.low_level);
+  document.getElementById('stk-fix-price').value = Number(it.price || 0); document.getElementById('stk-fix-cat').value = it.charge_type || 'Other';
+  document.getElementById('stk-fix-reason').value = ''; document.getElementById('stk-fix-hide').checked = false; stockErr('stk-fix-err'); openModal('mod-stock-fix');
+}
+async function stockSaveFix() {
+  var it = _stockItems.filter(function (i) { return i.id === _stockFixId; })[0]; if (!it) return;
+  var recv = Number(document.getElementById('stk-fix-recv').value || 0), qty = Number(document.getElementById('stk-fix-qty').value), low = Number(document.getElementById('stk-fix-low').value || 0);
+  var price = Number(document.getElementById('stk-fix-price').value || 0), cat = document.getElementById('stk-fix-cat').value || 'Other';
+  var reason = document.getElementById('stk-fix-reason').value.trim(), hide = document.getElementById('stk-fix-hide').checked;
+  if (recv < 0 || !(qty >= 0) || low < 0 || price < 0) return stockErr('stk-fix-err', 'Numbers cannot be negative.');
+  if (recv > 0 && qty !== Number(it.quantity)) return stockErr('stk-fix-err', 'Either add new stock received, or correct the count, not both at once.');
+  if (qty !== Number(it.quantity)) {
+    if (reason.length < 3) return stockErr('stk-fix-err', 'Please give a reason for correcting the count.');
+    var r = await _supa.rpc('stock_correct', { p_item_id: it.id, p_new_qty: qty, p_reason: reason });
+    if (r.error) return stockErr('stk-fix-err', stockMsg(r.error));
+  }
+  if (recv > 0) {
+    var rv = await _supa.rpc('stock_receive', { p_item_id: it.id, p_qty: recv, p_note: reason || null });
+    if (rv.error) return stockErr('stk-fix-err', stockMsg(rv.error));
+  }
+  if (low !== Number(it.low_level) || hide || price !== Number(it.price || 0) || cat !== (it.charge_type || 'Other')) {
+    var st = await _supa.rpc('stock_set_item', { p_item_id: it.id, p_name: null, p_unit: null, p_low_level: low, p_active: hide ? false : null, p_price: price, p_charge_type: cat });
+    if (st.error) return stockErr('stk-fix-err', stockMsg(st.error));
+  }
+  closeModal('mod-stock-fix'); if (typeof showToast === 'function') showToast('\u2713 Saved'); loadStock();
+}
 </script>
 </body>
 </html>
