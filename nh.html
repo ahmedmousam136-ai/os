@@ -63,6 +63,8 @@ html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;font-size:14px;line-height:1.55;-webkit-tap-highlight-color:transparent}
 button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;outline:none}
 input,textarea,select{font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;appearance:none}
+.aura-plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:700px){.aura-plans-grid{grid-template-columns:1fr}}
 /* Owner Help & Support */
 .hp-chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 16px}
 .hp-chip{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text-primary);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
@@ -493,6 +495,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="sb-fac-name" id="sb-nh-name">Loading...</div>
         <div class="sb-fac-type">🏥 Private Nursing Home</div>
         <div class="sb-online"><span class="dot"></span><span id="sb-occupancy">Loading...</span></div>
+        <div id="sb-days-left" style="display:none;font-size:11.5px;font-weight:700;margin-top:6px"></div>
       </div>
     </div>
     <nav class="sb-nav">
@@ -603,6 +606,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <span class="bc-page" id="tab-title">Dashboard</span>
       </div>
       <div class="hdr-r">
+        <a id="aura-days-pill" href="#" onclick="nav('subscription',document.querySelector('.nb[onclick*=&quot;nav(\'subscription\'&quot;]'));return false;" style="display:none;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;border:1px solid transparent"></a>
         <select id="lang-switcher" onchange="setLanguage(this.value)" style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--surface);color:var(--text-primary);font-size:12px;font-weight:600;cursor:pointer">
           <option value="en">🌐 English</option>
           <option value="bn">🌐 বাংলা</option>
@@ -1110,7 +1114,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           <div style="flex:1;min-width:200px"><div id="own-help-wa-t" style="font-size:14px;font-weight:700;color:var(--text-primary)">Talk to AuraScale support</div>
             <div id="own-help-wa-s" style="font-size:12.5px;color:var(--text-secondary);margin-top:2px">WhatsApp or email us, Monday to Saturday, 10 AM to 7 PM.</div>
             <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px"><span id="own-help-mail-l">Email</span>: <a href="mailto:ceo@aurascale.in" style="color:inherit">ceo@aurascale.in</a></div></div>
-          <a id="own-help-wa-btn" class="add-btn" style="background:#25D366;text-decoration:none" target="_blank" rel="noopener" href="#" onclick="this.href='https://wa.me/'+(typeof AURA_WA!=='undefined'?AURA_WA:'919330660325')+'?text='+encodeURIComponent('Hi AuraScale, I need help with '+((document.getElementById('sb-nh-name')||{}).textContent||'my nursing home'))">WhatsApp us</a>
+          <a id="own-help-wa-btn" class="add-btn" style="background:#25D366;text-decoration:none" target="_blank" rel="noopener" href="#" onclick="this.href='https://wa.me/'+(typeof AURA_WA!=='undefined'?AURA_WA:'918017465987')+'?text='+encodeURIComponent('Hi AuraScale, I need help with '+((document.getElementById('sb-nh-name')||{}).textContent||'my nursing home'))">WhatsApp us</a>
         </div>
       </div>
 
@@ -1130,6 +1134,11 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               <span id="sub-status-badge" style="font-weight:700;font-size:12px;padding:4px 10px;border-radius:999px">&mdash;</span>
             </div>
             <p class="ss" id="sub-status-note" style="margin:0">Checking subscription status&hellip;</p>
+            <div id="aura-days-box" style="display:none;border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+              <div style="display:flex;align-items:baseline;justify-content:center;gap:8px"><span id="aura-days-num" style="font-size:44px;font-weight:800;line-height:1">&mdash;</span><span id="aura-days-word" style="font-size:15px;font-weight:700">days left</span></div>
+              <div style="height:8px;border-radius:999px;background:var(--surface2,#EEE);margin:12px 0 8px;overflow:hidden"><div id="aura-days-bar" style="height:100%;width:0;border-radius:999px;transition:width .4s"></div></div>
+              <div id="aura-days-sub" class="ss" style="margin:0"></div>
+            </div>
             <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--border);padding-top:12px">
               <span class="ss">Monthly plan</span>
               <span style="font-weight:700;font-size:15px" id="aura-plan-price">&#8377;<span class="aura-price">4,999</span> <span class="ss" style="font-weight:500;font-size:11.5px">incl. GST</span></span>
@@ -1146,6 +1155,11 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             <p class="ss" style="margin:0;text-align:center">AuraScale confirms your payment within one working day. Subscription: your renewal date moves forward one month and access is restored if it was paused. Top-up: 100 scans are added. Your tax invoice appears below.</p>
             </div>
           </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph"><div class="pt">Plans</div><span class="ss">All prices include GST</span></div>
+          <div id="aura-plans" class="aura-plans-grid" style="padding:16px;display:grid;gap:12px"></div>
         </div>
 
         <div class="panel">
@@ -1855,6 +1869,7 @@ async function loadSubscriptionStatus(){
   if(!badge||!_clinicId)return;
   var r=await _supa.from('clinics').select('*').eq('id',_clinicId).single();
   if(r.data&&typeof auraApplyPlan==='function') auraApplyPlan(r.data);
+  if(typeof renderAuraPlans==='function') renderAuraPlans();
   var payArea=document.getElementById('aura-pay-area');
   if(payArea) payArea.style.display=window._auraComplimentary?'none':'flex';
   if(window._auraComplimentary){
@@ -1888,6 +1903,8 @@ async function loadSubscriptionStatus(){
     badge.style.background='var(--green-bg)';badge.style.color='var(--green)';
     note.textContent='Your AuraScale subscription is active. Your renewal date will appear here after your first payment.';
   }
+  if(r.data){ window._auraSubscription={status:r.data.subscription_status,expiresAt:r.data.subscription_expires_at||null,complimentary:window._auraComplimentary}; }
+  try{ auraRenderDaysLeft(); }catch(_e){}
   loadUsageStats();
   if (typeof auraLoadInvoices === 'function') { auraLoadInvoices(); auraShowUpiQr(); }
 }
@@ -1918,7 +1935,43 @@ async function loadUsageStats(){
 
 /* Shows a persistent top banner if the subscription is in its 7-day grace period —
    visible everywhere in the app, not just the Subscription page, like a Netflix warning. */
+/* ── DAYS LEFT: shown on every page (header + sidebar) and big on the Subscription page ── */
+function auraDaysInfo(){
+  var sub=window._auraSubscription||{};
+  if(window._auraComplimentary||sub.complimentary||!sub.expiresAt) return null;
+  var exp=new Date(sub.expiresAt), ms=exp.getTime()-Date.now();
+  var days=Math.ceil(ms/86400000);
+  var grace=typeof AURA_GRACE_DAYS!=='undefined'?AURA_GRACE_DAYS:5;
+  var info={exp:exp,days:days,lockIn:days<0?Math.max(grace+days,0):null};
+  if(days>7) info.tone='ok'; else if(days>=0) info.tone='soon'; else if(info.lockIn>0) info.tone='grace'; else info.tone='locked';
+  return info;
+}
+function auraRenderDaysLeft(){
+  var i=auraDaysInfo();
+  var pill=document.getElementById('aura-days-pill'), sb=document.getElementById('sb-days-left'), box=document.getElementById('aura-days-box');
+  if(!i){ if(pill)pill.style.display='none'; if(sb)sb.style.display='none'; if(box)box.style.display='none'; return; }
+  var C={ok:['var(--green-bg)','var(--green)','var(--green-border)'],soon:['#FFF3CD','#8A6D00','#F1D98A'],grace:['var(--red-bg)','var(--red)','var(--red-border)'],locked:['var(--red-bg)','var(--red)','var(--red-border)']}[i.tone];
+  var dateTxt=i.exp.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  var short, long;
+  if(i.days>1){ short=i.days+' days left'; long=i.days+' days left \u00b7 renews '+dateTxt; }
+  else if(i.days===1){ short='1 day left'; long='1 day left \u00b7 renews '+dateTxt; }
+  else if(i.days===0){ short='Renews today'; long='Renewal due today'; }
+  else if(i.lockIn>0){ short='Pay now \u00b7 '+i.lockIn+'d to lock'; long='Overdue \u00b7 locks in '+i.lockIn+' day'+(i.lockIn===1?'':'s'); }
+  else { short='Locked \u00b7 pay now'; long='Locked \u00b7 pay to continue'; }
+  if(pill){ pill.textContent='\uD83D\uDCC5 '+short; pill.style.display='inline-flex'; pill.style.background=C[0]; pill.style.color=C[1]; pill.style.borderColor=C[2]; pill.title=long; }
+  if(sb){ sb.textContent='\uD83D\uDCC5 '+long; sb.style.display='block'; sb.style.color=C[1]; }
+  if(box){
+    box.style.display='block'; box.style.borderColor=C[2]; box.style.background=C[0];
+    var n=document.getElementById('aura-days-num'), w=document.getElementById('aura-days-word'), bar=document.getElementById('aura-days-bar'), sub=document.getElementById('aura-days-sub');
+    if(i.days>=0){ n.textContent=i.days; w.textContent=i.days===1?'day left':'days left'; sub.textContent='Your subscription renews on '+dateTxt+'. Pay before this date to continue without a break.'; }
+    else if(i.lockIn>0){ n.textContent=i.lockIn; w.textContent=(i.lockIn===1?'day':'days')+' until the account is locked'; sub.textContent='The renewal was due on '+dateTxt+'. Please pay now.'; }
+    else { n.textContent='0'; w.textContent='days left'; sub.textContent='The account is locked. Pay below to open it again.'; }
+    n.style.color=C[1]; w.style.color=C[1];
+    bar.style.background=C[1]; bar.style.width=Math.max(4,Math.min(100,Math.round((Math.max(i.days,0)/30)*100)))+'%';
+  }
+}
 function renderSubscriptionBanner(){
+  try{ auraRenderDaysLeft(); }catch(_e){}
   var existing=document.getElementById('sub-grace-banner');
   if(existing)existing.remove();
   var sub=window._auraSubscription;
@@ -2002,8 +2055,14 @@ async function handleInviteSignup(){
   var originalLabel=btn.textContent;
   btn.textContent='Joining…';
 
+  window._auraSigningUp=true;
   try{
-    var r=await _supa.auth.signUp({email,password:pass});
+    var r=await _supa.auth.signUp({email,password:pass,options:{
+      data:{aura_pending_invite:{code:code,full_name:name}},
+      emailRedirectTo:location.origin+location.pathname
+    }});
+    /* Email confirmation is ON: the invite is used when they confirm and sign in for the first time. */
+    if(!r.error&&r.data&&r.data.user&&!r.data.session){ _auraCheckEmailScreen(email,true); return; }
     if(r.error){
       /* Same identity may already exist (e.g. this email already has a
          Clinic OS account, or another Nursing Home role) — that is allowed;
@@ -2037,9 +2096,12 @@ async function handleInviteSignup(){
       err.style.display='block';
       return;
     }
+    try{ await _supa.auth.updateUser({data:{aura_pending_invite:null}}); }catch(_e){}
     showToast('Welcome — your '+redeem.data.role+' account is ready.');
+    window._auraSigningUp=false;
     await _initApp();
   }finally{
+    window._auraSigningUp=false;
     btn.disabled=false;
     btn.textContent=originalLabel;
   }
@@ -2193,8 +2255,39 @@ async function handleSignup(){
     if(suBtn&&document.body.contains(suBtn)){suBtn.disabled=false;suBtn.textContent=suBtnLabel;}
   }
 }
+/* Creates the nursing home, owner membership and owner staff record for a signed-in user. */
+async function _auraCreateFacility(uid,nhname,name,mobile){
+  var ins=await _supa.from('clinics').insert({
+    owner_id:uid, name:nhname, doctor_name:name, phone:mobile,
+    facility_type:'nursing_home', is_approved:false, plan:'pending'
+  }).select().single();
+  if(ins.error||!ins.data){
+    var m=ins.error?ins.error.message:'unknown error';
+    return {error: m.indexOf('MOBILE_TAKEN')>-1 ? 'This mobile number is already registered with another nursing home. Please register again with a different number.' : 'Could not create nursing home record: '+m};
+  }
+  await _supa.from('facility_members').upsert({user_id:uid,clinic_id:ins.data.id,role:'owner'});
+  await _supa.from('nh_staff').upsert({id:uid,clinic_id:ins.data.id,role:'owner',full_name:name});
+  return {id:ins.data.id};
+}
+function _auraCheckEmailScreen(email,isStaff){
+  document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">&#128231;</div>'
+    +'<h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Confirm your email</h2>'
+    +'<p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">We have sent a confirmation link to<br><b>'+esc(email)+'</b></p>'
+    +'<p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Open the email and tap <b>Confirm</b>. '+(isStaff?'You join your nursing home as soon as you confirm.':'Your nursing home is registered as soon as you confirm, and AuraScale then activates it within 24 hours.')+'<br><br>Not in your inbox? Check Spam or Promotions. If you already have an AuraScale account with this email, just sign in.</p>'
+    +'<a href="'+location.pathname+'" style="display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">Back to Sign In</a></div></div>';
+}
 async function _handleSignupCreate(nhname,name,email,mobile,pass,err){
-  var r=await _supa.auth.signUp({email,password:pass});
+  window._auraSigningUp=true;
+  try{ return await _handleSignupCreate2(nhname,name,email,mobile,pass,err); }
+  finally{ window._auraSigningUp=false; }
+}
+async function _handleSignupCreate2(nhname,name,email,mobile,pass,err){
+  var r=await _supa.auth.signUp({email,password:pass,options:{
+    data:{aura_pending_nh:{nh_name:nhname,owner_name:name,mobile:mobile}},
+    emailRedirectTo:location.origin+location.pathname
+  }});
+  /* Email confirmation is ON: no login yet. The facility is created when they confirm and sign in. */
+  if(!r.error&&r.data&&r.data.user&&!r.data.session){ _auraCheckEmailScreen(email); return; }
   if(r.error){
     /* Same email may already have an account under Clinic OS (or a
        previous NH signup) — that's allowed as long as it's a
@@ -2216,26 +2309,15 @@ async function _handleSignupCreate(nhname,name,email,mobile,pass,err){
     }
   }
   if(r.data&&r.data.user){
-    var ins=await _supa.from('clinics').insert({
-      owner_id:r.data.user.id,
-      name:nhname,
-      doctor_name:name,
-      phone:mobile,
-      facility_type:'nursing_home',
-      is_approved:false,
-      plan:'pending'
-    }).select().single();
-    if(ins.error||!ins.data){
-      var insMsg=ins.error?ins.error.message:'unknown error';
-      if(insMsg.indexOf('MOBILE_TAKEN')>-1){ try{await _supa.auth.signOut();}catch(_e){} }
-      err.textContent=insMsg.indexOf('MOBILE_TAKEN')>-1?'This mobile number is already registered with another nursing home. Please use a different number.':'Could not create nursing home record: '+insMsg;
-      err.style.display='block';
+    var made=await _auraCreateFacility(r.data.user.id,nhname,name,mobile);
+    if(made.error){
+      if(made.error.indexOf('mobile number')>-1){ try{await _supa.auth.signOut();}catch(_e){} }
+      err.textContent=made.error; err.style.display='block';
       return;
     }
-    await _supa.from('facility_members').upsert({user_id:r.data.user.id,clinic_id:ins.data.id,role:'owner'});
-    await _supa.from('nh_staff').upsert({id:r.data.user.id,clinic_id:ins.data.id,role:'owner',full_name:name});
+    try{ await _supa.auth.updateUser({data:{aura_pending_nh:null}}); }catch(_e){}
   }
-  document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Registration Submitted</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your nursing home account is under review.<br>We will activate it within 24 hours.<br><br>WhatsApp us to expedite activation.</p><a href="https://wa.me/919330660325?text=Hi, I registered '+nhname+' on AuraScale NH. Please activate." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us to Activate</a></div></div>';
+  document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Registration Submitted</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your nursing home account is under review.<br>We will activate it within 24 hours.<br><br>WhatsApp us to expedite activation.</p><a href="https://wa.me/918017465987?text=Hi, I registered '+nhname+' on AuraScale NH. Please activate." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us to Activate</a></div></div>';
 }
 
 /* ── CHANGE PASSWORD (requires current password) ──
@@ -2410,6 +2492,29 @@ async function _initApp(){
         await _supa.from('nh_staff').upsert({id:uid,clinic_id:clinicId,role:'owner'});
       }
     }
+    /* Email confirmation: the owner registered, confirmed the email, and is now signing in for the
+       first time. The facility details were saved with the login at sign-up; create the facility now. */
+    var _pinv=(userRes.data.user.user_metadata||{}).aura_pending_invite;
+    if(!clinicId&&_pinv&&_pinv.code&&!window._auraSigningUp){
+      var _red=await _supa.rpc('nh_redeem_invite',{p_code:_pinv.code,p_full_name:_pinv.full_name||''});
+      try{ await _supa.auth.updateUser({data:{aura_pending_invite:null}}); }catch(_e){}
+      if(_red.error||!_red.data||!_red.data.ok){
+        await _supa.auth.signOut();
+        failAndReturnToLogin((_red.data&&_red.data.error)||'This invite code could not be used. Ask the owner for a new invite.');
+        return;
+      }
+      var _sr=await _supa.from('nh_staff').select('clinic_id,role').eq('id',uid).single();
+      if(_sr.data&&_sr.data.clinic_id){ clinicId=_sr.data.clinic_id; _myRole=_sr.data.role||'receptionist'; }
+    }
+    if(!clinicId){
+      var _pend=(userRes.data.user.user_metadata||{}).aura_pending_nh;
+      if(_pend&&_pend.nh_name&&!window._auraSigningUp){
+        var made=await _auraCreateFacility(uid,_pend.nh_name,_pend.owner_name||'',_pend.mobile||'');
+        if(made.error){ await _supa.auth.signOut(); failAndReturnToLogin(made.error); return; }
+        clinicId=made.id; _myRole='owner';
+        try{ await _supa.auth.updateUser({data:{aura_pending_nh:null}}); }catch(_e){}
+      }
+    }
     if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
     document.body.setAttribute('data-role',_myRole);
 
@@ -2418,7 +2523,7 @@ async function _initApp(){
     if(!cl.data.is_approved){
       document.getElementById('app-shell').classList.remove('authenticated');
       document.getElementById('auth-screen').classList.remove('hidden');
-      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/919330660325?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a></div></div>';
+      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/918017465987?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a></div></div>';
       return;
     }
     /* Subscription lock — this is the owner's own portal, so no role exemption applies here
@@ -5334,9 +5439,40 @@ var AURA_CASHFREE_ON = false;
   if (AURA_CASHFREE_ON) return;
   ['pay-sub-btn', 'pay-topup-btn'].forEach(function (id) { var b = document.getElementById(id); if (b) b.style.display = 'none'; });
 })();
-var AURA_WA = '919330660325', _auraUpiAmount = 4999;
+var AURA_WA = '918017465987', _auraUpiAmount = 4999;
 /* This nursing home's own monthly price (clinics.monthly_price, set by AuraScale admin) and Complimentary flag */
 var AURA_SUB_PRICE = 4999; window._auraComplimentary = false;
+/* ── PLANS shown on the Subscription page. To add a plan later (e.g. Growth, Pro), add one more entry here.
+   price: null = "talk to us" card. The owner's CURRENT plan uses this nursing home's own price (set in Admin). */
+var AURA_PLANS = [
+  { id: 'standard', name: 'Standard', price: 4999, current: true,
+    features: ['Unlimited patients, beds and staff logins', 'Registration with ID-card scan (300 scans a month)', 'Bed map, charges, bills and payments', 'Stock reduced automatically from bed charges', 'WhatsApp updates to patients (up to 1,000 a month)', 'Daily 8 PM report to the owner on WhatsApp', 'Activity audit of every staff action', 'English, Bengali and Hindi', 'Support Monday to Saturday, 10 AM to 7 PM'] },
+  { id: 'growth', name: 'Growth', price: null, soon: true,
+    features: ['For growing nursing homes', 'Higher monthly limits', 'Price and full details coming soon'] },
+  { id: 'pro', name: 'Pro', price: null, soon: true,
+    features: ['For large nursing homes and hospitals', 'Highest limits and extra features', 'Price and full details coming soon'] },
+  { id: 'custom', name: 'Custom', price: null,
+    features: ['For large or multi-branch nursing homes', 'More ID scans and WhatsApp messages', 'Help moving old records into AuraScale', 'Priority support'] }
+];
+function renderAuraPlans() {
+  var box = document.getElementById('aura-plans'); if (!box) return;
+  box.innerHTML = AURA_PLANS.map(function (pl) {
+    var cur = pl.current, price;
+    if (cur && window._auraComplimentary) price = '<span style="font-size:22px;font-weight:800">Free</span> <span class="ss">complimentary</span>';
+    else if (pl.soon) price = '<span style="font-size:18px;font-weight:800;color:var(--text-tertiary)">Coming soon</span>';
+    else if (pl.price == null) price = '<span style="font-size:18px;font-weight:800">Talk to us</span>';
+    else price = '<span style="font-size:22px;font-weight:800">&#8377;' + (cur ? AURA_SUB_PRICE : pl.price).toLocaleString('en-IN') + '</span> <span class="ss">/ month</span>';
+    var wa = 'https://wa.me/' + (typeof AURA_WA !== 'undefined' ? AURA_WA : '918017465987') + '?text=' + encodeURIComponent('Hi AuraScale, I would like to know about the ' + pl.name + ' plan for ' + (((document.getElementById('sb-nh-name') || {}).textContent) || 'my nursing home') + '.');
+    return '<div style="border:' + (cur ? '2px solid var(--green)' : (pl.soon ? '1px dashed var(--border)' : '1px solid var(--border)')) + ';border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--surface)' + (pl.soon ? ';opacity:.8' : '') + '">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:15px;font-weight:800">' + esc(pl.name) + '</span>'
+      + (cur ? '<span style="font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--green-bg);color:var(--green)">YOUR PLAN</span>' : '')
+      + (pl.soon ? '<span style="font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)">IN DEVELOPMENT</span>' : '') + '</div>'
+      + '<div>' + price + '</div>'
+      + '<ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.75;color:var(--text-secondary)">' + pl.features.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>'
+      + (cur || pl.soon ? '' : '<a class="add-btn" style="justify-content:center;text-decoration:none;background:transparent;border:1px solid var(--border);color:var(--text-primary);margin-top:auto" target="_blank" rel="noopener" href="' + wa + '">Ask about this plan</a>')
+      + '</div>';
+  }).join('');
+}
 function auraApplyPlan(row) {
   if (!row) return;
   var p = Number(row.monthly_price); if (p > 0) AURA_SUB_PRICE = p;
