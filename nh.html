@@ -2426,6 +2426,15 @@ async function handleLogout(){
   location.reload();
 }
 
+function _auraLoadFailedScreen(msg){
+  var o=document.getElementById('aura-loadfail'); if(o) o.remove();
+  o=document.createElement('div'); o.id='aura-loadfail';
+  o.style.cssText='position:fixed;inset:0;z-index:99991;background:var(--bg,#F7F6F3);display:flex;align-items:center;justify-content:center;padding:24px;font-family:sans-serif';
+  o.innerHTML='<div style="max-width:380px;text-align:center"><div style="font-size:34px;margin-bottom:10px">&#128246;</div><h2 style="font-size:17px;margin-bottom:8px">Could not load your dashboard</h2>'
+    +'<p style="font-size:13px;color:#64605A;line-height:1.6;margin-bottom:16px">You are still signed in. Please check the internet connection and try again.<br><span style="font-size:11.5px;opacity:.8">'+esc(msg)+'</span></p>'
+    +'<button onclick="document.getElementById(\'aura-loadfail\').remove();_initApp();" style="background:#0E9F6E;color:#fff;border:0;border-radius:8px;padding:11px 22px;font-weight:700;font-size:13px;cursor:pointer">Try again</button></div>';
+  document.body.appendChild(o);
+}
 /* ── INIT ── */
 /* AURASCALE_NH_BUILD: init-watchdog-v3-noconcurrency */
 async function _initApp(){
@@ -2551,13 +2560,18 @@ async function _initApp(){
     if(_myRole==='receptionist'){ window.location.href='receptionist.html'; return; }
     if(auraIsLocked(cl.data.subscription_status, cl.data.subscription_expires_at)){ auraEnterLockMode(); return; }
     if(typeof auraCheckAgreement==='function') auraCheckAgreement(cl.data.name);
+    _auraAppReady=true;
     loadDashboard();
     renderSubscriptionBanner();
   }catch(e){
     console.error('_initApp failed:',e);
-    failAndReturnToLogin(e.message||'Something went wrong loading your dashboard. Please try again.');
+    /* A slow or broken connection is not a sign-out: keep the login and offer a retry. */
+    var _still=null; try{ _still=(await _supa.auth.getSession()).data.session; }catch(_e){}
+    if(_still){ _auraLoadFailedScreen(e.message||'Could not load your dashboard.'); }
+    else failAndReturnToLogin(e.message||'Something went wrong loading your dashboard. Please try again.');
   }finally{
     _initInProgress=false;
+    _auraShowRestoring(false);
   }
 }
 
@@ -4705,9 +4719,39 @@ function sendInviteWhatsAppManual(){
   window.open('https://wa.me/91'+_lastInvitePhone+'?text='+encodeURIComponent(_inviteMessageText()),'_blank');
 }
 
-/* ── SESSION RESTORE ── */
+/* ── SESSION RESTORE ──
+   Refreshing the page must never log anyone out. While the saved login is being restored we show
+   "Restoring your session…" instead of the sign-in form. The app is loaded once; the hourly token refresh
+   (TOKEN_REFRESHED) no longer reloads the whole dashboard. Only a real sign-out shows the sign-in form. */
+var _auraAppReady=false;
+function _auraShowRestoring(on){
+  var o=document.getElementById('aura-restoring');
+  if(on&&!o){
+    o=document.createElement('div'); o.id='aura-restoring';
+    o.style.cssText='position:fixed;inset:0;z-index:99990;background:var(--bg,#F7F6F3);display:flex;align-items:center;justify-content:center;font:600 14px sans-serif;color:var(--text-secondary,#64605A)';
+    o.innerHTML='<div style="text-align:center"><div style="font-size:30px;margin-bottom:10px">&#8987;</div>Restoring your session&hellip;</div>';
+    document.body.appendChild(o);
+  } else if(!on&&o){ o.remove(); }
+}
+(function(){
+  var hasSaved=false;
+  try{ for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(/^sb-.*-auth-token$/.test(k)&&localStorage.getItem(k)){ hasSaved=true; break; } } }catch(_e){}
+  if(hasSaved){
+    _auraShowRestoring(true);
+    setTimeout(async function(){                 /* safety net: if nothing happened in 12 s, ask once more */
+      if(_auraAppReady||!document.getElementById('aura-restoring')) return;
+      try{ var r=await _supa.auth.getSession(); if(r.data&&r.data.session){ await _initApp(); return; } }catch(_e){}
+      _auraShowRestoring(false);
+    },12000);
+  }
+})();
 _supa.auth.onAuthStateChange(async function(event,session){
-  if(session&&session.user){await _initApp();}
+  if(event==='SIGNED_OUT'){ _auraAppReady=false; _auraShowRestoring(false); return; }
+  if(session&&session.user){
+    if(_auraAppReady && event!=='SIGNED_IN') return;   /* token refresh / profile update: keep the current screen */
+    if(_auraAppReady && event==='SIGNED_IN') return;    /* same login re-announced (e.g. when the tab regains focus) */
+    await _initApp();
+  } else if(event==='INITIAL_SESSION'){ _auraShowRestoring(false); }
 });
 
 /* ══════════════════════════════════════════════
