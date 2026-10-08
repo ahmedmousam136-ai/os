@@ -1070,7 +1070,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="sh"><div><h1 class="st">Subscription</h1><p class="ss">Your AuraScale account status &amp; billing</p></div></div>
 
         <div id="aura-lock-notice" style="display:none;background:#FDECEC;border:1px solid #F3B9B9;color:#9B1C1C;border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.55">
-          <b>&#128274; Your AuraScale account is locked.</b> The subscription renewal is overdue and the 5-day grace period has ended. The owner and reception portals are paused until the payment of &#8377;4,999 is received. Patient records are safe and nothing has been deleted.
+          <b>&#128274; Your AuraScale account is locked.</b> The subscription renewal is overdue and the 5-day grace period has ended. The owner and reception portals are paused until the payment of &#8377;<span class="aura-price">4,999</span> is received. Patient records are safe and nothing has been deleted.
         </div>
 
         <div class="panel">
@@ -1083,17 +1083,19 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             <p class="ss" id="sub-status-note" style="margin:0">Checking subscription status&hellip;</p>
             <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--border);padding-top:12px">
               <span class="ss">Monthly plan</span>
-              <span style="font-weight:700;font-size:15px">&#8377;4,999 <span class="ss" style="font-weight:500;font-size:11.5px">incl. GST</span></span>
+              <span style="font-weight:700;font-size:15px" id="aura-plan-price">&#8377;<span class="aura-price">4,999</span> <span class="ss" style="font-weight:500;font-size:11.5px">incl. GST</span></span>
             </div>
+            <div id="aura-pay-area" style="display:flex;flex-direction:column;gap:12px">
             <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding-top:4px">
-              <p class="ss" style="margin:0" id="aura-qr-note">Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;4,999</b> for the subscription.</p>
+              <p class="ss" style="margin:0" id="aura-qr-note">Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;<span class="aura-price">4,999</span></b> for the subscription.</p>
               <div id="aura-upi-qr" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
               <div style="font-size:12.5px;font-weight:600">UPI ID: <span id="aura-upi-id">8017465987-3@ybl</span></div>
             </div>
-            <a id="aura-upi-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none" onclick="return auraSetQr(4999)">&#128179; Pay Subscription Now &mdash; &#8377;4,999 (incl. GST)</a>
+            <a id="aura-upi-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none" onclick="return auraSetQr(AURA_SUB_PRICE)">&#128179; Pay Subscription Now &mdash; &#8377;<span class="aura-price">4,999</span> (incl. GST)</a>
             <p class="ss" style="margin:-4px 0 0;text-align:center">On a phone this opens your UPI app. On a computer, scan the QR with your phone.</p>
             <a id="aura-topup-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:transparent;border:1px solid var(--border);color:var(--text-primary)" onclick="return auraSetQr(499)">&#9889; Buy Top-up Pack &mdash; &#8377;499 (incl. GST) &middot; 100 ID-card scans</a>
             <p class="ss" style="margin:0;text-align:center">AuraScale confirms your payment within one working day. Subscription: your renewal date moves forward one month and access is restored if it was paused. Top-up: 100 scans are added. Your tax invoice appears below.</p>
+            </div>
           </div>
         </div>
 
@@ -1105,7 +1107,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="panel">
           <div class="ph"><div class="pt">ID-Scan Usage</div></div>
           <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
-            <p class="ss" style="margin:0">Your ₹4,999/month plan (inclusive of GST) includes 300 ID-card scans. When your scans run out, you can buy a top-up pack for ₹499 (inclusive of GST) that adds 100 more scans and never expires. Usage resets automatically each billing period.</p>
+            <p class="ss" style="margin:0">Your ₹<span class="aura-price">4,999</span>/month plan (inclusive of GST) includes 300 ID-card scans. When your scans run out, you can buy a top-up pack for ₹499 (inclusive of GST) that adds 100 more scans and never expires. Usage resets automatically each billing period.</p>
             <div>
               <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">
                 <span>ID Card Scans (OCR)</span>
@@ -1742,7 +1744,7 @@ async function payAuraScaleSubscription(){
   var originalText=btn.textContent;
   btn.disabled=true;btn.textContent='Preparing checkout…';
   try{
-    var amount=4999; // Monthly AuraScale subscription price — includes 300 OCR scans
+    var amount=(typeof AURA_SUB_PRICE!=="undefined"?AURA_SUB_PRICE:4999); // this nursing home's monthly price — includes 300 OCR scans
     var nameEl=document.getElementById('sb-nh-name');
     var clinicName=(nameEl&&nameEl.textContent)||'AuraScale Customer';
     var r=await _supa.functions.invoke('create-cashfree-order',{
@@ -1799,7 +1801,19 @@ async function payUsageTopup(){
 async function loadSubscriptionStatus(){
   var badge=document.getElementById('sub-status-badge'),note=document.getElementById('sub-status-note');
   if(!badge||!_clinicId)return;
-  var r=await _supa.from('clinics').select('subscription_status,subscription_expires_at').eq('id',_clinicId).single();
+  var r=await _supa.from('clinics').select('*').eq('id',_clinicId).single();
+  if(r.data&&typeof auraApplyPlan==='function') auraApplyPlan(r.data);
+  var payArea=document.getElementById('aura-pay-area');
+  if(payArea) payArea.style.display=window._auraComplimentary?'none':'flex';
+  if(window._auraComplimentary){
+    badge.textContent='Complimentary';
+    badge.style.background='var(--blue-bg)';badge.style.color='var(--blue)';
+    note.textContent='This nursing home is on a complimentary plan from AuraScale. No payment is due and the account will not be locked.';
+    var pp=document.getElementById('aura-plan-price'); if(pp) pp.innerHTML='Free';
+    loadUsageStats();
+    if (typeof auraLoadInvoices === 'function') auraLoadInvoices();
+    return;
+  }
   var status=(r.data&&r.data.subscription_status)||'active';
   var expiresAt=r.data&&r.data.subscription_expires_at;
   var daysLeft=expiresAt?Math.ceil((new Date(expiresAt).getTime()-Date.now())/86400000):null;
@@ -1807,7 +1821,7 @@ async function loadSubscriptionStatus(){
   if(status==='frozen' || (typeof auraIsLocked==='function' && auraIsLocked(status, expiresAt))){
     badge.textContent='Locked';
     badge.style.background='var(--red-bg)';badge.style.color='var(--red)';
-    note.textContent='Payment overdue. The owner and reception portals are paused until the renewal of \u20B94,999 is received. Doctors can still view patient records.';
+    note.textContent='Payment overdue. The owner and reception portals are paused until the renewal of \u20B9'+AURA_SUB_PRICE.toLocaleString('en-IN')+' is received. Doctors can still view patient records.';
   }else if(daysLeft!==null && daysLeft<0){
     var daysUntilLock=5+daysLeft; // grace period counts down from 5
     badge.textContent='Grace Period';
@@ -2347,7 +2361,7 @@ async function _initApp(){
     if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
     document.body.setAttribute('data-role',_myRole);
 
-    var cl=await withTimeout(_supa.from('clinics').select('id,name,facility_type,is_approved,subscription_status,subscription_expires_at').eq('id',clinicId).single(),20000,'your facility details');
+    var cl=await withTimeout(_supa.from('clinics').select('*').eq('id',clinicId).single(),20000,'your facility details');
     if(!cl.data){failAndReturnToLogin('Clinic record not found.');return;}
     if(!cl.data.is_approved){
       document.getElementById('app-shell').classList.remove('authenticated');
@@ -2360,8 +2374,10 @@ async function _initApp(){
        account is actually frozen is decided server-side by the daily check-subscriptions job,
        which enforces the 7-day grace period after subscription_expires_at. */
     /* Expose renewal/grace-period info for the top banner (renderSubscriptionBanner). */
+    if(typeof auraApplyPlan==='function') auraApplyPlan(cl.data);
     window._auraSubscription={status:cl.data.subscription_status,expiresAt:cl.data.subscription_expires_at||null};
-    if(cl.data.subscription_expires_at){
+    if(window._auraComplimentary) window._auraSubscription={status:'active',expiresAt:null,complimentary:true};
+    if(cl.data.subscription_expires_at && !window._auraComplimentary){
       var _daysLeft=Math.ceil((new Date(cl.data.subscription_expires_at).getTime()-Date.now())/86400000);
       window._auraSubscription.daysLeft=_daysLeft;
       window._auraSubscription.inGracePeriod=_daysLeft<0;
@@ -5267,6 +5283,16 @@ var AURA_CASHFREE_ON = false;
   ['pay-sub-btn', 'pay-topup-btn'].forEach(function (id) { var b = document.getElementById(id); if (b) b.style.display = 'none'; });
 })();
 var AURA_WA = '919330660325', _auraUpiAmount = 4999;
+/* This nursing home's own monthly price (clinics.monthly_price, set by AuraScale admin) and Complimentary flag */
+var AURA_SUB_PRICE = 4999; window._auraComplimentary = false;
+function auraApplyPlan(row) {
+  if (!row) return;
+  var p = Number(row.monthly_price); if (p > 0) AURA_SUB_PRICE = p;
+  window._auraComplimentary = row.billing_exempt === true;
+  if (_auraQrAmount !== 499) _auraQrAmount = AURA_SUB_PRICE;
+  var txt = AURA_SUB_PRICE.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  document.querySelectorAll('.aura-price').forEach(function (el) { el.textContent = txt; });
+}
 async function auraDrawUpiQr(boxId, amount, note) {
   var box = document.getElementById(boxId); if (!box) return;
   var url = auraUpiUrl(amount, note);
@@ -5276,12 +5302,12 @@ async function auraDrawUpiQr(boxId, amount, note) {
   } catch (e) { box.innerHTML = '<span class="ss">QR could not load. Use the UPI ID below.</span>'; }
   return url;
 }
-var _auraQrAmount = 4999;
+var _auraQrAmount = AURA_SUB_PRICE;
 async function auraShowUpiQr() {
   if (!document.getElementById('aura-upi-qr')) return;
   var nameEl = document.getElementById('sb-nh-name'), nh = ((nameEl && nameEl.textContent) || '').slice(0, 40);
   var sub = document.getElementById('aura-upi-link'), top = document.getElementById('aura-topup-link');
-  if (sub) sub.href = auraUpiUrl(4999, 'AuraScale subscription - ' + nh);
+  if (sub) sub.href = auraUpiUrl(AURA_SUB_PRICE, 'AuraScale subscription - ' + nh);
   if (top) top.href = auraUpiUrl(499, 'AuraScale ID-scan top-up - ' + nh);
   var note = document.getElementById('aura-qr-note');
   if (note) note.innerHTML = 'Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;' + _auraQrAmount.toLocaleString('en-IN') + '</b> for the ' + (_auraQrAmount === 499 ? 'ID-scan top-up pack (100 scans)' : 'subscription') + '.';
@@ -5299,6 +5325,7 @@ function auraSetQr(amount) {
 var AURA_GRACE_DAYS = 5;
 var _origNav = function (id, btn) { nav(id, btn); };
 function auraIsLocked(status, expiresAt) {
+  if (window._auraComplimentary) return false;   /* Complimentary homes are never locked */
   if (status === 'frozen') return true;
   if (!expiresAt) return false;
   return Date.now() > new Date(expiresAt).getTime() + AURA_GRACE_DAYS * 86400000;
@@ -5592,7 +5619,7 @@ async function stockDownloadReport() {
     <div class="mb" style="display:flex;flex-direction:column;gap:12px">
       <p class="ss" style="margin:0;font-size:13px;line-height:1.6">Before you continue, please read and accept the agreement between <b id="agr-nh">your nursing home</b> and AuraScale. In short:</p>
       <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.7">
-        <li>&#8377;4,999 per month including GST after a 15-day free trial, paid monthly by UPI; a GST tax invoice for every payment.</li>
+        <li>&#8377;<span class="aura-price">4,999</span> per month including GST after a 15-day free trial, paid monthly by UPI; a GST tax invoice for every payment.</li>
         <li>You own your patients&rsquo; data. AuraScale only stores and processes it for you, never sells it, and keeps it secure (DPDP Act, 2023).</li>
         <li>Patients get WhatsApp messages only after they tap &ldquo;Yes&rdquo;.</li>
         <li>If there is a data breach, AuraScale tells you within 24 hours and helps you inform the authorities and patients.</li>
