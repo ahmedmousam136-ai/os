@@ -403,6 +403,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <div id="sb-profile-role" style="font-size:10.5px;color:var(--sidebar-text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
         </div>
       </div>
+      <div style="font-size:10.5px;padding:6px 8px 2px;opacity:.75"><a href="https://aurascale.in/privacy" target="_blank" style="color:inherit">Privacy</a> &middot; <a href="https://aurascale.in/terms" target="_blank" style="color:inherit">Terms</a> &middot; <a href="https://aurascale.in/agreement" target="_blank" style="color:inherit">Agreement</a></div>
       <div class="sb-out" onclick="handleLogout()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
     </div></div>
@@ -1392,10 +1393,11 @@ async function init(){
      since it's the whole facility's account that's suspended, not just
      the Owner's personal login. Per instruction, doctor.html is NOT
      locked — only Owner + Receptionist. */
-  var _subCheck = await _supa.from('clinics').select('subscription_status,subscription_expires_at').eq('id',_clinicId).single();
+  var _subCheck = await _supa.from('clinics').select('*').eq('id',_clinicId).single();
   if(_subCheck.error) _subCheck = await _supa.from('clinics').select('subscription_status').eq('id',_clinicId).single();
   var _subExp = _subCheck.data && _subCheck.data.subscription_expires_at;
-  if(_subCheck.data && (_subCheck.data.subscription_status==='frozen' || (_subExp && Date.now() > new Date(_subExp).getTime() + 5*86400000))){
+  /* Complimentary nursing homes (clinics.billing_exempt, set by AuraScale) are never locked */
+  if(_subCheck.data && _subCheck.data.billing_exempt !== true && (_subCheck.data.subscription_status==='frozen' || (_subExp && Date.now() > new Date(_subExp).getTime() + 5*86400000))){
     document.body.innerHTML = '<div style="position:fixed;inset:0;background:var(--bg,#F7F6F3);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:sans-serif">'
       +'<div style="max-width:420px"><div style="font-size:44px;margin-bottom:16px">🔒</div>'
       +'<h2 style="font-size:19px;font-weight:700;margin-bottom:10px;color:#18170F">Account temporarily locked</h2>'
