@@ -927,17 +927,24 @@ async function doLogout(){
   document.getElementById('auth-screen').classList.remove('hidden');
 }
 
-/* Restore session on load */
-(async function(){
-  var {data}=await _supa.auth.getSession();
-  if(data&&data.session&&data.session.user){
-    var email=data.session.user.email.toLowerCase();
-    var isAdmin=SA_EMAILS.includes(email);
-    if(!isAdmin){
-      var pa=await _supa.from('platform_admins').select('user_id').eq('user_id',data.session.user.id).single();
-      isAdmin=!!(pa.data&&pa.data.user_id);
+/* Restore session on load. A refresh must never log you out: a slow connection is retried, not treated as signed out. */
+(async function restoreAdmin(attempt){
+  attempt=attempt||1;
+  try{
+    var {data}=await _supa.auth.getSession();
+    if(data&&data.session&&data.session.user){
+      var email=data.session.user.email.toLowerCase();
+      var isAdmin=SA_EMAILS.includes(email);
+      if(!isAdmin){
+        var pa=await _supa.from('platform_admins').select('user_id').eq('user_id',data.session.user.id).maybeSingle();
+        if(pa.error) throw pa.error;
+        isAdmin=!!(pa.data&&pa.data.user_id);
+      }
+      if(isAdmin){_saUid=data.session.user.id;_saEmail=email;bootApp(email);}
     }
-    if(isAdmin){_saUid=data.session.user.id;_saEmail=email;bootApp(email);}
+  }catch(e){
+    console.warn('Admin restore attempt '+attempt+' failed', e);
+    if(attempt<4) setTimeout(function(){ restoreAdmin(attempt+1); }, attempt*1500);
   }
 })();
 
