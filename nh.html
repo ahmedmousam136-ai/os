@@ -537,6 +537,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       </button>
     </nav>
     <div class="sb-foot">
+      <div style="font-size:10.5px;padding:6px 8px 2px;opacity:.75"><a href="https://aurascale.in/privacy" target="_blank" style="color:inherit">Privacy</a> &middot; <a href="https://aurascale.in/terms" target="_blank" style="color:inherit">Terms</a> &middot; <a href="https://aurascale.in/agreement" target="_blank" style="color:inherit">Agreement</a></div>
       <div class="sb-controls">
         <button class="theme-toggle" onclick="toggleTheme()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -959,7 +960,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-staff" class="view owner-only">
         <div class="sh">
           <div><h1 class="st">Staff</h1><p class="ss">Manage Receptionist and Doctor accounts for this facility</p></div>
-          <button class="add-btn" onclick="openModal('mod-add-staff')">+ Invite Staff</button>
+          <button class="add-btn" onclick="openStaffInvite()">+ Invite Staff</button>
         </div>
         <div class="panel">
           <div class="ph"><div class="pt">Team</div></div>
@@ -1406,23 +1407,24 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
   <div class="modal">
     <div class="mh"><div class="mtitle">👥 Generate Invite Code</div><button class="mclose" onclick="closeModal('mod-add-staff')">✕</button></div>
     <div class="mb">
-      <p class="ss" style="margin-bottom:10px">Share this code with the person joining — they'll enter it under "I Have an Invite Code" when registering. You never need to know or set their password.</p>
+      <p class="ss" style="margin-bottom:10px">AuraScale sends the invite code on WhatsApp to the number below. They enter it under "I Have an Invite Code" when registering. You never need to know or set their password.</p>
       <div><label class="flbl">Role *</label>
         <select class="finput" id="staff-role"><option value="receptionist">Receptionist</option><option value="doctor">Doctor</option></select>
       </div>
       <div><label class="flbl">Label (optional, for your reference)</label><input class="finput" id="staff-label" placeholder="e.g. Front desk — morning shift"/></div>
-      <div><label class="flbl">Their Phone Number (optional, to send the code directly)</label><input class="finput" id="staff-phone" type="tel" placeholder="10-digit mobile number"/></div>
+      <div><label class="flbl">Their WhatsApp Number *</label>
+        <div style="display:flex;align-items:stretch;gap:6px"><span class="finput" style="flex:0 0 auto;width:auto;display:flex;align-items:center;font-weight:600">+91</span>
+        <input class="finput" id="staff-phone" type="tel" inputmode="numeric" maxlength="16" autocomplete="tel" placeholder="10-digit mobile number" oninput="staffPhoneInput(this)" style="flex:1"/></div>
+        <div id="staff-phone-hint" class="ss" style="font-size:11px;margin-top:4px">0/10 digits</div></div>
       <div id="staff-error" class="auth-error"></div>
-      <button class="msub" onclick="generateStaffInvite()">+ Generate Invite Code</button>
+      <button class="msub" id="staff-gen-btn" onclick="generateStaffInvite()">📲 Generate &amp; Send on WhatsApp</button>
       <div id="staff-invite-result" style="display:none;margin-top:14px;padding:14px;background:var(--bg);border-radius:var(--r-sm);text-align:center">
         <div class="ss">Invite Code</div>
         <div id="staff-invite-code" style="font-family:monospace;font-size:20px;font-weight:700;margin:6px 0;letter-spacing:1px"></div>
         <button class="qbtn" onclick="copyInviteCode()">Copy Code</button>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="qbtn" style="flex:1;background:#25D366;color:#fff;border:none" onclick="sendInviteWhatsApp()">📲 Send via WhatsApp</button>
-          <button class="qbtn" style="flex:1" onclick="sendInviteSMS()">💬 Send via SMS</button>
-        </div>
-        <p class="ss" style="margin-top:8px;font-size:10.5px">Direct in-app sending via AuraScale's own WhatsApp number is under construction — for now this opens WhatsApp/SMS on your own phone with the message pre-filled.</p>
+        <div id="staff-wa-status" class="ss" style="margin-top:10px;font-size:12px"></div>
+        <button class="qbtn" id="staff-wa-retry" style="display:none;margin-top:8px;width:100%;background:#25D366;color:#fff;border:none" onclick="sendInviteWhatsApp()">📲 Send Again on WhatsApp</button>
+        <button class="qbtn" id="staff-wa-manual" style="display:none;margin-top:6px;width:100%" onclick="sendInviteWhatsAppManual()">Open WhatsApp on my phone instead</button>
       </div>
     </div>
   </div>
@@ -1895,6 +1897,21 @@ function switchSignupMode(mode){
   document.getElementById('su-form-new').style.display=mode==='new'?'block':'none';
   document.getElementById('su-form-invite').style.display=mode==='invite'?'block':'none';
 }
+/* WhatsApp invite button opens nh.html?invite=CODE: show "I Have an Invite Code" with the code filled in. */
+(function(){
+  function prefillInvite(){
+    try{
+      var code=(new URLSearchParams(location.search).get('invite')||'').trim().toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,20);
+      if(!code)return;
+      var tab=document.querySelector('.auth-tab[onclick*="signup"]');
+      if(tab)switchAuthTab('signup',tab);
+      switchSignupMode('invite');
+      var el=document.getElementById('inv-code'); if(el)el.value=code;
+      var nm=document.getElementById('inv-name'); if(nm)setTimeout(function(){try{nm.focus();}catch(_e){}},300);
+    }catch(_e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',prefillInvite);else prefillInvite();
+})();
 
 async function handleInviteSignup(){
   var btn=document.getElementById('inv-submit-btn');
@@ -2258,6 +2275,7 @@ async function _initApp(){
     if(_myRole==='doctor'){ window.location.href='doctor.html'; return; }
     if(_myRole==='receptionist'){ window.location.href='receptionist.html'; return; }
     if(auraIsLocked(cl.data.subscription_status, cl.data.subscription_expires_at)){ auraEnterLockMode(); return; }
+    if(typeof auraCheckAgreement==='function') auraCheckAgreement(cl.data.name);
     loadDashboard();
     renderSubscriptionBanner();
   }catch(e){
@@ -4216,14 +4234,15 @@ async function loadStaffList(){
 async function loadInvitesList(){
   var el=document.getElementById('invites-list');
   if(!el)return;
-  var r=await _supa.from('nh_invites').select('code,role,label,used_by,expires_at,created_at').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20);
+  var r=await _supa.from('nh_invites').select('code,role,label,used_by,expires_at,created_at,phone,wa_sent_at').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20);
+  if(r.error) r=await _supa.from('nh_invites').select('code,role,label,used_by,expires_at,created_at').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20);
   if(!r.data||!r.data.length){el.innerHTML='<div class="empty"><div class="empty-ic">🎟️</div><p class="empty-t">No invite codes generated yet</p></div>';return;}
   el.innerHTML=r.data.map(function(i){
     var expired=!i.used_by&&i.expires_at&&new Date(i.expires_at)<new Date();
     var status=i.used_by?'Used':(expired?'Expired':'Pending');
     var chipClass=i.used_by?'ch-act':(expired?'ch-crit':'ch-wait');
     return '<div class="adm-row"><div class="adm-av" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">🎟️</div>'
-      +'<div style="flex:1"><div class="adm-name" style="font-family:monospace">'+i.code+'</div><div class="adm-meta">'+i.role+(i.label?' · '+i.label:'')+(i.expires_at&&!i.used_by?' · expires '+new Date(i.expires_at).toLocaleDateString('en-GB'):'')+'</div></div>'
+      +'<div style="flex:1"><div class="adm-name" style="font-family:monospace">'+i.code+'</div><div class="adm-meta">'+i.role+(i.label?' · '+i.label:'')+(i.expires_at&&!i.used_by?' · expires '+new Date(i.expires_at).toLocaleDateString('en-GB'):'')+(i.phone?' · 📲 sent to +'+String(i.phone).slice(0,2)+' '+String(i.phone).slice(2,7)+' '+String(i.phone).slice(7):'')+'</div></div>'
       +'<span class="chip '+chipClass+'">'+status+'</span></div>';
   }).join('');
 }
@@ -4300,36 +4319,78 @@ async function deleteFacility(){
   }
 }
 var _lastGeneratedInvite='';
+var _lastInvitePhone='';
+/* Indian mobile only: 10 digits starting 6-9; +91 / 91 / 0 in front is accepted and removed.
+   Returns the 10-digit number, or '' if it is not a valid mobile number. */
+function normIndianMobile(v){
+  var d=String(v||'').replace(/\D/g,'');
+  if(d.length===12&&d.indexOf('91')===0)d=d.slice(2);
+  else if(d.length===11&&d.charAt(0)==='0')d=d.slice(1);
+  return /^[6-9]\d{9}$/.test(d)?d:'';
+}
+function staffPhoneInput(el){
+  var d=String(el.value||'').replace(/\D/g,'');
+  if(d.length>10&&d.indexOf('91')===0)d=d.slice(2);
+  else if(d.length>10&&d.charAt(0)==='0')d=d.slice(1);
+  if(d.length>10)d=d.slice(0,10);
+  if(el.value!==d)el.value=d;
+  var h=document.getElementById('staff-phone-hint');
+  if(!h)return;
+  if(!d.length){h.textContent='0/10 digits';h.style.color='';}
+  else if(d.length<10){h.textContent=d.length+'/10 digits — enter all 10 digits';h.style.color='var(--red)';}
+  else if(!/^[6-9]/.test(d)){h.textContent='Indian mobile numbers start with 6, 7, 8 or 9';h.style.color='var(--red)';}
+  else{h.textContent='✓ +91 '+d.slice(0,5)+' '+d.slice(5);h.style.color='var(--green)';}
+}
 async function generateStaffInvite(){
   var role  = document.getElementById('staff-role').value;
   var label = (document.getElementById('staff-label').value||'').trim();
   var err   = document.getElementById('staff-error');
+  var btn   = document.getElementById('staff-gen-btn');
   err.style.display = 'none';
 
-  /* Use SECURITY DEFINER RPC — bypasses RLS permanently for all owners */
-  var r = await _supa.rpc('nh_generate_invite', {
-    p_role      : role,
-    p_label     : label,
-    p_clinic_id : _clinicId
-  });
-
-  if(r.error){
-    err.textContent = 'Error: ' + r.error.message;
+  var raw = document.getElementById('staff-phone').value||'';
+  var phone = normIndianMobile(raw);
+  if(!phone){
+    var n=raw.replace(/\D/g,'').length;
+    err.textContent = !n ? 'Enter their WhatsApp number — the invite code is sent there.'
+      : (n<10 ? 'This number has only '+n+' digits. Enter the full 10-digit mobile number.'
+      : 'This is not a valid Indian mobile number. It must be 10 digits starting with 6, 7, 8 or 9.');
     err.style.display = 'block';
-    return;
-  }
-  if(!r.data || !r.data.ok){
-    err.textContent = (r.data && r.data.error) || 'Could not generate code. Please refresh and try again.';
-    err.style.display = 'block';
+    document.getElementById('staff-phone').focus();
     return;
   }
 
-  var code = r.data.code;
-  _lastGeneratedInvite = code;
-  document.getElementById('staff-invite-code').textContent = code;
-  document.getElementById('staff-invite-result').style.display = 'block';
-  document.getElementById('staff-label').value = '';
-  loadInvitesList();
+  if(btn){btn.disabled=true;btn.textContent='Generating…';}
+  try{
+    /* Use SECURITY DEFINER RPC — bypasses RLS permanently for all owners */
+    var r = await _supa.rpc('nh_generate_invite', {
+      p_role      : role,
+      p_label     : label,
+      p_clinic_id : _clinicId
+    });
+    if(r.error){ err.textContent = 'Error: ' + r.error.message; err.style.display = 'block'; return; }
+    if(!r.data || !r.data.ok){
+      err.textContent = (r.data && r.data.error) || 'Could not generate code. Please refresh and try again.';
+      err.style.display = 'block'; return;
+    }
+    _lastGeneratedInvite = r.data.code;
+    _lastInvitePhone = phone;
+    document.getElementById('staff-invite-code').textContent = _lastGeneratedInvite;
+    document.getElementById('staff-invite-result').style.display = 'block';
+    document.getElementById('staff-label').value = '';
+    await sendInviteWhatsApp();
+    loadInvitesList();
+  } finally {
+    if(btn){btn.disabled=false;btn.innerHTML='📲 Generate &amp; Send on WhatsApp';}
+  }
+}
+function openStaffInvite(){
+  _lastGeneratedInvite='';_lastInvitePhone='';
+  ['staff-phone','staff-label'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  var h=document.getElementById('staff-phone-hint');if(h){h.textContent='0/10 digits';h.style.color='';}
+  document.getElementById('staff-error').style.display='none';
+  document.getElementById('staff-invite-result').style.display='none';
+  openModal('mod-add-staff');
 }
 function copyInviteCode(){
   if(!_lastGeneratedInvite)return;
@@ -4338,20 +4399,35 @@ function copyInviteCode(){
 function _inviteMessageText(){
   var nameEl=document.getElementById('sb-nh-name');
   var clinicName=(nameEl&&nameEl.textContent)||'AuraScale';
-  return 'Hi! You\'ve been invited to join '+clinicName+' on AuraScale.\n\nYour invite code: '+_lastGeneratedInvite+'\n\nGo to '+window.location.origin+'/index.html, choose "I Have an Invite Code" and enter it to set up your account.';
+  return 'Hi! You\'ve been invited to join '+clinicName+' on AuraScale.\n\nYour invite code: '+_lastGeneratedInvite+'\n\nOpen this link to join: https://os.aurascale.in/nh.html?invite='+encodeURIComponent(_lastGeneratedInvite);
 }
-function sendInviteWhatsApp(){
-  if(!_lastGeneratedInvite)return;
-  var phoneRaw=(document.getElementById('staff-phone').value||'').replace(/\D/g,'');
-  var phone=phoneRaw.length===10?'91'+phoneRaw:phoneRaw; // default to India country code for a bare 10-digit number
-  var url='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(_inviteMessageText());
-  window.open(url,'_blank');
+/* Sends the code from AuraScale's own WhatsApp number (edge function send-staff-invite -> Make). */
+async function sendInviteWhatsApp(){
+  if(!_lastGeneratedInvite||!_lastInvitePhone)return;
+  var st=document.getElementById('staff-wa-status'), retry=document.getElementById('staff-wa-retry'), man=document.getElementById('staff-wa-manual');
+  st.style.color=''; st.textContent='Sending on WhatsApp to +91 '+_lastInvitePhone.slice(0,5)+' '+_lastInvitePhone.slice(5)+'…';
+  retry.style.display='none'; man.style.display='none';
+  var res=null, msg='';
+  try{
+    res=await _supa.functions.invoke('send-staff-invite',{body:{code:_lastGeneratedInvite, phone:_lastInvitePhone}});
+    if(res.error){
+      try{ var b=await res.error.context.json(); msg=b&&b.error; }catch(_e){}
+      msg=msg||res.error.message;
+    }
+  }catch(e){ msg=String(e&&e.message||e); }
+  if(res&&!res.error&&res.data&&res.data.ok){
+    st.style.color='var(--green)';
+    st.textContent='✅ Invite sent on WhatsApp to '+res.data.sent_to;
+    showToast('Invite sent on WhatsApp');
+  }else{
+    st.style.color='var(--red)';
+    st.textContent='⚠️ Could not send on WhatsApp: '+(msg||(res&&res.data&&res.data.error)||'please try again');
+    retry.style.display='block'; man.style.display='block';
+  }
 }
-function sendInviteSMS(){
-  if(!_lastGeneratedInvite)return;
-  var phoneRaw=(document.getElementById('staff-phone').value||'').replace(/\D/g,'');
-  var url='sms:'+(phoneRaw||'')+'?body='+encodeURIComponent(_inviteMessageText());
-  window.open(url,'_self');
+function sendInviteWhatsAppManual(){
+  if(!_lastGeneratedInvite||!_lastInvitePhone)return;
+  window.open('https://wa.me/91'+_lastInvitePhone+'?text='+encodeURIComponent(_inviteMessageText()),'_blank');
 }
 
 /* ── SESSION RESTORE ── */
@@ -5404,6 +5480,56 @@ async function stockDownloadReport() {
   if (!used.length) { doc.text('No stock was used on this day.', 14, y); y += 6; }
   doc.setFontSize(8); doc.setTextColor(120); doc.text('Generated by AuraScale Nursing Home OS on ' + new Date().toLocaleString('en-GB') + '.', 14, 290);
   doc.save('Stock-report-' + d + '.pdf');
+}
+</script>
+<!-- SERVICE AGREEMENT: the owner accepts it once per version (replaces signing on paper) -->
+<style>#mod-agreement .agr-links a{color:#12976A;text-decoration:underline;font-weight:600}#mod-agreement .modal{max-height:92vh;overflow-y:auto}</style>
+<div class="mod-ov" id="mod-agreement" style="z-index:200">
+  <div class="modal" style="max-width:560px">
+    <div class="mh"><div class="mtitle">AuraScale Service Agreement</div></div>
+    <div class="mb" style="display:flex;flex-direction:column;gap:12px">
+      <p class="ss" style="margin:0;font-size:13px;line-height:1.6">Before you continue, please read and accept the agreement between <b id="agr-nh">your nursing home</b> and AuraScale. In short:</p>
+      <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.7">
+        <li>&#8377;4,999 per month including GST after a 15-day free trial, paid monthly by UPI; a GST tax invoice for every payment.</li>
+        <li>You own your patients&rsquo; data. AuraScale only stores and processes it for you, never sells it, and keeps it secure (DPDP Act, 2023).</li>
+        <li>Patients get WhatsApp messages only after they tap &ldquo;Yes&rdquo;.</li>
+        <li>If there is a data breach, AuraScale tells you within 24 hours and helps you inform the authorities and patients.</li>
+        <li>Cancel any time; access continues to the end of the paid month, and you get a full export of your data.</li>
+      </ul>
+      <p style="margin:0;font-size:13px" class="agr-links"><a href="https://aurascale.in/agreement" target="_blank">Read the full Service Agreement</a> &middot; <a href="https://aurascale.in/privacy" target="_blank">Privacy Policy</a> &middot; <a href="https://aurascale.in/terms" target="_blank">Terms</a> &middot; <a href="https://aurascale.in/refund" target="_blank">Refunds</a></p>
+      <div><label class="flbl">Your full name</label><input class="finput" id="agr-name" maxlength="80" placeholder="e.g. Rahim Khan"/></div>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;cursor:pointer"><input type="checkbox" id="agr-tick" style="margin-top:2px;width:20px;height:20px;min-width:20px;flex:none;display:inline-block;opacity:1;position:static;visibility:visible;-webkit-appearance:checkbox;appearance:auto;accent-color:#12976A;cursor:pointer"/>
+        <span>I have read and agree to the AuraScale Service Agreement (version <span id="agr-ver"></span>), including the Data Processing Addendum, on behalf of <b id="agr-nh2">my nursing home</b>.</span></label>
+      <div id="agr-err" style="color:var(--red);font-size:12px;display:none"></div>
+      <button class="msub" id="agr-btn" onclick="auraAcceptAgreement()">I agree</button>
+      <p class="ss" style="margin:0;font-size:11px">Your name, the date and time, and this version are recorded. This counts as your signature.</p>
+    </div>
+  </div>
+</div>
+<script>
+var AURA_AGREEMENT_VERSION = '1.2';
+async function auraCheckAgreement(nhName) {
+  try {
+    if (_myRole !== 'owner' || !_clinicId) return;
+    var r = await _supa.from('aurascale_agreement_acceptances').select('version,accepted_at').eq('clinic_id', _clinicId).eq('version', AURA_AGREEMENT_VERSION).limit(1);
+    if (r.error) { console.warn('agreement check skipped:', r.error.message); return; }   /* table not set up yet: never block the owner */
+    if (r.data && r.data.length) return;
+    ['agr-nh', 'agr-nh2'].forEach(function (id) { var e = document.getElementById(id); if (e) e.textContent = nhName || 'my nursing home'; });
+    document.getElementById('agr-ver').textContent = AURA_AGREEMENT_VERSION;
+    openModal('mod-agreement');
+  } catch (e) { console.warn('agreement check failed', e); }
+}
+async function auraAcceptAgreement() {
+  var name = (document.getElementById('agr-name').value || '').trim(), tick = document.getElementById('agr-tick').checked, err = document.getElementById('agr-err'), btn = document.getElementById('agr-btn');
+  err.style.display = 'none';
+  if (name.length < 2) { err.textContent = 'Please type your full name.'; err.style.display = 'block'; return; }
+  if (!tick) { err.textContent = 'Please tick the box to accept the agreement.'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  var r = await _supa.rpc('accept_aurascale_agreement', { p_clinic_id: _clinicId, p_version: AURA_AGREEMENT_VERSION, p_name: name, p_user_agent: navigator.userAgent });
+  btn.disabled = false; btn.textContent = 'I agree';
+  if (r.error) { err.textContent = 'Could not save: ' + r.error.message; err.style.display = 'block'; return; }
+  closeModal('mod-agreement');
+  if (typeof showToast === 'function') showToast('✓ Agreement accepted. Thank you.');
 }
 </script>
 </body>
