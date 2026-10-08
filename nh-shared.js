@@ -23,40 +23,66 @@ var _myName   = null;
    Call at the top of every portal init().
    requiredRole: 'receptionist' | 'doctor' | 'owner' | null (any)
    Returns { facilityName, role, uid, clinicId } on success,
-   or null if auth fails (and handles redirect automatically).      */
+   or null if auth fails (and handles redirect automatically).
+
+   Refreshing the page must never log anyone out:
+   - the saved login is read from this browser first (no network needed);
+   - a slow or failed connection is retried, then shows "Try again" — it never signs out
+     or sends the person back to the sign-in page;
+   - only a missing login (they signed out) goes to the sign-in page.            */
+function nhLoadFailedScreen(msg) {
+  var lo = document.getElementById('loading'); if (lo) lo.style.display = 'none';
+  var o = document.getElementById('nh-loadfail'); if (o) o.remove();
+  o = document.createElement('div'); o.id = 'nh-loadfail';
+  o.style.cssText = 'position:fixed;inset:0;z-index:99991;background:var(--bg,#F7F6F3);display:flex;align-items:center;justify-content:center;padding:24px;font-family:sans-serif';
+  o.innerHTML = '<div style="max-width:380px;text-align:center"><div style="font-size:34px;margin-bottom:10px">&#128246;</div>'
+    + '<h2 style="font-size:17px;margin-bottom:8px">Could not load AuraScale</h2>'
+    + '<p style="font-size:13px;color:#64605A;line-height:1.6;margin-bottom:16px">You are still signed in. Please check the internet connection and try again.<br><span style="font-size:11.5px;opacity:.8">' + esc(msg || '') + '</span></p>'
+    + '<button onclick="location.reload()" style="background:#0E9F6E;color:#fff;border:0;border-radius:8px;padding:11px 22px;font-weight:700;font-size:13px;cursor:pointer">Try again</button></div>';
+  document.body.appendChild(o);
+}
+
 async function nhAuthGuard(requiredRole) {
   function withTimeout(p, ms, label) {
     return Promise.race([
       p,
       new Promise(function(_, rej) {
-        setTimeout(function() {
-          rej(new Error('Timed out loading ' + label + '. Check your connection.'));
-        }, 20000);
+        setTimeout(function() { rej(new Error('Timed out loading ' + label + '. Check your connection.')); }, ms);
       })
     ]);
   }
+  /* run a database read, retrying up to 3 times on a network/server error (not on "no row") */
+  async function readWithRetry(makeQuery, label) {
+    var last = null;
+    for (var attempt = 1; attempt <= 3; attempt++) {
+      try {
+        var r = await withTimeout(makeQuery(), 15000, label);
+        if (!r.error || r.error.code === 'PGRST116') return r;      /* PGRST116 = no row found */
+        last = r.error;
+      } catch (e) { last = e; }
+      await new Promise(function(res) { setTimeout(res, attempt * 1200); });
+    }
+    throw (last instanceof Error ? last : new Error((last && last.message) || ('Could not load ' + label)));
+  }
 
+  var user = null;
   try {
-    var userRes = await withTimeout(_supa.auth.getUser(), 20000, 'session');
-    var user = userRes.data && userRes.data.user;
-    if (!user) { window.location.href = 'nh.html'; return null; }
-
+    /* 1. the login saved in this browser (refreshes an expired token by itself) */
+    var sess = await withTimeout(_supa.auth.getSession(), 15000, 'session');
+    user = sess.data && sess.data.session && sess.data.session.user;
+    if (!user) { window.location.href = 'nh.html'; return null; }   /* really signed out */
     _myUid = user.id;
 
-    /* Resolve clinic via nh_staff (covers invited doctor/receptionist logins) */
-    var staffRow = await withTimeout(
-      _supa.from('nh_staff')
-        .select('clinic_id,role,full_name,is_active')
-        .eq('id', user.id)
-        .single(),
-      20000, 'staff record'
-    );
+    /* 2. which nursing home and role this login belongs to */
+    var staffRow = await readWithRetry(function() {
+      return _supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id', user.id).maybeSingle();
+    }, 'staff record');
 
     var clinicId = null;
     if (staffRow.data && staffRow.data.clinic_id) {
-      clinicId  = staffRow.data.clinic_id;
-      _myRole   = staffRow.data.role || 'owner';
-      _myName   = staffRow.data.full_name || null;
+      clinicId = staffRow.data.clinic_id;
+      _myRole  = staffRow.data.role || 'owner';
+      _myName  = staffRow.data.full_name || null;
       if (staffRow.data.is_active === false) {
         await _supa.auth.signOut();
         window.location.href = 'nh.html';
@@ -64,14 +90,9 @@ async function nhAuthGuard(requiredRole) {
       }
     } else {
       /* Legacy owner lookup (predates nh_staff) */
-      var legacy = await withTimeout(
-        _supa.from('clinics')
-          .select('id')
-          .eq('owner_id', user.id)
-          .eq('facility_type', 'nursing_home')
-          .single(),
-        20000, 'facility (legacy)'
-      );
+      var legacy = await readWithRetry(function() {
+        return _supa.from('clinics').select('id').eq('owner_id', user.id).eq('facility_type', 'nursing_home').limit(1).maybeSingle();
+      }, 'facility (legacy)');
       if (legacy.data) {
         clinicId = legacy.data.id;
         _myRole  = 'owner';
@@ -89,22 +110,22 @@ async function nhAuthGuard(requiredRole) {
       return null;
     }
 
-    var cl = await withTimeout(
-      _supa.from('clinics').select('id,name,is_approved,subscription_status').eq('id', clinicId).single(),
-      20000, 'facility details'
-    );
+    var cl = await readWithRetry(function() {
+      return _supa.from('clinics').select('*').eq('id', clinicId).maybeSingle();
+    }, 'facility details');
 
-    if (!cl.data) { window.location.href = 'nh.html'; return null; }
+    if (!cl.data) { nhLoadFailedScreen('Facility details could not be read.'); return null; }
 
     if (!cl.data.is_approved) {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><div style="font-size:40px;margin-bottom:16px">⏳</div><h2>Account Pending Activation</h2><p style="color:#666;margin:12px 0 20px">Your AuraScale NH account is being reviewed. We activate within 24 hours.</p><a href="https://wa.me/919330660325?text=Hi, please activate my AuraScale NH account." target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;text-decoration:none">📲 WhatsApp Us</a></div></div>';
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><div style="font-size:40px;margin-bottom:16px">⏳</div><h2>Account Pending Activation</h2><p style="color:#666;margin:12px 0 20px">Your AuraScale NH account is being reviewed. We activate within 24 hours.</p><a href="https://wa.me/918017465987?text=Hi, please activate my AuraScale NH account." target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;text-decoration:none">📲 WhatsApp Us</a></div></div>';
       return null;
     }
 
     /* Subscription lock — owner & receptionist are frozen out if payment is overdue.
-       Doctors are ALWAYS exempt: patient care must not be interrupted by a billing dispute. */
-    if (_myRole !== 'doctor' && cl.data.subscription_status === 'frozen') {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><div style="font-size:40px;margin-bottom:16px">🔒</div><h2>Subscription Payment Due</h2><p style="color:#666;margin:12px 0 20px">Access to billing and administration is paused until this month\'s AuraScale subscription is renewed. Doctors can continue accessing patient records as normal.</p><a href="https://wa.me/919330660325?text=Hi, I need to renew my AuraScale subscription." target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;text-decoration:none">📲 Renew via WhatsApp</a></div></div>';
+       Doctors are ALWAYS exempt: patient care must not be interrupted by a billing dispute.
+       Complimentary nursing homes (billing_exempt) are never locked. */
+    if (_myRole !== 'doctor' && cl.data.billing_exempt !== true && cl.data.subscription_status === 'frozen') {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><div style="font-size:40px;margin-bottom:16px">🔒</div><h2>Subscription Payment Due</h2><p style="color:#666;margin:12px 0 20px">Access to billing and administration is paused until this month\'s AuraScale subscription is renewed. Doctors can continue accessing patient records as normal.</p><a href="https://wa.me/918017465987?text=Hi, I need to renew my AuraScale subscription." target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;text-decoration:none">📲 Renew via WhatsApp</a></div></div>';
       return null;
     }
 
@@ -128,6 +149,10 @@ async function nhAuthGuard(requiredRole) {
 
   } catch (e) {
     console.error('nhAuthGuard failed:', e);
+    /* Still signed in? Then this was a connection problem: offer "Try again" instead of logging out. */
+    var still = null;
+    try { still = (await _supa.auth.getSession()).data.session; } catch (_e) {}
+    if (still) { nhLoadFailedScreen(e && e.message); return null; }
     window.location.href = 'nh.html';
     return null;
   }
