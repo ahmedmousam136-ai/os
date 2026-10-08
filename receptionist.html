@@ -1366,12 +1366,14 @@ async function init(){
      since it's the whole facility's account that's suspended, not just
      the Owner's personal login. Per instruction, doctor.html is NOT
      locked — only Owner + Receptionist. */
-  var _subCheck = await _supa.from('clinics').select('subscription_status').eq('id',_clinicId).single();
-  if(_subCheck.data && _subCheck.data.subscription_status==='frozen'){
+  var _subCheck = await _supa.from('clinics').select('subscription_status,subscription_expires_at').eq('id',_clinicId).single();
+  if(_subCheck.error) _subCheck = await _supa.from('clinics').select('subscription_status').eq('id',_clinicId).single();
+  var _subExp = _subCheck.data && _subCheck.data.subscription_expires_at;
+  if(_subCheck.data && (_subCheck.data.subscription_status==='frozen' || (_subExp && Date.now() > new Date(_subExp).getTime() + 7*86400000))){
     document.body.innerHTML = '<div style="position:fixed;inset:0;background:var(--bg,#F7F6F3);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:sans-serif">'
       +'<div style="max-width:420px"><div style="font-size:44px;margin-bottom:16px">🔒</div>'
-      +'<h2 style="font-size:19px;font-weight:700;margin-bottom:10px;color:#18170F">Facility Account Locked</h2>'
-      +'<p style="font-size:13.5px;color:#64605A;line-height:1.6;margin-bottom:20px">This facility\'s AuraScale subscription payment is overdue and the grace period has ended. Please contact the Owner/Administrator to renew the subscription — your access will be restored automatically once payment is completed.</p></div></div>';
+      +'<h2 style="font-size:19px;font-weight:700;margin-bottom:10px;color:#18170F">Account temporarily locked</h2>'
+      +'<p style="font-size:13.5px;color:#64605A;line-height:1.6;margin-bottom:20px">This nursing home\'s AuraScale subscription renewal is overdue and the 7-day grace period has ended. Please ask the owner to renew the subscription from the owner portal (Subscription page). Access returns automatically once the payment is confirmed. Patient records are safe.</p></div></div>';
     return;
   }
   _authInfo = g;
