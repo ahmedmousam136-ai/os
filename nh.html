@@ -500,6 +500,10 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
         <span data-i18n="nav_discharge">Discharge</span>
       </button>
+      <button class="nb owner-only" onclick="nav('stock',this);_stockUnseen=0;stockBadge()">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span><span>Stock</span>
+        <span class="nb-badge" id="nav-stock-count" style="display:none">0</span>
+      </button>
       <button class="nb owner-only" onclick="nav('bills',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
         <span data-i18n="nav_bills">Bills</span>
@@ -885,6 +889,26 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
       <!-- NOTIFICATIONS (owner) -->
       <!-- BILLS (owner): every saved final bill -->
+      <!-- STOCK -->
+      <div id="v-stock" class="view owner-only">
+        <div class="sh"><div><h1 class="st">Stock</h1><p class="ss">Oxygen cylinders, syringes, gloves and other supplies. Every use is subtracted automatically.</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="qbtn" onclick="stockOpenUse()" style="background:var(--green);color:#fff;border-color:var(--green);font-weight:700;padding:8px 14px;font-size:12px">&minus; Record use</button>
+            <button class="qbtn" onclick="stockOpenReceive()" style="padding:8px 14px;font-size:12px">+ Stock received</button>
+            <button class="qbtn" onclick="stockOpenNew()" style="padding:8px 14px;font-size:12px">+ New item</button>
+          </div>
+        </div>
+        <div class="ss" style="margin:-4px 0 12px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">&#128197; Stock is included in your <b>daily report at 8:00 PM</b> on WhatsApp: opening, received, used and closing for every item, what each bed used, and low-stock warnings.</div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Items in stock</div><span class="ss" id="stock-summary"></span></div>
+          <div id="stock-list" style="padding:6px 0"></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">Today&rsquo;s movements</div></div>
+          <div id="stock-moves" style="padding:6px 0"></div>
+        </div>
+      </div>
+
       <div id="v-bills" class="view owner-only">
         <div class="sh"><div><h1 class="st" id="bills-title">Bills</h1><p class="ss" id="bills-sub">Every final bill that has been saved. Tap Download to open the PDF.</p></div></div>
         <div class="panel">
@@ -1046,7 +1070,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="sh"><div><h1 class="st">Subscription</h1><p class="ss">Your AuraScale account status &amp; billing</p></div></div>
 
         <div id="aura-lock-notice" style="display:none;background:#FDECEC;border:1px solid #F3B9B9;color:#9B1C1C;border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.55">
-          <b>&#128274; Your AuraScale account is locked.</b> The subscription renewal is overdue and the 7-day grace period has ended. The owner and reception portals are paused until the payment of &#8377;4,999 is received. Patient records are safe and nothing has been deleted.
+          <b>&#128274; Your AuraScale account is locked.</b> The subscription renewal is overdue and the 5-day grace period has ended. The owner and reception portals are paused until the payment of &#8377;4,999 is received. Patient records are safe and nothing has been deleted.
         </div>
 
         <div class="panel">
@@ -1062,14 +1086,14 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               <span style="font-weight:700;font-size:15px">&#8377;4,999 <span class="ss" style="font-weight:500;font-size:11.5px">incl. GST</span></span>
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding-top:4px">
-              <p class="ss" style="margin:0">Scan with any UPI app (GPay, PhonePe, Paytm) to pay AuraScale.</p>
+              <p class="ss" style="margin:0" id="aura-qr-note">Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;4,999</b> for the subscription.</p>
               <div id="aura-upi-qr" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
               <div style="font-size:12.5px;font-weight:600">UPI ID: <span id="aura-upi-id">8017465987-3@ybl</span></div>
             </div>
-            <a id="aura-upi-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none">&#128179; Pay Subscription Now &mdash; &#8377;4,999 (incl. GST)</a>
+            <a id="aura-upi-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none" onclick="return auraSetQr(4999)">&#128179; Pay Subscription Now &mdash; &#8377;4,999 (incl. GST)</a>
             <p class="ss" style="margin:-4px 0 0;text-align:center">On a phone this opens your UPI app. On a computer, scan the QR with your phone.</p>
-            <a id="aura-upi-wa" href="#" target="_blank" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:transparent;border:1px solid var(--border);color:var(--text-primary)">Send payment screenshot on WhatsApp</a>
-            <p class="ss" style="margin:0;text-align:center">AuraScale confirms your payment within one working day. Your renewal date then moves forward one month, access is restored if it was paused, and your tax invoice appears below.</p>
+            <a id="aura-topup-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:transparent;border:1px solid var(--border);color:var(--text-primary)" onclick="return auraSetQr(499)">&#9889; Buy Top-up Pack &mdash; &#8377;499 (incl. GST) &middot; 100 ID-card scans</a>
+            <p class="ss" style="margin:0;text-align:center">AuraScale confirms your payment within one working day. Subscription: your renewal date moves forward one month and access is restored if it was paused. Top-up: 100 scans are added. Your tax invoice appears below.</p>
           </div>
         </div>
 
@@ -1092,12 +1116,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               </div>
             </div>
             <div id="usage-bonus-note" class="ss" style="display:none"></div>
-            <button type="button" class="add-btn" style="width:100%;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--text-primary)" onclick="auraShowTopupQr()">Buy top-up pack &mdash; &#8377;499 incl. GST (+100 scans)</button>
-            <div id="aura-topup-box" style="display:none;flex-direction:column;align-items:center;gap:8px;text-align:center">
-              <div id="aura-topup-qr" style="width:160px;height:160px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
-              <a id="aura-topup-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none">&#128179; Pay &#8377;499 by UPI</a>
-              <a id="aura-topup-wa" href="#" target="_blank" class="ss" style="text-decoration:underline">Send the payment screenshot on WhatsApp</a>
-            </div>
           </div>
         </div>
       </div>
@@ -1694,7 +1712,7 @@ function nav(id,btn){
   var v=document.getElementById('v-'+id);
   if(v)v.classList.add('on');
   if(btn)btn.classList.add('on');
-  var titles={dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',reports:'Reports',notifications:'Notifications',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings',audit:'Audit',subscription:'Subscription'};
+  var titles={stock:'Stock',dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',reports:'Reports',notifications:'Notifications',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings',audit:'Audit',subscription:'Subscription'};
   var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
@@ -1710,6 +1728,7 @@ function nav(id,btn){
   if(id==='ayushman')loadAyushmanView();
   if(id==='staff')loadStaffList();
   if(id==='subscription')loadSubscriptionStatus();
+  if(id==='stock')loadStock();
   if(id==='bills'){ var tb=document.getElementById('tab-title'); if(tb&&typeof famT==='function')tb.textContent=famT('bp_title'); if(typeof billsTab==='function')billsTab(_billsTab); }
   if(id==='settings'&&typeof loadFacilityDetails==='function')loadFacilityDetails();
   /* auto-close sidebar on mobile after navigating */
@@ -1789,7 +1808,7 @@ async function loadSubscriptionStatus(){
     badge.style.background='var(--red-bg)';badge.style.color='var(--red)';
     note.textContent='Payment overdue. The owner and reception portals are paused until the renewal of \u20B94,999 is received. Doctors can still view patient records.';
   }else if(daysLeft!==null && daysLeft<0){
-    var daysUntilLock=7+daysLeft; // grace period counts down from 7
+    var daysUntilLock=5+daysLeft; // grace period counts down from 5
     badge.textContent='Grace Period';
     badge.style.background='#FFF3CD';badge.style.color='#8A6D00';
     note.textContent='Renewal was due on '+new Date(expiresAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'. Grace period: '+Math.max(daysUntilLock,0)+' day'+(Math.max(daysUntilLock,0)===1?'':'s')+' left before the account is locked. Please renew now to avoid interruption.';
@@ -2232,7 +2251,7 @@ async function _initApp(){
       var _daysLeft=Math.ceil((new Date(cl.data.subscription_expires_at).getTime()-Date.now())/86400000);
       window._auraSubscription.daysLeft=_daysLeft;
       window._auraSubscription.inGracePeriod=_daysLeft<0;
-      window._auraSubscription.daysUntilLock=_daysLeft<0?(7+_daysLeft):null;
+      window._auraSubscription.daysUntilLock=_daysLeft<0?(5+_daysLeft):null;
     }
     _clinicId=cl.data.id;
     document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
@@ -3821,6 +3840,12 @@ async function loadOwnerNotifications(){
     }
   }
 
+  try {
+    var stk = await _supa.from('nh_stock_items').select('name,unit,quantity,low_level').eq('clinic_id',_clinicId).eq('is_active',true);
+    (stk.data||[]).filter(function(i){ return Number(i.quantity) <= Number(i.low_level); }).forEach(function(i){
+      alerts.push({icon:'&#128230;', title: Number(i.quantity)<=0 ? 'Out of stock' : 'Low stock', detail: esc(i.name)+' \u2014 '+stockQty(i.quantity)+' '+esc(i.unit)+' left', level: Number(i.quantity)<=0 ? 'red' : 'amber'});
+    });
+  } catch(e) {}
   var alertsHtml = alerts.length ? alerts.map(function(a){
     var bg = a.level==='red' ? 'var(--red-bg)' : 'var(--amber-bg)';
     var col = a.level==='red' ? 'var(--red)' : 'var(--amber)';
@@ -3835,6 +3860,15 @@ async function loadOwnerNotifications(){
       return '<div class="adm-row"><div class="adm-av" style="background:var(--green-bg);color:var(--green)">&#8377;</div>'
         + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(auraMoney(d.amount)+' received \u00b7 '+(d.method||''))+'</div>'
         + '<div class="adm-meta">'+esc((d.patient_name||'Patient')+' \u00b7 '+st+(d.recorded_by_name ? ' \u00b7 by '+d.recorded_by_name : ''))+'</div>'
+        + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div></div>';
+    }
+    if(/^stock_/.test(a.action||'')){
+      var sd=d, sk=a.action.replace('stock_','');
+      var stTitle = sk==='daily_report' ? 'Daily stock report ready ('+(sd.items||0)+' items'+(sd.low?', '+sd.low+' low':'')+')'
+        : (sk==='used' ? 'Stock used: '+stockQty(-sd.change)+' '+(sd.unit||'')+' '+(sd.item||'') : sk==='received' ? 'Stock received: +'+stockQty(sd.change)+' '+(sd.unit||'')+' '+(sd.item||'') : sk==='opening' ? 'New stock item: '+(sd.item||'')+' ('+stockQty(sd.change)+' '+(sd.unit||'')+')' : 'Stock corrected: '+(sd.item||''));
+      var stMeta = sk==='daily_report' ? 'Open Stock to download the PDF' : [sd.bed, sd.patient].filter(Boolean).join(' \u00b7 ') + (sd.left!=null ? (sd.bed||sd.patient?' \u00b7 ':'')+stockQty(sd.left)+' left' : '') + (sd.low ? ' \u00b7 LOW' : '') + (sd.by ? ' \u00b7 by '+sd.by : '');
+      return '<div class="adm-row"'+(sk==='daily_report'?' style="cursor:pointer" onclick="nav(\'stock\',document.querySelector(\'.nb[onclick*=stock]\'))"':'')+'><div class="adm-av" style="background:'+(sd.low?'var(--red-bg)':'var(--amber-bg)')+';color:'+(sd.low?'var(--red)':'var(--amber)')+'">&#128230;</div>'
+        + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(stTitle)+'</div><div class="adm-meta">'+esc(stMeta)+'</div>'
         + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div></div>';
     }
     var label = (a.action||'Activity').replace(/_/g,' ');
@@ -5069,27 +5103,27 @@ async function auraDrawUpiQr(boxId, amount, note) {
   } catch (e) { box.innerHTML = '<span class="ss">QR could not load. Use the UPI ID below.</span>'; }
   return url;
 }
+var _auraQrAmount = 4999;
 async function auraShowUpiQr() {
   if (!document.getElementById('aura-upi-qr')) return;
   var nameEl = document.getElementById('sb-nh-name'), nh = ((nameEl && nameEl.textContent) || '').slice(0, 40);
-  var url = await auraDrawUpiQr('aura-upi-qr', 4999, 'AuraScale subscription - ' + nh);
-  var link = document.getElementById('aura-upi-link'); if (link) link.href = url || auraUpiUrl(4999, 'AuraScale subscription');
-  var wa = document.getElementById('aura-upi-wa');
-  if (wa) wa.href = 'https://wa.me/' + AURA_WA + '?text=' + encodeURIComponent('Hello AuraScale, I have paid Rs 4,999 by UPI for the monthly subscription of ' + nh + '. Payment screenshot attached.');
+  var sub = document.getElementById('aura-upi-link'), top = document.getElementById('aura-topup-link');
+  if (sub) sub.href = auraUpiUrl(4999, 'AuraScale subscription - ' + nh);
+  if (top) top.href = auraUpiUrl(499, 'AuraScale ID-scan top-up - ' + nh);
+  var note = document.getElementById('aura-qr-note');
+  if (note) note.innerHTML = 'Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;' + _auraQrAmount.toLocaleString('en-IN') + '</b> for the ' + (_auraQrAmount === 499 ? 'ID-scan top-up pack (100 scans)' : 'subscription') + '.';
+  await auraDrawUpiQr('aura-upi-qr', _auraQrAmount, (_auraQrAmount === 499 ? 'AuraScale ID-scan top-up - ' : 'AuraScale subscription - ') + nh);
 }
-async function auraShowTopupQr() {
-  var box = document.getElementById('aura-topup-box'); if (!box) return;
-  box.style.display = 'flex';
-  var nameEl = document.getElementById('sb-nh-name'), nh = ((nameEl && nameEl.textContent) || '').slice(0, 40);
-  var url = await auraDrawUpiQr('aura-topup-qr', 499, 'AuraScale ID-scan top-up - ' + nh);
-  var link = document.getElementById('aura-topup-link'); if (link) link.href = url || auraUpiUrl(499, 'AuraScale ID-scan top-up');
-  var wa = document.getElementById('aura-topup-wa');
-  if (wa) wa.href = 'https://wa.me/' + AURA_WA + '?text=' + encodeURIComponent('Hello AuraScale, I have paid Rs 499 by UPI for an ID-scan top-up pack for ' + nh + '. Payment screenshot attached.');
+/* On a phone the button opens the UPI app (its href). On a computer it switches the QR above to that amount. */
+function auraSetQr(amount) {
+  _auraQrAmount = amount; auraShowUpiQr();
+  if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) { var q = document.getElementById('aura-upi-qr'); if (q) q.scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; }
+  return true;
 }
 /* ===== ACCOUNT LOCK =====
    Locked = the daily job set subscription_status to 'frozen', or the renewal date is more than 7 days past.
    A locked owner can open ONLY the Subscription page (to pay); every other page is blocked. */
-var AURA_GRACE_DAYS = 7;
+var AURA_GRACE_DAYS = 5;
 var _origNav = function (id, btn) { nav(id, btn); };
 function auraIsLocked(status, expiresAt) {
   if (status === 'frozen') return true;
@@ -5156,6 +5190,273 @@ function auraOpenInvoice(i) {
   var w = window.open('', '_blank');
   if (!w) { alert('Please allow pop-ups for this site to view the invoice.'); return; }
   w.document.open(); w.document.write(auraInvoiceHtml(v)); w.document.close();
+}
+</script>
+
+<!-- STOCK: new item / received / use / correct -->
+<div class="mod-ov" id="mod-stock-new">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">New stock item</div><button class="mclose" onclick="closeModal('mod-stock-new')">&#10005;</button></div>
+    <div class="mb">
+      <div><label class="flbl">Item name *</label><input class="finput" id="stk-new-name" maxlength="80" placeholder="e.g. Oxygen cylinder, Syringe 5 ml, Gloves"/></div>
+      <div class="rx-2">
+        <div><label class="flbl">Unit</label><input class="finput" id="stk-new-unit" maxlength="20" placeholder="pcs, cylinders, boxes" value="pcs"/></div>
+        <div><label class="flbl">Quantity in stock now</label><input class="finput" id="stk-new-qty" type="number" min="0" step="1" value="0"/></div>
+      </div>
+      <div><label class="flbl">Warn the owner when it falls to</label><input class="finput" id="stk-new-low" type="number" min="0" step="1" value="0"/></div>
+      <div id="stk-new-err" style="color:var(--red);font-size:12px;display:none"></div>
+      <button class="msub" onclick="stockSaveNew()">Add item</button>
+    </div>
+  </div>
+</div>
+<div class="mod-ov" id="mod-stock-recv">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">Stock received</div><button class="mclose" onclick="closeModal('mod-stock-recv')">&#10005;</button></div>
+    <div class="mb">
+      <div><label class="flbl">Item *</label><select class="finput" id="stk-recv-item"></select></div>
+      <div><label class="flbl">Quantity received *</label><input class="finput" id="stk-recv-qty" type="number" min="1" step="1" placeholder="e.g. 10"/></div>
+      <div><label class="flbl">Note (supplier / bill no.)</label><input class="finput" id="stk-recv-note" maxlength="200"/></div>
+      <div id="stk-recv-err" style="color:var(--red);font-size:12px;display:none"></div>
+      <button class="msub" onclick="stockSaveReceive()">Add to stock</button>
+    </div>
+  </div>
+</div>
+<div class="mod-ov" id="mod-stock-use">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">Record use</div><button class="mclose" onclick="closeModal('mod-stock-use')">&#10005;</button></div>
+    <div class="mb">
+      <div><label class="flbl">Item *</label><select class="finput" id="stk-use-item" onchange="stockUseHint()"></select></div>
+      <div class="rx-2">
+        <div><label class="flbl">Quantity used *</label><input class="finput" id="stk-use-qty" type="number" min="1" step="1" value="1" oninput="stockUseHint()"/></div>
+        <div><label class="flbl">Used for</label><select class="finput" id="stk-use-for"></select></div>
+      </div>
+      <div id="stk-use-hint" class="ss" style="margin:0"></div>
+      <div><label class="flbl">Note</label><input class="finput" id="stk-use-note" maxlength="200" placeholder="optional"/></div>
+      <div id="stk-use-err" style="color:var(--red);font-size:12px;display:none"></div>
+      <button class="msub" onclick="stockSaveUse()">Record use</button>
+    </div>
+  </div>
+</div>
+<div class="mod-ov" id="mod-stock-fix">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">Correct stock count</div><button class="mclose" onclick="closeModal('mod-stock-fix')">&#10005;</button></div>
+    <div class="mb">
+      <div class="ss" id="stk-fix-name" style="margin:0;font-weight:700"></div>
+      <div class="rx-2">
+        <div><label class="flbl">Actual quantity now *</label><input class="finput" id="stk-fix-qty" type="number" min="0" step="1"/></div>
+        <div><label class="flbl">Warn when it falls to</label><input class="finput" id="stk-fix-low" type="number" min="0" step="1"/></div>
+      </div>
+      <div><label class="flbl">Reason *</label><input class="finput" id="stk-fix-reason" maxlength="200" placeholder="e.g. physical count, damaged, expired"/></div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:12.5px"><input type="checkbox" id="stk-fix-hide"/> Stop using this item (hide it)</label>
+      <div id="stk-fix-err" style="color:var(--red);font-size:12px;display:none"></div>
+      <button class="msub" onclick="stockSaveFix()">Save</button>
+    </div>
+  </div>
+</div>
+<script>
+/* ===== STOCK ===== (shared by the reception and owner portals) */
+var STOCK_IS_OWNER = true;
+var _stockItems = [], _stockFixId = null;
+function stockQty(n) { return Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+function stockEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function stockErr(id, msg) { var e = document.getElementById(id); if (!e) return; e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
+function stockMsg(e) {
+  var m = String((e && e.message) || e || '');
+  if (/could not find the function|schema cache|does not exist|PGRST202/i.test(m)) return 'Stock is not set up yet. Run stock.sql in Supabase first.';
+  if (/not enough stock/i.test(m)) return m.replace(/^.*not enough stock/i, 'Not enough stock').replace(/\.00\b/g, '');
+  if (/already exists/i.test(m)) return 'An item with this name already exists.';
+  if (/only the owner/i.test(m)) return 'Only the owner can do this.';
+  if (/not allowed/i.test(m)) return 'Your login is not allowed to change stock.';
+  return m || 'Something went wrong. Please try again.';
+}
+function stockDayStart(d) { var x = d ? new Date(d + 'T00:00:00+05:30') : new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) + 'T00:00:00+05:30'); return x; }
+async function loadStock() {
+  var list = document.getElementById('stock-list'); if (!list || !_clinicId) return;
+  var rd = document.getElementById('stock-rep-date'); if (rd && !rd.value) rd.value = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  var r = await _supa.from('nh_stock_items').select('*').eq('clinic_id', _clinicId).order('name');
+  if (r.error) { list.innerHTML = '<p class="ss" style="padding:12px 16px">' + stockEsc(stockMsg(r.error)) + '</p>'; return; }
+  _stockItems = r.data || [];
+  var active = _stockItems.filter(function (i) { return i.is_active; });
+  var low = active.filter(function (i) { return Number(i.quantity) <= Number(i.low_level); });
+  document.getElementById('stock-summary').textContent = active.length + ' items' + (low.length ? ' · ' + low.length + ' low' : '');
+  list.innerHTML = active.length ? active.map(function (i) {
+    var isLow = Number(i.quantity) <= Number(i.low_level), zero = Number(i.quantity) <= 0;
+    return '<div class="adm-row" style="align-items:center"><div class="adm-av" style="background:' + (isLow ? 'var(--red-bg)' : 'var(--green-bg)') + ';color:' + (isLow ? 'var(--red)' : 'var(--green)') + ';font-weight:700;font-size:11px">' + stockEsc(stockQty(i.quantity)) + '</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">' + stockEsc(i.name) + '</div><div class="adm-meta">' + stockEsc(stockQty(i.quantity) + ' ' + i.unit + ' left') + (Number(i.low_level) > 0 ? ' · warn at ' + stockEsc(stockQty(i.low_level)) : '') + '</div></div>'
+      + (isLow ? '<span style="font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--red-bg);color:var(--red);white-space:nowrap">' + (zero ? 'OUT OF STOCK' : 'LOW') + '</span>' : '')
+      + '<button class="qbtn" onclick="stockOpenUse(\'' + i.id + '\')">Use</button><button class="qbtn" onclick="stockOpenReceive(\'' + i.id + '\')">+ Add</button>'
+      + (STOCK_IS_OWNER ? '<button class="qbtn" onclick="stockOpenFix(\'' + i.id + '\')">Edit</button>' : '') + '</div>';
+  }).join('') : '<div class="empty" style="padding:20px"><p class="empty-t">No items yet</p><p class="ss">Tap <b>+ New item</b> to add oxygen cylinders, syringes and other supplies.</p></div>';
+  var m = await _supa.from('nh_stock_moves').select('*').eq('clinic_id', _clinicId).gte('created_at', stockDayStart().toISOString()).order('created_at', { ascending: false }).limit(200);
+  var mv = document.getElementById('stock-moves');
+  var rows = (m.data || []);
+  mv.innerHTML = rows.length ? rows.map(stockMoveRow).join('') : '<div class="empty" style="padding:18px"><p class="empty-t">No stock movements today</p></div>';
+}
+function stockMoveRow(x) {
+  var used = x.kind === 'used', add = x.kind === 'received' || x.kind === 'opening';
+  var what = used ? 'Used' : add ? (x.kind === 'opening' ? 'Opening stock' : 'Received') : 'Corrected';
+  var ch = Number(x.change), sign = ch > 0 ? '+' : '';
+  var forTxt = x.bed_label || x.patient_name ? ' · ' + [x.bed_label, x.patient_name].filter(Boolean).join(' · ') : (used ? ' · general use' : '');
+  return '<div class="adm-row"><div class="adm-av" style="background:' + (used ? 'var(--amber-bg)' : 'var(--green-bg)') + ';color:' + (used ? 'var(--amber)' : 'var(--green)') + ';font-weight:700;font-size:11px">' + sign + stockEsc(stockQty(ch)) + '</div>'
+    + '<div style="flex:1;min-width:0"><div class="adm-name">' + stockEsc(what + ': ' + x.item_name) + stockEsc(forTxt) + '</div>'
+    + '<div class="adm-meta">' + stockEsc(stockQty(x.balance_after) + ' ' + x.unit + ' left · ' + new Date(x.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + (x.created_by_name ? ' · by ' + x.created_by_name : '') + (x.note ? ' · ' + x.note : '')) + '</div></div></div>';
+}
+function stockFillItems(selId, chosen) {
+  var s = document.getElementById(selId); if (!s) return;
+  var act = _stockItems.filter(function (i) { return i.is_active; });
+  s.innerHTML = act.length ? act.map(function (i) { return '<option value="' + i.id + '"' + (i.id === chosen ? ' selected' : '') + '>' + stockEsc(i.name + ' (' + stockQty(i.quantity) + ' ' + i.unit + ' left)') + '</option>'; }).join('') : '<option value="">Add an item first</option>';
+}
+async function stockEnsureItems() { if (!_stockItems.length) await loadStock(); }
+function stockOpenNew() { ['stk-new-name'].forEach(function (id) { document.getElementById(id).value = ''; }); document.getElementById('stk-new-unit').value = 'pcs'; document.getElementById('stk-new-qty').value = '0'; document.getElementById('stk-new-low').value = '0'; stockErr('stk-new-err'); openModal('mod-stock-new'); }
+async function stockSaveNew() {
+  var name = document.getElementById('stk-new-name').value.trim(), unit = document.getElementById('stk-new-unit').value.trim() || 'pcs';
+  var qty = Number(document.getElementById('stk-new-qty').value || 0), low = Number(document.getElementById('stk-new-low').value || 0);
+  if (!name) return stockErr('stk-new-err', 'Please enter the item name.');
+  if (qty < 0 || low < 0) return stockErr('stk-new-err', 'Quantities cannot be negative.');
+  var r = await _supa.rpc('stock_add_item', { p_clinic_id: _clinicId, p_name: name, p_unit: unit, p_low_level: low, p_opening: qty });
+  if (r.error) return stockErr('stk-new-err', stockMsg(r.error));
+  closeModal('mod-stock-new'); if (typeof showToast === 'function') showToast('✓ ' + name + ' added'); loadStock();
+}
+async function stockOpenReceive(id) { await stockEnsureItems(); stockFillItems('stk-recv-item', id); document.getElementById('stk-recv-qty').value = ''; document.getElementById('stk-recv-note').value = ''; stockErr('stk-recv-err'); openModal('mod-stock-recv'); }
+async function stockSaveReceive() {
+  var id = document.getElementById('stk-recv-item').value, qty = Number(document.getElementById('stk-recv-qty').value || 0);
+  if (!id) return stockErr('stk-recv-err', 'Add an item first.');
+  if (!(qty > 0)) return stockErr('stk-recv-err', 'Enter how many were received.');
+  var r = await _supa.rpc('stock_receive', { p_item_id: id, p_qty: qty, p_note: document.getElementById('stk-recv-note').value.trim() || null });
+  if (r.error) return stockErr('stk-recv-err', stockMsg(r.error));
+  closeModal('mod-stock-recv'); if (typeof showToast === 'function') showToast('✓ Stock added'); loadStock();
+}
+async function stockOpenUse(id) {
+  await stockEnsureItems(); stockFillItems('stk-use-item', id);
+  document.getElementById('stk-use-qty').value = '1'; document.getElementById('stk-use-note').value = ''; stockErr('stk-use-err');
+  var f = document.getElementById('stk-use-for'); f.innerHTML = '<option value="">General / ward use</option>';
+  var a = await _supa.from('admissions').select('id,patient_name,bed_id').eq('clinic_id', _clinicId).eq('status', 'Active');
+  var b = await _supa.from('beds').select('id,bed_number,ward').eq('clinic_id', _clinicId);
+  var bm = {}; (b.data || []).forEach(function (x) { bm[x.id] = x; });
+  (a.data || []).map(function (x) { var bd = bm[x.bed_id]; return { id: x.id, label: (bd ? 'Bed ' + bd.bed_number + ' · ' : '') + (x.patient_name || 'Patient'), sort: bd ? String(bd.bed_number) : 'zzz' }; })
+    .sort(function (p, q) { return p.sort.localeCompare(q.sort, undefined, { numeric: true }); })
+    .forEach(function (x) { f.innerHTML += '<option value="' + x.id + '">' + stockEsc(x.label) + '</option>'; });
+  stockUseHint(); openModal('mod-stock-use');
+}
+function stockUseHint() {
+  var id = document.getElementById('stk-use-item').value, q = Number(document.getElementById('stk-use-qty').value || 0), h = document.getElementById('stk-use-hint');
+  var it = _stockItems.filter(function (i) { return i.id === id; })[0]; if (!it || !h) { if (h) h.textContent = ''; return; }
+  var left = Number(it.quantity) - q;
+  h.innerHTML = left < 0 ? '<span style="color:var(--red)">Only ' + stockEsc(stockQty(it.quantity) + ' ' + it.unit) + ' in stock.</span>' : 'After this: <b>' + stockEsc(stockQty(left) + ' ' + it.unit) + '</b> left' + (left <= Number(it.low_level) ? ' <span style="color:var(--red)">(low stock, the owner will be alerted)</span>' : '');
+}
+async function stockSaveUse() {
+  var id = document.getElementById('stk-use-item').value, qty = Number(document.getElementById('stk-use-qty').value || 0), adm = document.getElementById('stk-use-for').value || null;
+  if (!id) return stockErr('stk-use-err', 'Add an item first.');
+  if (!(qty > 0)) return stockErr('stk-use-err', 'Enter how many were used.');
+  var btn = document.querySelector('#mod-stock-use .msub'); if (btn) btn.disabled = true;
+  var r = await _supa.rpc('stock_use', { p_item_id: id, p_qty: qty, p_admission_id: adm, p_note: document.getElementById('stk-use-note').value.trim() || null });
+  if (btn) btn.disabled = false;
+  if (r.error) return stockErr('stk-use-err', stockMsg(r.error));
+  closeModal('mod-stock-use');
+  if (typeof showToast === 'function' && r.data) showToast('✓ Recorded · ' + stockQty(r.data.balance_after) + ' ' + r.data.unit + ' of ' + r.data.item_name + ' left');
+  loadStock();
+}
+function stockOpenFix(id) {
+  var it = _stockItems.filter(function (i) { return i.id === id; })[0]; if (!it) return; _stockFixId = id;
+  document.getElementById('stk-fix-name').textContent = it.name + ' · ' + stockQty(it.quantity) + ' ' + it.unit + ' in stock now';
+  document.getElementById('stk-fix-qty').value = Number(it.quantity); document.getElementById('stk-fix-low').value = Number(it.low_level);
+  document.getElementById('stk-fix-reason').value = ''; document.getElementById('stk-fix-hide').checked = false; stockErr('stk-fix-err'); openModal('mod-stock-fix');
+}
+async function stockSaveFix() {
+  var it = _stockItems.filter(function (i) { return i.id === _stockFixId; })[0]; if (!it) return;
+  var qty = Number(document.getElementById('stk-fix-qty').value), low = Number(document.getElementById('stk-fix-low').value || 0), reason = document.getElementById('stk-fix-reason').value.trim(), hide = document.getElementById('stk-fix-hide').checked;
+  if (!(qty >= 0) || low < 0) return stockErr('stk-fix-err', 'Quantities cannot be negative.');
+  if (qty !== Number(it.quantity)) {
+    if (reason.length < 3) return stockErr('stk-fix-err', 'Please give a reason for changing the count.');
+    var r = await _supa.rpc('stock_correct', { p_item_id: it.id, p_new_qty: qty, p_reason: reason });
+    if (r.error) return stockErr('stk-fix-err', stockMsg(r.error));
+  }
+  if (low !== Number(it.low_level) || hide) {
+    var s = await _supa.rpc('stock_set_item', { p_item_id: it.id, p_name: null, p_unit: null, p_low_level: low, p_active: hide ? false : null });
+    if (s.error) return stockErr('stk-fix-err', stockMsg(s.error));
+  }
+  closeModal('mod-stock-fix'); if (typeof showToast === 'function') showToast('✓ Saved'); loadStock();
+}
+</script>
+<script>
+/* ===== STOCK: owner extras: live alerts + daily PDF ===== */
+var _stockChan = null, _stockUnseen = 0;
+function stockBadge() {
+  var b = document.getElementById('nav-stock-count'); if (!b) return;
+  b.textContent = _stockUnseen; b.style.display = _stockUnseen > 0 ? '' : 'none';
+}
+function stockStartLive() {
+  if (_stockChan || !_clinicId || window._auraLocked || typeof _supa === 'undefined' || !_supa.channel) return;
+  _stockChan = _supa.channel('owner-stock-' + _clinicId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'nh_stock_moves', filter: 'clinic_id=eq.' + _clinicId }, function (p) {
+      var x = p.new || {}; if (x.kind === 'opening') return;
+      var onPage = document.getElementById('v-stock') && document.getElementById('v-stock').classList.contains('on');
+      if (!onPage) { _stockUnseen++; stockBadge(); } else { loadStock(); }
+      var txt = x.kind === 'used'
+        ? 'Stock used: ' + stockQty(-x.change) + ' ' + x.unit + ' ' + x.item_name + (x.bed_label ? ' · ' + x.bed_label : '') + ' · ' + stockQty(x.balance_after) + ' left' + (x.created_by_name ? ' · by ' + x.created_by_name : '')
+        : (x.kind === 'received' ? 'Stock received: +' : 'Stock corrected: ') + stockQty(x.change) + ' ' + x.unit + ' ' + x.item_name + ' · ' + stockQty(x.balance_after) + ' left';
+      if (typeof showToast === 'function') showToast('📦 ' + txt);
+    }).subscribe();
+}
+setInterval(stockStartLive, 3000);
+async function stockDownloadReport() {
+  var d = (document.getElementById('stock-rep-date') || {}).value || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  var today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  var start = stockDayStart(d), end = new Date(start.getTime() + 86400000);
+  var rows = null;
+  if (d !== today) {
+    var s = await _supa.from('nh_stock_daily').select('rows,created_at').eq('clinic_id', _clinicId).eq('report_date', d).maybeSingle();
+    if (s.data) rows = s.data.rows;
+    else { alert('No stock report was saved for ' + new Date(d).toLocaleDateString('en-GB') + '. Reports are saved at 8:00 PM each day from when stock was set up.'); return; }
+  }
+  var mv = await _supa.from('nh_stock_moves').select('*').eq('clinic_id', _clinicId).gte('created_at', start.toISOString()).lt('created_at', end.toISOString()).order('created_at');
+  var moves = mv.data || [];
+  if (!rows) {      /* today: work it out live */
+    var it = await _supa.from('nh_stock_items').select('*').eq('clinic_id', _clinicId).order('name');
+    rows = (it.data || []).filter(function (i) { return i.is_active || moves.some(function (m) { return m.item_id === i.id; }); }).map(function (i) {
+      var mine = moves.filter(function (m) { return m.item_id === i.id; });
+      var sum = function (f) { return mine.filter(f).reduce(function (a, m) { return a + Number(m.change); }, 0); };
+      var net = sum(function () { return true; });
+      return { name: i.name, unit: i.unit, opening: Number(i.quantity) - net, received: sum(function (m) { return m.kind === 'received' || m.kind === 'opening'; }), used: -sum(function (m) { return m.kind === 'used'; }), corrected: sum(function (m) { return m.kind === 'corrected'; }), closing: Number(i.quantity), low_level: Number(i.low_level), low: Number(i.quantity) <= Number(i.low_level) };
+    });
+  }
+  var jsPDF = window.jspdf && window.jspdf.jsPDF; if (!jsPDF) { alert('PDF tools are still loading. Please try again in a moment.'); return; }
+  var doc = new jsPDF({ unit: 'mm', format: 'a4' }), y = 16, W = 210;
+  var nh = (document.getElementById('sb-nh-name') || {}).textContent || 'Nursing Home';
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.text(nh, 14, y); y += 7;
+  doc.setFontSize(12); doc.text('Daily Stock Report', 14, y); doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+  doc.text(new Date(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), W - 14, y, { align: 'right' }); y += 5;
+  doc.setDrawColor(180); doc.line(14, y, W - 14, y); y += 7;
+  var cols = [['Item', 14], ['Unit', 78], ['Opening', 104], ['Received', 126], ['Used', 148], ['Closing', 166], ['Status', 184]];
+  doc.setFont('helvetica', 'bold'); cols.forEach(function (c) { doc.text(c[0], c[1], y); }); doc.setFont('helvetica', 'normal'); y += 2; doc.line(14, y, W - 14, y); y += 5;
+  var q = function (n) { return stockQty(n); };
+  rows.forEach(function (r) {
+    if (y > 270) { doc.addPage(); y = 18; }
+    var used = Number(r.used) || 0, corr = Number(r.corrected) || 0;
+    doc.text(doc.splitTextToSize(String(r.name), 62)[0], 14, y); doc.text(String(r.unit || ''), 78, y);
+    doc.text(q(r.opening), 104, y); doc.text(q(r.received), 126, y); doc.text(q(used), 148, y);
+    doc.setFont('helvetica', 'bold'); doc.text(q(r.closing), 166, y); doc.setFont('helvetica', 'normal');
+    if (r.low) { doc.setTextColor(180, 30, 30); doc.text(Number(r.closing) <= 0 ? 'OUT' : 'LOW', 184, y); doc.setTextColor(0); } else doc.text('OK', 184, y);
+    if (corr) { y += 4; doc.setFontSize(8); doc.setTextColor(110); doc.text('Count corrected by ' + (corr > 0 ? '+' : '') + q(corr), 14, y); doc.setTextColor(0); doc.setFontSize(9.5); }
+    y += 6;
+  });
+  if (!rows.length) { doc.text('No stock items.', 14, y); y += 6; }
+  var totalUsed = rows.reduce(function (a, r) { return a + (Number(r.used) || 0); }, 0), lowN = rows.filter(function (r) { return r.low; }).length;
+  y += 2; doc.line(14, y, W - 14, y); y += 6;
+  doc.text('Items: ' + rows.length + '   ·   Units used today: ' + q(totalUsed) + '   ·   Low / out of stock: ' + lowN, 14, y); y += 10;
+  var used = moves.filter(function (m) { return m.kind === 'used'; });
+  if (y > 260) { doc.addPage(); y = 18; }
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text('Usage details', 14, y); y += 6; doc.setFontSize(9); doc.text('Time', 14, y); doc.text('Item', 30, y); doc.text('Qty', 92, y); doc.text('Used for', 106, y); doc.text('By', 168, y); doc.setFont('helvetica', 'normal'); y += 2; doc.line(14, y, W - 14, y); y += 5;
+  used.forEach(function (m) {
+    if (y > 280) { doc.addPage(); y = 18; }
+    doc.text(new Date(m.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }), 14, y);
+    doc.text(doc.splitTextToSize(m.item_name, 60)[0], 30, y); doc.text(q(-m.change), 92, y);
+    doc.text(doc.splitTextToSize([m.bed_label, m.patient_name].filter(Boolean).join(' - ') || 'General use', 60)[0], 106, y);
+    doc.text(doc.splitTextToSize(m.created_by_name || '', 30)[0], 168, y); y += 5.5;
+  });
+  if (!used.length) { doc.text('No stock was used on this day.', 14, y); y += 6; }
+  doc.setFontSize(8); doc.setTextColor(120); doc.text('Generated by AuraScale Nursing Home OS on ' + new Date().toLocaleString('en-GB') + '.', 14, 290);
+  doc.save('Stock-report-' + d + '.pdf');
 }
 </script>
 </body>
