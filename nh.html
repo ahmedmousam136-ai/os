@@ -421,11 +421,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div id="su-form-new">
           <div><label class="auth-label">Nursing Home Name</label><input class="auth-input" id="su-nhname" placeholder="e.g. Diamond Harbour Nursing Home"/></div>
           <div><label class="auth-label">Owner / Administrator Name</label><input class="auth-input" id="su-name" placeholder="Full name"/></div>
-          <div><label class="auth-label">Email</label><input class="auth-input" id="su-email" type="email" placeholder="admin@yournursinghome.com"/></div>
-          <div><label class="auth-label">Mobile</label><input class="auth-input" id="su-mobile" type="tel" placeholder="WhatsApp number"/></div>
+          <div><label class="auth-label">Email</label><input class="auth-input" id="su-email" type="email" autocomplete="email" placeholder="admin@yournursinghome.com" onblur="suEmailBlur(this)"/>
+            <div id="su-email-hint" class="ss" style="font-size:11px;margin-top:4px;display:none"></div></div>
+          <div><label class="auth-label">Mobile (WhatsApp)</label>
+            <div style="display:flex;gap:6px"><span class="auth-input" style="flex:0 0 auto;width:auto;display:flex;align-items:center;font-weight:600">+91</span>
+            <input class="auth-input" id="su-mobile" type="tel" inputmode="numeric" maxlength="16" autocomplete="tel" placeholder="10-digit mobile number" oninput="suMobileInput(this)" style="flex:1"/></div>
+            <div id="su-mobile-hint" class="ss" style="font-size:11px;margin-top:4px">One nursing home per mobile number</div></div>
           <div><label class="auth-label">Password</label><input class="auth-input" id="su-pass" type="password" placeholder="Min 6 characters"/></div>
           <div id="signup-error" class="auth-error"></div>
-          <button class="auth-btn" onclick="handleSignup()">Register Nursing Home →</button>
+          <button class="auth-btn" id="su-submit-btn" onclick="handleSignup()">Register Nursing Home →</button>
         </div>
 
         <!-- PATH B: invite code → creates a Doctor or Receptionist,
@@ -1923,7 +1927,11 @@ async function handleInviteSignup(){
   var err=document.getElementById('invite-signup-error');
   err.style.display='none';
   if(!code||!name||!email||!pass){err.textContent='Please fill all fields.';err.style.display='block';return;}
+  email=email.toLowerCase();
+  var invEmailProblem=(typeof auraEmailProblem==='function')?auraEmailProblem(email):'';
+  if(invEmailProblem){err.textContent=invEmailProblem;err.style.display='block';return;}
   if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  if(typeof auraEmailDomainOk==='function'&&!(await auraEmailDomainOk(email))){err.textContent='This email address cannot receive emails (the part after @ does not exist). Please check it.';err.style.display='block';return;}
   btn.disabled=true;
   var originalLabel=btn.textContent;
   btn.textContent='Joining…';
@@ -2018,6 +2026,70 @@ async function handleLogin(){
   await _initApp();
 }
 
+/* ── SIGN-UP CHECKS: real-looking email + one owner per mobile ── */
+var AURA_EMAIL_TYPOS={'gmial.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com','gmail.co':'gmail.com','gmail.con':'gmail.com','gmail.cm':'gmail.com','gmail.om':'gmail.com','gmail.in':'gmail.com','gmai.com':'gmail.com','gamil.com':'gmail.com','gnail.com':'gmail.com','gmil.com':'gmail.com','gmsil.com':'gmail.com','gmali.com':'gmail.com','gmail.comm':'gmail.com','gmail.coom':'gmail.com','gimail.com':'gmail.com','yaho.com':'yahoo.com','yahooo.com':'yahoo.com','yahoo.co':'yahoo.com','yhoo.com':'yahoo.com','yaho.in':'yahoo.in','hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','hotmial.com':'hotmail.com','outlok.com':'outlook.com','outloo.com':'outlook.com','outlook.co':'outlook.com','rediffmail.co':'rediffmail.com','redifmail.com':'rediffmail.com','iclod.com':'icloud.com','icloud.co':'icloud.com'};
+var AURA_EMAIL_KNOWN={'gmail.com':1,'googlemail.com':1,'yahoo.com':1,'yahoo.in':1,'yahoo.co.in':1,'hotmail.com':1,'outlook.com':1,'live.com':1,'icloud.com':1,'rediffmail.com':1,'proton.me':1,'protonmail.com':1,'zoho.com':1,'zohomail.in':1,'aurascale.in':1};
+var AURA_EMAIL_THROWAWAY=['mailinator','yopmail','tempmail','temp-mail','10minutemail','guerrillamail','sharklasers','trashmail','dispostable','getnada','maildrop','throwawaymail','fakeinbox','mailnesia','mintemail','mohmal','emailondeck','tempinbox','moakt','burnermail','spamgourmet','discard.email','tmpmail','tmail','minuteinbox','inboxkitten','mailcatch','example.com','example.org','example.net','test.com','domain.com','email.test'];
+/* returns '' when fine, otherwise the message to show */
+function auraEmailProblem(email){
+  var e=String(email||'').trim().toLowerCase();
+  if(!e)return 'Enter your email address.';
+  if(!/^[a-z0-9](?:[a-z0-9._%+-]*[a-z0-9_+-])?@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/.test(e)||e.indexOf('..')>-1)
+    return 'This is not a valid email address. Check for spaces or missing letters (example: name@gmail.com).';
+  var local=e.split('@')[0], dom=e.split('@')[1];
+  if(AURA_EMAIL_TYPOS[dom])return 'Did you mean '+local+'@'+AURA_EMAIL_TYPOS[dom]+' ? Please correct the email.';
+  for(var i=0;i<AURA_EMAIL_THROWAWAY.length;i++){var b=AURA_EMAIL_THROWAWAY[i];if(dom===b||dom.indexOf(b+'.')===0||dom.slice(-(b.length+1))==='.'+b)return 'Temporary or sample email addresses are not allowed. Use your real email.';}
+  if(dom==='gmail.com'||dom==='googlemail.com'){
+    var base=local.split('+')[0].replace(/\./g,'');
+    if(!/^[a-z0-9.+]+$/.test(local)||base.length<6||base.length>30)
+      return 'This is not a valid Gmail address. Gmail names have 6–30 letters, numbers or dots.';
+  }
+  if(/^(test|testing|abc|abcd|abcde|asdf|asdfg|qwerty|xyz|aaa+|sample|dummy|fake|none|na|null|user|demo)\d*$/.test(local.split('+')[0]))
+    return 'Please use your real email address, not a test one.';
+  return '';
+}
+/* checks that the email's domain can actually receive mail (MX record), using Google's public DNS.
+   true = OK or could not check (never blocks on a network problem); false = domain cannot receive mail */
+async function auraEmailDomainOk(email){
+  var dom=String(email||'').trim().toLowerCase().split('@')[1]||'';
+  if(!dom)return false;
+  if(AURA_EMAIL_KNOWN[dom])return true;
+  try{
+    var ctl=new AbortController(); var t=setTimeout(function(){ctl.abort();},5000);
+    var r=await fetch('https://dns.google/resolve?name='+encodeURIComponent(dom)+'&type=MX',{signal:ctl.signal}); clearTimeout(t);
+    if(!r.ok)return true;
+    var j=await r.json();
+    if(j.Status===3)return false;                                   /* domain does not exist */
+    var mx=(j.Answer||[]).filter(function(a){return a.type===15&&!/^0\s+\.$/.test(String(a.data||'').trim());});
+    if(mx.length)return true;
+    var r2=await fetch('https://dns.google/resolve?name='+encodeURIComponent(dom)+'&type=A'); var j2=await r2.json();
+    return !!(j2.Answer||[]).length;                                /* no MX but has an address: mail can still be delivered */
+  }catch(_e){return true;}
+}
+function suEmailBlur(el){
+  var h=document.getElementById('su-email-hint'); if(!h)return;
+  var v=(el.value||'').trim(); if(!v){h.style.display='none';return;}
+  var p=auraEmailProblem(v);
+  h.style.display='block';
+  if(p){h.textContent=p;h.style.color='var(--red)';}else{h.textContent='✓ Email looks good';h.style.color='var(--green)';}
+}
+function suMobileInput(el){
+  var d=String(el.value||'').replace(/\D/g,'');
+  if(d.length>10&&d.indexOf('91')===0)d=d.slice(2); else if(d.length>10&&d.charAt(0)==='0')d=d.slice(1);
+  if(d.length>10)d=d.slice(0,10);
+  if(el.value!==d)el.value=d;
+  var h=document.getElementById('su-mobile-hint'); if(!h)return;
+  if(!d.length){h.textContent='One nursing home per mobile number';h.style.color='';}
+  else if(d.length<10){h.textContent=d.length+'/10 digits — enter all 10 digits';h.style.color='var(--red)';}
+  else if(!/^[6-9]/.test(d)){h.textContent='Indian mobile numbers start with 6, 7, 8 or 9';h.style.color='var(--red)';}
+  else{h.textContent='✓ +91 '+d.slice(0,5)+' '+d.slice(5);h.style.color='var(--green)';}
+}
+function _suMobile10(v){
+  var d=String(v||'').replace(/\D/g,'');
+  if(d.length===12&&d.indexOf('91')===0)d=d.slice(2); else if(d.length===11&&d.charAt(0)==='0')d=d.slice(1);
+  return /^[6-9]\d{9}$/.test(d)?d:'';
+}
+
 async function handleSignup(){
   var nhname=(document.getElementById('su-nhname').value||'').trim();
   var name=(document.getElementById('su-name').value||'').trim();
@@ -2026,8 +2098,36 @@ async function handleSignup(){
   var pass=document.getElementById('su-pass').value||'';
   var err=document.getElementById('signup-error');
   err.style.display='none';
-  if(!nhname||!name||!email||!pass){err.textContent='Please fill all required fields.';err.style.display='block';return;}
-  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  if(!nhname||!name||!email||!mobile||!pass){err.textContent='Please fill all required fields.';err.style.display='block';return;}
+  function _suFail(m){err.textContent=m;err.style.display='block';}
+  email=email.toLowerCase();
+  var emailProblem=auraEmailProblem(email);
+  if(emailProblem){_suFail(emailProblem);document.getElementById('su-email').focus();return;}
+  var mob10=_suMobile10(mobile);
+  if(!mob10){
+    var nd=mobile.replace(/\D/g,'').length;
+    _suFail(nd<10?'This mobile number has only '+nd+' digits. Enter the full 10-digit number.':'This is not a valid Indian mobile number. It must be 10 digits starting with 6, 7, 8 or 9.');
+    document.getElementById('su-mobile').focus();return;
+  }
+  if(pass.length<6){_suFail('Password must be at least 6 characters.');return;}
+  var suBtn=document.getElementById('su-submit-btn'), suBtnLabel=suBtn?suBtn.textContent:'';
+  if(suBtn){if(suBtn.disabled)return;suBtn.disabled=true;suBtn.textContent='Checking…';}
+  try{
+    if(!(await auraEmailDomainOk(email))){_suFail('This email address cannot receive emails (the part after @ does not exist). Please check it.');return;}
+    /* one owner account per mobile number: ask the database before creating the login */
+    var av=await _supa.rpc('nh_owner_mobile_available',{p_mobile:mob10});
+    if(!av.error&&av.data===false){
+      _suFail('This mobile number (+91 '+mob10.slice(0,5)+' '+mob10.slice(5)+') is already registered with another nursing home. Please sign in with that account, or use a different number.');
+      document.getElementById('su-mobile').focus();return;
+    }
+    mobile=mob10;
+    if(suBtn)suBtn.textContent='Registering…';
+    await _handleSignupCreate(nhname,name,email,mobile,pass,err);
+  }finally{
+    if(suBtn&&document.body.contains(suBtn)){suBtn.disabled=false;suBtn.textContent=suBtnLabel;}
+  }
+}
+async function _handleSignupCreate(nhname,name,email,mobile,pass,err){
   var r=await _supa.auth.signUp({email,password:pass});
   if(r.error){
     /* Same email may already have an account under Clinic OS (or a
@@ -2060,7 +2160,9 @@ async function handleSignup(){
       plan:'pending'
     }).select().single();
     if(ins.error||!ins.data){
-      err.textContent='Could not create nursing home record: '+(ins.error?ins.error.message:'unknown error');
+      var insMsg=ins.error?ins.error.message:'unknown error';
+      if(insMsg.indexOf('MOBILE_TAKEN')>-1){ try{await _supa.auth.signOut();}catch(_e){} }
+      err.textContent=insMsg.indexOf('MOBILE_TAKEN')>-1?'This mobile number is already registered with another nursing home. Please use a different number.':'Could not create nursing home record: '+insMsg;
       err.style.display='block';
       return;
     }
