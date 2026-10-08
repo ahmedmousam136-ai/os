@@ -1053,7 +1053,6 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               <span id="sub-status-badge" style="font-weight:700;font-size:12px;padding:4px 10px;border-radius:999px">—</span>
             </div>
             <p class="ss" id="sub-status-note">Checking subscription status…</p>
-            <button onclick="payAuraScaleSubscription()" id="pay-sub-btn" class="add-btn" style="width:100%;justify-content:center">💳 Pay Subscription Now — ₹4,999 (incl. GST)</button>
             <a href="https://wa.me/919330660325?text=Hi, I'd like to renew/check my AuraScale subscription." target="_blank" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:transparent;border:1px solid var(--border);color:var(--text-secondary)">📲 Or renew via WhatsApp instead</a>
           </div>
         </div>
@@ -1068,7 +1067,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             <p class="ss" style="margin:0" id="aura-upi-note">Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;4,999</b> to AuraScale.</p>
             <div id="aura-upi-qr" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
             <div style="font-size:12.5px;font-weight:600">UPI ID: <span id="aura-upi-id">8017465987-3@ybl</span></div>
-            <a id="aura-upi-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none">Open UPI app</a>
+            <a id="aura-upi-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none">&#128179; Pay Subscription Now &mdash; &#8377;4,999 (incl. GST)</a>
+            <p class="ss" style="margin:0">On a phone this opens your UPI app. On a computer, scan the QR above with your phone.</p>
             <a id="aura-upi-wa" href="#" target="_blank" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:#25D366">Send payment screenshot on WhatsApp</a>
             <p class="ss" style="margin:0">AuraScale confirms your payment within one working day. Your renewal date then updates and the tax invoice appears below.</p>
           </div>
@@ -5086,6 +5086,7 @@ async function auraShowUpiQr() {
   if (note) note.innerHTML = 'Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;' + _auraUpiAmount.toLocaleString('en-IN') + '</b> to AuraScale for the ' + what + '.';
   var url = await auraDrawUpiQr('aura-upi-qr', _auraUpiAmount, 'AuraScale ' + what + ' - ' + nh);
   var link = document.getElementById('aura-upi-link'); if (link) link.href = url || auraUpiUrl(_auraUpiAmount, 'AuraScale ' + what);
+  if (link) link.innerHTML = _auraUpiAmount === 499 ? '&#128179; Pay Top-up Now &mdash; &#8377;499 (incl. GST)' : '&#128179; Pay Subscription Now &mdash; &#8377;4,999 (incl. GST)';
   var wa = document.getElementById('aura-upi-wa');
   if (wa) wa.href = 'https://wa.me/' + AURA_WA + '?text=' + encodeURIComponent('Hi, I have paid Rs ' + _auraUpiAmount + ' by UPI for the AuraScale ' + what + ' of ' + nh + '. Screenshot attached.');
 }
