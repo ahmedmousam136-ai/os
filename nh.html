@@ -1045,32 +1045,31 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div id="v-subscription" class="view owner-only">
         <div class="sh"><div><h1 class="st">Subscription</h1><p class="ss">Your AuraScale account status &amp; billing</p></div></div>
 
-        <div class="panel">
-          <div class="ph"><div class="pt">AuraScale Subscription</div></div>
-          <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span class="ss">Status</span>
-              <span id="sub-status-badge" style="font-weight:700;font-size:12px;padding:4px 10px;border-radius:999px">—</span>
-            </div>
-            <p class="ss" id="sub-status-note">Checking subscription status…</p>
-            <a href="https://wa.me/919330660325?text=Hi, I'd like to renew/check my AuraScale subscription." target="_blank" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:transparent;border:1px solid var(--border);color:var(--text-secondary)">📲 Or renew via WhatsApp instead</a>
-          </div>
+        <div id="aura-lock-notice" style="display:none;background:#FDECEC;border:1px solid #F3B9B9;color:#9B1C1C;border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.55">
+          <b>&#128274; Your AuraScale account is locked.</b> The subscription renewal is overdue and the 7-day grace period has ended. The owner and reception portals are paused until the payment of &#8377;4,999 is received. Patient records are safe and nothing has been deleted.
         </div>
 
         <div class="panel">
-          <div class="ph"><div class="pt">Pay by UPI</div></div>
-          <div style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
-            <div style="display:flex;gap:8px;width:100%">
-              <button type="button" id="aura-upi-sub" class="add-btn" style="flex:1;justify-content:center" onclick="auraUpiChoose(4999)">Subscription &#8377;4,999</button>
-              <button type="button" id="aura-upi-top" class="add-btn" style="flex:1;justify-content:center;background:transparent;color:var(--text-primary);border:1px solid var(--border)" onclick="auraUpiChoose(499)">ID-scan top-up &#8377;499</button>
+          <div class="ph"><div class="pt">AuraScale Subscription</div></div>
+          <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="ss">Status</span>
+              <span id="sub-status-badge" style="font-weight:700;font-size:12px;padding:4px 10px;border-radius:999px">&mdash;</span>
             </div>
-            <p class="ss" style="margin:0" id="aura-upi-note">Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;4,999</b> to AuraScale.</p>
-            <div id="aura-upi-qr" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
-            <div style="font-size:12.5px;font-weight:600">UPI ID: <span id="aura-upi-id">8017465987-3@ybl</span></div>
+            <p class="ss" id="sub-status-note" style="margin:0">Checking subscription status&hellip;</p>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--border);padding-top:12px">
+              <span class="ss">Monthly plan</span>
+              <span style="font-weight:700;font-size:15px">&#8377;4,999 <span class="ss" style="font-weight:500;font-size:11.5px">incl. GST</span></span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding-top:4px">
+              <p class="ss" style="margin:0">Scan with any UPI app (GPay, PhonePe, Paytm) to pay AuraScale.</p>
+              <div id="aura-upi-qr" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
+              <div style="font-size:12.5px;font-weight:600">UPI ID: <span id="aura-upi-id">8017465987-3@ybl</span></div>
+            </div>
             <a id="aura-upi-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none">&#128179; Pay Subscription Now &mdash; &#8377;4,999 (incl. GST)</a>
-            <p class="ss" style="margin:0">On a phone this opens your UPI app. On a computer, scan the QR above with your phone.</p>
-            <a id="aura-upi-wa" href="#" target="_blank" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:#25D366">Send payment screenshot on WhatsApp</a>
-            <p class="ss" style="margin:0">AuraScale confirms your payment within one working day. Your renewal date then updates and the tax invoice appears below.</p>
+            <p class="ss" style="margin:-4px 0 0;text-align:center">On a phone this opens your UPI app. On a computer, scan the QR with your phone.</p>
+            <a id="aura-upi-wa" href="#" target="_blank" class="add-btn" style="width:100%;justify-content:center;text-decoration:none;background:transparent;border:1px solid var(--border);color:var(--text-primary)">Send payment screenshot on WhatsApp</a>
+            <p class="ss" style="margin:0;text-align:center">AuraScale confirms your payment within one working day. Your renewal date then moves forward one month, access is restored if it was paused, and your tax invoice appears below.</p>
           </div>
         </div>
 
@@ -1093,8 +1092,12 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
               </div>
             </div>
             <div id="usage-bonus-note" class="ss" style="display:none"></div>
-            <p class="ss" style="margin:0">To buy a top-up pack now, use <b>Pay by UPI</b> above and choose <b>ID-scan top-up &#8377;499</b>.</p>
-            <button onclick="payUsageTopup()" id="pay-topup-btn" class="add-btn" style="width:100%;justify-content:center;background:var(--purple,#6B3FA0)">⚡ Buy Top-Up Pack — ₹499 incl. GST (+100 scans)</button>
+            <button type="button" class="add-btn" style="width:100%;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--text-primary)" onclick="auraShowTopupQr()">Buy top-up pack &mdash; &#8377;499 incl. GST (+100 scans)</button>
+            <div id="aura-topup-box" style="display:none;flex-direction:column;align-items:center;gap:8px;text-align:center">
+              <div id="aura-topup-qr" style="width:160px;height:160px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>
+              <a id="aura-topup-link" href="#" class="add-btn" style="width:100%;justify-content:center;text-decoration:none">&#128179; Pay &#8377;499 by UPI</a>
+              <a id="aura-topup-wa" href="#" target="_blank" class="ss" style="text-decoration:underline">Send the payment screenshot on WhatsApp</a>
+            </div>
           </div>
         </div>
       </div>
@@ -1685,6 +1688,7 @@ function initLanguage(){
 initLanguage();
 
 function nav(id,btn){
+  if(window._auraLocked && id!=='subscription'){ if(typeof showToast==='function')showToast('\uD83D\uDD12 Account locked \u2014 please renew the subscription to continue.'); id='subscription'; btn=document.querySelector('.nb[data-lock-ok]'); }
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')});
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on')});
   var v=document.getElementById('v-'+id);
@@ -1780,23 +1784,23 @@ async function loadSubscriptionStatus(){
   var expiresAt=r.data&&r.data.subscription_expires_at;
   var daysLeft=expiresAt?Math.ceil((new Date(expiresAt).getTime()-Date.now())/86400000):null;
 
-  if(status==='frozen'){
+  if(status==='frozen' || (typeof auraIsLocked==='function' && auraIsLocked(status, expiresAt))){
     badge.textContent='Locked';
     badge.style.background='var(--red-bg)';badge.style.color='var(--red)';
-    note.textContent='Access to billing and admin features is paused because the grace period after renewal ended without payment. Your doctors can still access patient records as normal.';
+    note.textContent='Payment overdue. The owner and reception portals are paused until the renewal of \u20B94,999 is received. Doctors can still view patient records.';
   }else if(daysLeft!==null && daysLeft<0){
     var daysUntilLock=7+daysLeft; // grace period counts down from 7
     badge.textContent='Grace Period';
     badge.style.background='#FFF3CD';badge.style.color='#8A6D00';
-    note.textContent='Your subscription ended on '+new Date(expiresAt).toLocaleDateString('en-IN')+'. You have '+Math.max(daysUntilLock,0)+' day(s) left before the account is automatically locked — renew now to avoid interruption.';
+    note.textContent='Renewal was due on '+new Date(expiresAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'. Grace period: '+Math.max(daysUntilLock,0)+' day'+(Math.max(daysUntilLock,0)===1?'':'s')+' left before the account is locked. Please renew now to avoid interruption.';
   }else if(daysLeft!==null){
     badge.textContent='Active';
     badge.style.background='var(--green-bg)';badge.style.color='var(--green)';
-    note.textContent='Renews on '+new Date(expiresAt).toLocaleDateString('en-IN')+' ('+daysLeft+' day'+(daysLeft===1?'':'s')+' left).';
+    note.textContent='Next renewal: '+new Date(expiresAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+' ('+daysLeft+' day'+(daysLeft===1?'':'s')+' left).';
   }else{
     badge.textContent='Active';
     badge.style.background='var(--green-bg)';badge.style.color='var(--green)';
-    note.textContent='Your AuraScale subscription is active. No payment has been recorded yet — the renewal date will appear here after your first payment.';
+    note.textContent='Your AuraScale subscription is active. Your renewal date will appear here after your first payment.';
   }
   loadUsageStats();
   if (typeof auraLoadInvoices === 'function') { auraLoadInvoices(); auraShowUpiQr(); }
@@ -2222,13 +2226,6 @@ async function _initApp(){
        (doctors never reach this point; they're redirected to doctor.html above). Whether the
        account is actually frozen is decided server-side by the daily check-subscriptions job,
        which enforces the 7-day grace period after subscription_expires_at. */
-    if(cl.data.subscription_status==='frozen'){
-      document.getElementById('app-shell').classList.remove('authenticated');
-      document.getElementById('auth-screen').classList.remove('hidden');
-      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">🔒</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Subscription Payment Due</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale subscription\'s grace period has ended. Renew now to restore access — your doctors can still access patient records as normal.</p><a href="https://wa.me/919330660325?text=Hi, I need to renew my AuraScale subscription." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 Renew via WhatsApp</a><div style="margin-top:18px;font-size:13px;font-weight:600">Or pay &#8377;4,999 by UPI</div><div id="aura-lock-qr" style="width:180px;height:180px;margin:10px auto;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;padding:8px"></div><div style="font-size:12px">UPI ID: 8017465987-3@ybl</div><p style="font-size:12px;color:var(--text-secondary);margin-top:8px">After paying, send the screenshot on WhatsApp. Access returns as soon as AuraScale confirms it.</p></div></div>';
-      setTimeout(function(){ if (typeof auraDrawUpiQr === 'function') auraDrawUpiQr('aura-lock-qr', 4999, 'AuraScale subscription - ' + String(cl.data.name || '').slice(0, 40)); }, 0);
-      return;
-    }
     /* Expose renewal/grace-period info for the top banner (renderSubscriptionBanner). */
     window._auraSubscription={status:cl.data.subscription_status,expiresAt:cl.data.subscription_expires_at||null};
     if(cl.data.subscription_expires_at){
@@ -2246,6 +2243,7 @@ async function _initApp(){
        automatically without needing to sign in again. */
     if(_myRole==='doctor'){ window.location.href='doctor.html'; return; }
     if(_myRole==='receptionist'){ window.location.href='receptionist.html'; return; }
+    if(auraIsLocked(cl.data.subscription_status, cl.data.subscription_expires_at)){ auraEnterLockMode(); return; }
     loadDashboard();
     renderSubscriptionBanner();
   }catch(e){
@@ -5071,24 +5069,44 @@ async function auraDrawUpiQr(boxId, amount, note) {
   } catch (e) { box.innerHTML = '<span class="ss">QR could not load. Use the UPI ID below.</span>'; }
   return url;
 }
-function auraUpiChoose(amount) {
-  _auraUpiAmount = amount;
-  var on = { flex: '1', justifyContent: 'center' };
-  var a = document.getElementById('aura-upi-sub'), b = document.getElementById('aura-upi-top');
-  [[a, amount === 4999], [b, amount === 499]].forEach(function (x) { if (!x[0]) return; x[0].style.background = x[1] ? '' : 'transparent'; x[0].style.color = x[1] ? '' : 'var(--text-primary)'; x[0].style.border = x[1] ? '' : '1px solid var(--border)'; });
-  auraShowUpiQr();
-}
 async function auraShowUpiQr() {
   if (!document.getElementById('aura-upi-qr')) return;
   var nameEl = document.getElementById('sb-nh-name'), nh = ((nameEl && nameEl.textContent) || '').slice(0, 40);
-  var what = _auraUpiAmount === 499 ? 'ID-scan top-up' : 'subscription';
-  var note = document.getElementById('aura-upi-note');
-  if (note) note.innerHTML = 'Scan with any UPI app (GPay, PhonePe, Paytm) to pay <b>&#8377;' + _auraUpiAmount.toLocaleString('en-IN') + '</b> to AuraScale for the ' + what + '.';
-  var url = await auraDrawUpiQr('aura-upi-qr', _auraUpiAmount, 'AuraScale ' + what + ' - ' + nh);
-  var link = document.getElementById('aura-upi-link'); if (link) link.href = url || auraUpiUrl(_auraUpiAmount, 'AuraScale ' + what);
-  if (link) link.innerHTML = _auraUpiAmount === 499 ? '&#128179; Pay Top-up Now &mdash; &#8377;499 (incl. GST)' : '&#128179; Pay Subscription Now &mdash; &#8377;4,999 (incl. GST)';
+  var url = await auraDrawUpiQr('aura-upi-qr', 4999, 'AuraScale subscription - ' + nh);
+  var link = document.getElementById('aura-upi-link'); if (link) link.href = url || auraUpiUrl(4999, 'AuraScale subscription');
   var wa = document.getElementById('aura-upi-wa');
-  if (wa) wa.href = 'https://wa.me/' + AURA_WA + '?text=' + encodeURIComponent('Hi, I have paid Rs ' + _auraUpiAmount + ' by UPI for the AuraScale ' + what + ' of ' + nh + '. Screenshot attached.');
+  if (wa) wa.href = 'https://wa.me/' + AURA_WA + '?text=' + encodeURIComponent('Hello AuraScale, I have paid Rs 4,999 by UPI for the monthly subscription of ' + nh + '. Payment screenshot attached.');
+}
+async function auraShowTopupQr() {
+  var box = document.getElementById('aura-topup-box'); if (!box) return;
+  box.style.display = 'flex';
+  var nameEl = document.getElementById('sb-nh-name'), nh = ((nameEl && nameEl.textContent) || '').slice(0, 40);
+  var url = await auraDrawUpiQr('aura-topup-qr', 499, 'AuraScale ID-scan top-up - ' + nh);
+  var link = document.getElementById('aura-topup-link'); if (link) link.href = url || auraUpiUrl(499, 'AuraScale ID-scan top-up');
+  var wa = document.getElementById('aura-topup-wa');
+  if (wa) wa.href = 'https://wa.me/' + AURA_WA + '?text=' + encodeURIComponent('Hello AuraScale, I have paid Rs 499 by UPI for an ID-scan top-up pack for ' + nh + '. Payment screenshot attached.');
+}
+/* ===== ACCOUNT LOCK =====
+   Locked = the daily job set subscription_status to 'frozen', or the renewal date is more than 7 days past.
+   A locked owner can open ONLY the Subscription page (to pay); every other page is blocked. */
+var AURA_GRACE_DAYS = 7;
+var _origNav = function (id, btn) { nav(id, btn); };
+function auraIsLocked(status, expiresAt) {
+  if (status === 'frozen') return true;
+  if (!expiresAt) return false;
+  return Date.now() > new Date(expiresAt).getTime() + AURA_GRACE_DAYS * 86400000;
+}
+function auraEnterLockMode() {
+  window._auraLocked = true;
+  document.body.classList.add('aura-locked');
+  var n = document.getElementById('aura-lock-notice'); if (n) n.style.display = 'block';
+  if (!document.getElementById('aura-lock-css')) {
+    var st = document.createElement('style'); st.id = 'aura-lock-css';
+    st.textContent = 'body.aura-locked .nb:not([data-lock-ok]){opacity:.35;pointer-events:none}';
+    document.head.appendChild(st);
+  }
+  document.querySelectorAll('.nb').forEach(function (b) { if (/nav\('subscription'/.test(b.getAttribute('onclick') || '')) b.setAttribute('data-lock-ok', '1'); });
+  if (typeof _origNav === 'function') _origNav('subscription', document.querySelector('.nb[data-lock-ok]'));
 }
 var _auraInvoices = [];
 async function auraLoadInvoices() {
