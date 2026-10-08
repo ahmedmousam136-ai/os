@@ -2418,7 +2418,7 @@ async function doRegisterAndAdmit(){
   var upd={visit_type:visit,uhid:regUhid};
   if(!isExisting||address) upd.address=address;
   await _supa.from('nh_patients').update(upd).eq('id',pid);
-  var _waRes=await waSave(pid, !!document.getElementById('reg-wa-consent').checked, isExisting, true); waAfterSave(pid,_waRes);   // WhatsApp consent: only written when new or changed
+  var _waTick=!!document.getElementById('reg-wa-consent').checked; var _waRes=await waSave(pid, _waTick, isExisting, true); waAfterSave(pid,_waRes,_waTick);   // WhatsApp consent: only written when new or changed
   // Upload captured ID images
   for(var side of['front','back']){
     if(_imgs[side]){
@@ -2522,7 +2522,6 @@ async function openProfile(id,name){
     +'<div class="ir"><span class="il">Age / Gender</span><span class="iv">'+(d.age||'—')+' / '+(d.gender||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Mobile</span><span class="iv">'+(d.phone||'—')+'</span></div>'
     +'<div class="ir"><span class="il">'+esc(famT('wa_lbl'))+'</span><span class="iv">'+esc(waProfileText(d))
-      +((d.whatsapp_consent&&d.whatsapp_consent_status!==undefined&&d.whatsapp_consent_status!=='confirmed')?' <button class="qbtn" style="margin-left:8px" onclick="waAskNow(\''+esc(d.id)+'\',this)">'+esc(famT(d.whatsapp_consent_status==='pending'?'wa_resend_btn':'wa_ask_btn'))+'</button>':'')
       +'</span></div>'
     +admBlock
     +'<div class="ir"><span class="il">Address</span><span class="iv">'+(d.address||'—')+'</span></div>'
@@ -4838,7 +4837,7 @@ async function waRequestPermission(patientId,silent){
   }catch(e){ console.warn('consent request not sent', e); }
   return false;
 }
-function waAfterSave(patientId,res){ if(res==='on') setTimeout(function(){ waRequestPermission(patientId,true); }, 3300); }   // after the "registered" toast
+function waAfterSave(patientId,res,ticked){ if(res==='on'||ticked) setTimeout(function(){ waRequestPermission(patientId,true); }, 3300); }   // box ticked = always ask on WhatsApp (the function skips patients who already confirmed or were asked recently)   // after the "registered" toast
 async function waAskNow(patientId,btn){
   if(btn) btn.disabled=true;
   await waRequestPermission(patientId,false);
