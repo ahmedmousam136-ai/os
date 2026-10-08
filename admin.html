@@ -765,13 +765,14 @@ header{
         <div class="sh"><div><h1 class="st">Invoices &amp; Payments</h1><p class="ss">AuraScale tax invoices to nursing homes. One is created automatically for every payment.</p></div></div>
         <div class="panel">
           <div class="ph"><div class="pt">Record a UPI / cash payment you received</div></div>
-          <div style="padding:16px;display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:10px;align-items:end">
+          <div style="padding:16px;display:grid;grid-template-columns:2fr 1.4fr 1fr 2fr auto;gap:10px;align-items:end">
             <div><label class="ss">Nursing home</label><select class="finput" id="inv-clinic"></select></div>
+            <div><label class="ss">For</label><select class="finput" id="inv-kind"><option value="sub">Subscription &#8377;4,999</option><option value="topup">ID-scan top-up &#8377;499</option></select></div>
             <div><label class="ss">Method</label><select class="finput" id="inv-method"><option>UPI</option><option>Bank transfer</option><option>Cash</option></select></div>
             <div><label class="ss">UTR / reference</label><input class="finput" id="inv-ref" placeholder="e.g. 4321 8765 1234"/></div>
-            <button class="btn-green" onclick="recordPayment()">Record &#8377;4,999 payment</button>
+            <button class="btn-green" onclick="recordPayment()">Record payment</button>
           </div>
-          <p class="ss" style="padding:0 16px 14px;margin:0">This extends their subscription by one month, unlocks the account if it was locked, and issues the tax invoice.</p>
+          <p class="ss" style="padding:0 16px 14px;margin:0">Subscription: extends by one month and unlocks a locked account. Top-up: adds 100 ID scans. Both issue the tax invoice. Check the money has arrived in your UPI app first.</p>
         </div>
         <div class="panel">
           <div class="ph"><div class="pt">All invoices</div><span class="ss" id="inv-summary"></span></div>
@@ -1408,8 +1409,9 @@ async function recordPayment() {
   var name = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
   var method = document.getElementById('inv-method').value, ref = (document.getElementById('inv-ref').value || '').trim();
   if (!id) return;
-  if (!confirm('Record ₹4,999 received from ' + name + ' by ' + method + (ref ? ' (ref ' + ref + ')' : '') + '?\n\nThis issues a tax invoice and cannot be undone.')) return;
-  var r = await _supa.rpc('admin_record_payment', { p_clinic_id: id, p_method: method, p_ref: ref || null });
+  var topup = document.getElementById('inv-kind').value === 'topup', amt = topup ? '499' : '4,999';
+  if (!confirm('Record ₹' + amt + (topup ? ' top-up' : ' subscription') + ' received from ' + name + ' by ' + method + (ref ? ' (ref ' + ref + ')' : '') + '?\n\nThis issues a tax invoice and cannot be undone.')) return;
+  var r = await _supa.rpc(topup ? 'admin_record_topup' : 'admin_record_payment', { p_clinic_id: id, p_method: method, p_ref: ref || null });
   if (r.error) { alert('Not recorded: ' + r.error.message); return; }
   alert('Recorded. Invoice ' + ((r.data && r.data.invoice_no) || '') + ' issued.');
   document.getElementById('inv-ref').value = '';
