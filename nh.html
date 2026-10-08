@@ -891,12 +891,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <!-- BILLS (owner): every saved final bill -->
       <!-- STOCK -->
       <div id="v-stock" class="view owner-only">
-        <div class="sh"><div><h1 class="st">Stock</h1><p class="ss">Oxygen cylinders, syringes, gloves and other supplies. Every use is subtracted automatically.</p></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="qbtn" onclick="stockOpenUse()" style="background:var(--green);color:#fff;border-color:var(--green);font-weight:700;padding:8px 14px;font-size:12px">&minus; Record use</button>
-            <button class="qbtn" onclick="stockOpenReceive()" style="padding:8px 14px;font-size:12px">+ Stock received</button>
-            <button class="qbtn" onclick="stockOpenNew()" style="padding:8px 14px;font-size:12px">+ New item</button>
-          </div>
+        <div class="sh"><div><h1 class="st">Stock</h1><p class="ss">Live stock of oxygen cylinders, syringes and other supplies. Updated automatically whenever reception adds a charge to a bed.</p></div>
         </div>
         <div class="ss" style="margin:-4px 0 12px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">&#128197; Stock is included in your <b>daily report at 8:00 PM</b> on WhatsApp: opening, received, used and closing for every item, what each bed used, and low-stock warnings.</div>
         <div class="panel">
@@ -3865,7 +3860,7 @@ async function loadOwnerNotifications(){
     if(/^stock_/.test(a.action||'')){
       var sd=d, sk=a.action.replace('stock_','');
       var stTitle = sk==='daily_report' ? 'Daily stock report ready ('+(sd.items||0)+' items'+(sd.low?', '+sd.low+' low':'')+')'
-        : (sk==='used' ? 'Stock used: '+stockQty(-sd.change)+' '+(sd.unit||'')+' '+(sd.item||'') : sk==='received' ? 'Stock received: +'+stockQty(sd.change)+' '+(sd.unit||'')+' '+(sd.item||'') : sk==='opening' ? 'New stock item: '+(sd.item||'')+' ('+stockQty(sd.change)+' '+(sd.unit||'')+')' : 'Stock corrected: '+(sd.item||''));
+        : (sk==='used' ? 'Stock used: '+stockQty(-sd.change)+' '+(sd.unit||'')+' '+(sd.item||'') : sk==='received' ? 'Stock received: +'+stockQty(sd.change)+' '+(sd.unit||'')+' '+(sd.item||'') : sk==='returned' ? 'Stock returned (charge removed): +'+stockQty(sd.change)+' '+(sd.unit||'')+' '+(sd.item||'') : sk==='opening' ? 'New stock item: '+(sd.item||'')+' ('+stockQty(sd.change)+' '+(sd.unit||'')+')' : 'Stock corrected: '+(sd.item||''));
       var stMeta = sk==='daily_report' ? 'Open Stock to download the PDF' : [sd.bed, sd.patient].filter(Boolean).join(' \u00b7 ') + (sd.left!=null ? (sd.bed||sd.patient?' \u00b7 ':'')+stockQty(sd.left)+' left' : '') + (sd.low ? ' \u00b7 LOW' : '') + (sd.by ? ' \u00b7 by '+sd.by : '');
       return '<div class="adm-row"'+(sk==='daily_report'?' style="cursor:pointer" onclick="nav(\'stock\',document.querySelector(\'.nb[onclick*=stock]\'))"':'')+'><div class="adm-av" style="background:'+(sd.low?'var(--red-bg)':'var(--amber-bg)')+';color:'+(sd.low?'var(--red)':'var(--amber)')+'">&#128230;</div>'
         + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(stTitle)+'</div><div class="adm-meta">'+esc(stMeta)+'</div>'
@@ -5203,50 +5198,31 @@ function auraOpenInvoice(i) {
         <div><label class="flbl">Unit</label><input class="finput" id="stk-new-unit" maxlength="20" placeholder="pcs, cylinders, boxes" value="pcs"/></div>
         <div><label class="flbl">Quantity in stock now</label><input class="finput" id="stk-new-qty" type="number" min="0" step="1" value="0"/></div>
       </div>
+      <div class="rx-2">
+        <div><label class="flbl">Price per unit (&#8377;) for the bill</label><input class="finput" id="stk-new-price" type="number" min="0" step="1" placeholder="e.g. 1200"/></div>
+        <div><label class="flbl">Charge type on the bill</label><select class="finput" id="stk-new-cat"><option>Other</option><option>Medicine</option><option>Injection</option><option>Procedure</option><option>Lab Test</option><option>Diagnostic</option><option>Nursing</option><option>Bed Charge</option><option>Doctor Fee</option></select></div>
+      </div>
       <div><label class="flbl">Warn the owner when it falls to</label><input class="finput" id="stk-new-low" type="number" min="0" step="1" value="0"/></div>
       <div id="stk-new-err" style="color:var(--red);font-size:12px;display:none"></div>
       <button class="msub" onclick="stockSaveNew()">Add item</button>
     </div>
   </div>
 </div>
-<div class="mod-ov" id="mod-stock-recv">
-  <div class="modal">
-    <div class="mh"><div class="mtitle">Stock received</div><button class="mclose" onclick="closeModal('mod-stock-recv')">&#10005;</button></div>
-    <div class="mb">
-      <div><label class="flbl">Item *</label><select class="finput" id="stk-recv-item"></select></div>
-      <div><label class="flbl">Quantity received *</label><input class="finput" id="stk-recv-qty" type="number" min="1" step="1" placeholder="e.g. 10"/></div>
-      <div><label class="flbl">Note (supplier / bill no.)</label><input class="finput" id="stk-recv-note" maxlength="200"/></div>
-      <div id="stk-recv-err" style="color:var(--red);font-size:12px;display:none"></div>
-      <button class="msub" onclick="stockSaveReceive()">Add to stock</button>
-    </div>
-  </div>
-</div>
-<div class="mod-ov" id="mod-stock-use">
-  <div class="modal">
-    <div class="mh"><div class="mtitle">Record use</div><button class="mclose" onclick="closeModal('mod-stock-use')">&#10005;</button></div>
-    <div class="mb">
-      <div><label class="flbl">Item *</label><select class="finput" id="stk-use-item" onchange="stockUseHint()"></select></div>
-      <div class="rx-2">
-        <div><label class="flbl">Quantity used *</label><input class="finput" id="stk-use-qty" type="number" min="1" step="1" value="1" oninput="stockUseHint()"/></div>
-        <div><label class="flbl">Used for</label><select class="finput" id="stk-use-for"></select></div>
-      </div>
-      <div id="stk-use-hint" class="ss" style="margin:0"></div>
-      <div><label class="flbl">Note</label><input class="finput" id="stk-use-note" maxlength="200" placeholder="optional"/></div>
-      <div id="stk-use-err" style="color:var(--red);font-size:12px;display:none"></div>
-      <button class="msub" onclick="stockSaveUse()">Record use</button>
-    </div>
-  </div>
-</div>
 <div class="mod-ov" id="mod-stock-fix">
   <div class="modal">
-    <div class="mh"><div class="mtitle">Correct stock count</div><button class="mclose" onclick="closeModal('mod-stock-fix')">&#10005;</button></div>
+    <div class="mh"><div class="mtitle">Edit stock item</div><button class="mclose" onclick="closeModal('mod-stock-fix')">&#10005;</button></div>
     <div class="mb">
       <div class="ss" id="stk-fix-name" style="margin:0;font-weight:700"></div>
+      <div><label class="flbl">New stock received (adds to the count)</label><input class="finput" id="stk-fix-recv" type="number" min="0" step="1" placeholder="e.g. 10"/></div>
       <div class="rx-2">
-        <div><label class="flbl">Actual quantity now *</label><input class="finput" id="stk-fix-qty" type="number" min="0" step="1"/></div>
+        <div><label class="flbl">Price per unit (&#8377;)</label><input class="finput" id="stk-fix-price" type="number" min="0" step="1"/></div>
+        <div><label class="flbl">Charge type</label><select class="finput" id="stk-fix-cat"><option>Other</option><option>Medicine</option><option>Injection</option><option>Procedure</option><option>Lab Test</option><option>Diagnostic</option><option>Nursing</option><option>Bed Charge</option><option>Doctor Fee</option></select></div>
+      </div>
+      <div class="rx-2">
+        <div><label class="flbl">Correct the count to</label><input class="finput" id="stk-fix-qty" type="number" min="0" step="1"/></div>
         <div><label class="flbl">Warn when it falls to</label><input class="finput" id="stk-fix-low" type="number" min="0" step="1"/></div>
       </div>
-      <div><label class="flbl">Reason *</label><input class="finput" id="stk-fix-reason" maxlength="200" placeholder="e.g. physical count, damaged, expired"/></div>
+      <div><label class="flbl">Reason (needed when correcting the count)</label><input class="finput" id="stk-fix-reason" maxlength="200" placeholder="e.g. physical count, damaged, expired"/></div>
       <label style="display:flex;gap:8px;align-items:center;font-size:12.5px"><input type="checkbox" id="stk-fix-hide"/> Stop using this item (hide it)</label>
       <div id="stk-fix-err" style="color:var(--red);font-size:12px;display:none"></div>
       <button class="msub" onclick="stockSaveFix()">Save</button>
@@ -5255,7 +5231,7 @@ function auraOpenInvoice(i) {
 </div>
 <script>
 /* ===== STOCK ===== (shared by the reception and owner portals) */
-var STOCK_IS_OWNER = true;
+var STOCK_IS_OWNER = true, STOCK_CAN_EDIT = !STOCK_IS_OWNER;
 var _stockItems = [], _stockFixId = null;
 function stockQty(n) { return Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
 function stockEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -5282,11 +5258,10 @@ async function loadStock() {
   list.innerHTML = active.length ? active.map(function (i) {
     var isLow = Number(i.quantity) <= Number(i.low_level), zero = Number(i.quantity) <= 0;
     return '<div class="adm-row" style="align-items:center"><div class="adm-av" style="background:' + (isLow ? 'var(--red-bg)' : 'var(--green-bg)') + ';color:' + (isLow ? 'var(--red)' : 'var(--green)') + ';font-weight:700;font-size:11px">' + stockEsc(stockQty(i.quantity)) + '</div>'
-      + '<div style="flex:1;min-width:0"><div class="adm-name">' + stockEsc(i.name) + '</div><div class="adm-meta">' + stockEsc(stockQty(i.quantity) + ' ' + i.unit + ' left') + (Number(i.low_level) > 0 ? ' · warn at ' + stockEsc(stockQty(i.low_level)) : '') + '</div></div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name">' + stockEsc(i.name) + '</div><div class="adm-meta">' + stockEsc(stockQty(i.quantity) + ' ' + i.unit + ' left') + (Number(i.price) > 0 ? ' \u00b7 \u20B9' + stockEsc(stockQty(i.price)) + ' each' : '') + (Number(i.low_level) > 0 ? ' · warn at ' + stockEsc(stockQty(i.low_level)) : '') + '</div></div>'
       + (isLow ? '<span style="font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--red-bg);color:var(--red);white-space:nowrap">' + (zero ? 'OUT OF STOCK' : 'LOW') + '</span>' : '')
-      + '<button class="qbtn" onclick="stockOpenUse(\'' + i.id + '\')">Use</button><button class="qbtn" onclick="stockOpenReceive(\'' + i.id + '\')">+ Add</button>'
-      + (STOCK_IS_OWNER ? '<button class="qbtn" onclick="stockOpenFix(\'' + i.id + '\')">Edit</button>' : '') + '</div>';
-  }).join('') : '<div class="empty" style="padding:20px"><p class="empty-t">No items yet</p><p class="ss">Tap <b>+ New item</b> to add oxygen cylinders, syringes and other supplies.</p></div>';
+      + (STOCK_CAN_EDIT ? '<button class="qbtn" onclick="stockOpenFix(\'' + i.id + '\')">Edit</button>' : '') + '</div>';
+  }).join('') : '<div class="empty" style="padding:20px"><p class="empty-t">No items yet</p>' + (STOCK_CAN_EDIT ? '<p class="ss">Tap <b>+ New item</b> to add oxygen cylinders, syringes and other supplies.</p>' : '<p class="ss">Reception adds the items. They will appear here.</p>') + '</div>';
   var m = await _supa.from('nh_stock_moves').select('*').eq('clinic_id', _clinicId).gte('created_at', stockDayStart().toISOString()).order('created_at', { ascending: false }).limit(200);
   var mv = document.getElementById('stock-moves');
   var rows = (m.data || []);
@@ -5294,7 +5269,7 @@ async function loadStock() {
 }
 function stockMoveRow(x) {
   var used = x.kind === 'used', add = x.kind === 'received' || x.kind === 'opening';
-  var what = used ? 'Used' : add ? (x.kind === 'opening' ? 'Opening stock' : 'Received') : 'Corrected';
+  var what = used ? 'Used' : add ? (x.kind === 'opening' ? 'Opening stock' : 'Received') : x.kind === 'returned' ? 'Returned (charge removed)' : 'Corrected';
   var ch = Number(x.change), sign = ch > 0 ? '+' : '';
   var forTxt = x.bed_label || x.patient_name ? ' · ' + [x.bed_label, x.patient_name].filter(Boolean).join(' · ') : (used ? ' · general use' : '');
   return '<div class="adm-row"><div class="adm-av" style="background:' + (used ? 'var(--amber-bg)' : 'var(--green-bg)') + ';color:' + (used ? 'var(--amber)' : 'var(--green)') + ';font-weight:700;font-size:11px">' + sign + stockEsc(stockQty(ch)) + '</div>'
@@ -5307,75 +5282,47 @@ function stockFillItems(selId, chosen) {
   s.innerHTML = act.length ? act.map(function (i) { return '<option value="' + i.id + '"' + (i.id === chosen ? ' selected' : '') + '>' + stockEsc(i.name + ' (' + stockQty(i.quantity) + ' ' + i.unit + ' left)') + '</option>'; }).join('') : '<option value="">Add an item first</option>';
 }
 async function stockEnsureItems() { if (!_stockItems.length) await loadStock(); }
-function stockOpenNew() { ['stk-new-name'].forEach(function (id) { document.getElementById(id).value = ''; }); document.getElementById('stk-new-unit').value = 'pcs'; document.getElementById('stk-new-qty').value = '0'; document.getElementById('stk-new-low').value = '0'; stockErr('stk-new-err'); openModal('mod-stock-new'); }
+function stockOpenNew() { ['stk-new-name'].forEach(function (id) { document.getElementById(id).value = ''; }); document.getElementById('stk-new-unit').value = 'pcs'; document.getElementById('stk-new-qty').value = '0'; document.getElementById('stk-new-low').value = '0'; document.getElementById('stk-new-price').value = ''; document.getElementById('stk-new-cat').value = 'Other'; stockErr('stk-new-err'); openModal('mod-stock-new'); }
 async function stockSaveNew() {
   var name = document.getElementById('stk-new-name').value.trim(), unit = document.getElementById('stk-new-unit').value.trim() || 'pcs';
   var qty = Number(document.getElementById('stk-new-qty').value || 0), low = Number(document.getElementById('stk-new-low').value || 0);
   if (!name) return stockErr('stk-new-err', 'Please enter the item name.');
   if (qty < 0 || low < 0) return stockErr('stk-new-err', 'Quantities cannot be negative.');
-  var r = await _supa.rpc('stock_add_item', { p_clinic_id: _clinicId, p_name: name, p_unit: unit, p_low_level: low, p_opening: qty });
+  var price = Number(document.getElementById('stk-new-price').value || 0), cat = document.getElementById('stk-new-cat').value || 'Other';
+  if (price < 0) return stockErr('stk-new-err', 'Price cannot be negative.');
+  var r = await _supa.rpc('stock_add_item', { p_clinic_id: _clinicId, p_name: name, p_unit: unit, p_low_level: low, p_opening: qty, p_price: price, p_charge_type: cat });
   if (r.error) return stockErr('stk-new-err', stockMsg(r.error));
   closeModal('mod-stock-new'); if (typeof showToast === 'function') showToast('✓ ' + name + ' added'); loadStock();
 }
-async function stockOpenReceive(id) { await stockEnsureItems(); stockFillItems('stk-recv-item', id); document.getElementById('stk-recv-qty').value = ''; document.getElementById('stk-recv-note').value = ''; stockErr('stk-recv-err'); openModal('mod-stock-recv'); }
-async function stockSaveReceive() {
-  var id = document.getElementById('stk-recv-item').value, qty = Number(document.getElementById('stk-recv-qty').value || 0);
-  if (!id) return stockErr('stk-recv-err', 'Add an item first.');
-  if (!(qty > 0)) return stockErr('stk-recv-err', 'Enter how many were received.');
-  var r = await _supa.rpc('stock_receive', { p_item_id: id, p_qty: qty, p_note: document.getElementById('stk-recv-note').value.trim() || null });
-  if (r.error) return stockErr('stk-recv-err', stockMsg(r.error));
-  closeModal('mod-stock-recv'); if (typeof showToast === 'function') showToast('✓ Stock added'); loadStock();
-}
-async function stockOpenUse(id) {
-  await stockEnsureItems(); stockFillItems('stk-use-item', id);
-  document.getElementById('stk-use-qty').value = '1'; document.getElementById('stk-use-note').value = ''; stockErr('stk-use-err');
-  var f = document.getElementById('stk-use-for'); f.innerHTML = '<option value="">General / ward use</option>';
-  var a = await _supa.from('admissions').select('id,patient_name,bed_id').eq('clinic_id', _clinicId).eq('status', 'Active');
-  var b = await _supa.from('beds').select('id,bed_number,ward').eq('clinic_id', _clinicId);
-  var bm = {}; (b.data || []).forEach(function (x) { bm[x.id] = x; });
-  (a.data || []).map(function (x) { var bd = bm[x.bed_id]; return { id: x.id, label: (bd ? 'Bed ' + bd.bed_number + ' · ' : '') + (x.patient_name || 'Patient'), sort: bd ? String(bd.bed_number) : 'zzz' }; })
-    .sort(function (p, q) { return p.sort.localeCompare(q.sort, undefined, { numeric: true }); })
-    .forEach(function (x) { f.innerHTML += '<option value="' + x.id + '">' + stockEsc(x.label) + '</option>'; });
-  stockUseHint(); openModal('mod-stock-use');
-}
-function stockUseHint() {
-  var id = document.getElementById('stk-use-item').value, q = Number(document.getElementById('stk-use-qty').value || 0), h = document.getElementById('stk-use-hint');
-  var it = _stockItems.filter(function (i) { return i.id === id; })[0]; if (!it || !h) { if (h) h.textContent = ''; return; }
-  var left = Number(it.quantity) - q;
-  h.innerHTML = left < 0 ? '<span style="color:var(--red)">Only ' + stockEsc(stockQty(it.quantity) + ' ' + it.unit) + ' in stock.</span>' : 'After this: <b>' + stockEsc(stockQty(left) + ' ' + it.unit) + '</b> left' + (left <= Number(it.low_level) ? ' <span style="color:var(--red)">(low stock, the owner will be alerted)</span>' : '');
-}
-async function stockSaveUse() {
-  var id = document.getElementById('stk-use-item').value, qty = Number(document.getElementById('stk-use-qty').value || 0), adm = document.getElementById('stk-use-for').value || null;
-  if (!id) return stockErr('stk-use-err', 'Add an item first.');
-  if (!(qty > 0)) return stockErr('stk-use-err', 'Enter how many were used.');
-  var btn = document.querySelector('#mod-stock-use .msub'); if (btn) btn.disabled = true;
-  var r = await _supa.rpc('stock_use', { p_item_id: id, p_qty: qty, p_admission_id: adm, p_note: document.getElementById('stk-use-note').value.trim() || null });
-  if (btn) btn.disabled = false;
-  if (r.error) return stockErr('stk-use-err', stockMsg(r.error));
-  closeModal('mod-stock-use');
-  if (typeof showToast === 'function' && r.data) showToast('✓ Recorded · ' + stockQty(r.data.balance_after) + ' ' + r.data.unit + ' of ' + r.data.item_name + ' left');
-  loadStock();
-}
 function stockOpenFix(id) {
   var it = _stockItems.filter(function (i) { return i.id === id; })[0]; if (!it) return; _stockFixId = id;
-  document.getElementById('stk-fix-name').textContent = it.name + ' · ' + stockQty(it.quantity) + ' ' + it.unit + ' in stock now';
+  document.getElementById('stk-fix-name').textContent = it.name + ' \u00b7 ' + stockQty(it.quantity) + ' ' + it.unit + ' in stock now';
+  document.getElementById('stk-fix-recv').value = '';
   document.getElementById('stk-fix-qty').value = Number(it.quantity); document.getElementById('stk-fix-low').value = Number(it.low_level);
+  document.getElementById('stk-fix-price').value = Number(it.price || 0); document.getElementById('stk-fix-cat').value = it.charge_type || 'Other';
   document.getElementById('stk-fix-reason').value = ''; document.getElementById('stk-fix-hide').checked = false; stockErr('stk-fix-err'); openModal('mod-stock-fix');
 }
 async function stockSaveFix() {
   var it = _stockItems.filter(function (i) { return i.id === _stockFixId; })[0]; if (!it) return;
-  var qty = Number(document.getElementById('stk-fix-qty').value), low = Number(document.getElementById('stk-fix-low').value || 0), reason = document.getElementById('stk-fix-reason').value.trim(), hide = document.getElementById('stk-fix-hide').checked;
-  if (!(qty >= 0) || low < 0) return stockErr('stk-fix-err', 'Quantities cannot be negative.');
+  var recv = Number(document.getElementById('stk-fix-recv').value || 0), qty = Number(document.getElementById('stk-fix-qty').value), low = Number(document.getElementById('stk-fix-low').value || 0);
+  var price = Number(document.getElementById('stk-fix-price').value || 0), cat = document.getElementById('stk-fix-cat').value || 'Other';
+  var reason = document.getElementById('stk-fix-reason').value.trim(), hide = document.getElementById('stk-fix-hide').checked;
+  if (recv < 0 || !(qty >= 0) || low < 0 || price < 0) return stockErr('stk-fix-err', 'Numbers cannot be negative.');
+  if (recv > 0 && qty !== Number(it.quantity)) return stockErr('stk-fix-err', 'Either add new stock received, or correct the count, not both at once.');
   if (qty !== Number(it.quantity)) {
-    if (reason.length < 3) return stockErr('stk-fix-err', 'Please give a reason for changing the count.');
+    if (reason.length < 3) return stockErr('stk-fix-err', 'Please give a reason for correcting the count.');
     var r = await _supa.rpc('stock_correct', { p_item_id: it.id, p_new_qty: qty, p_reason: reason });
     if (r.error) return stockErr('stk-fix-err', stockMsg(r.error));
   }
-  if (low !== Number(it.low_level) || hide) {
-    var s = await _supa.rpc('stock_set_item', { p_item_id: it.id, p_name: null, p_unit: null, p_low_level: low, p_active: hide ? false : null });
-    if (s.error) return stockErr('stk-fix-err', stockMsg(s.error));
+  if (recv > 0) {
+    var rv = await _supa.rpc('stock_receive', { p_item_id: it.id, p_qty: recv, p_note: reason || null });
+    if (rv.error) return stockErr('stk-fix-err', stockMsg(rv.error));
   }
-  closeModal('mod-stock-fix'); if (typeof showToast === 'function') showToast('✓ Saved'); loadStock();
+  if (low !== Number(it.low_level) || hide || price !== Number(it.price || 0) || cat !== (it.charge_type || 'Other')) {
+    var st = await _supa.rpc('stock_set_item', { p_item_id: it.id, p_name: null, p_unit: null, p_low_level: low, p_active: hide ? false : null, p_price: price, p_charge_type: cat });
+    if (st.error) return stockErr('stk-fix-err', stockMsg(st.error));
+  }
+  closeModal('mod-stock-fix'); if (typeof showToast === 'function') showToast('\u2713 Saved'); loadStock();
 }
 </script>
 <script>
@@ -5394,7 +5341,7 @@ function stockStartLive() {
       if (!onPage) { _stockUnseen++; stockBadge(); } else { loadStock(); }
       var txt = x.kind === 'used'
         ? 'Stock used: ' + stockQty(-x.change) + ' ' + x.unit + ' ' + x.item_name + (x.bed_label ? ' · ' + x.bed_label : '') + ' · ' + stockQty(x.balance_after) + ' left' + (x.created_by_name ? ' · by ' + x.created_by_name : '')
-        : (x.kind === 'received' ? 'Stock received: +' : 'Stock corrected: ') + stockQty(x.change) + ' ' + x.unit + ' ' + x.item_name + ' · ' + stockQty(x.balance_after) + ' left';
+        : (x.kind === 'received' ? 'Stock received: +' : x.kind === 'returned' ? 'Stock returned (charge removed): +' : 'Stock corrected: ') + stockQty(x.change) + ' ' + x.unit + ' ' + x.item_name + ' · ' + stockQty(x.balance_after) + ' left';
       if (typeof showToast === 'function') showToast('📦 ' + txt);
     }).subscribe();
 }
