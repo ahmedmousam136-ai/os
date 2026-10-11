@@ -1723,6 +1723,15 @@ function resizeImageDataUrl(dataUrl, maxDim, quality){
 function triggerCap(side){document.getElementById('cf-'+side).click();}
 function handleCap(evt,side){
   var f=evt.target.files[0];if(!f)return;
+  capFile(f,side);evt.target.value='';
+}
+/* one place that turns a picture file into the captured ID image (used by tap, drag & drop and paste) */
+function capFile(f,side){
+  if(!f) return false;
+  if(!/^image\//.test(f.type||'') && !/\.(jpe?g|png|webp|heic|heif|bmp|gif)$/i.test(f.name||'')){
+    showToast(/pdf/i.test(f.type||f.name||'') ? 'This is a PDF. Please use a photo or screenshot of the card (JPG or PNG).' : 'Please drop a picture of the ID card (JPG or PNG).');
+    return false;
+  }
   var r=new FileReader();
   r.onload=async function(e){
     var resized=await resizeImageDataUrl(e.target.result,1600,0.85);
@@ -1730,8 +1739,42 @@ function handleCap(evt,side){
     var i=document.getElementById('ci-'+side),a=document.getElementById('ca-'+side),l=document.getElementById('cl-'+side);
     i.src=resized;i.classList.add('on');a.classList.add('done');l.textContent='✓ Captured';
   };
-  r.readAsDataURL(f);evt.target.value='';
+  r.readAsDataURL(f);
+  return true;
 }
+/* Drag & drop: drag a downloaded Aadhaar / Voter card picture (e.g. from Chrome's download list or a folder)
+   onto FRONT or BACK. Dropping two pictures at once fills both sides. Ctrl+V pastes a copied picture too. */
+function capDropSetup(){
+  ['front','back'].forEach(function(side){
+    var box=document.getElementById('ca-'+side); if(!box || box._dropReady) return; box._dropReady=true;
+    var on=function(e){ e.preventDefault(); e.stopPropagation(); box.style.outline='2px dashed var(--blue, #2563eb)'; box.style.outlineOffset='3px'; if(e.dataTransfer) e.dataTransfer.dropEffect='copy'; };
+    var off=function(){ box.style.outline=''; box.style.outlineOffset=''; };
+    box.addEventListener('dragenter',on); box.addEventListener('dragover',on);
+    box.addEventListener('dragleave',off);
+    box.addEventListener('drop',function(e){
+      e.preventDefault(); e.stopPropagation(); off();
+      var files=[].slice.call((e.dataTransfer && e.dataTransfer.files) || []);
+      if(!files.length){ showToast('Could not read that item. Drag the picture file itself (from the downloads list or a folder).'); return; }
+      capFile(files[0], side);
+      if(files[1]) capFile(files[1], side==='front' ? 'back' : 'front');
+    });
+    var lbl=box.querySelector('div[style*="font-size:10px"]'); if(lbl) lbl.textContent='Camera, upload or drag & drop';
+  });
+  /* a file dropped just outside the boxes must not open in the browser and lose the form */
+  if(!window._capGuard){ window._capGuard=true;
+    ['dragover','drop'].forEach(function(t){ window.addEventListener(t,function(e){ var w=document.getElementById('wp-2'); if(w && w.offsetParent!==null && e.dataTransfer && [].indexOf.call(e.dataTransfer.types||[],'Files')>=0) e.preventDefault(); }); });
+    document.addEventListener('paste',function(e){
+      var w=document.getElementById('wp-2'); if(!w || w.offsetParent===null) return;
+      var items=[].slice.call((e.clipboardData && e.clipboardData.items) || []).filter(function(it){ return it.kind==='file' && /^image\//.test(it.type); });
+      if(!items.length) return;
+      e.preventDefault();
+      var side=!_imgs.front ? 'front' : (!_imgs.back ? 'back' : 'front');
+      capFile(items[0].getAsFile(), side);
+      showToast('Picture pasted as '+side.toUpperCase()+'.');
+    });
+  }
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',capDropSetup); else capDropSetup();
 async function runOCR(){
   if(!_imgs.front&&!_imgs.back){showToast('Capture at least the front of the ID first');return;}
   if(!_imgs.front||!_imgs.back){
