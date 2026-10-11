@@ -810,7 +810,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
         <div><label class="flbl">Gender</label><select class="finput" id="reg-gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
       </div>
       <div class="rx-2">
-        <div><label class="flbl">Phone *</label><input class="finput" id="reg-phone" type="tel" placeholder="Mobile number"/></div>
+        <div><label class="flbl">Phone *</label><input class="finput" id="reg-phone" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile number" oninput="auraPhoneHint(this)"/><div id="reg-phone-hint" style="font-size:11px;margin-top:3px;display:none"></div></div>
       </div>
       <div><label class="flbl">Address</label><input class="finput" id="reg-address" placeholder="Patient address"/></div>
       <div id="reg-err-3" class="note-box note-amber" style="display:none;color:var(--red);background:var(--red-bg);border-color:var(--red-border)"></div>
@@ -1354,6 +1354,8 @@ async function goToAdmission(){
   var phone=(document.getElementById('reg-phone').value||'').trim();
   if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
   if(!phone){err.textContent='Phone number is required \u2014 please enter it before continuing';err.style.display='block';return;}
+  if(!auraMobile(phone)){err.textContent=auraMobileError(phone);err.style.display='block';try{document.getElementById('reg-phone').focus();}catch(e){}return;}
+  phone=auraMobile(phone); document.getElementById('reg-phone').value=phone;
   err.style.display='none';
   var btn=document.querySelector('#wp-3 button[onclick="goToAdmission()"]'); if(btn) btn.disabled=true;
   try{
@@ -1749,7 +1751,7 @@ async function runOCR(){
       if(extracted.name)document.getElementById('reg-name').value=extracted.name;
       if(extracted.gender){var g=extracted.gender;document.getElementById('reg-gender').value=g.charAt(0).toUpperCase()+g.slice(1).toLowerCase();}
       if(extracted.address)document.getElementById('reg-address').value=extracted.address;
-      if(extracted.phone)document.getElementById('reg-phone').value=extracted.phone;
+      if(extracted.phone){document.getElementById('reg-phone').value=extracted.phone; try{auraPhoneHint(document.getElementById('reg-phone'));}catch(e){}}
       if(extracted.dob){var dob=new Date(extracted.dob);if(!isNaN(dob)){_extractedDOB=dob;var age=Math.floor((Date.now()-dob)/(365.25*86400000));if(age>0&&age<120)document.getElementById('reg-age').value=age;}}
     }else{
       prev.style.display='block';prev.textContent='⚠️ Could not extract information automatically — please enter details manually.';
@@ -2100,6 +2102,31 @@ function setFamLanguage(lang){
 }
 
 function normPhone(p){ var d=String(p||'').replace(/\D/g,''); return d.length>10 ? d.slice(-10) : d; }
+/* A real Indian mobile number: exactly 10 digits starting with 6, 7, 8 or 9 (an optional +91 / 91 / 0 in front is allowed).
+   Returns the clean 10 digits, or '' if the number is wrong (too short, too long, or not a mobile). */
+function auraMobile(p){
+  var d=String(p||'').replace(/\D/g,'');
+  if(d.length===12 && d.indexOf('91')===0) d=d.slice(2);
+  else if(d.length===11 && d.charAt(0)==='0') d=d.slice(1);
+  return /^[6-9][0-9]{9}$/.test(d) ? d : '';
+}
+function auraMobileError(p){
+  var d=String(p||'').replace(/\D/g,'');
+  if(!d) return 'Phone number is required.';
+  if(d.length===12 && d.indexOf('91')===0) d=d.slice(2); else if(d.length===11 && d.charAt(0)==='0') d=d.slice(1);
+  if(d.length<10) return 'Mobile number is too short: '+d.length+' digits typed, it must be exactly 10 digits. Please check it.';
+  if(d.length>10) return 'Mobile number is too long: '+d.length+' digits typed, it must be exactly 10 digits. Please check it.';
+  return 'This is not a valid mobile number (it must start with 6, 7, 8 or 9). Please check it.';
+}
+/* live hint under the phone box: counts digits as they are typed */
+function auraPhoneHint(inp){
+  var h=document.getElementById(inp.id+'-hint'); if(!h) return;
+  var d=String(inp.value||'').replace(/\D/g,'');
+  if(!d){ h.style.display='none'; return; }
+  h.style.display='block';
+  if(auraMobile(inp.value)){ h.style.color='var(--green, #12976a)'; h.textContent='\u2713 Valid mobile number'; }
+  else { h.style.color='var(--red, #c0392b)'; h.textContent=auraMobileError(inp.value); }
+}
 var FAMILY_RELATIONS=['Wife','Husband','Son','Daughter','Father','Mother','Brother','Sister','Other'];
 var SHARED_RELATIONS=['Friend','Neighbour','Caretaker','Other person'];
 /* Stored in nh_patients.guardian (no database change needed): "Family member (Son)" for a relative,
@@ -2419,6 +2446,8 @@ async function doRegisterAndAdmit(){
   var err=document.getElementById('reg-err');err.style.display='none';
   if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
   if(!phone){err.textContent='Phone number is required';err.style.display='block';return;}
+  if(!auraMobile(phone)){err.textContent=auraMobileError(phone);err.style.display='block';return;}
+  phone=auraMobile(phone);
   var needsBed=visit!=='OPD';
   if(needsBed&&!_selBedId){err.textContent='Please select a bed for '+visit+' admission';err.style.display='block';return;}
   var btn=document.getElementById('admit-btn');var admitLabel=btn.innerHTML;btn.disabled=true;btn.textContent='Saving…';
@@ -4512,15 +4541,51 @@ async function auraGenerateBill(admissionId, opts) {
   } finally { delete _auraBillBusy[admissionId]; }
 }
 /* send the final bill to the patient on WhatsApp (server checks the patient's WhatsApp permission) */
-async function auraSendFinalBill(admissionId) {
-  try { var n = await _supa.functions.invoke('patient-bills', { body: { mode: 'final', admission_id: admissionId } }); return !!(n && n.data && n.data.sent); } catch (e) { return false; }
+async function auraSendFinalBill(admissionId, resend) {
+  try {
+    var n = await _supa.functions.invoke('patient-bills', { body: { mode: 'final', admission_id: admissionId, resend: !!resend } });
+    if (n && n.error) {
+      var why = 'server_error';
+      try { var ctx = n.error.context; if (ctx && typeof ctx.json === 'function') { var j = await ctx.json(); if (j && j.reason) why = j.reason; } } catch (e2) {}
+      return { sent: false, reason: why };
+    }
+    var d = (n && n.data) || {};
+    return { sent: !!d.sent, reason: d.reason || '' };
+  } catch (e) { return { sent: false, reason: 'network' }; }
+}
+/* plain words for why the WhatsApp bill did or did not go */
+function auraSendResultText(s) {
+  if (s && s.sent) return 'Final bill sent to the patient on WhatsApp.';
+  var m = {
+    patient_not_agreed: 'the patient has not tapped "Yes" to receive WhatsApp messages yet',
+    no_patient_phone: 'no WhatsApp number is saved for this patient',
+    final_bill_not_ready: 'the final bill PDF is not ready yet (tap Generate Bill first)',
+    already_sent: 'it was already sent earlier',
+    not_configured: 'WhatsApp bill sending is not set up on the server (MAKE_BILL_WEBHOOK_URL)',
+    webhook_error: 'the WhatsApp service (Make) did not accept it',
+    pdf_missing: 'the bill PDF file is missing (tap Generate Bill again)',
+    not_signed_in: 'your login has expired, please log in again',
+    not_your_facility: 'this bill belongs to another facility',
+    network: 'no internet connection'
+  };
+  return 'WhatsApp bill NOT sent: ' + (m[s && s.reason] || ('reason ' + ((s && s.reason) || 'unknown'))) + '.';
+}
+async function auraSendFinalBillClick(admId, btn) {
+  var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Sending…'; }
+  var s = await auraSendFinalBill(admId, true);
+  if (typeof showToast === 'function') showToast(auraSendResultText(s));
+  if (btn) { btn.disabled = false; btn.innerHTML = old; }
+}
+async function auraSendAfterIssue(admId) {
+  var s = await auraSendFinalBill(admId, false);
+  if (typeof showToast === 'function') setTimeout(function () { showToast(auraSendResultText(s)); }, 2500);
 }
 /* Used right after a discharge: never throws, never blocks, only tells the user what happened. */
 async function auraGenerateBillAuto(admissionId) {
   try {
     var r = await auraGenerateBill(admissionId);
     if (typeof showToast === 'function') showToast(r.ok ? (r.locked ? 'Final bill ' + r.billNo + ' issued and locked. ' : 'Final bill saved. ') + auraWhereToFind() + auraAddressHint(r) : 'Discharged, but the bill was not saved: ' + r.error + ' (use Generate Bill to try again)');
-    if (r.ok && r.locked && !r.already) auraSendFinalBill(admissionId);
+    if (r.ok && r.locked && !r.already) auraSendAfterIssue(admissionId);
     auraAfterBill();
   } catch (e) { /* a bill problem must never disturb a discharge */ }
 }
@@ -4533,6 +4598,7 @@ function auraBillButtonsHtml(admId, bill, compact) {
   if (bill && compact === '2') return dl;
   if (bill && locked) {
     return dl + (compact === '1' ? '' : '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">&#128274; ' + esc(auraT('bt_locked', 'Final bill')) + ' ' + esc(bill.final_bill_no) + ' &middot; ' + esc(auraT('bt_balance', 'Balance')) + ' ' + esc(auraBMoney(bill.due)) + '</span>')
+      + '<button class="qbtn" style="background:#e7f8ef;border-color:#9fdcbc;color:#0b6b4c" title="Send this final bill to the patient on WhatsApp" onclick="auraSendFinalBillClick(\'' + q + '\',this)">&#128242; ' + esc(auraT('bt_sendwa', 'Send on WhatsApp')) + '</button>'
       + (auraIsOwnerHere() ? '<button class="qbtn" style="color:var(--red)" title="Cancel this final bill to correct a mistake. A new bill number will be given." onclick="auraCancelFinalBill(\'' + q + '\',this)">' + esc(auraT('bt_cancel', 'Cancel bill')) + '</button>' : '');
   }
   if (bill) {
@@ -4558,7 +4624,7 @@ async function auraGenerateBillClick(admId, btn) {
   var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Making the bill…'; }
   var r = await auraGenerateBill(admId);
   if (typeof showToast === 'function') showToast(r.ok ? (r.locked ? 'Final bill ' + r.billNo + (r.already ? ' is already issued (locked).' : ' issued and locked.') : 'Bill saved (' + r.pages + (r.pages > 1 ? ' pages' : ' page') + ').') + ' Tap Download bill.' + auraAddressHint(r) : r.error);
-  if (r.ok && r.locked && !r.already) auraSendFinalBill(admId);
+  if (r.ok && r.locked && !r.already) auraSendAfterIssue(admId);
   if (btn && !r.ok) { btn.disabled = false; btn.innerHTML = old; }
   auraAfterBill();
 }
