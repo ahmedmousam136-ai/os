@@ -630,6 +630,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
           </div>
           <div class="rt-live"><span class="rt-dot"></span><span data-i18n="live">Live</span></div>
         </div>
+        <div id="aura-billsetup" style="display:none"></div>
 
         <!-- Dashboard tab bar -->
         <div class="dash-tabs">
@@ -1256,7 +1257,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
     <div class="mb">
       <div class="rx-2col">
         <div><label class="flbl">Patient Name *</label><input class="finput" id="adm-name" placeholder="Full name" autocapitalize="words"/></div>
-        <div><label class="flbl">Mobile</label><input class="finput" id="adm-phone" type="tel" placeholder="WhatsApp number"/></div>
+        <div><label class="flbl">Mobile *</label><input class="finput" id="adm-phone" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit WhatsApp number" oninput="auraPhoneHint(this)"/><div id="adm-phone-hint" style="font-size:11px;margin-top:3px;display:none"></div></div>
       </div>
       <div class="rx-3col">
         <div><label class="flbl">Age</label><input class="finput" id="adm-age" type="number" placeholder="Years"/></div>
@@ -2604,6 +2605,7 @@ async function _initApp(){
 /* ── DASHBOARD ── */
 async function loadDashboard(){
   if(!_clinicId)return;
+  try { auraBillSetupCard(); } catch (e) {}
   var today = new Date().toISOString().slice(0,10);
   var monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
@@ -3086,6 +3088,31 @@ function setFamLanguage(lang){
 }
 
 function normPhone(p){ var d=String(p||'').replace(/\D/g,''); return d.length>10 ? d.slice(-10) : d; }
+/* A real Indian mobile number: exactly 10 digits starting with 6, 7, 8 or 9 (an optional +91 / 91 / 0 in front is allowed).
+   Returns the clean 10 digits, or '' if the number is wrong (too short, too long, or not a mobile). */
+function auraMobile(p){
+  var d=String(p||'').replace(/\D/g,'');
+  if(d.length===12 && d.indexOf('91')===0) d=d.slice(2);
+  else if(d.length===11 && d.charAt(0)==='0') d=d.slice(1);
+  return /^[6-9][0-9]{9}$/.test(d) ? d : '';
+}
+function auraMobileError(p){
+  var d=String(p||'').replace(/\D/g,'');
+  if(!d) return 'Phone number is required.';
+  if(d.length===12 && d.indexOf('91')===0) d=d.slice(2); else if(d.length===11 && d.charAt(0)==='0') d=d.slice(1);
+  if(d.length<10) return 'Mobile number is too short: '+d.length+' digits typed, it must be exactly 10 digits. Please check it.';
+  if(d.length>10) return 'Mobile number is too long: '+d.length+' digits typed, it must be exactly 10 digits. Please check it.';
+  return 'This is not a valid mobile number (it must start with 6, 7, 8 or 9). Please check it.';
+}
+/* live hint under the phone box: counts digits as they are typed */
+function auraPhoneHint(inp){
+  var h=document.getElementById(inp.id+'-hint'); if(!h) return;
+  var d=String(inp.value||'').replace(/\D/g,'');
+  if(!d){ h.style.display='none'; return; }
+  h.style.display='block';
+  if(auraMobile(inp.value)){ h.style.color='var(--green, #12976a)'; h.textContent='\u2713 Valid mobile number'; }
+  else { h.style.color='var(--red, #c0392b)'; h.textContent=auraMobileError(inp.value); }
+}
 var FAMILY_RELATIONS=['Wife','Husband','Son','Daughter','Father','Mother','Brother','Sister','Other'];
 var SHARED_RELATIONS=['Friend','Neighbour','Caretaker','Other person'];
 /* Stored in nh_patients.guardian (no database change needed): "Family member (Son)" for a relative,
@@ -3402,6 +3429,8 @@ async function admitPatient(){
   var err=document.getElementById('adm-error');
   err.style.display='none';
   if(!name){err.textContent='Patient name is required';err.style.display='block';return;}
+  if(!auraMobile(phone)){err.textContent=auraMobileError(phone);err.style.display='block';return;}
+  phone=auraMobile(phone);
   if(!bedId){err.textContent='Please select a bed';err.style.display='block';return;}
   if(!doctor){err.textContent='Admitting doctor is required';err.style.display='block';return;}
   /* A persistent patient record, so this person has a real profile/history across visits.
@@ -5434,15 +5463,51 @@ async function auraGenerateBill(admissionId, opts) {
   } finally { delete _auraBillBusy[admissionId]; }
 }
 /* send the final bill to the patient on WhatsApp (server checks the patient's WhatsApp permission) */
-async function auraSendFinalBill(admissionId) {
-  try { var n = await _supa.functions.invoke('patient-bills', { body: { mode: 'final', admission_id: admissionId } }); return !!(n && n.data && n.data.sent); } catch (e) { return false; }
+async function auraSendFinalBill(admissionId, resend) {
+  try {
+    var n = await _supa.functions.invoke('patient-bills', { body: { mode: 'final', admission_id: admissionId, resend: !!resend } });
+    if (n && n.error) {
+      var why = 'server_error';
+      try { var ctx = n.error.context; if (ctx && typeof ctx.json === 'function') { var j = await ctx.json(); if (j && j.reason) why = j.reason; } } catch (e2) {}
+      return { sent: false, reason: why };
+    }
+    var d = (n && n.data) || {};
+    return { sent: !!d.sent, reason: d.reason || '' };
+  } catch (e) { return { sent: false, reason: 'network' }; }
+}
+/* plain words for why the WhatsApp bill did or did not go */
+function auraSendResultText(s) {
+  if (s && s.sent) return 'Final bill sent to the patient on WhatsApp.';
+  var m = {
+    patient_not_agreed: 'the patient has not tapped "Yes" to receive WhatsApp messages yet',
+    no_patient_phone: 'no WhatsApp number is saved for this patient',
+    final_bill_not_ready: 'the final bill PDF is not ready yet (tap Generate Bill first)',
+    already_sent: 'it was already sent earlier',
+    not_configured: 'WhatsApp bill sending is not set up on the server (MAKE_BILL_WEBHOOK_URL)',
+    webhook_error: 'the WhatsApp service (Make) did not accept it',
+    pdf_missing: 'the bill PDF file is missing (tap Generate Bill again)',
+    not_signed_in: 'your login has expired, please log in again',
+    not_your_facility: 'this bill belongs to another facility',
+    network: 'no internet connection'
+  };
+  return 'WhatsApp bill NOT sent: ' + (m[s && s.reason] || ('reason ' + ((s && s.reason) || 'unknown'))) + '.';
+}
+async function auraSendFinalBillClick(admId, btn) {
+  var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Sending…'; }
+  var s = await auraSendFinalBill(admId, true);
+  if (typeof showToast === 'function') showToast(auraSendResultText(s));
+  if (btn) { btn.disabled = false; btn.innerHTML = old; }
+}
+async function auraSendAfterIssue(admId) {
+  var s = await auraSendFinalBill(admId, false);
+  if (typeof showToast === 'function') setTimeout(function () { showToast(auraSendResultText(s)); }, 2500);
 }
 /* Used right after a discharge: never throws, never blocks, only tells the user what happened. */
 async function auraGenerateBillAuto(admissionId) {
   try {
     var r = await auraGenerateBill(admissionId);
     if (typeof showToast === 'function') showToast(r.ok ? (r.locked ? 'Final bill ' + r.billNo + ' issued and locked. ' : 'Final bill saved. ') + auraWhereToFind() + auraAddressHint(r) : 'Discharged, but the bill was not saved: ' + r.error + ' (use Generate Bill to try again)');
-    if (r.ok && r.locked && !r.already) auraSendFinalBill(admissionId);
+    if (r.ok && r.locked && !r.already) auraSendAfterIssue(admissionId);
     auraAfterBill();
   } catch (e) { /* a bill problem must never disturb a discharge */ }
 }
@@ -5455,6 +5520,7 @@ function auraBillButtonsHtml(admId, bill, compact) {
   if (bill && compact === '2') return dl;
   if (bill && locked) {
     return dl + (compact === '1' ? '' : '<span style="font-size:10.5px;color:var(--text-tertiary);align-self:center">&#128274; ' + esc(auraT('bt_locked', 'Final bill')) + ' ' + esc(bill.final_bill_no) + ' &middot; ' + esc(auraT('bt_balance', 'Balance')) + ' ' + esc(auraBMoney(bill.due)) + '</span>')
+      + '<button class="qbtn" style="background:#e7f8ef;border-color:#9fdcbc;color:#0b6b4c" title="Send this final bill to the patient on WhatsApp" onclick="auraSendFinalBillClick(\'' + q + '\',this)">&#128242; ' + esc(auraT('bt_sendwa', 'Send on WhatsApp')) + '</button>'
       + (auraIsOwnerHere() ? '<button class="qbtn" style="color:var(--red)" title="Cancel this final bill to correct a mistake. A new bill number will be given." onclick="auraCancelFinalBill(\'' + q + '\',this)">' + esc(auraT('bt_cancel', 'Cancel bill')) + '</button>' : '');
   }
   if (bill) {
@@ -5480,7 +5546,7 @@ async function auraGenerateBillClick(admId, btn) {
   var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = 'Making the bill…'; }
   var r = await auraGenerateBill(admId);
   if (typeof showToast === 'function') showToast(r.ok ? (r.locked ? 'Final bill ' + r.billNo + (r.already ? ' is already issued (locked).' : ' issued and locked.') : 'Bill saved (' + r.pages + (r.pages > 1 ? ' pages' : ' page') + ').') + ' Tap Download bill.' + auraAddressHint(r) : r.error);
-  if (r.ok && r.locked && !r.already) auraSendFinalBill(admId);
+  if (r.ok && r.locked && !r.already) auraSendAfterIssue(admId);
   if (btn && !r.ok) { btn.disabled = false; btn.innerHTML = old; }
   auraAfterBill();
 }
@@ -5672,6 +5738,58 @@ async function sigRemove() {
 document.addEventListener('input', function (e) { if (e.target && e.target.id === 'sig-name') sigPreview(_sigShown); });
 </script>
 
+
+<!-- OWNER: bill setup checklist on the dashboard -->
+<script>
+(function () {
+  if (typeof FAM_I18N === 'undefined') return;
+  var T = {
+    en: { bs_title: 'Finish your bill setup', bs_sub: 'Your patients’ bills and receipts use these details.', bs_addr: 'Nursing home address', bs_addr_need: 'Needed on every bill',
+          bs_gst: 'GSTIN (optional)', bs_gst_yes: 'Bills are titled “Bill of Supply” and show your GSTIN', bs_gst_no: 'No GSTIN: bills are titled “Final Bill”. Add it if you have one.',
+          bs_sign: 'Signature & stamp', bs_sign_need: 'Printed above “Authorised Signatory”', bs_go: 'Set up now', bs_done: 'Done', bs_exempt: 'healthcare, GST exempt', bs_nogst: 'no GST charged' },
+    bn: { bs_title: 'বিলের সেটআপ শেষ করুন', bs_sub: 'রোগীর বিল ও রসিদে এই তথ্যগুলো ছাপা হয়।', bs_addr: 'নার্সিং হোমের ঠিকানা', bs_addr_need: 'প্রতিটি বিলে দরকার',
+          bs_gst: 'GSTIN (ইচ্ছামতো)', bs_gst_yes: 'বিলের নাম “Bill of Supply”, বিলে আপনার GSTIN থাকবে', bs_gst_no: 'GSTIN নেই: বিলের নাম “Final Bill”। থাকলে যোগ করুন।',
+          bs_sign: 'সই ও স্ট্যাম্প', bs_sign_need: '“Authorised Signatory”-এর উপরে ছাপা হয়', bs_go: 'এখনই সেট করুন', bs_done: 'হয়েছে', bs_exempt: 'চিকিৎসা, GST মুক্ত', bs_nogst: 'কোনো GST নেওয়া হয়নি' },
+    hi: { bs_title: 'बिल सेटअप पूरा करें', bs_sub: 'मरीज़ों के बिल और रसीद में यही जानकारी छपती है।', bs_addr: 'नर्सिंग होम का पता', bs_addr_need: 'हर बिल पर ज़रूरी',
+          bs_gst: 'GSTIN (वैकल्पिक)', bs_gst_yes: 'बिल का शीर्षक “Bill of Supply”, बिल पर आपका GSTIN होगा', bs_gst_no: 'GSTIN नहीं: बिल का शीर्षक “Final Bill”। हो तो जोड़ें।',
+          bs_sign: 'हस्ताक्षर और मुहर', bs_sign_need: '“Authorised Signatory” के ऊपर छपता है', bs_go: 'अभी सेट करें', bs_done: 'हो गया', bs_exempt: 'इलाज, GST मुक्त', bs_nogst: 'कोई GST नहीं लिया' }
+  };
+  Object.keys(T).forEach(function (l) { if (FAM_I18N[l]) for (var k in T[l]) FAM_I18N[l][k] = T[l][k]; });
+})();
+/* shows a small checklist on the owner dashboard until the address and the signature are set */
+async function auraBillSetupCard() {
+  var box = document.getElementById('aura-billsetup'); if (!box || typeof _clinicId === 'undefined' || !_clinicId) return;
+  if (typeof _myRole !== 'undefined' && _myRole !== 'owner') { box.style.display = 'none'; return; }
+  var r = await _supa.from('clinics').select('*').eq('id', _clinicId).single();
+  if (r.error || !r.data) { box.style.display = 'none'; return; }
+  var c = r.data, addrOk = !!String(c.address || '').trim(), gstOk = auraGstinValid(c.gstin), signOk = !!c.bill_sign_path;
+  if (addrOk && signOk) { box.style.display = 'none'; return; }
+  var row = function (ok, title, note, optional) {
+    return '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--border)">'
+      + '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;' + (ok ? 'background:var(--green);color:#fff">✓' : optional ? 'background:var(--bg);color:var(--text-tertiary);border:1px solid var(--border)">i' : 'background:#fff4e0;color:#9a5b00;border:1px solid #f3d9a8">!') + '</span>'
+      + '<div style="min-width:0"><div style="font-weight:600;font-size:13px">' + esc(title) + (ok && !optional ? ' <span style="color:var(--green);font-weight:600;font-size:11.5px">· ' + esc(famT('bs_done')) + '</span>' : '') + '</div>'
+      + '<div style="font-size:11.5px;color:var(--text-tertiary)">' + esc(note) + '</div></div></div>';
+  };
+  box.innerHTML = '<div class="panel" style="margin-bottom:14px;border-left:4px solid #12976A"><div style="padding:14px 16px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px"><div><div style="font-weight:700;font-size:14.5px">🧾 ' + esc(famT('bs_title')) + '</div>'
+    + '<div style="font-size:12px;color:var(--text-tertiary)">' + esc(famT('bs_sub')) + '</div></div>'
+    + '<button class="add-btn" onclick="auraGoBillSetup()">' + esc(famT('bs_go')) + '</button></div>'
+    + row(addrOk, famT('bs_addr'), famT('bs_addr_need'), false)
+    + row(gstOk, famT('bs_gst'), gstOk ? famT('bs_gst_yes') : famT('bs_gst_no'), true)
+    + row(signOk, famT('bs_sign'), famT('bs_sign_need'), false)
+    + '</div></div>';
+  box.style.display = '';
+}
+function auraGoBillSetup() {
+  var btn = document.querySelector('.nb[onclick*="settings"]');
+  if (typeof nav === 'function') nav('settings', btn);
+  setTimeout(function () {
+    var box = document.getElementById('aura-billsetup'), addrMissing = box && box.innerHTML.indexOf('!</span>') >= 0 && box.innerHTML.indexOf(famT('bs_addr')) < box.innerHTML.indexOf('!</span>');
+    var target = (addrMissing ? document.getElementById('fd-title') : document.getElementById('sig-panel')) || document.getElementById('fd-title');
+    if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 350);
+}
+</script>
 <!-- FACILITY DETAILS (owner Settings) -->
 <script>
 /* ===== FACILITY DETAILS (owner, Settings) =====
@@ -5733,9 +5851,13 @@ function fdPreview() {
   var g = fdEl('fd-gstin'); var gv = fdGstinOf(); if (g.value !== gv) g.value = gv;
   var addr = (fdEl('fd-address').value || '').trim(), phone = (fdEl('fd-phone').value || '').trim();
   var line2 = []; if (phone) line2.push(esc(famT('fd_phone_lbl')) + ': ' + esc(phone)); if (gv) line2.push('GSTIN: ' + esc(gv));
-  fdEl('fd-preview-box').innerHTML = '<div style="font-size:16px;font-weight:700;color:#0b4f3a;line-height:1.25">' + esc(_fdName || '') + '</div>'
+  var gOk = !!gv && FD_GSTIN_RE.test(gv) && auraGstinValid(gv);
+  fdEl('fd-preview-box').innerHTML = '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div style="min-width:0;flex:1">'
+    + '<div style="font-size:16px;font-weight:700;color:#0b4f3a;line-height:1.25">' + esc(_fdName || '') + '</div>'
     + '<div style="font-size:11.5px;color:' + (addr ? '#4a5b53' : '#a1a8a4') + ';margin-top:3px">' + (addr ? esc(addr).replace(/\n/g, '<br>') : esc(famT('fd_prev_noaddr'))) + '</div>'
-    + (line2.length ? '<div style="font-size:11.5px;color:#4a5b53;margin-top:2px">' + line2.join(' &nbsp;&middot;&nbsp; ') + '</div>' : '');
+    + (line2.length ? '<div style="font-size:11.5px;color:#4a5b53;margin-top:2px">' + line2.join(' &nbsp;&middot;&nbsp; ') + '</div>' : '')
+    + '</div><div style="text-align:right;flex-shrink:0"><div style="font-size:14px;font-weight:800;letter-spacing:.05em;color:#12976A">' + (gOk ? 'BILL OF SUPPLY' : 'FINAL BILL') + '</div>'
+    + '<div style="font-size:10.5px;color:#6b7a73;margin-top:2px">' + (gOk ? 'SAC 9993 &middot; ' + esc(famT('bs_exempt')) : esc(famT('bs_nogst'))) + '</div></div></div>';
   var st = fdEl('fd-gstin-state');
   if (!gv) { st.textContent = ''; } else if (FD_GSTIN_RE.test(gv) && auraGstinValid(gv)) { st.textContent = famT('fd_gstin_ok'); st.style.color = 'var(--green)'; } else { st.textContent = gv.length < 15 ? gv.length + ' / 15' : famT('fd_err_gstin'); st.style.color = gv.length < 15 ? 'var(--text-tertiary)' : 'var(--red)'; }
   fdEl('fd-error').style.display = 'none'; fdEl('fd-success').style.display = 'none';
