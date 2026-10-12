@@ -453,7 +453,8 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
         <!-- PATH A: new facility → always creates an OWNER -->
         <div id="su-form-new">
-          <div><label class="auth-label">Nursing Home Name</label><input class="auth-input" id="su-nhname" placeholder="e.g. Diamond Harbour Nursing Home"/></div>
+          <div><label class="auth-label">Type of business</label><select class="auth-input" id="su-btype"><option value="nursing_home">Nursing home / hospital</option><option value="pharmacy">Pharmacy (medicine shop)</option><option value="lab">Diagnostic centre / lab</option></select></div>
+          <div><label class="auth-label">Business Name</label><input class="auth-input" id="su-nhname" placeholder="e.g. Diamond Harbour Nursing Home"/></div>
           <div><label class="auth-label">Owner / Administrator Name</label><input class="auth-input" id="su-name" placeholder="Full name"/></div>
           <div><label class="auth-label">Email</label><input class="auth-input" id="su-email" type="email" autocomplete="email" placeholder="admin@yournursinghome.com" onblur="suEmailBlur(this)"/>
             <div id="su-email-hint" class="ss" style="font-size:11px;margin-top:4px;display:none"></div></div>
@@ -1505,7 +1506,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
     <div class="mb">
       <p class="ss" style="margin-bottom:10px">AuraScale sends the invite code on WhatsApp to the number below. They enter it under "I Have an Invite Code" when registering. You never need to know or set their password.</p>
       <div><label class="flbl">Role *</label>
-        <select class="finput" id="staff-role"><option value="receptionist">Receptionist</option><option value="doctor">Doctor</option></select>
+        <select class="finput" id="staff-role"><option value="receptionist">Receptionist</option><option value="doctor">Doctor</option><option value="pharmacist" class="aura-dept-opt" data-mod="mod_pharmacy">Pharmacist (Pharmacy only)</option><option value="lab" class="aura-dept-opt" data-mod="mod_lab">Lab staff (Lab only)</option></select>
       </div>
       <div><label class="flbl">Label (optional, for your reference)</label><input class="finput" id="staff-label" placeholder="e.g. Front desk — morning shift"/></div>
       <div><label class="flbl">Their WhatsApp Number *</label>
@@ -2283,11 +2284,12 @@ async function handleSignup(){
   }
 }
 /* Creates the nursing home, owner membership and owner staff record for a signed-in user. */
-async function _auraCreateFacility(uid,nhname,name,mobile){
-  var ins=await _supa.from('clinics').insert({
-    owner_id:uid, name:nhname, doctor_name:name, phone:mobile,
-    facility_type:'nursing_home', is_approved:false, plan:'pending'
-  }).select().single();
+function _auraSignupType(){ var e=document.getElementById('su-btype'); var v=e?e.value:'nursing_home'; return (v==='pharmacy'||v==='lab')?v:'nursing_home'; }
+async function _auraCreateFacility(uid,nhname,name,mobile,btype){
+  var row={ owner_id:uid, name:nhname, doctor_name:name, phone:mobile, facility_type:'nursing_home', is_approved:false, plan:'pending' };
+  btype=btype||_auraSignupType();
+  if(btype==='pharmacy'||btype==='lab') row.business_type=btype;   /* stand-alone pharmacy / lab (column from dept-logins.sql) */
+  var ins=await _supa.from('clinics').insert(row).select().single();
   if(ins.error||!ins.data){
     var m=ins.error?ins.error.message:'unknown error';
     return {error: m.indexOf('MOBILE_TAKEN')>-1 ? 'This mobile number is already registered with another nursing home. Please register again with a different number.' : 'Could not create nursing home record: '+m};
@@ -2310,7 +2312,7 @@ async function _handleSignupCreate(nhname,name,email,mobile,pass,err){
 }
 async function _handleSignupCreate2(nhname,name,email,mobile,pass,err){
   var r=await _supa.auth.signUp({email,password:pass,options:{
-    data:{aura_pending_nh:{nh_name:nhname,owner_name:name,mobile:mobile}},
+    data:{aura_pending_nh:{nh_name:nhname,owner_name:name,mobile:mobile,business_type:_auraSignupType()}},
     emailRedirectTo:location.origin+location.pathname
   }});
   /* Email confirmation is ON: no login yet. The facility is created when they confirm and sign in. */
@@ -2545,7 +2547,7 @@ async function _initApp(){
     if(!clinicId){
       var _pend=(userRes.data.user.user_metadata||{}).aura_pending_nh;
       if(_pend&&_pend.nh_name&&!window._auraSigningUp){
-        var made=await _auraCreateFacility(uid,_pend.nh_name,_pend.owner_name||'',_pend.mobile||'');
+        var made=await _auraCreateFacility(uid,_pend.nh_name,_pend.owner_name||'',_pend.mobile||'',_pend.business_type||'nursing_home');
         if(made.error){ await _supa.auth.signOut(); failAndReturnToLogin(made.error); return; }
         clinicId=made.id; _myRole='owner';
         try{ await _supa.auth.updateUser({data:{aura_pending_nh:null}}); }catch(_e){}
@@ -2553,6 +2555,9 @@ async function _initApp(){
     }
     if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
     document.body.setAttribute('data-role',_myRole);
+    /* pharmacy / lab staff go straight to their own screen (they never see the owner portal) */
+    if(_myRole==='pharmacist'){ window.location.replace('pharmacy.html'); return; }
+    if(_myRole==='lab'){ window.location.replace('lab.html'); return; }
 
     var cl=await withTimeout(_supa.from('clinics').select('*').eq('id',clinicId).single(),20000,'your facility details');
     if(!cl.data){failAndReturnToLogin('Clinic record not found.');return;}
@@ -2585,6 +2590,11 @@ async function _initApp(){
        automatically without needing to sign in again. */
     if(_myRole==='doctor'){ window.location.href='doctor.html'; return; }
     if(_myRole==='receptionist'){ window.location.href='receptionist.html'; return; }
+    if(_myRole==='pharmacist'){ window.location.replace('pharmacy.html'); return; }
+    if(_myRole==='lab'){ window.location.replace('lab.html'); return; }
+    /* stand-alone pharmacy / lab: the owner works on that screen (no nursing-home portal) */
+    if(_myRole==='owner'&&cl.data.business_type==='pharmacy'){ window.location.replace('pharmacy.html'); return; }
+    if(_myRole==='owner'&&cl.data.business_type==='lab'){ window.location.replace('lab.html'); return; }
     if(auraIsLocked(cl.data.subscription_status, cl.data.subscription_expires_at)){ auraEnterLockMode(); return; }
     if(typeof auraCheckAgreement==='function') auraCheckAgreement(cl.data.name);
     _auraAppReady=true;
@@ -4577,7 +4587,8 @@ async function loadStaffList(){
 async function loadInvitesList(){
   var el=document.getElementById('invites-list');
   if(!el)return;
-  var r=await _supa.from('nh_invites').select('code,role,label,used_by,expires_at,created_at,phone,wa_sent_at').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20);
+  var r=await _supa.from('nh_invites').select('code,role,dept_role,label,used_by,expires_at,created_at,phone,wa_sent_at').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20);
+  if(r.error) r=await _supa.from('nh_invites').select('code,role,label,used_by,expires_at,created_at,phone,wa_sent_at').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20);
   if(r.error) r=await _supa.from('nh_invites').select('code,role,label,used_by,expires_at,created_at').eq('clinic_id',_clinicId).order('created_at',{ascending:false}).limit(20);
   if(!r.data||!r.data.length){el.innerHTML='<div class="empty"><div class="empty-ic">🎟️</div><p class="empty-t">No invite codes generated yet</p></div>';return;}
   el.innerHTML=r.data.map(function(i){
@@ -4585,7 +4596,7 @@ async function loadInvitesList(){
     var status=i.used_by?'Used':(expired?'Expired':'Pending');
     var chipClass=i.used_by?'ch-act':(expired?'ch-crit':'ch-wait');
     return '<div class="adm-row"><div class="adm-av" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">🎟️</div>'
-      +'<div style="flex:1"><div class="adm-name" style="font-family:monospace">'+i.code+'</div><div class="adm-meta">'+i.role+(i.label?' · '+i.label:'')+(i.expires_at&&!i.used_by?' · expires '+new Date(i.expires_at).toLocaleDateString('en-GB'):'')+(i.phone?' · 📲 sent to +'+String(i.phone).slice(0,2)+' '+String(i.phone).slice(2,7)+' '+String(i.phone).slice(7):'')+'</div></div>'
+      +'<div style="flex:1"><div class="adm-name" style="font-family:monospace">'+i.code+'</div><div class="adm-meta">'+(i.dept_role==='pharmacist'?'pharmacist':i.dept_role==='lab'?'lab staff':i.role)+(i.label?' · '+i.label:'')+(i.expires_at&&!i.used_by?' · expires '+new Date(i.expires_at).toLocaleDateString('en-GB'):'')+(i.phone?' · 📲 sent to +'+String(i.phone).slice(0,2)+' '+String(i.phone).slice(2,7)+' '+String(i.phone).slice(7):'')+'</div></div>'
       +'<span class="chip '+chipClass+'">'+status+'</span></div>';
   }).join('');
 }
@@ -4708,7 +4719,9 @@ async function generateStaffInvite(){
   if(btn){btn.disabled=true;btn.textContent='Generating…';}
   try{
     /* Use SECURITY DEFINER RPC — bypasses RLS permanently for all owners */
-    var r = await _supa.rpc('nh_generate_invite', {
+    var r = (role==='pharmacist'||role==='lab')
+      ? await _supa.rpc('nhx_dept_invite', { p_clinic_id: _clinicId, p_dept: role, p_label: label })
+      : await _supa.rpc('nh_generate_invite', {
       p_role      : role,
       p_label     : label,
       p_clinic_id : _clinicId
@@ -4731,6 +4744,13 @@ async function generateStaffInvite(){
 }
 function openStaffInvite(){
   _lastGeneratedInvite='';_lastInvitePhone='';
+  /* Pharmacist / Lab staff can only be invited when that module is switched on */
+  [].forEach.call(document.querySelectorAll('#staff-role .aura-dept-opt'),function(o){o.hidden=true;o.disabled=true;});
+  _supa.from('clinics').select('mod_pharmacy,mod_lab').eq('id',_clinicId).maybeSingle().then(function(r){
+    if(!r||r.error||!r.data)return;
+    [].forEach.call(document.querySelectorAll('#staff-role .aura-dept-opt'),function(o){var on=!!r.data[o.getAttribute('data-mod')];o.hidden=!on;o.disabled=!on;});
+  });
+  var _sr=document.getElementById('staff-role'); if(_sr&&_sr.selectedOptions[0]&&_sr.selectedOptions[0].disabled) _sr.value='receptionist';
   ['staff-phone','staff-label'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   var h=document.getElementById('staff-phone-hint');if(h){h.textContent='0/10 digits';h.style.color='';}
   document.getElementById('staff-error').style.display='none';
