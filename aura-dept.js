@@ -77,9 +77,48 @@ function dTodayIST() { return new Date(Date.now() + 5.5 * 3600 * 1000).toISOStri
 function dDaysTo(d) { if (!d) return 99999; return Math.floor((new Date(d + 'T00:00:00') - new Date(dTodayIST() + 'T00:00:00')) / 86400000); }
 function dErr(e) {
   var m = (e && (e.message || e.details || e.hint)) || String(e || 'Something went wrong');
-  return m.replace(/^(MODULE_OFF|NO_STOCK|DUPLICATE|GSTIN_INVALID|DUE|BILL_LOCKED|GST_MANUAL):\s*/, '');
+  return m.replace(/^(MODULE_OFF|NO_STOCK|DUPLICATE|GSTIN_INVALID|DL_INVALID|PHONE_INVALID|DUE|BILL_LOCKED|GST_MANUAL):\s*/, '');
 }
 function dMobile(p) { var d = String(p || '').replace(/\D/g, ''); if (d.length === 12 && d.indexOf('91') === 0) d = d.slice(2); else if (d.length === 11 && d[0] === '0') d = d.slice(1); return /^[6-9]\d{9}$/.test(d) ? d : ''; }
+/* ---------- checks for registration numbers (the database runs the same checks) ---------- */
+/* GSTIN: 15 characters, valid state code, and the last character must match the GST check-digit formula */
+function deptGstinOk(g) {
+  g = String(g || '').toUpperCase().replace(/\s/g, '');
+  if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g)) return false;
+  var st = parseInt(g.slice(0, 2), 10); if (!((st >= 1 && st <= 38) || st === 97 || st === 99)) return false;
+  var cs = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', sum = 0;
+  for (var i = 0; i < 14; i++) { var v = cs.indexOf(g[i]) * (i % 2 ? 2 : 1); sum += Math.floor(v / 36) + (v % 36); }
+  return cs[(36 - (sum % 36)) % 36] === g[14];
+}
+/* why a GSTIN is wrong, in plain words ('' = fine) */
+function deptGstinProblem(g) {
+  g = String(g || '').toUpperCase().replace(/\s/g, '');
+  if (!g) return 'Enter the GSTIN.';
+  if (g.length !== 15) return 'A GSTIN has exactly 15 characters (you typed ' + g.length + ').';
+  if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g)) return 'This is not a GSTIN. It looks like 19ABCDE1234F1Z5: 2-digit state code, 10-character PAN, then 3 characters.';
+  if (!deptGstinOk(g)) return 'This GSTIN is not valid (the state code or the check digit is wrong). Copy it exactly from the GST certificate.';
+  return '';
+}
+/* drug licence number(s): must look like a real licence, e.g. "WB/S24P/RCD-1234 (20B), 1235 (21B)",
+   "20B/1234/2019, 21B/1235/2019", or the new online format "RLF20BWB2024000123" */
+var DEPT_STATES = 'AN|AP|AR|AS|BR|CH|CG|CT|DN|DD|DL|GA|GJ|HR|HP|JK|JH|KA|KL|LA|LD|MP|MH|MN|ML|MZ|NL|OD|OR|PY|PB|RJ|SK|TN|TS|TG|TR|UP|UK|UA|WB';
+function deptDlProblem(v) {
+  var d = String(v || '').toUpperCase().replace(/\s+/g, ' ').trim();
+  if (!d) return 'Enter the drug licence number(s). They are printed on every bill.';
+  if (d.length < 8) return 'This licence number is too short. Write it exactly as on the licence, e.g. WB/S24P/RCD-1234.';
+  if (d.length > 120) return 'This is too long (120 characters at most).';
+  if (!/^[A-Z0-9 \/\-.,:;&()_#'\u00b7]+$/.test(d)) return 'Use only letters, numbers and / - . , : ; & ( ) # in the licence number.';
+  if (!/[0-9]{3,}/.test(d)) return 'A licence number has a serial number (at least 3 digits together). Please check the licence.';
+  if ((d.match(/[A-Z]/g) || []).length < 2) return 'Write the full licence number with its letters, e.g. WB/S24P/RCD-1234 or 20B/1234.';
+  if (/(.)\1{4,}/.test(d)) return 'This does not look like a real licence number.';
+  if (/(^|[^A-Z])(TEST|DEMO|DUMMY|SAMPLE|ASDF|QWER|QWERTY|ABCD|ABCDE|XYZ|NIL|NONE|NA|XXX)([^A-Z]|$)/.test(d)) return 'This does not look like a real licence number.';
+  var national = /^RLF ?[0-9]{2}[A-Z]{1,2} ?[A-Z]{2} ?[0-9]{4} ?[0-9]{6}/.test(d);
+  var form = /(^|[^0-9])(20|21)[A-G]?([^0-9]|$)/.test(d) || /FORM ?(20|21)/.test(d);
+  var state = new RegExp('^(' + DEPT_STATES + ')[^A-Z]').test(d) || new RegExp('(^|[^A-Z])(' + DEPT_STATES + ')[/\\- ]').test(d);
+  if (!national && !form && !state) return 'This does not look like a drug licence number. It usually starts with the state code (e.g. WB/...), or mentions Form 20B / 21B, or is the new online number (RLF20B...).';
+  return '';
+}
+function deptPhoneOk(p) { var d = String(p || '').replace(/\D/g, ''); return d.length >= 8 && d.length <= 15; }
 function dEl(id) { return document.getElementById(id); }
 function dShowErr(id, msg) { var e = dEl(id); if (!e) { showToast(msg); return; } e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
 function dOpen(id) { dEl(id).classList.add('open'); }
