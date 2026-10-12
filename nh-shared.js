@@ -105,7 +105,7 @@ async function nhAuthGuard(requiredRole) {
 
     /* Role mismatch → redirect to the right portal */
     if (requiredRole && _myRole !== requiredRole) {
-      var portals = { owner: 'nh.html', doctor: 'doctor.html', receptionist: 'receptionist.html' };
+      var portals = { owner: 'nh.html', doctor: 'doctor.html', receptionist: 'receptionist.html', pharmacist: 'pharmacy.html', lab: 'lab.html' };
       window.location.href = portals[_myRole] || 'nh.html';
       return null;
     }
@@ -114,6 +114,9 @@ async function nhAuthGuard(requiredRole) {
       return _supa.from('clinics').select('*').eq('id', clinicId).maybeSingle();
     }, 'facility details');
 
+    if (!cl.data) {   /* pharmacy / lab staff: read the facility through the helper (newer access rules) */
+      try { var hc = await _supa.rpc('nhx_my_clinic', { p_clinic: clinicId }); if (!hc.error && hc.data) cl = { data: hc.data }; } catch (_e) {}
+    }
     if (!cl.data) { nhLoadFailedScreen('Facility details could not be read.'); return null; }
 
     if (!cl.data.is_approved) {
