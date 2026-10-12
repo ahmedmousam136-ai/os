@@ -44,6 +44,26 @@ var DEPT = { clinic: null, module: null, role: null, admissions: [] };
   + '.err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:9px;padding:9px 12px;font-size:13px;margin-top:10px;display:none}'
   + '.note{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}'
   + '#nh-toast{display:none;position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#18170F;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:300;max-width:92vw;box-shadow:var(--sh-lg)}#nh-toast.show{display:block}';
+  css += ''
+  + '.d-brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}.d-brand .d-title{white-space:nowrap}'
+  + '.d-pow{font-size:10.5px;color:var(--text-tertiary);font-weight:600;letter-spacing:.02em}.d-pow b{color:var(--green)}'
+  + '.d-menu-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:20px;line-height:1;color:var(--text-secondary)}'
+  + '.d-menu{position:absolute;right:12px;top:58px;background:var(--surface);border:1px solid var(--border-mid);border-radius:12px;box-shadow:var(--sh-lg);min-width:210px;z-index:60;display:none;overflow:hidden}'
+  + '.d-menu.open{display:block}.d-menu a,.d-menu button{display:block;width:100%;text-align:left;padding:13px 16px;font-size:14px;color:var(--text-primary);text-decoration:none;border-bottom:1px solid var(--border)}'
+  + '.d-menu a:last-child,.d-menu button:last-child{border-bottom:none}.d-menu .who{padding:12px 16px;font-size:12px;color:var(--text-tertiary);border-bottom:1px solid var(--border)}'
+  + '.d-tab .ti{margin-right:5px}'
+  + '@media(max-width:700px){'
+  +   'html,body{font-size:15px}.finput,select.finput,textarea.finput{font-size:16px}'
+  +   '.d-top{padding:8px 12px}.d-title{font-size:19px}'
+  +   '.d-tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);border-top:1px solid var(--border);padding:4px 4px calc(4px + env(safe-area-inset-bottom));margin:0;max-width:none;gap:2px;justify-content:space-around;box-shadow:0 -4px 16px rgba(0,0,0,.06)}'
+  +   '.d-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:none!important;border-radius:10px;font-size:10.5px;min-width:0}'
+  +   '.d-tab .ti{margin:0;font-size:20px;line-height:1.1}.d-tab .tl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}'
+  +   '.d-tab.on{background:var(--green-bg);color:var(--green)}'
+  +   '.d-main{padding:10px 10px 96px}.d-view{border-radius:var(--r-lg);padding:12px}'
+  +   '.modal-bg{padding:0;align-items:stretch}.modal{border-radius:0;max-width:none!important;min-height:100%}'
+  +   '.modal-h{position:sticky;top:0;background:var(--surface);z-index:2}'
+  +   '.stat b{font-size:17px}.btn{min-height:44px}'
+  + '}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 })();
 
@@ -64,7 +84,14 @@ function dEl(id) { return document.getElementById(id); }
 function dShowErr(id, msg) { var e = dEl(id); if (!e) { showToast(msg); return; } e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
 function dOpen(id) { dEl(id).classList.add('open'); }
 function dClose(id) { dEl(id).classList.remove('open'); }
-function dTab(name) {
+var _dTabTitle = {};
+function dTab(name, fromHistory) {
+  var btn = document.querySelector('.d-tab[data-t="' + name + '"]');
+  if (!btn || btn.style.display === 'none') { name = (document.querySelector('.d-tab') || {}).getAttribute ? document.querySelector('.d-tab').getAttribute('data-t') : name; btn = document.querySelector('.d-tab[data-t="' + name + '"]'); }
+  /* every tab is a step in the phone's / browser's history, so "Back" goes to the previous tab, not out of the page */
+  if (!fromHistory && location.hash !== '#' + name) { try { history.pushState({ t: name }, '', '#' + name); } catch (e) {} }
+  try { document.title = (btn ? ((btn.querySelector('.tl') || btn).textContent.replace(/^\W+/, '').trim()) : name) + ' · ' + (DEPT.title || '') + ' · AuraScale'; } catch (e) {}
+  window.scrollTo(0, 0);
   [].forEach.call(document.querySelectorAll('.d-tab'), function (b) { b.classList.toggle('on', b.getAttribute('data-t') === name); });
   [].forEach.call(document.querySelectorAll('.d-view'), function (v) { v.classList.toggle('on', v.id === 'v-' + name); });
   try { localStorage.setItem('aura-dept-tab-' + DEPT.module, name); } catch (e) {}
@@ -79,20 +106,27 @@ async function deptInit(module, title) {
   var g = await nhAuthGuard(null); if (!g) return false;
   DEPT.role = g.role;
   if (['owner', 'receptionist', 'pharmacist', 'lab'].indexOf(g.role) < 0) { location.href = g.role === 'doctor' ? 'doctor.html' : 'nh.html'; return false; }
+  /* pharmacy staff only open the Pharmacy, lab staff only the Lab */
+  if (g.role === 'pharmacist' && module !== 'pharmacy') { location.replace('pharmacy.html'); return false; }
+  if (g.role === 'lab' && module !== 'lab') { location.replace('lab.html'); return false; }
   var c = await _supa.from('clinics').select('*').eq('id', _clinicId).maybeSingle();
+  if (!c.data) { try { var r2 = await _supa.rpc('nhx_my_clinic', { p_clinic: _clinicId }); if (r2.data) c = { data: r2.data }; } catch (e) {} }
   DEPT.clinic = c.data || {};
-  var back = g.role === 'owner' ? 'nh.html' : 'receptionist.html';
-  dEl('d-back').href = back;
-  dEl('d-fac').textContent = DEPT.clinic.name || g.facilityName || '';
+  DEPT.title = title;
+  DEPT.standalone = DEPT.clinic.business_type === 'pharmacy' || DEPT.clinic.business_type === 'lab';
+  var back = DEPT.standalone ? '' : (g.role === 'owner' ? 'nh.html' : g.role === 'receptionist' ? 'receptionist.html' : '');
+  dEl('d-fac').innerHTML = esc(DEPT.clinic.name || g.facilityName || '') + ' &middot; <span class="d-pow">Powered by <b>AuraScale OS</b></span>';
+  deptMenu(back, g);
+  window.addEventListener('popstate', function () { var t = (location.hash || '').slice(1); if (t) dTab(t, true); });
   dEl('loading').style.display = 'none';
   dEl('app').style.display = 'block';
   var on = module === 'pharmacy' ? DEPT.clinic.mod_pharmacy : DEPT.clinic.mod_lab;
   if (!on) {
     dEl('d-body').innerHTML = '<div class="d-view on" style="border-radius:var(--r-lg);text-align:center;padding:40px 16px"><div style="font-size:40px">&#128274;</div>'
-      + '<h2 style="margin:10px 0 6px">' + esc(title) + ' is not active for your nursing home</h2>'
+      + '<h2 style="margin:10px 0 6px">' + esc(title) + ' is not switched on for your account</h2>'
       + '<p class="muted" style="max-width:420px;margin:0 auto 16px">This is an extra module. Contact AuraScale to switch it on for your account.</p>'
-      + '<a class="btn btn-g" target="_blank" href="https://wa.me/918017465987?text=' + encodeURIComponent('Hi AuraScale, I want the ' + title + ' module for ' + (DEPT.clinic.name || 'my nursing home') + '.') + '">&#128242; WhatsApp AuraScale</a>'
-      + ' <a class="btn" href="' + back + '">Back</a></div>';
+      + '<a class="btn btn-g" target="_blank" href="https://wa.me/918017465987?text=' + encodeURIComponent('Hi AuraScale, I want the ' + title + ' module for ' + (DEPT.clinic.name || 'my account') + '.') + '">&#128242; WhatsApp AuraScale</a>'
+      + (back ? ' <a class="btn" href="' + back + '">Go to ' + (back === 'nh.html' ? 'owner portal' : 'reception') + '</a>' : '') + '</div>';
     dEl('d-tabs').style.display = 'none';
     return false;
   }
@@ -100,8 +134,41 @@ async function deptInit(module, title) {
   return true;
 }
 
+/* the small menu at the top right: who is signed in, the other portal (only when there is one), log out */
+function deptMenu(back, g) {
+  var top = document.querySelector('.d-top'); if (!top || dEl('d-menu')) return;
+  var old = dEl('d-back'); if (old) old.remove();
+  var b = document.createElement('button'); b.className = 'd-menu-btn'; b.innerHTML = '&#8942;'; b.setAttribute('aria-label', 'Menu');
+  var m = document.createElement('div'); m.className = 'd-menu'; m.id = 'd-menu';
+  var roleTxt = { owner: 'Owner', receptionist: 'Reception', pharmacist: 'Pharmacist', lab: 'Lab staff' }[g.role] || 'Staff';
+  m.innerHTML = '<div class="who">Signed in: <b>' + esc(g.name || '') + '</b> (' + roleTxt + ')</div>'
+    + (back ? '<a href="' + back + '">&#8617; ' + (back === 'nh.html' ? 'Owner portal' : 'Reception portal') + '</a>' : '')
+    + (DEPT.module === 'pharmacy' && DEPT.clinic.mod_lab && DEPT.role !== 'pharmacist' ? '<a href="lab.html">&#129514; Lab</a>' : '')
+    + (DEPT.module === 'lab' && DEPT.clinic.mod_pharmacy && DEPT.role !== 'lab' ? '<a href="pharmacy.html">&#128138; Pharmacy</a>' : '')
+    + '<button onclick="if(typeof toggleTheme===\'function\')toggleTheme()">&#127763; Light / dark</button>'
+    + '<button onclick="handleLogout()" style="color:var(--red)">&#10162; Log out</button>';
+  var wrap = document.createElement('div'); wrap.style.marginLeft = 'auto';
+  wrap.appendChild(b); top.appendChild(wrap); top.appendChild(m);
+  var me = dEl('d-me'); if (me) me.remove();
+  b.onclick = function (e) { e.stopPropagation(); m.classList.toggle('open'); };
+  document.addEventListener('click', function (e) { if (!e.target.closest('#d-menu')) m.classList.remove('open'); });
+}
+/* first tab to show: the one in the address (#bills), else the last one used */
+function deptStartTab(def) {
+  var t = (location.hash || '').slice(1);
+  if (!t) { try { t = localStorage.getItem('aura-dept-tab-' + DEPT.module) || def; } catch (e) { t = def; } }
+  if (!document.querySelector('.d-tab[data-t="' + t + '"]') || document.querySelector('.d-tab[data-t="' + t + '"]').style.display === 'none') t = def;
+  try { history.replaceState({ t: t }, '', '#' + t); } catch (e) {}
+  dTab(t, true);
+}
+
 /* ---------- admitted patients (for "Admitted patient" bills) ---------- */
 async function deptLoadAdmissions() {
+  if (DEPT.standalone) { DEPT.admissions = []; return []; }
+  try {
+    var h = await _supa.rpc('nhx_active_admissions', { p_clinic: _clinicId, p_module: DEPT.module });
+    if (!h.error && Array.isArray(h.data)) { DEPT.admissions = h.data; return h.data; }
+  } catch (e) {}
   var r = await _supa.from('admissions').select('*').eq('clinic_id', _clinicId).eq('status', 'Active').order('admission_date', { ascending: false });
   var rows = r.data || [];
   var bedIds = rows.map(function (a) { return a.bed_id; }).filter(Boolean), beds = {};
@@ -123,6 +190,10 @@ function deptAdmissionOptions() {
 /* ---------- find a saved patient by UHID or mobile (to put reports in their health book) ---------- */
 async function deptFindPatient(q) {
   q = String(q || '').trim(); if (q.length < 3) return [];
+  try {
+    var h = await _supa.rpc('nhx_find_patients', { p_clinic: _clinicId, p_module: DEPT.module, p_q: q });
+    if (!h.error && Array.isArray(h.data)) return h.data;
+  } catch (e) {}
   var digits = q.replace(/\D/g, '');
   var req = _supa.from('nh_patients').select('*').eq('clinic_id', _clinicId).limit(8);
   if (/^\d{10,12}$/.test(digits) && digits.length === q.replace(/[\s+\-]/g, '').length) req = req.ilike('phone', '%' + digits.slice(-10) + '%');
@@ -141,25 +212,24 @@ function deptLoadLibs() {
 /* o: { format:'a4'|'a5', head: html (every page), rows: [html <tr>], thead: html, colgroup, after: html (totals, once at end), foot: html (every page bottom), css } */
 async function deptMakePdf(o) {
   await deptLoadLibs();
-  var W = o.format === 'a5' ? 559 : 794, H = o.format === 'a5' ? 794 : 1123, PAD = 34;
+  var a5 = o.format === 'a5', W = a5 ? 559 : 794, H = a5 ? 794 : 1123, PX = a5 ? 30 : 44, PT = a5 ? 28 : 38, PB = 34;
   var host = document.createElement('div');
   host.style.cssText = 'position:fixed;left:-14000px;top:0;width:' + W + 'px;background:#fff;pointer-events:none';
-  var baseCss = '.pg{position:relative;width:' + W + 'px;height:' + H + 'px;padding:' + PAD + 'px;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.4;overflow:hidden}'
-    + '.pg table.it{width:100%;border-collapse:collapse;margin-top:8px}.pg table.it th{background:#F1F5F3;font-size:10.5px;text-align:left;padding:6px 5px;border-bottom:1.5px solid #333}'
-    + '.pg table.it td{padding:5px;border-bottom:1px solid #ddd;font-size:11.5px;vertical-align:top}.pg .r{text-align:right}.pg .c{text-align:center}'
-    + '.pg .foot{position:absolute;left:' + PAD + 'px;right:' + PAD + 'px;bottom:18px;font-size:9.5px;color:#666;border-top:1px solid #ccc;padding-top:5px;display:flex;justify-content:space-between}';
-  host.innerHTML = '<style>' + baseCss + (o.css || '') + '</style>';
+  host.innerHTML = '<style>' + deptPdfCss(W, H, PX, PT, PB) + (o.css || '') + '</style>';
   document.body.appendChild(host);
   try {
     if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
-    var meas = document.createElement('div'); meas.className = 'pg'; meas.style.height = 'auto'; host.appendChild(meas);
-    function h(html, row) { meas.innerHTML = row ? '<table class="it">' + (o.colgroup || '') + '<tbody>' + html + '</tbody></table>' : html; return meas.scrollHeight - PAD * 2; }
-    var hHead = h(o.head), hThead = o.thead ? h('<table class="it">' + (o.colgroup || '') + o.thead + '</table>') : 0, hAfter = o.after ? h(o.after) : 0;
-    var avail = H - PAD * 2 - 40;
+    var meas = document.createElement('div'); meas.className = 'pg'; meas.style.height = 'auto'; meas.style.paddingTop = '0'; meas.style.paddingBottom = '0'; host.appendChild(meas);
+    function h(html, row) { meas.innerHTML = row ? '<table class="it">' + (o.colgroup || '') + '<tbody>' + html + '</tbody></table>' : html; return meas.scrollHeight; }
+    var hHead = h(o.head), hHead2 = o.headNext ? h(o.headNext) : hHead, hThead = o.thead ? h('<table class="it">' + (o.colgroup || '') + o.thead + '</table>') : 0, hAfter = o.after ? h(o.after) : 0;
+    var avail = H - PT - PB - 48;   /* room for the page footer and the 'continued' line */
     var pages = [], cur = [], used = hHead + hThead;
-    (o.rows || []).forEach(function (r) {
-      var rh = h(r, true) - 4;
-      if (cur.length && used + rh > avail) { pages.push(cur); cur = []; used = hHead + hThead; }
+    var all = o.rows || [];
+    all.forEach(function (r, k) {
+      var rh = h(r, true);
+      /* a group heading (e.g. the test name) never stays alone at the bottom of a page */
+      var need = rh + (r.indexOf('class="grp"') >= 0 && all[k + 1] ? h(all[k + 1], true) : 0);
+      if (cur.length && used + need > avail) { pages.push(cur); cur = []; used = hHead2 + hThead; }
       cur.push(r); used += rh;
     });
     var afterOwnPage = used + hAfter > avail && cur.length > 0;
@@ -169,8 +239,8 @@ async function deptMakePdf(o) {
     var n = pages.length, out = document.createElement('div'); host.appendChild(out);
     out.innerHTML = pages.map(function (rows, i) {
       var tbl = rows.length ? '<table class="it">' + (o.colgroup || '') + (o.thead || '') + '<tbody>' + rows.join('') + '</tbody></table>' : '';
-      var tail = (i === n - 1) ? (o.after || '') : '<div style="text-align:right;font-size:10px;color:#666;margin-top:6px">Continued on next page&hellip;</div>';
-      return '<div class="pg">' + o.head + tbl + tail + '<div class="foot"><span>' + (o.foot || '') + '</span><span>Page ' + (i + 1) + ' of ' + n + '</span></div></div>';
+      var tail = (i === n - 1) ? (o.after || '') : '<div style="text-align:right;font-size:10.5px;color:#6b7a73;margin-top:6px">Continued on next page&hellip;</div>';
+      return '<div class="pg">' + (i && o.headNext ? o.headNext : o.head) + tbl + tail + '<div class="foot"><span>' + (o.foot || '') + '</span><span>Page ' + (i + 1) + ' of ' + n + '</span></div></div>';
     }).join('');
     var doc = new window.jspdf.jsPDF({ unit: 'mm', format: o.format || 'a4', compress: true });
     var Wmm = doc.internal.pageSize.getWidth(), Hmm = doc.internal.pageSize.getHeight();
@@ -209,12 +279,73 @@ async function deptWhatsApp(phone, text, bucket, path) {
   } catch (e) { if (w) w.close(); showToast('Could not make the link: ' + dErr(e)); }
 }
 /* the header block printed at the top of bills / reports */
+/* the same look as the nursing-home final bill */
+function deptPdfCss(W, H, PX, PT, PB) {
+  var font = 'font-family:"Noto Sans","Noto Sans Bengali","Hind Siliguri",Arial,Helvetica,sans-serif;';
+  return '.pg{box-sizing:border-box;position:relative;width:' + W + 'px;height:' + H + 'px;padding:' + PT + 'px ' + PX + 'px ' + PB + 'px;background:#fff;color:#14201b;' + font + 'font-size:12.5px;line-height:1.45;overflow:hidden}'
+    + '.dh{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid #12976A;padding-bottom:12px}'
+    + '.dh-name{font-size:22px;font-weight:700;color:#0b4f3a;line-height:1.2}.dh-sub{font-size:11.5px;color:#4a5b53;margin-top:3px}'
+    + '.dh-t{text-align:right;flex-shrink:0;max-width:300px}.dh-t b{display:block;font-size:18px;letter-spacing:.05em;color:#12976A;line-height:1.2}.dh-t span{display:block;font-size:11.5px;color:#4a5b53;margin-top:3px}.dh-t .no{display:inline;font-size:13px;color:#14201b;font-weight:700;margin:0}'
+    + '.dh2{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #12976A;padding-bottom:8px;margin-bottom:8px;font-size:12px;color:#4a5b53}.dh2 b{font-size:15px;color:#0b4f3a}'
+    + '.dpt{display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;margin:14px 0 12px;padding:11px 14px;background:#f4f8f6;border:1px solid #dbe7e1;border-radius:8px}'
+    + '.dpt div{display:flex;gap:8px}.dpt .l{color:#6b7a73;min-width:104px;flex-shrink:0}.dpt .v{font-weight:600;overflow-wrap:anywhere}.dpt .wide{grid-column:1 / span 2}'
+    + 'table.it{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}'
+    + '.it th{background:#12976A;color:#fff;text-align:left;padding:7px 8px;font-weight:600}'
+    + '.it td{padding:6px 8px;border-bottom:1px solid #e3ebe7;vertical-align:top;overflow-wrap:anywhere}'
+    + '.r,.it th.r,.it td.r{text-align:right}.c{text-align:center}.mut{color:#6b7a73}.sm{font-size:10.5px;color:#6b7a73}'
+    + '.it tr.grp td{background:#eef6f2;font-weight:700;color:#0b4f3a;padding-top:8px}'
+    + '.hi{color:#b42318;font-weight:800}'
+    + '.dtot{width:340px;flex-shrink:0}.dtot .row{display:flex;justify-content:space-between;padding:4px 8px}.dtot .s{font-size:11.5px;color:#4a5b53}'
+    + '.dtot .grand{margin-top:4px;padding:9px 8px;background:#eef6f2;border-radius:6px;font-size:14.5px;font-weight:700}'
+    + '.dwords{margin-top:6px;text-align:right;font-size:11.5px;color:#4a5b53;font-style:italic}'
+    + '.dsplit{display:flex;justify-content:space-between;gap:18px;margin-top:12px;align-items:flex-start}'
+    + '.dgst{border-collapse:collapse;font-size:11px;margin-top:4px}.dgst th{background:#f4f8f6;color:#4a5b53;font-weight:600;padding:4px 8px;border-bottom:1px solid #cfdcd5;text-align:right}.dgst th:first-child,.dgst td:first-child{text-align:left}.dgst td{padding:4px 8px;border-bottom:1px solid #e3ebe7;text-align:right}'
+    + '.dph{margin-top:16px;padding-bottom:5px;border-bottom:2px solid #12976A;font-weight:700;color:#0b4f3a;font-size:13px}'
+    + '.dprow{display:flex;gap:8px;padding:6px 8px;border-bottom:1px solid #e3ebe7;font-size:11.5px}.dprow.h{color:#6b7a73;font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #cfdcd5}'
+    + '.dfinal{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:12px}.dfinal .box{width:340px}.dfinal .row{display:flex;justify-content:space-between;padding:5px 8px}'
+    + '.dfinal .due{margin-top:4px;padding:10px 8px;border-radius:6px;font-size:16px;font-weight:700;display:flex;justify-content:space-between}'
+    + '.due-red{background:#fdecec;color:#b42318}.due-green{background:#e6f6ee;color:#0f7a4f}'
+    + '.dstamp{display:inline-block;border:3px solid #0f7a4f;color:#0f7a4f;font-weight:800;font-size:22px;letter-spacing:.12em;padding:4px 16px;border-radius:6px;transform:rotate(-8deg);opacity:.85;margin-left:8px}'
+    + '.dstamp.red{border-color:#b42318;color:#b42318;font-size:15px;letter-spacing:.06em}.dstamp.blue{border-color:#1d4ed8;color:#1d4ed8;font-size:14px;letter-spacing:.05em}'
+    + '.dend{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-top:18px}'
+    + '.ddecl{flex:1;font-size:10.8px;color:#4a5b53;border:1px solid #dbe7e1;border-radius:8px;padding:9px 12px;background:#fafcfb;line-height:1.5}.ddecl b{color:#14201b}'
+    + '.dsign{width:220px;text-align:center;font-size:11px;color:#4a5b53;flex-shrink:0}.dsign img{max-width:200px;max-height:70px;display:block;margin:0 auto 2px}.dsign .sp{height:58px}'
+    + '.dsign .ln{border-top:1px solid #14201b;padding-top:4px;color:#14201b;font-weight:600}'
+    + '.dfin{text-align:center;font-size:10.5px;color:#6b7a73;margin-top:14px}'
+    + '.foot{position:absolute;left:' + PX + 'px;right:' + PX + 'px;bottom:16px;font-size:9.6px;color:#7a8a83;display:flex;justify-content:space-between;gap:12px;border-top:1px solid #e3ebe7;padding-top:6px}';
+}
+/* page header + the grey details card.  o: { name, sub:[html], title, right:[html], info:[[label, value(html), wide?]] } */
 function deptPdfHead(o) {
-  return '<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:2px solid #0B6B4C;padding-bottom:8px">'
-    + '<div><div style="font-size:19px;font-weight:800;color:#0B4F3A">' + esc(o.name || '') + '</div>'
-    + '<div style="font-size:10.5px;color:#333;max-width:420px">' + esc(o.address || '') + (o.phone ? ' &middot; Ph ' + esc(o.phone) : '') + '</div>'
-    + (o.lines || []).filter(Boolean).map(function (l) { return '<div style="font-size:10.5px;color:#333">' + l + '</div>'; }).join('') + '</div>'
-    + '<div style="text-align:right"><div style="font-size:15px;font-weight:800;letter-spacing:.04em">' + esc(o.title || '') + '</div>'
-    + (o.right || []).filter(Boolean).map(function (l) { return '<div style="font-size:11px">' + l + '</div>'; }).join('') + '</div></div>'
-    + (o.party ? '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #ccc;font-size:11.5px">' + o.party + '</div>' : '');
+  return '<div class="dh"><div><div class="dh-name">' + esc(o.name || '') + '</div>'
+    + (o.sub || []).filter(Boolean).map(function (l) { return '<div class="dh-sub">' + l + '</div>'; }).join('') + '</div>'
+    + '<div class="dh-t"><b>' + esc(o.title || '') + '</b>' + (o.right || []).filter(Boolean).map(function (l) { return '<span>' + l + '</span>'; }).join('') + '</div></div>'
+    + (o.info && o.info.length ? '<div class="dpt">' + o.info.filter(function (x) { return x && x[1]; }).map(function (x) { return '<div' + (x[2] ? ' class="wide"' : '') + '><span class="l">' + x[0] + '</span><span class="v">' + x[1] + '</span></div>'; }).join('') + '</div>' : '');
+}
+/* small header on page 2, 3 ... */
+function deptPdfHeadNext(left, right) { return '<div class="dh2"><span>' + left + '</span><span>' + right + '</span></div>'; }
+/* the facility's signature / stamp image (same one used on the nursing-home bills), if the owner uploaded one */
+var _deptSign;
+async function deptSignature() {
+  if (_deptSign !== undefined) return _deptSign;
+  _deptSign = '';
+  var p = DEPT.clinic && DEPT.clinic.bill_sign_path; if (!p) return '';
+  try {
+    var dl = await _supa.storage.from('bills').download(p);
+    if (dl.data) _deptSign = await new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(String(fr.result || '')); }; fr.onerror = function () { res(''); }; fr.readAsDataURL(dl.data); });
+  } catch (e) { _deptSign = ''; }
+  return _deptSign;
+}
+function deptMoney(n) { return '&#8377;' + (Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function deptPdfDate(d) { if (!d) return ''; var x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' }); }
+function deptPdfDateTime(d) { if (!d) return ''; var x = new Date(d); return isNaN(x) ? '' : deptPdfDate(d) + ' ' + x.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }); }
+/* Rupees in words, Indian system */
+function deptWords(n) {
+  n = Math.round(Number(n) || 0); if (!n) return 'Rupees Zero Only';
+  var a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  var b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  function two(x) { return x < 20 ? a[x] : b[Math.floor(x / 10)] + (x % 10 ? ' ' + a[x % 10] : ''); }
+  function three(x) { return (x >= 100 ? a[Math.floor(x / 100)] + ' Hundred' + (x % 100 ? ' ' : '') : '') + (x % 100 ? two(x % 100) : ''); }
+  var cr = Math.floor(n / 10000000), lk = Math.floor(n / 100000) % 100, th = Math.floor(n / 1000) % 100, r = n % 1000, out = [];
+  if (cr) out.push(two(cr) + ' Crore'); if (lk) out.push(two(lk) + ' Lakh'); if (th) out.push(two(th) + ' Thousand'); if (r) out.push(three(r));
+  return 'Rupees ' + out.join(' ') + ' Only';
 }
