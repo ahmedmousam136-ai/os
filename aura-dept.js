@@ -118,6 +118,18 @@ function deptDlProblem(v) {
   if (!national && !form && !state) return 'This does not look like a drug licence number. It usually starts with the state code (e.g. WB/...), or mentions Form 20B / 21B, or is the new online number (RLF20B...).';
   return '';
 }
+/* automatic WhatsApp (bill / report) through AuraScale's number; returns a short line for the screen */
+async function deptAutoSend(body) {
+  try {
+    var r = await _supa.functions.invoke('dept-whatsapp', { body: body });
+    var d = r.data || {};
+    if (r.error && !d.reason) return { ok: false, text: 'Automatic WhatsApp could not be sent now. Use the WhatsApp button.' };
+    if (d.sent) return { ok: true, text: '✓ Sent on WhatsApp automatically.' };
+    var why = { customer_not_agreed: '', no_phone: '', admitted_patient: '', already_sent: 'Already sent on WhatsApp.', patient_said_no: 'Not sent: this patient said NO to WhatsApp messages.',
+      not_configured: 'Automatic WhatsApp is not switched on yet. Use the WhatsApp button.', webhook_error: 'Automatic WhatsApp failed. Use the WhatsApp button.', pdf_not_ready: 'The PDF is not ready yet.' }[d.reason];
+    return { ok: false, text: why === undefined ? 'Automatic WhatsApp not sent (' + (d.reason || 'error') + '). Use the WhatsApp button.' : why };
+  } catch (e) { return { ok: false, text: 'Automatic WhatsApp could not be sent now. Use the WhatsApp button.' }; }
+}
 function deptPhoneOk(p) { var d = String(p || '').replace(/\D/g, ''); return d.length >= 8 && d.length <= 15; }
 function dEl(id) { return document.getElementById(id); }
 function dShowErr(id, msg) { var e = dEl(id); if (!e) { showToast(msg); return; } e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
