@@ -18,16 +18,14 @@
 <style>@media(max-width:600px){.hide-sm{display:none}}</style>
 <div id="app" style="display:none">
   <div class="d-top">
-    <a class="d-back" id="d-back" href="nh.html">&larr; Back</a>
-    <div><div class="d-title">&#128138; Pharmacy</div><div class="d-sub" id="d-fac"></div></div>
-    <div style="margin-left:auto" class="tiny" id="d-me"></div>
+    <div class="d-brand"><div style="min-width:0"><div class="d-title">&#128138; Pharmacy</div><div class="d-sub" id="d-fac"></div></div></div>
   </div>
   <div class="d-tabs" id="d-tabs">
-    <button class="d-tab on" data-t="pos" onclick="dTab('pos')">&#129534; New bill</button>
-    <button class="d-tab" data-t="stock" onclick="dTab('stock')">&#128230; Stock</button>
-    <button class="d-tab" data-t="receive" onclick="dTab('receive')">&#10133; Add stock</button>
-    <button class="d-tab" data-t="bills" onclick="dTab('bills')">&#128196; Bills &amp; sales</button>
-    <button class="d-tab" data-t="settings" onclick="dTab('settings')" data-owner-only>&#9881; Settings</button>
+    <button class="d-tab on" data-t="pos" onclick="dTab('pos')"><span class="ti">&#129534;</span><span class="tl">New bill</span></button>
+    <button class="d-tab" data-t="stock" onclick="dTab('stock')"><span class="ti">&#128230;</span><span class="tl">Stock</span></button>
+    <button class="d-tab" data-t="receive" onclick="dTab('receive')"><span class="ti">&#10133;</span><span class="tl">Add stock</span></button>
+    <button class="d-tab" data-t="bills" onclick="dTab('bills')"><span class="ti">&#128196;</span><span class="tl">Bills</span></button>
+    <button class="d-tab" data-t="settings" onclick="dTab('settings')" data-owner-only><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
   </div>
   <div class="d-main" id="d-body">
 
@@ -97,6 +95,12 @@
 
     <!-- ============ ADD STOCK ============ -->
     <div class="d-view" id="v-receive">
+      <div class="card" style="margin-bottom:18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">
+        <div style="font-size:30px">&#128248;</div>
+        <div style="flex:1;min-width:220px"><b>Scan the distributor's bill</b><div class="tiny">Take a clear photo of the whole bill. AI reads every line (name, batch, expiry, MRP, rate, quantity). You check the lines, then add them to stock in one tap.</div></div>
+        <label class="btn btn-g" style="cursor:pointer">&#128247; Take / choose photo<input type="file" id="scan-file" accept="image/*" capture="environment" onchange="scanPick(this)" style="display:none"/></label>
+        <div class="tiny" id="scan-status" style="width:100%"></div>
+      </div>
       <h3 style="font-size:15px;margin-bottom:4px">Stock received from the distributor</h3>
       <p class="tiny" style="margin-bottom:12px">Enter one line of the distributor's bill. Prices are what is printed on the pack (MRP includes GST).</p>
       <div style="position:relative;margin-bottom:10px;max-width:520px">
@@ -181,6 +185,9 @@
 <!-- after saving a bill -->
 <div class="modal-bg" id="m-done"><div class="modal"><div class="modal-h"><span id="done-title">Bill saved</span><button class="btn btn-sm" onclick="dClose('m-done')">&times;</button></div>
   <div class="modal-b" id="done-body"></div></div></div>
+<!-- scanned bill: check the lines -->
+<div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1180px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div>
+  <div class="modal-b" id="scan-body"></div></div></div>
 <!-- medicine batches / edit -->
 <div class="modal-bg" id="m-med"><div class="modal" style="max-width:760px"><div class="modal-h"><span id="med-title">Medicine</span><button class="btn btn-sm" onclick="dClose('m-med')">&times;</button></div>
   <div class="modal-b" id="med-body"></div></div></div>
@@ -192,19 +199,17 @@ function ph() { return DEPT.clinic.ph_settings || {}; }
 
 async function init() {
   var ok = await deptInit('pharmacy', 'Pharmacy'); if (!ok) return;
-  dEl('d-me').textContent = (_myName || '') + ' · ' + (DEPT.role === 'owner' ? 'Owner' : 'Staff');
   setupNote();
   await Promise.all([loadMeds(), deptLoadAdmissions()]);
   dEl('c-adm').innerHTML = deptAdmissionOptions();
-  var t = 'pos'; try { t = localStorage.getItem('aura-dept-tab-pharmacy') || 'pos'; } catch (e) {}
-  if (t === 'settings' && !dIsOwner()) t = 'pos';
-  dTab(t);
-  setTimeout(function () { var s = dEl('m-search'); if (s && t === 'pos') s.focus(); }, 200);
+  if (!DEPT.admissions.length) dEl('k-ipd').parentNode.style.display = 'none';
+  deptStartTab('pos');
+  setTimeout(function () { var s = dEl('m-search'); if (s && location.hash === '#pos' && window.innerWidth > 700) s.focus(); }, 200);
   document.addEventListener('click', function (e) { if (!e.target.closest('#m-dd,#m-search')) dEl('m-dd').style.display = 'none'; if (!e.target.closest('#r-dd,#r-med')) dEl('r-dd').style.display = 'none'; if (!e.target.closest('#c-uhid-dd,#c-uhid')) dEl('c-uhid-dd').style.display = 'none'; });
 }
 function setupNote() {
   var s = ph(), el = dEl('pos-setup-note');
-  if (!s.name) { el.style.display = 'block'; el.innerHTML = '&#9888; Pharmacy details (name, GST, drug licence) are not filled yet, so bills will show the nursing-home name and no GST. ' + (dIsOwner() ? '<a href="#" onclick="dTab(\'settings\');return false" style="color:inherit;font-weight:700;text-decoration:underline">Fill them in Settings</a>.' : 'Ask the owner to fill them in Settings.'); }
+  if (!s.name) { el.style.display = 'block'; el.innerHTML = '&#9888; Pharmacy details (name, GST, drug licence) are not filled yet, so bills will show the business name and no GST. ' + (dIsOwner() ? '<a href="#" onclick="dTab(\'settings\');return false" style="color:inherit;font-weight:700;text-decoration:underline">Fill them in Settings</a>.' : 'Ask the owner to fill them in Settings.'); }
   else el.style.display = 'none';
 }
 
@@ -379,39 +384,57 @@ async function salePdf(sale) {
   var it = await _supa.from('ph_sale_items').select('*').eq('sale_id', sale.id).order('name');
   if (it.error) throw it.error;
   var items = it.data || [], s = sale.seller || {}, reg = sale.gst_mode === 'regular', ipd = sale.kind === 'ipd';
+  var name = s.name || s.clinic_name || '';
+  /* the facility's signature / stamp only when the pharmacy bills under the facility's own name */
+  var sign = (!ipd && (DEPT.standalone || !s.name || s.name === s.clinic_name)) ? await deptSignature() : '';
+  var adm = ipd ? (DEPT.admissions || []).filter(function (a) { return a.id === sale.admission_id; })[0] : null;
+  var title = sale.cancelled ? sale.title + ' (CANCELLED)' : sale.title;
   var head = deptPdfHead({
-    name: s.name || s.clinic_name, address: s.address || s.clinic_address, phone: s.phone || s.clinic_phone,
-    lines: [s.gstin ? 'GSTIN: <b>' + esc(s.gstin) + '</b>' : '', s.dl_no ? 'Drug Lic.: ' + esc(s.dl_no) : '', (s.name && s.clinic_name && s.name !== s.clinic_name) ? 'At ' + esc(s.clinic_name) : ''],
-    title: sale.cancelled ? sale.title + ' (CANCELLED)' : sale.title,
-    right: ['No: <b>' + esc(sale.bill_no) + '</b>', dDateTime(sale.created_at)],
-    party: '<div>' + (ipd ? 'Patient' : 'Customer') + ': <b>' + esc(sale.patient_name || '') + '</b>' + (sale.patient_phone ? ' &middot; ' + esc(sale.patient_phone) : '') + (sale.uhid ? '<br>UHID: ' + esc(sale.uhid) : '') + '</div>'
-      + '<div style="text-align:right">' + (sale.doctor ? 'Doctor: ' + esc(sale.doctor) + '<br>' : '') + (ipd ? 'Charged to the nursing-home bill' : 'Paid by: ' + esc(String(sale.pay_mode || '').toUpperCase())) + '</div>'
+    name: name,
+    sub: [esc(s.address || s.clinic_address || '').replace(/\n/g, ', '),
+      [s.phone || s.clinic_phone ? 'Phone: ' + esc(s.phone || s.clinic_phone) : '', s.gstin ? 'GSTIN: ' + esc(s.gstin) : ''].filter(Boolean).join(' &nbsp;&middot;&nbsp; '),
+      s.dl_no ? 'Drug Licence No: ' + esc(s.dl_no) : '',
+      (s.name && s.clinic_name && s.name !== s.clinic_name) ? 'At ' + esc(s.clinic_name) : ''],
+    title: title,
+    right: ['Bill No: <span class="no">' + esc(sale.bill_no) + '</span>', 'Date: ' + deptPdfDateTime(sale.created_at), reg ? 'Prices are MRP, inclusive of GST' : ''],
+    info: [[ipd ? 'Patient' : 'Billed to', esc(sale.patient_name || 'Walk-in customer')], ['Payment', ipd ? 'Added to the nursing-home bill' : esc(({ cash: 'Cash', upi: 'UPI', card: 'Card', credit: 'Credit' })[sale.pay_mode] || String(sale.pay_mode || '').toUpperCase())],
+      ['Phone', esc(sale.patient_phone || '')], ['Prescribed by', esc(sale.doctor || '')],
+      ['UHID', esc(sale.uhid || '')], ['Bed / Ward', adm ? esc(adm._bed || '') : '']]
   });
-  var thead = '<thead><tr><th>#</th><th>Medicine</th><th>Batch</th><th>Exp</th><th class="r">Qty</th><th class="r">MRP</th>' + (reg ? '<th class="r">GST%</th>' : '') + '<th class="r">Disc</th><th class="r">Amount</th></tr></thead>';
+  var headNext = deptPdfHeadNext('<b>' + esc(name) + '</b> &nbsp;&middot;&nbsp; ' + esc(sale.patient_name || ''), 'Bill No: ' + esc(sale.bill_no) + ' (continued)');
+  var colgroup = '<colgroup><col style="width:5%"><col style="width:' + (reg ? 31 : 37) + '%"><col style="width:12%"><col style="width:8%"><col style="width:7%"><col style="width:10%">' + (reg ? '<col style="width:7%">' : '') + '<col style="width:8%"><col style="width:12%"></colgroup>';
+  var thead = '<thead><tr><th>#</th><th>Medicine</th><th>Batch</th><th>Expiry</th><th class="r">Qty</th><th class="r">MRP</th>' + (reg ? '<th class="r">GST</th>' : '') + '<th class="r">Disc</th><th class="r">Amount</th></tr></thead>';
   var rows = items.map(function (x, i) {
-    return '<tr><td>' + (i + 1) + '</td><td><b>' + esc(x.name) + '</b>' + (x.hsn && reg ? '<br><span style="font-size:9.5px;color:#555">HSN ' + esc(x.hsn) + '</span>' : '') + (x.schedule ? ' <span style="font-size:9.5px">Sch ' + esc(x.schedule) + '</span>' : '') + '</td>'
-      + '<td>' + esc(x.batch_no) + '</td><td>' + dExp(x.expiry) + '</td><td class="r">' + Number(x.qty) + '</td><td class="r">' + Number(x.mrp).toFixed(2) + '</td>'
-      + (reg ? '<td class="r">' + Number(x.gst_rate) + '</td>' : '') + '<td class="r">' + Number(x.discount).toFixed(2) + '</td><td class="r"><b>' + Number(x.amount).toFixed(2) + '</b></td></tr>';
+    var meta = [reg && x.hsn ? 'HSN ' + esc(x.hsn) : '', x.schedule ? 'Schedule ' + esc(x.schedule) : ''].filter(Boolean).join(' &middot; ');
+    return '<tr><td class="mut">' + (i + 1) + '</td><td><b>' + esc(x.name) + '</b>' + (meta ? '<div class="sm">' + meta + '</div>' : '') + '</td>'
+      + '<td>' + esc(x.batch_no || '') + '</td><td>' + dExp(x.expiry) + '</td><td class="r">' + Number(x.qty) + '</td><td class="r">' + Number(x.mrp).toFixed(2) + '</td>'
+      + (reg ? '<td class="r">' + Number(x.gst_rate) + '%</td>' : '') + '<td class="r">' + (Number(x.discount) ? Number(x.discount).toFixed(2) : '-') + '</td><td class="r"><b>' + Number(x.amount).toFixed(2) + '</b></td></tr>';
   });
-  var gstTable = '';
+  var left = '';
   if (reg) {
     var by = {}; items.forEach(function (x) { var k = Number(x.gst_rate); by[k] = by[k] || { t: 0, c: 0, s: 0 }; by[k].t += Number(x.taxable); by[k].c += Number(x.cgst); by[k].s += Number(x.sgst); });
-    gstTable = '<table style="border-collapse:collapse;font-size:10px;margin-top:6px"><tr style="background:#F1F5F3"><th style="padding:3px 6px;text-align:left">GST</th><th style="padding:3px 6px" class="r">Taxable</th><th style="padding:3px 6px" class="r">CGST</th><th style="padding:3px 6px" class="r">SGST</th></tr>'
-      + Object.keys(by).map(function (k) { return '<tr><td style="padding:3px 6px">' + k + '%</td><td style="padding:3px 6px" class="r">' + by[k].t.toFixed(2) + '</td><td style="padding:3px 6px" class="r">' + by[k].c.toFixed(2) + '</td><td style="padding:3px 6px" class="r">' + by[k].s.toFixed(2) + '</td></tr>'; }).join('') + '</table>';
+    left = '<div style="font-weight:700;color:#0b4f3a;font-size:12px">GST summary</div><table class="dgst"><tr><th>GST rate</th><th>Taxable value</th><th>CGST</th><th>SGST</th><th>Total tax</th></tr>'
+      + Object.keys(by).sort(function (p, q) { return p - q; }).map(function (k) { var v = by[k]; return '<tr><td>' + k + '%</td><td>' + v.t.toFixed(2) + '</td><td>' + v.c.toFixed(2) + '</td><td>' + v.s.toFixed(2) + '</td><td>' + (v.c + v.s).toFixed(2) + '</td></tr>'; }).join('') + '</table>';
+  } else if (sale.gst_mode === 'composition') {
+    left = '<div class="sm" style="max-width:300px">Composition taxable person, not eligible to collect tax on supplies.</div>';
   }
-  var line = function (a, b, strong) { return '<div style="display:flex;justify-content:space-between;gap:20px;' + (strong ? 'font-weight:800;font-size:14px;border-top:1.5px solid #333;padding-top:4px;margin-top:3px' : '') + '"><span>' + a + '</span><span>' + b + '</span></div>'; };
-  var after = '<div style="display:flex;justify-content:space-between;gap:16px;margin-top:10px"><div style="flex:1;font-size:10.5px">'
-    + (ipd ? '<b>Medicine issue slip.</b> These medicines are added to the patient\'s nursing-home bill; this is not a separate bill.' : 'Amount in words: <b>Rupees ' + inWords(sale.total) + ' only</b>')
-    + gstTable
-    + (sale.gst_mode === 'composition' ? '<div style="margin-top:6px">Composition taxable person, not eligible to collect tax on supplies.</div>' : '')
-    + (s.footer ? '<div style="margin-top:6px">' + esc(s.footer) + '</div>' : '') + '</div>'
-    + '<div style="min-width:190px;font-size:11.5px">' + line('MRP total', Number(sale.mrp_total).toFixed(2))
-    + (Number(sale.discount) ? line('Discount (' + Number(sale.discount_pct) + '%)', '-' + Number(sale.discount).toFixed(2)) : '')
-    + (reg ? line('Taxable value', Number(sale.taxable).toFixed(2)) + line('CGST', Number(sale.cgst).toFixed(2)) + line('SGST', Number(sale.sgst).toFixed(2)) : '')
-    + (Number(sale.round_off) ? line('Round off', Number(sale.round_off).toFixed(2)) : '')
-    + line(ipd ? 'Total charged' : 'NET AMOUNT', '&#8377; ' + Number(sale.total).toFixed(2), true) + '</div></div>'
-    + '<div style="display:flex;justify-content:space-between;margin-top:26px;font-size:10.5px"><div>Billed by: ' + esc(sale.created_by_name || '') + '</div><div style="text-align:center;border-top:1px solid #333;padding-top:3px;min-width:160px">' + (s.pharmacist ? esc(s.pharmacist) + '<br>' : '') + 'Pharmacist</div></div>';
-  return deptMakePdf({ format: 'a5', head: head, thead: thead, rows: rows, after: after, foot: 'AuraScale Pharmacy &middot; ' + esc(sale.bill_no) });
+  var row = function (l, v, cls) { return '<div class="row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
+  var tot = '<div class="dtot">' + row('MRP total (' + items.length + ' item' + (items.length === 1 ? '' : 's') + ')', deptMoney(sale.mrp_total))
+    + (Number(sale.discount) ? row('Less: discount (' + Number(sale.discount_pct) + '%)', '-' + deptMoney(sale.discount)) : '')
+    + (reg ? row('Taxable value', deptMoney(sale.taxable), 's') + row('CGST', deptMoney(sale.cgst), 's') + row('SGST', deptMoney(sale.sgst), 's') : '')
+    + (Number(sale.round_off) ? row('Round off', (Number(sale.round_off) > 0 ? '+' : '') + Number(sale.round_off).toFixed(2), 's') : '')
+    + row(ipd ? 'Total charged' : 'Net amount', deptMoney(sale.total), 'grand') + '</div>';
+  var after = '<div class="dsplit"><div>' + left + '</div>' + tot + '</div><div class="dwords">' + deptWords(sale.total) + '</div>'
+    + '<div class="dfinal"><div>' + (sale.cancelled ? '<span class="dstamp red">CANCELLED</span>' : ipd ? '<span class="dstamp blue">ON PATIENT BILL</span>' : '<span class="dstamp">PAID</span>') + '</div>'
+    + (ipd || sale.cancelled ? '' : '<div class="box">' + row('Received by ' + esc(({ cash: 'cash', upi: 'UPI', card: 'card', credit: 'credit' })[sale.pay_mode] || sale.pay_mode || ''), deptMoney(sale.total)) + '<div class="due due-green"><span>Balance due</span><span>' + deptMoney(0) + '</span></div></div>') + '</div>'
+    + '<div class="dend"><div class="ddecl">'
+    + (ipd ? '<b>Medicine issue slip.</b> These medicines are added to the patient\'s nursing-home bill; this is not a separate bill.<br>'
+      : '<b>' + (reg ? 'All prices are MRP, inclusive of GST.' : 'All prices are MRP.') + '</b> Please check the medicines, quantity and expiry date before leaving the counter.<br>')
+    + 'Schedule H / H1 medicines are sold only against a valid prescription.' + (s.footer ? '<br>' + esc(s.footer) : '')
+    + '<br>Billed by: ' + esc(sale.created_by_name || '') + '</div>'
+    + '<div class="dsign">For ' + esc(name) + (sign ? '<img src="' + sign + '" alt="">' : '<div class="sp"></div>') + '<div class="ln">' + (s.pharmacist ? 'Registered Pharmacist' : 'Authorised Signatory') + '</div>' + (s.pharmacist ? '<div>' + esc(s.pharmacist) + '</div>' : '') + '</div></div>';
+  return deptMakePdf({ format: 'a4', head: head, headNext: headNext, colgroup: colgroup, thead: thead, rows: rows, after: after,
+    foot: 'Computer-generated bill &middot; ' + esc(sale.bill_no) + ' &middot; issued ' + deptPdfDateTime(sale.created_at) + ' &middot; AuraScale' });
 }
 async function ensureSalePdf(sale) {
   if (sale.pdf_path && !sale._regen) return sale.pdf_path;
@@ -625,6 +648,94 @@ async function impGo() {
   IMP_ROWS = []; await loadMeds(); loadRecent();
 }
 
+/* ---------------- SCAN A DISTRIBUTOR BILL (photo -> lines -> check -> stock) ---------------- */
+var SCAN = [];
+function scanResize(file) {
+  return new Promise(function (res, rej) {
+    var fr = new FileReader();
+    fr.onload = function () { var im = new Image(); im.onload = function () {
+      var max = 2200, w = im.width, h = im.height, k = Math.min(1, max / Math.max(w, h));
+      var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', 0.85)); };
+      im.onerror = function () { rej(new Error('This file is not a picture.')); }; im.src = fr.result; };
+    fr.onerror = function () { rej(new Error('Could not read the file.')); }; fr.readAsDataURL(file);
+  });
+}
+async function scanPick(inp) {
+  var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+  var st = dEl('scan-status'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the bill&hellip; this takes about 20-40 seconds.';
+  try {
+    var data = await scanResize(f);
+    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: data.split(',')[1], mime_type: 'image/jpeg' } });
+    var d = r.data;
+    if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok) {
+      var why = { daily_limit: 'Today\'s limit of bill photos is used up. Please add the lines by hand, or try tomorrow.', ai_key_not_set: 'Bill reading is not set up on the server yet (ANTHROPIC_API_KEY).', pharmacy_module_off: 'The Pharmacy module is not active.', nothing_read: 'No product lines could be read. Take a clearer, straight photo of the whole bill in good light.', image_too_large: 'The photo is too large.', not_signed_in: 'Your login has expired. Please log in again.' };
+      st.textContent = '&#9888; '.replace('&#9888; ', '\u26a0 ') + (why[d && d.reason] || ('Could not read the bill' + (d && d.message ? ': ' + d.message : (r.error ? ': ' + dErr(r.error) : '')) + '.'));
+      return;
+    }
+    st.textContent = '';
+    scanReview(d);
+  } catch (e) { st.textContent = '\u26a0 ' + dErr(e); }
+}
+function scanCandidates(name) {
+  var n = String(name || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').trim(), w = n.split(/\s+/)[0] || '', num = (n.match(/\d+/) || [''])[0];
+  var exact = MEDS.filter(function (m) { return m.name.toLowerCase() === String(name || '').toLowerCase(); });
+  var cands = MEDS.filter(function (m) { var mn = m.name.toLowerCase(); return w.length >= 3 && mn.indexOf(w) >= 0; });
+  var best = exact[0] || cands.filter(function (m) { return !num || m.name.toLowerCase().indexOf(num) >= 0; })[0] || null;
+  return { list: cands.slice(0, 8), best: best };
+}
+function scanReview(d) {
+  SCAN = d.lines.map(function (l) {
+    var c = scanCandidates(l.name);
+    var med = c.best;
+    return { pack: l.pack || '', inc: true, read: l.name, match: med ? med.id : '', cands: c.list, batch: l.batch || '', expiry: l.expiry || '', qty: l.qty || 0, free: l.free || 0, upp: l.units_per_pack || 1,
+      mrp: l.mrp || '', rate: l.rate || '', gst: (l.gst !== null && l.gst !== undefined && [0, 5, 12, 18, 28].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : 5,
+      per: med ? (/^(tab|cap|pcs)$/.test(med.unit) && (l.units_per_pack || 1) > 1 ? 'unit' : 'pack') : 'pack' };
+  });
+  var inp = function (i, k, w, ty) { return '<input class="finput" style="width:' + w + 'px;padding:6px" ' + (ty ? 'type="number" step="any" min="0"' : '') + ' value="' + esc(SCAN[i][k]) + '" oninput="SCAN[' + i + '][\'' + k + '\']=this.value"/>'; };
+  var rows = SCAN.map(function (x, i) {
+    var opts = '<option value="">&#10133; New: ' + esc(x.read) + '</option>' + x.cands.map(function (m) { return '<option value="' + m.id + '"' + (m.id === x.match ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
+    return '<tr><td><input type="checkbox" checked onchange="SCAN[' + i + '].inc=this.checked" style="width:18px;height:18px"/></td>'
+      + '<td><div class="tiny">Read: ' + esc(x.read) + '</div><select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value">' + opts + '</select></td>'
+      + '<td>' + inp(i, 'batch', 90) + '</td><td>' + inp(i, 'expiry', 82) + '</td><td>' + inp(i, 'qty', 64, 1) + '</td><td>' + inp(i, 'free', 54, 1) + '</td><td>' + inp(i, 'upp', 54, 1) + '</td>'
+      + '<td>' + inp(i, 'mrp', 76, 1) + '</td><td>' + inp(i, 'rate', 76, 1) + '</td>'
+      + '<td><select class="finput" style="width:70px;padding:6px" onchange="SCAN[' + i + '].gst=Number(this.value)">' + [0, 5, 12, 18, 28].map(function (g) { return '<option' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td>'
+      + '<td><select class="finput" style="width:110px;padding:6px" onchange="SCAN[' + i + '].per=this.value"><option value="pack"' + (x.per === 'pack' ? ' selected' : '') + '>Whole pack</option><option value="unit"' + (x.per === 'unit' ? ' selected' : '') + '>Loose (tab/cap)</option></select></td></tr>';
+  }).join('');
+  dEl('scan-body').innerHTML = '<div class="note">AI can misread. <b>Check every line against the paper bill</b> (especially batch, expiry and MRP) before adding.</div>'
+    + '<div class="grid3" style="margin-bottom:10px"><div><label class="flbl">Supplier</label><input class="finput" id="scan-sup" value="' + esc(d.supplier || '') + '"/></div><div><label class="flbl">Bill no.</label><input class="finput" value="' + esc(d.invoice_no || '') + '" disabled/></div><div><label class="flbl">Bill date</label><input class="finput" value="' + esc(d.invoice_date || '') + '" disabled/></div></div>'
+    + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th></th><th>Medicine (match to your list)</th><th>Batch</th><th>Expiry MM/YY</th><th>Packs</th><th>Free</th><th>Units / pack</th><th>MRP / pack</th><th>Rate / pack</th><th>GST %</th><th>Sell as</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<button class="btn btn-g" style="margin-top:12px" id="scan-go" onclick="scanSave()">&#10003; Add checked lines to stock</button><div class="err" id="scan-err"></div><div id="scan-res"></div>';
+  dOpen('m-scan');
+}
+async function scanSave() {
+  dShowErr('scan-err', '');
+  var sup = dEl('scan-sup').value.trim(), rows = [], bad = [];
+  SCAN.forEach(function (x, i) {
+    if (!x.inc) return;
+    var med = x.match ? MEDMAP[x.match] : null, upp = Math.max(1, Math.round(Number(x.upp) || 1)), q = Number(x.qty) || 0, fr = Number(x.free) || 0, mrp = Number(x.mrp), rate = Number(x.rate) || 0;
+    var exp = impExpiry(x.expiry);
+    if (!(q + fr > 0) || !(mrp > 0) || !exp) { bad.push(i + 1); return; }
+    var effRate = q + fr > 0 ? rate * q / (q + fr) : rate;            /* free packs lower the real cost */
+    var guess = /ml|syr|susp|bottle|liq/i.test(x.pack + ' ' + x.read) ? 'bottle' : /inj|vial|amp/i.test(x.read) ? 'vial' : /cream|gel|oint|tube/i.test(x.read) ? 'tube' : /(\d+\s*'?\s*s\b|x\s*\d+|tab|cap|strip)/i.test(x.pack + ' ' + x.read) ? 'strip' : 'pcs';
+    var unit = x.per === 'unit' ? (med && /^(tab|cap)$/.test(med.unit) ? med.unit : 'tab') : (med ? med.unit : guess);
+    var k = x.per === 'unit' ? upp : 1;
+    rows.push({ name: med ? med.name : x.read, gst_rate: String(x.gst), unit: unit, batch_no: x.batch, expiry: exp,
+      mrp: String(Math.round(mrp / k * 100) / 100), purchase_rate: String(Math.round(effRate / k * 100) / 100), qty: String((q + fr) * k), supplier: sup });
+  });
+  if (bad.length) { dShowErr('scan-err', 'Fix line(s) ' + bad.join(', ') + ': quantity, MRP and expiry (MM/YY) are needed. Or untick them.'); return; }
+  if (!rows.length) { dShowErr('scan-err', 'No lines are ticked.'); return; }
+  var btn = dEl('scan-go'); btn.disabled = true; btn.textContent = 'Adding…';
+  var r = await _supa.rpc('ph_import', { p_clinic_id: _clinicId, p_rows: rows });
+  btn.disabled = false; btn.innerHTML = '&#10003; Add checked lines to stock';
+  if (r.error) { dShowErr('scan-err', dErr(r.error)); return; }
+  var e = r.data.errors || [];
+  dEl('scan-res').innerHTML = '<div class="card" style="margin-top:10px"><b>' + r.data.stock_lines_added + '</b> lines added to stock' + (r.data.medicines_added ? ', <b>' + r.data.medicines_added + '</b> new medicines' : '') + '.' + (e.length ? '<div style="color:var(--red);margin-top:6px">' + e.map(function (x) { return 'Line ' + x.row + ' ' + esc(x.name || '') + ': ' + esc(x.error); }).join('<br>') + '</div>' : '') + '</div>';
+  if (!e.length) { showToast('Bill added to stock.'); setTimeout(function () { dClose('m-scan'); }, 1200); }
+  await loadMeds(); loadRecent();
+}
+
 /* ---------------- BILLS ---------------- */
 function onTab_bills() { loadSales(); }
 function billsRange(d) { RANGE = d; [].forEach.call(dEl('bl-range').children, function (b) { b.classList.toggle('on', Number(b.getAttribute('data-r')) === d); }); loadSales(); }
@@ -694,4 +805,4 @@ function unlinkIfRenamed(v) {
 init().then(function () { var b = dEl('pos-bottom'); if (b && window.innerWidth < 760) b.style.gridTemplateColumns = '1fr'; });
 </script>
 </body>
-</html>pharmacy.html
+</html>
