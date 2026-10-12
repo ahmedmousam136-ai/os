@@ -38,7 +38,8 @@
       </div>
       <div id="pos-walkin" class="grid4" style="margin-bottom:12px">
         <div><label class="flbl">Customer name</label><input class="finput" id="c-name" oninput="unlinkIfRenamed(this.value)" placeholder="Walk-in customer"/></div>
-        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"/></div>
+        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"/>
+          <label class="tiny" style="display:flex;gap:6px;align-items:center;margin-top:5px;cursor:pointer"><input type="checkbox" id="c-wa" checked style="width:16px;height:16px"/> Send bill on WhatsApp (customer agreed)</label></div>
         <div><label class="flbl">Doctor</label><input class="finput" id="c-doctor" placeholder="Prescribed by (optional)"/></div>
         <div style="position:relative"><label class="flbl">UHID (optional)</label><input class="finput" id="c-uhid" placeholder="Link a saved patient" oninput="posPatientSearch(this.value)" autocomplete="off"/><div id="c-uhid-dd" class="dd" style="display:none"></div></div>
       </div>
@@ -64,6 +65,7 @@
       <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;margin-top:14px" id="pos-bottom">
         <div class="grid3" style="align-content:start">
           <div><label class="flbl">Discount %</label><input class="finput" id="c-disc" type="number" min="0" max="100" step="0.5" value="0" oninput="posRender()"/></div>
+          <div id="refill-box"><label class="flbl">Refill reminder on WhatsApp</label><select class="finput" id="c-refill"><option value="0">No reminder</option><option value="5">After 5 days</option><option value="7">After 7 days</option><option value="10">After 10 days</option><option value="15">After 15 days</option><option value="30">After 30 days (1 month)</option><option value="60">After 60 days</option><option value="90">After 90 days</option></select></div>
           <div id="pay-box"><label class="flbl">Payment</label><select class="finput" id="c-pay"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="credit">Credit (pay later)</option></select></div>
         </div>
         <div class="card">
@@ -249,6 +251,7 @@ function posKind(k) {
   dEl('pos-walkin').style.display = k === 'walkin' ? 'grid' : 'none';
   dEl('pos-ipd').style.display = k === 'ipd' ? 'block' : 'none';
   dEl('pay-box').style.display = k === 'walkin' ? 'block' : 'none';
+  dEl('refill-box').style.display = k === 'walkin' ? 'block' : 'none';
   dEl('k-hint').textContent = k === 'walkin' ? 'Counter sale with a pharmacy bill.' : 'Charged to the admitted patient\'s bill.';
   if (k === 'ipd') dEl('c-disc').value = 0;
   dEl('c-disc').disabled = k === 'ipd';
@@ -357,12 +360,15 @@ async function posSave() {
     p.uhid = dEl('c-uhid').value.trim(); p.patient_id = LINKED ? LINKED.id : null;
     p.discount_pct = Number(dEl('c-disc').value) || 0; p.pay_mode = dEl('c-pay').value;
   }
+  var waOk = KIND === 'walkin' && !!p.patient_phone && dEl('c-wa').checked, refill = waOk ? Number(dEl('c-refill').value) || 0 : 0;
+  if (KIND === 'walkin' && !p.patient_phone && Number(dEl('c-refill').value)) { dShowErr('pos-err', 'For a refill reminder, enter the customer\'s mobile number.'); return; }
   var btn = dEl('b-save'); btn.disabled = true; btn.textContent = 'Saving…';
   try {
     var r = await _supa.rpc('ph_sell', { p_clinic_id: _clinicId, p: p });
     if (r.error) throw r.error;
     var sale = r.data;
-    CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid'].forEach(function (id) { dEl(id).value = ''; }); dEl('c-disc').value = 0;
+    if (waOk) { var w = await _supa.rpc('ph_set_whatsapp', { p_sale_id: sale.id, p_ok: true, p_refill_days: refill || null }); if (!w.error && w.data) sale = Object.assign(sale, w.data); }
+    CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid'].forEach(function (id) { dEl(id).value = ''; }); dEl('c-disc').value = 0; dEl('c-refill').value = '0'; dEl('c-wa').checked = true;
     posRender(); loadMeds();
     showDone(sale, true);
   } catch (e) { dShowErr('pos-err', dErr(e)); }
@@ -458,6 +464,11 @@ async function showDone(sale, fresh) {
     dEl('done-pdf').textContent = 'PDF saved.';
     dEl('done-open').disabled = false; dEl('done-open').onclick = function () { deptOpenPdf('bills', path); };
     dEl('done-wa').disabled = false; dEl('done-wa').onclick = function () { waSale(sale); };
+    if (fresh && sale.wa_ok) {
+      dEl('done-pdf').textContent = 'PDF saved. Sending on WhatsApp…';
+      var a = await deptAutoSend({ mode: 'pharmacy_bill', sale_id: sale.id });
+      dEl('done-pdf').innerHTML = 'PDF saved. ' + (a.text ? '<b style="color:' + (a.ok ? 'var(--green)' : 'var(--amber)') + '">' + esc(a.text) + '</b>' : '') + (sale.refill_due ? '<br>Refill reminder on ' + dDate(sale.refill_due) + '.' : '');
+    }
   } catch (e) { dEl('done-pdf').textContent = 'The bill is saved, but the PDF could not be made: ' + dErr(e) + '. Open it later from Bills & sales.'; }
 }
 function waSale(sale) {
