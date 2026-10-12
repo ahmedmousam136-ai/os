@@ -875,6 +875,7 @@ const SA_EMAILS=['ceo@aurascale.in','mousham@aurascale.in','admin@aurascale.in']
 
 var _saUid=null,_saEmail=null;
 var _allHomes=[],_currentNhId=null;
+function btypeTag(h){var t=h&&h.business_type;return t==='pharmacy'?' <span class="chip" style="background:#e0f2fe;color:#0369a1">&#128138; Pharmacy</span>':t==='lab'?' <span class="chip" style="background:#f3e8ff;color:#7e22ce">&#129514; Lab</span>':'';}
 
 /* ── UTILS ── */
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -1075,7 +1076,7 @@ async function loadHomes(){
     return '<div class="nh-row" onclick="openNHProfile(\''+h.id+'\')">'
       +'<div class="nh-av">'+(h.name||'?').charAt(0).toUpperCase()+'</div>'
       +'<div style="flex:1;min-width:0">'
-        +'<div class="nh-name">'+esc(h.name||'Unnamed')+'</div>'
+        +'<div class="nh-name">'+esc(h.name||'Unnamed')+btypeTag(h)+'</div>'
         +'<div class="nh-meta">Owner: '+esc(h.doctor_name||'—')+(h.phone?' · '+h.phone:'')+' · Beds: '+bd.o+'/'+bd.t+' · Active admissions: '+actAdm+'</div>'
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:8px">'
@@ -1114,7 +1115,7 @@ function nhTab(tab,el){
 async function loadNHOverview(nhId,h){
   document.getElementById('nh-detail-overview').innerHTML=
     '<div style="display:flex;flex-direction:column;gap:2px">'
-    +'<div class="ir"><span class="il">Facility Name</span><span class="iv">'+esc(h.name||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">Facility Name</span><span class="iv">'+esc(h.name||'—')+btypeTag(h)+'</span></div>'
     +'<div class="ir"><span class="il">Owner / Admin</span><span class="iv">'+esc(h.doctor_name||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Phone</span><span class="iv">'+(h.phone||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Status</span><span class="iv">'+(h.is_approved?'Active':'Pending Approval')+'</span></div>'
@@ -1307,8 +1308,8 @@ async function loadApprovals(){
     return '<div class="nh-row">'
       +'<div class="nh-av">'+((h.name||'?').charAt(0).toUpperCase())+'</div>'
       +'<div style="flex:1;min-width:0">'
-        +'<div class="nh-name">'+esc(h.name||'Unnamed')+'</div>'
-        +'<div class="nh-meta">Owner: '+esc(h.doctor_name||'—')+(h.phone?' · '+h.phone:'')+' · Registered '+since+' day(s) ago</div>'
+        +'<div class="nh-name">'+esc(h.name||'Unnamed')+btypeTag(h)+'</div>'
+        +'<div class="nh-meta">Owner: '+esc(h.doctor_name||'—')+(h.phone?' · '+h.phone:'')+' · Registered '+since+' day(s) ago'+(h.business_type==='pharmacy'||h.business_type==='lab'?' · <b>After approving, tick '+(h.business_type==='lab'?'Lab':'Pharmacy')+' in Plans</b>':'')+'</div>'
       +'</div>'
       +'<div style="display:flex;gap:7px;flex-shrink:0">'
         +'<button class="btn-ghost" onclick="openNHProfile(\''+h.id+'\')">View</button>'
@@ -1400,7 +1401,8 @@ setInterval(syncHeaderIdentity, 1500);
 async function loadInvoices() {
   var list = document.getElementById('inv-list'), sel = document.getElementById('inv-clinic');
   list.innerHTML = '<p class="ss">Loading&hellip;</p>';
-  var cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt,mod_pharmacy,mod_lab').eq('facility_type', 'nursing_home').order('name');
+  var cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt,mod_pharmacy,mod_lab,business_type').eq('facility_type', 'nursing_home').order('name');
+  if (cl.error) cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt,mod_pharmacy,mod_lab').eq('facility_type', 'nursing_home').order('name');
   _modReady = !cl.error;
   if (cl.error) cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt').eq('facility_type', 'nursing_home').order('name');
   var planReady = !cl.error;
@@ -1431,7 +1433,7 @@ function renderPlans(ready) {
   if (!_planRows.length) { el.innerHTML = '<p class="ss" style="margin:0">No nursing homes yet.</p>'; return; }
   el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="text-align:left;color:var(--text-tertiary)"><th style="padding:6px">Nursing home</th><th>Monthly price &#8377; (incl. GST)</th><th>Complimentary</th><th>Extra modules' + (_modReady ? '' : ' <span style="font-weight:400">(run modules-pharmacy-lab.sql)</span>') + '</th><th></th></tr></thead><tbody>'
     + _planRows.map(function (c, i) {
-      return '<tr style="border-top:1px solid var(--border)"><td style="padding:8px 6px;font-weight:600">' + esc(c.name || c.id) + '</td>'
+      return '<tr style="border-top:1px solid var(--border)"><td style="padding:8px 6px;font-weight:600">' + esc(c.name || c.id) + btypeTag(c) + '</td>'
         + '<td><input class="finput" id="plan-price-' + i + '" type="number" min="1" step="1" value="' + planPrice(c) + '" style="max-width:130px"' + (c.billing_exempt ? ' disabled' : '') + '/></td>'
         + '<td><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="plan-free-' + i + '"' + (c.billing_exempt ? ' checked' : '') + ' style="appearance:auto;-webkit-appearance:checkbox;width:16px;height:16px" onchange="document.getElementById(\'plan-price-' + i + '\').disabled=this.checked"/> Free</label></td>'
         + '<td>' + modBox('plan-ph-' + i, c.mod_pharmacy, '&#128138; Pharmacy') + modBox('plan-lab-' + i, c.mod_lab, '&#129514; Lab') + '</td>'
