@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Lab · AuraScale</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="nh-shared.js"></script>
+<script src="aura-dept.js"></script>
+</head>
+<body>
+<div id="loading"><div class="spin"></div><p style="font-size:13px;color:#9E9A93">Loading lab&hellip;</p></div>
+<div id="nh-toast"></div>
+<style>
+.tchip{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);font-size:13px;cursor:pointer;margin:0 6px 6px 0}
+.tchip.on{border-color:var(--green);background:var(--green-bg);font-weight:700}
+.tchip .p{color:var(--text-tertiary);font-size:11.5px}
+.ab{color:var(--red);font-weight:800}
+.res-in{width:130px;padding:7px 9px}
+@media(max-width:600px){.hide-sm{display:none}.res-in{width:90px}}
+</style>
+
+<div id="app" style="display:none">
+  <div class="d-top">
+    <a class="d-back" id="d-back" href="nh.html">&larr; Back</a>
+    <div><div class="d-title">&#129514; Lab &amp; Diagnostics</div><div class="d-sub" id="d-fac"></div></div>
+    <div style="margin-left:auto" class="tiny" id="d-me"></div>
+  </div>
+  <div class="d-tabs" id="d-tabs">
+    <button class="d-tab on" data-t="new" onclick="dTab('new')">&#10133; New test order</button>
+    <button class="d-tab" data-t="pending" onclick="dTab('pending')">&#9203; Reports to make</button>
+    <button class="d-tab" data-t="orders" onclick="dTab('orders')">&#128196; All orders</button>
+    <button class="d-tab" data-t="tests" onclick="dTab('tests')">&#129514; Tests &amp; prices</button>
+    <button class="d-tab" data-t="settings" onclick="dTab('settings')" data-owner-only>&#9881; Settings</button>
+  </div>
+  <div class="d-main" id="d-body">
+
+    <!-- ============ NEW ORDER ============ -->
+    <div class="d-view on" id="v-new">
+      <div id="new-note" class="note" style="display:none"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <div class="seg"><button id="k-walkin" class="on" onclick="kind('walkin')">&#128694; Walk-in patient</button><button id="k-ipd" onclick="kind('ipd')">&#128719; Admitted patient</button></div>
+        <span class="tiny" id="k-hint">Lab bill for the patient (healthcare service: no GST).</span>
+      </div>
+      <div id="o-walkin" class="grid4" style="margin-bottom:12px">
+        <div><label class="flbl">Patient name *</label><input class="finput" id="o-name" oninput="unlinkIfRenamed(this.value)"/></div>
+        <div class="grid2" style="gap:8px"><div><label class="flbl">Age</label><input class="finput" id="o-age" placeholder="e.g. 34"/></div>
+          <div><label class="flbl">Sex</label><select class="finput" id="o-sex"><option value="">-</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div></div>
+        <div><label class="flbl">Mobile (for WhatsApp report)</label><input class="finput" id="o-phone" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"/></div>
+        <div style="position:relative"><label class="flbl">UHID (puts the report in their health book)</label><input class="finput" id="o-uhid" placeholder="Search UHID / mobile / name" oninput="patSearch(this.value)" autocomplete="off"/><div id="o-uhid-dd" class="dd" style="display:none"></div></div>
+      </div>
+      <div id="o-ipd" style="display:none;margin-bottom:12px">
+        <label class="flbl">Admitted patient</label><select class="finput" id="o-adm" style="max-width:520px"></select>
+        <p class="tiny" style="margin-top:5px">Test charges go straight onto this patient's nursing-home bill.</p>
+      </div>
+      <div style="max-width:420px;margin-bottom:12px"><label class="flbl">Referred by (doctor)</label><input class="finput" id="o-ref" placeholder="Dr. &hellip;"/></div>
+
+      <label class="flbl">Tests</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <input class="finput" id="t-q" placeholder="Search test&hellip;" oninput="pickRender()" style="max-width:260px"/>
+        <select class="finput" id="t-cat" onchange="pickRender()" style="max-width:200px"></select>
+      </div>
+      <div id="t-pick" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:10px 10px 4px;margin-bottom:12px"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:16px" id="new-bottom">
+        <div>
+          <div id="sel-list" class="muted">No tests chosen yet.</div>
+          <div class="grid3" id="pay-box" style="margin-top:12px">
+            <div><label class="flbl">Discount ₹</label><input class="finput" id="o-disc" type="number" min="0" step="1" value="0" oninput="sumRender()"/></div>
+            <div><label class="flbl">Paid now ₹</label><input class="finput" id="o-paid" type="number" min="0" step="1" oninput="this.dataset.touched=1;sumRender()"/></div>
+            <div><label class="flbl">Payment</label><select class="finput" id="o-mode"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option></select></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="sum-row"><span>Tests</span><span id="s-gross">₹0</span></div>
+          <div class="sum-row"><span>Discount</span><span id="s-disc">-₹0</span></div>
+          <div class="sum-row big"><span>Total</span><span id="s-total">₹0</span></div>
+          <div class="sum-row" id="s-due-row"><span>Due after this payment</span><span id="s-due">₹0</span></div>
+          <button class="btn btn-g" style="width:100%;margin-top:10px;font-size:15px;min-height:48px" id="b-book" onclick="book()">&#10003; Book tests</button>
+          <div class="err" id="new-err"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PENDING ============ -->
+    <div class="d-view" id="v-pending">
+      <p class="muted" style="margin-bottom:10px">Tests booked in the last 30 days whose report has not been sent yet.</p>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Booked</th><th>Order</th><th>Patient</th><th class="hide-sm">Tests</th><th>Status</th><th></th></tr></thead><tbody id="pd-b"></tbody></table></div>
+    </div>
+
+    <!-- ============ ALL ORDERS ============ -->
+    <div class="d-view" id="v-orders">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <div class="seg" id="or-range"><button class="on" data-r="1" onclick="ordersRange(1)">Today</button><button data-r="7" onclick="ordersRange(7)">7 days</button><button data-r="30" onclick="ordersRange(30)">30 days</button></div>
+        <input class="finput" id="or-q" placeholder="Search order no. or name&hellip;" oninput="ordersRender()" style="max-width:260px"/>
+      </div>
+      <div class="stat" id="or-stats"></div>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Time</th><th>Order</th><th>Patient</th><th class="r">Amount</th><th>Status</th><th></th></tr></thead><tbody id="or-b"></tbody></table></div>
+    </div>
+
+    <!-- ============ TESTS ============ -->
+    <div class="d-view" id="v-tests">
+      <div class="note">Please check the <b>prices</b> and <b>normal ranges</b> before the first report: ranges depend on your machine, kit and method. Change anything with <b>Edit</b>.</div>
+      <div id="tests-empty" class="card" style="display:none;text-align:center;padding:26px"><div style="font-size:30px">&#129514;</div><p style="margin:8px 0 12px">Your test list is empty.</p><button class="btn btn-g" onclick="seed()">Load 43 common tests (CBC, LFT, KFT, Sugar, Thyroid, Lipid, Urine, X-ray&hellip;)</button></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px"><input class="finput" id="ts-q" placeholder="Search test&hellip;" oninput="testsRender()" style="max-width:260px"/><button class="btn btn-sm" onclick="testEdit(null)">&#10133; New test</button></div>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Test</th><th class="hide-sm">Category</th><th class="r">Price ₹</th><th class="hide-sm">Parameters</th><th></th></tr></thead><tbody id="ts-b"></tbody></table></div>
+    </div>
+
+    <!-- ============ SETTINGS ============ -->
+    <div class="d-view" id="v-settings">
+      <h3 style="font-size:15px;margin-bottom:4px">Lab details printed on bills and reports</h3>
+      <p class="tiny" style="margin-bottom:12px">Lab tests are a healthcare service and are exempt from GST, so lab bills never add GST.</p>
+      <div class="grid2">
+        <div><label class="flbl">Lab name</label><input class="finput" id="ls-name"/></div>
+        <div><label class="flbl">Phone</label><input class="finput" id="ls-phone"/></div>
+        <div style="grid-column:1/-1"><label class="flbl">Address</label><input class="finput" id="ls-address"/></div>
+        <div><label class="flbl">Pathologist name</label><input class="finput" id="ls-path" placeholder="Dr. &hellip;"/></div>
+        <div><label class="flbl">Qualification</label><input class="finput" id="ls-qual" placeholder="MBBS, MD (Pathology)"/></div>
+        <div><label class="flbl">Registration no.</label><input class="finput" id="ls-reg" placeholder="WBMC &hellip;"/></div>
+        <div><label class="flbl">Lab technician</label><input class="finput" id="ls-tech"/></div>
+        <div style="grid-column:1/-1"><label style="display:flex;gap:8px;align-items:center;font-size:13.5px;cursor:pointer"><input type="checkbox" id="ls-paybefore" style="width:18px;height:18px"/> Give the report only after full payment (walk-in patients)</label></div>
+        <div style="grid-column:1/-1"><label class="flbl">Line at the bottom of reports (optional)</label><input class="finput" id="ls-footer" placeholder="e.g. Sample collection 7 am - 1 pm. Home collection available."/></div>
+      </div>
+      <button class="btn btn-g" style="margin-top:14px" onclick="setSave()">&#10003; Save details</button>
+      <div class="err" id="ls-err"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-done"><div class="modal"><div class="modal-h"><span id="done-title">Booked</span><button class="btn btn-sm" onclick="dClose('m-done')">&times;</button></div><div class="modal-b" id="done-body"></div></div></div>
+<div class="modal-bg" id="m-res"><div class="modal" style="max-width:860px"><div class="modal-h"><span id="res-title">Results</span><button class="btn btn-sm" onclick="dClose('m-res')">&times;</button></div><div class="modal-b" id="res-body"></div></div></div>
+<div class="modal-bg" id="m-test"><div class="modal" style="max-width:860px"><div class="modal-h"><span id="te-title">Test</span><button class="btn btn-sm" onclick="dClose('m-test')">&times;</button></div><div class="modal-b" id="te-body"></div></div></div>
+
+<script>
+var TESTS = [], TMAP = {}, SEL = [], KIND = 'walkin', LINKED = null, ORDERS = [], PENDING = [], RANGE = 1, CUR = null;
+function lab() { return DEPT.clinic.lab_settings || {}; }
+function labName() { return lab().name || DEPT.clinic.name || 'Laboratory'; }
+
+async function init() {
+  var ok = await deptInit('lab', 'Lab'); if (!ok) return;
+  dEl('d-me').textContent = (_myName || '') + ' · ' + (DEPT.role === 'owner' ? 'Owner' : 'Staff');
+  await Promise.all([loadTests(), deptLoadAdmissions()]);
+  dEl('o-adm').innerHTML = deptAdmissionOptions();
+  note();
+  var t = 'new'; try { t = localStorage.getItem('aura-dept-tab-lab') || 'new'; } catch (e) {}
+  if (t === 'settings' && !dIsOwner()) t = 'new';
+  dTab(t);
+  document.addEventListener('click', function (e) { if (!e.target.closest('#o-uhid-dd,#o-uhid')) dEl('o-uhid-dd').style.display = 'none'; });
+  var fix = function () { dEl('new-bottom').style.gridTemplateColumns = window.innerWidth < 760 ? '1fr' : '1fr 340px'; }; fix(); window.addEventListener('resize', fix);
+}
+function note() {
+  var el = dEl('new-note'), m = [];
+  if (!TESTS.length) m.push('Your test list is empty. ' + '<a href="#" onclick="dTab(\'tests\');return false" style="color:inherit;font-weight:700;text-decoration:underline">Load the common tests</a>.');
+  if (!lab().name && !lab().pathologist) m.push('Lab details (name, pathologist) are not filled yet. ' + (dIsOwner() ? '<a href="#" onclick="dTab(\'settings\');return false" style="color:inherit;font-weight:700;text-decoration:underline">Fill them in Settings</a>.' : 'Ask the owner to fill them in Settings.'));
+  el.style.display = m.length ? 'block' : 'none'; el.innerHTML = '&#9888; ' + m.join('<br>&#9888; ');
+}
+async function loadTests() {
+  var r = await _supa.from('lab_tests').select('*').eq('clinic_id', _clinicId).order('sort').order('name');
+  TESTS = r.data || []; TMAP = {}; TESTS.forEach(function (t) { TMAP[t.id] = t; });
+  var cats = []; TESTS.forEach(function (t) { if (cats.indexOf(t.category) < 0) cats.push(t.category); });
+  dEl('t-cat').innerHTML = '<option value="">All categories</option>' + cats.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
+  pickRender();
+}
+
+/* ---------------- NEW ORDER ---------------- */
+function kind(k) {
+  KIND = k;
+  dEl('k-walkin').classList.toggle('on', k === 'walkin'); dEl('k-ipd').classList.toggle('on', k === 'ipd');
+  dEl('o-walkin').style.display = k === 'walkin' ? 'grid' : 'none'; dEl('o-ipd').style.display = k === 'ipd' ? 'block' : 'none';
+  dEl('pay-box').style.display = k === 'walkin' ? 'grid' : 'none'; dEl('s-due-row').style.display = k === 'walkin' ? 'flex' : 'none';
+  dEl('k-hint').textContent = k === 'walkin' ? 'Lab bill for the patient (healthcare service: no GST).' : 'Charged to the admitted patient\'s bill.';
+  sumRender();
+}
+function pickRender() {
+  var q = (dEl('t-q').value || '').toLowerCase(), cat = dEl('t-cat').value;
+  var list = TESTS.filter(function (t) { return t.is_active && (!cat || t.category === cat) && (!q || t.name.toLowerCase().indexOf(q) >= 0); });
+  dEl('t-pick').innerHTML = list.length ? list.map(function (t) {
+    return '<span class="tchip' + (SEL.indexOf(t.id) >= 0 ? ' on' : '') + '" onclick="toggleTest(\'' + t.id + '\')">' + (SEL.indexOf(t.id) >= 0 ? '&#10003; ' : '') + esc(t.name) + ' <span class="p">' + dMoney0(t.price) + '</span></span>';
+  }).join('') : '<p class="muted" style="padding:8px">' + (TESTS.length ? 'No test matches.' : 'No tests yet. Load the common tests in Tests &amp; prices.') + '</p>';
+}
+function toggleTest(id) { var i = SEL.indexOf(id); if (i >= 0) SEL.splice(i, 1); else SEL.push(id); pickRender(); sumRender(); }
+function sumRender() {
+  var g = SEL.reduce(function (a, id) { return a + Number(TMAP[id] ? TMAP[id].price : 0); }, 0);
+  var d = KIND === 'walkin' ? Math.max(0, Number(dEl('o-disc').value) || 0) : 0, t = Math.max(0, g - d);
+  var paidEl = dEl('o-paid'); if (!paidEl.dataset.touched) paidEl.value = t;
+  var pd = KIND === 'walkin' ? Math.max(0, Number(paidEl.value) || 0) : 0;
+  dEl('s-gross').textContent = dMoney0(g); dEl('s-disc').textContent = '-' + dMoney0(d); dEl('s-total').textContent = dMoney0(t); dEl('s-due').textContent = dMoney0(Math.max(0, t - pd));
+  dEl('sel-list').innerHTML = SEL.length ? '<table class="dt"><tbody>' + SEL.map(function (id) { var x = TMAP[id]; return '<tr><td>' + esc(x.name) + '<div class="tiny">' + esc(x.sample || '') + '</div></td><td class="r">' + dMoney0(x.price) + '</td><td class="r"><button class="btn btn-sm btn-r" onclick="toggleTest(\'' + id + '\')">&times;</button></td></tr>'; }).join('') + '</tbody></table>' : '<span class="muted">No tests chosen yet. Tap tests above.</span>';
+}
+async function patSearch(q) {
+  var dd = dEl('o-uhid-dd'); LINKED = null;
+  if (String(q).trim().length < 3) { dd.style.display = 'none'; return; }
+  var rows = await deptFindPatient(q);
+  dd.innerHTML = rows.length ? rows.map(function (p) { return '<div class="dd-i" onclick=\'patLink(' + JSON.stringify({ id: p.id, n: p.full_name, ph: p.phone, u: p.uhid, a: p.age, g: p.gender }).replace(/'/g, '&#39;') + ')\'><b>' + esc(p.full_name || '') + '</b> <span class="tiny">' + esc(p.uhid || '') + ' &middot; ' + esc(p.phone || '') + '</span></div>'; }).join('') : '<div class="dd-i muted">No saved patient found. The report will still be made; it just won\'t go into a health book.</div>';
+  dd.style.display = 'block';
+}
+function patLink(p) {
+  LINKED = p; dEl('o-uhid').value = p.u || ''; dEl('o-uhid-dd').style.display = 'none';
+  dEl('o-name').value = p.n || dEl('o-name').value; if (!dEl('o-phone').value) dEl('o-phone').value = p.ph || '';
+  if (p.a && !dEl('o-age').value) dEl('o-age').value = p.a; if (p.g) { var g = /^f/i.test(p.g) ? 'Female' : /^m/i.test(p.g) ? 'Male' : ''; if (g) dEl('o-sex').value = g; }
+}
+async function book() {
+  dShowErr('new-err', '');
+  if (!SEL.length) { dShowErr('new-err', 'Pick at least one test.'); return; }
+  var p = { kind: KIND, tests: SEL.slice(), referred_by: dEl('o-ref').value.trim() };
+  if (KIND === 'ipd') {
+    p.admission_id = dEl('o-adm').value; if (!p.admission_id) { dShowErr('new-err', 'Choose the admitted patient.'); return; }
+    var a = DEPT.admissions.filter(function (x) { return x.id === p.admission_id; })[0] || {};
+    p.age = a.patient_age || ''; p.gender = a.patient_gender || ''; p.uhid = a.uhid || '';
+  } else {
+    p.patient_name = dEl('o-name').value.trim(); if (!p.patient_name) { dShowErr('new-err', 'Patient name is required.'); return; }
+    var ph1 = dEl('o-phone').value.trim(); if (ph1 && !dMobile(ph1)) { dShowErr('new-err', 'Mobile number must be 10 digits starting with 6-9 (or leave it empty).'); return; }
+    p.patient_phone = dMobile(ph1); p.age = dEl('o-age').value.trim(); p.gender = dEl('o-sex').value; p.uhid = dEl('o-uhid').value.trim(); p.patient_id = LINKED ? LINKED.id : null;
+    p.discount = Number(dEl('o-disc').value) || 0; p.paid = Number(dEl('o-paid').value) || 0; p.pay_mode = dEl('o-mode').value;
+  }
+  var btn = dEl('b-book'); btn.disabled = true; btn.textContent = 'Booking…';
+  try {
+    var r = await _supa.rpc('lab_book', { p_clinic_id: _clinicId, p: p }); if (r.error) throw r.error;
+    var o = r.data;
+    SEL = []; LINKED = null; ['o-name', 'o-age', 'o-phone', 'o-uhid', 'o-ref'].forEach(function (id) { dEl(id).value = ''; }); dEl('o-sex').value = ''; dEl('o-disc').value = 0; delete dEl('o-paid').dataset.touched;
+    pickRender(); sumRender();
+    showDone(o);
+  } catch (e) { dShowErr('new-err', dErr(e)); }
+  finally { btn.disabled = false; btn.innerHTML = '&#10003; Book tests'; }
+}
+function showDone(o) {
+  dEl('done-title').textContent = 'Booked ' + o.order_no;
+  var due = Number(o.total) - Number(o.paid);
+  dEl('done-body').innerHTML = '<div style="text-align:center"><div style="font-size:34px">&#9989;</div><div style="font-size:20px;font-weight:800">' + esc(o.patient_name) + '</div>'
+    + '<div class="muted">' + (o.items || []).map(function (i) { return esc(i.name); }).join(', ') + '</div>'
+    + '<div style="margin:10px 0;font-size:15px">' + (o.kind === 'ipd' ? 'Total ' + dMoney0(o.total) + ' &middot; added to the nursing-home bill' : 'Total ' + dMoney0(o.total) + ' &middot; paid ' + dMoney0(o.paid) + (due > 0 ? ' &middot; <b style="color:var(--amber)">due ' + dMoney0(due) + '</b>' : '')) + '</div>'
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
+    + (o.kind === 'walkin' ? '<button class="btn" onclick="billOpen(\'' + o.id + '\')">&#128196; Bill</button><button class="btn" onclick="billWa(\'' + o.id + '\')">&#128242; WhatsApp bill</button>' : '')
+    + '<button class="btn btn-p" onclick="dClose(\'m-done\');resOpen(\'' + o.id + '\')">&#9998; Enter results now</button>'
+    + '<button class="btn btn-g" onclick="dClose(\'m-done\')">&#10133; Next patient</button></div></div>';
+  ORDERS.unshift(o); dOpen('m-done');
+}
+
+/* ---------------- lists ---------------- */
+function findOrder(id) { return ORDERS.filter(function (o) { return o.id === id; })[0] || PENDING.filter(function (o) { return o.id === id; })[0]; }
+function statusTag(o) {
+  if (o.status === 'cancelled') return '<span class="tag t-r">Cancelled</span>';
+  if (o.status === 'sent') return '<span class="tag t-g">Report sent</span>';
+  if (o.status === 'ready') return '<span class="tag t-b">Results ready</span>';
+  return '<span class="tag t-a">Waiting for results</span>';
+}
+function dueTag(o) { var d = Number(o.total) - Number(o.paid); return o.kind === 'walkin' && d > 0 && o.status !== 'cancelled' ? ' <span class="tag t-a">Due ' + dMoney0(d) + '</span>' : (o.kind === 'ipd' ? ' <span class="tag t-b">Patient bill</span>' : ''); }
+function onTab_pending() { loadPending(); }
+async function loadPending() {
+  var from = new Date(Date.now() - 30 * 86400000).toISOString();
+  var r = await _supa.from('lab_orders').select('*').eq('clinic_id', _clinicId).in('status', ['booked', 'ready']).gte('created_at', from).order('created_at', { ascending: true }).limit(500);
+  PENDING = r.data || [];
+  dEl('pd-b').innerHTML = PENDING.length ? PENDING.map(function (o) {
+    return '<tr><td class="tiny">' + dDateTime(o.created_at) + '</td><td><b>' + esc(o.order_no) + '</b></td><td>' + esc(o.patient_name) + '<div class="tiny">' + esc([o.age, o.gender].filter(Boolean).join(' / ')) + '</div></td>'
+      + '<td class="hide-sm tiny">' + (o.items || []).map(function (i) { return esc(i.name); }).join(', ') + '</td><td>' + statusTag(o) + dueTag(o) + '</td>'
+      + '<td class="r" style="white-space:nowrap"><button class="btn btn-sm btn-p" onclick="resOpen(\'' + o.id + '\')">' + (o.status === 'ready' ? '&#128196; Report' : '&#9998; Results') + '</button></td></tr>';
+  }).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">Nothing pending. &#127881;</td></tr>';
+}
+function onTab_orders() { loadOrders(); }
+function ordersRange(d) { RANGE = d; [].forEach.call(dEl('or-range').children, function (b) { b.classList.toggle('on', Number(b.getAttribute('data-r')) === d); }); loadOrders(); }
+async function loadOrders() {
+  var from = new Date(dTodayIST() + 'T00:00:00+05:30'); from.setDate(from.getDate() - (RANGE - 1));
+  var r = await _supa.from('lab_orders').select('*').eq('clinic_id', _clinicId).gte('created_at', from.toISOString()).order('created_at', { ascending: false }).limit(1000);
+  if (r.error) { showToast(dErr(r.error)); return; }
+  ORDERS = r.data || []; ordersRender();
+}
+function ordersRender() {
+  var q = dEl('or-q').value.trim().toLowerCase();
+  var live = ORDERS.filter(function (o) { return o.status !== 'cancelled'; }), walk = live.filter(function (o) { return o.kind === 'walkin'; });
+  var sum = function (a, f) { return a.reduce(function (t, o) { return t + Number(f(o)); }, 0); };
+  dEl('or-stats').innerHTML = '<div><span class="tiny">Orders</span><b>' + live.length + '</b><span class="tiny">' + live.filter(function (o) { return o.status === 'sent'; }).length + ' reports sent</span></div>'
+    + '<div><span class="tiny">Collected (walk-in)</span><b style="color:var(--green)">' + dMoney0(sum(walk, function (o) { return o.paid; })) + '</b></div>'
+    + '<div><span class="tiny">Still due</span><b style="color:var(--amber)">' + dMoney0(sum(walk, function (o) { return o.total - o.paid; })) + '</b></div>'
+    + '<div><span class="tiny">Admitted patients (on their bills)</span><b>' + dMoney0(sum(live.filter(function (o) { return o.kind === 'ipd'; }), function (o) { return o.total; })) + '</b></div>';
+  var list = ORDERS.filter(function (o) { return !q || o.order_no.toLowerCase().indexOf(q) >= 0 || (o.patient_name || '').toLowerCase().indexOf(q) >= 0 || (o.patient_phone || '').indexOf(q) >= 0; });
+  dEl('or-b').innerHTML = list.length ? list.map(function (o) {
+    var due = Number(o.total) - Number(o.paid), dead = o.status === 'cancelled';
+    return '<tr' + (dead ? ' style="opacity:.55"' : '') + '><td class="tiny">' + dDateTime(o.created_at) + '</td><td><b>' + esc(o.order_no) + '</b><div class="tiny hide-sm">' + (o.items || []).map(function (i) { return esc(i.name); }).join(', ') + '</div></td>'
+      + '<td>' + esc(o.patient_name) + '<div class="tiny">' + esc(o.patient_phone || '') + '</div></td><td class="r"><b>' + dMoney0(o.total) + '</b></td><td>' + statusTag(o) + dueTag(o) + '</td>'
+      + '<td class="r" style="white-space:nowrap">' + (dead ? '' :
+        (o.kind === 'walkin' ? '<button class="btn btn-sm" onclick="billOpen(\'' + o.id + '\')">Bill</button> ' : '')
+        + (o.kind === 'walkin' && due > 0 ? '<button class="btn btn-sm" onclick="payDue(\'' + o.id + '\')">&#8377; Take due</button> ' : '')
+        + '<button class="btn btn-sm btn-p" onclick="resOpen(\'' + o.id + '\')">' + (o.status === 'booked' ? 'Results' : 'Report') + '</button>'
+        + (dIsOwner() ? ' <button class="btn btn-sm btn-r" onclick="orderCancel(\'' + o.id + '\')">Cancel</button>' : '')) + '</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">No orders in this period.</td></tr>';
+}
+async function payDue(id) {
+  var o = findOrder(id); if (!o) return; var due = Number(o.total) - Number(o.paid);
+  var amt = prompt('Amount received from ' + o.patient_name + ' (due ' + dMoney0(due) + '):', due); if (amt === null) return;
+  var mode = (prompt('Paid by? Type cash, upi or card:', 'cash') || 'cash').trim().toLowerCase();
+  var r = await _supa.rpc('lab_add_payment', { p_order_id: id, p_amount: Number(amt), p_mode: mode });
+  if (r.error) { showToast(dErr(r.error)); return; }
+  Object.assign(o, r.data); o.bill_pdf_path = null; showToast('Payment saved.'); ordersRender();
+}
+async function orderCancel(id) {
+  var o = findOrder(id); if (!o) return;
+  var reason = prompt('Cancel order ' + o.order_no + ' for ' + o.patient_name + '?' + (o.kind === 'ipd' ? '\nThe test charges are removed from the patient\'s bill.' : '\nReturn any money taken separately.') + '\n\nType the reason:');
+  if (reason === null) return;
+  var r = await _supa.rpc('lab_cancel', { p_order_id: id, p_reason: reason });
+  if (r.error) { showToast(dErr(r.error)); return; }
+  showToast('Order cancelled.'); loadOrders();
+}
+
+/* ---------------- bill PDF (walk-in) ---------------- */
+function labHead(title, o, right) {
+  var s = lab(), c = DEPT.clinic;
+  return deptPdfHead({ name: labName(), address: s.address || c.address, phone: s.phone || c.phone,
+    lines: [s.name && c.name && s.name !== c.name ? 'At ' + esc(c.name) : '', c.gstin ? 'GSTIN: ' + esc(c.gstin) : ''], title: title, right: right,
+    party: '<div>Patient: <b>' + esc(o.patient_name) + '</b>' + ((o.age || o.gender) ? ' &middot; ' + esc([o.age ? o.age + ' Y' : '', o.gender].filter(Boolean).join(' / ')) : '') + (o.uhid ? '<br>UHID: ' + esc(o.uhid) : '') + (o.patient_phone ? ' &middot; ' + esc(o.patient_phone) : '') + '</div>'
+      + '<div style="text-align:right">' + (o.referred_by ? 'Referred by: ' + esc(o.referred_by) + '<br>' : '') + 'Order: ' + esc(o.order_no) + '</div>' });
+}
+async function billPdf(o) {
+  var exempt = !!DEPT.clinic.gstin;
+  var head = labHead(exempt ? 'BILL OF SUPPLY' : 'LAB BILL', o, ['No: <b>' + esc(o.order_no) + '</b>', dDateTime(o.created_at)]);
+  var thead = '<thead><tr><th>#</th><th>Test</th><th>Sample</th><th class="r">Amount</th></tr></thead>';
+  var rows = (o.items || []).map(function (i, k) { return '<tr><td>' + (k + 1) + '</td><td><b>' + esc(i.name) + '</b></td><td>' + esc(i.sample || '') + '</td><td class="r">' + Number(i.price).toFixed(2) + '</td></tr>'; });
+  var line = function (a, b, s) { return '<div style="display:flex;justify-content:space-between;gap:20px;' + (s ? 'font-weight:800;font-size:14px;border-top:1.5px solid #333;padding-top:4px;margin-top:3px' : '') + '"><span>' + a + '</span><span>' + b + '</span></div>'; };
+  var pays = (o.payments || []).map(function (p) { return dDateTime(p.at) + ' &middot; ' + String(p.mode).toUpperCase() + ' &middot; &#8377;' + Number(p.amount).toFixed(2); }).join('<br>');
+  var after = '<div style="display:flex;justify-content:space-between;gap:16px;margin-top:10px"><div style="flex:1;font-size:10.5px">' + (exempt ? 'Healthcare services (SAC 9993), exempt from GST.<br>' : '') + (pays ? '<b>Payments</b><br>' + pays : '') + '</div>'
+    + '<div style="min-width:190px;font-size:11.5px">' + line('Tests', Number(o.gross).toFixed(2)) + (Number(o.discount) ? line('Discount', '-' + Number(o.discount).toFixed(2)) : '') + line('TOTAL', '&#8377; ' + Number(o.total).toFixed(2), true)
+    + line('Paid', Number(o.paid).toFixed(2)) + (Number(o.total) - Number(o.paid) > 0 ? line('<b>Balance due</b>', '<b>' + (Number(o.total) - Number(o.paid)).toFixed(2) + '</b>') : '') + '</div></div>'
+    + '<div style="margin-top:26px;font-size:10.5px;display:flex;justify-content:space-between"><span>Billed by: ' + esc(o.created_by_name || '') + '</span><span>For ' + esc(labName()) + '</span></div>';
+  return deptMakePdf({ format: 'a5', head: head, thead: thead, rows: rows, after: after, foot: 'AuraScale Lab &middot; ' + esc(o.order_no) });
+}
+async function ensureBill(o) {
+  if (o.bill_pdf_path) return o.bill_pdf_path;
+  var blob = await billPdf(o), path = _clinicId + '/lab/bill-' + o.id + '-' + Math.round(Number(o.paid)) + '.pdf';
+  await deptUpload('bills', path, blob);
+  var r = await _supa.rpc('lab_set_bill_pdf', { p_order_id: o.id, p_path: path }); if (r.error) throw r.error;
+  o.bill_pdf_path = path; return path;
+}
+async function billOpen(id) { var o = findOrder(id); if (!o) return; try { showToast('Opening…'); deptOpenPdf('bills', await ensureBill(o)); } catch (e) { showToast('Bill: ' + dErr(e)); } }
+async function billWa(id) { var o = findOrder(id); if (!o) return; try { var p = await ensureBill(o); deptWhatsApp(o.patient_phone, labName() + '\nBill ' + o.order_no + ' for ' + o.patient_name + ' · ' + dMoney0(o.total) + (Number(o.total) > Number(o.paid) ? ' (due ' + dMoney0(o.total - o.paid) + ')' : '') + '\nYour bill (PDF):', 'bills', p); } catch (e) { showToast('Bill: ' + dErr(e)); } }
+
+/* ---------------- RESULTS ---------------- */
+function female(o) { return /^f/i.test(String(o.gender || '')); }
+function rangeOf(p, o) {
+  var f = female(o), lo = f && p.low_f !== undefined ? p.low_f : p.low, hi = f && p.high_f !== undefined ? p.high_f : p.high;
+  return { lo: (lo === undefined || lo === null || lo === '') ? null : Number(lo), hi: (hi === undefined || hi === null || hi === '') ? null : Number(hi), text: p.ref || '' };
+}
+function rangeText(p, o) { var r = rangeOf(p, o); if (r.lo !== null || r.hi !== null) return (r.lo !== null ? r.lo : '') + ' - ' + (r.hi !== null ? r.hi : '') + (r.text ? ' (' + r.text + ')' : ''); return r.text || ''; }
+function flagOf(v, p, o) {
+  var r = rangeOf(p, o), n = parseFloat(String(v || '').replace(/,/g, ''));
+  if (String(v || '').trim() === '' || isNaN(n) || !/^\s*[<>]?\s*-?[\d.,]+\s*$/.test(String(v))) return '';
+  if (r.lo !== null && n < r.lo) return 'L'; if (r.hi !== null && n > r.hi) return 'H'; return '';
+}
+async function resOpen(id) {
+  var o = findOrder(id);
+  if (!o) { var r = await _supa.from('lab_orders').select('*').eq('id', id).maybeSingle(); o = r.data; if (o) ORDERS.push(o); }
+  if (!o) return; CUR = o;
+  dEl('res-title').textContent = 'Results · ' + o.order_no + ' · ' + o.patient_name;
+  var res = o.results || {};
+  var html = '<div class="muted" style="margin-bottom:10px">' + esc([o.age ? o.age + ' Y' : '', o.gender, o.referred_by ? 'Ref: ' + o.referred_by : ''].filter(Boolean).join(' · ')) + (female(o) ? '' : (o.gender ? '' : ' <span class="tag t-a">Sex not given: male ranges used</span>')) + '</div>';
+  (o.items || []).forEach(function (it) {
+    var tv = res[it.test_id] || {};
+    html += '<div class="card" style="margin-bottom:10px;background:var(--surface)"><div style="font-weight:800;margin-bottom:6px">' + esc(it.name) + ' <span class="tiny">' + esc(it.sample || '') + '</span></div><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Parameter</th><th>Result</th><th class="hide-sm">Unit</th><th>Normal range</th><th></th></tr></thead><tbody>'
+      + (it.params || []).map(function (p, k) {
+        var v = tv[p.name] === undefined ? '' : tv[p.name], fl = flagOf(v, p, o);
+        return '<tr><td>' + esc(p.name) + '</td><td><input class="finput res-in" data-t="' + it.test_id + '" data-p="' + esc(p.name) + '" data-k="' + k + '" value="' + esc(v) + '" oninput="resFlag(this)"' + (o.status === 'cancelled' ? ' disabled' : '') + '/></td>'
+          + '<td class="tiny hide-sm">' + esc(p.unit || '') + '</td><td class="tiny">' + esc(rangeText(p, o)) + '</td><td class="ab" id="fl-' + it.test_id + '-' + k + '">' + (fl === 'H' ? '&#9650; High' : fl === 'L' ? '&#9660; Low' : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  });
+  html += '<label class="flbl">Remarks / impression (optional)</label><textarea class="finput" id="res-rem" rows="2">' + esc(o.remarks || '') + '</textarea>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
+    + '<button class="btn" onclick="resSave(false)">Save draft</button>'
+    + '<button class="btn btn-p" onclick="resSave(true)">&#10003; Save &amp; mark ready</button>'
+    + '<button class="btn btn-g" id="res-rep" onclick="reportMake()"' + (o.status === 'booked' ? ' disabled title="Mark the results ready first"' : '') + '>&#128196; Make report &amp; send</button></div>'
+    + '<p class="tiny" style="margin-top:8px">Values outside the normal range are shown in red on the report. Please check every value before sending.</p><div class="err" id="res-err"></div><div id="res-out"></div>';
+  dEl('res-body').innerHTML = html; dOpen('m-res');
+  setTimeout(function () { var f = dEl('res-body').querySelector('.res-in'); if (f && !f.value) f.focus(); }, 60);
+}
+function resFlag(inp) {
+  var it = (CUR.items || []).filter(function (x) { return x.test_id === inp.getAttribute('data-t'); })[0]; if (!it) return;
+  var k = Number(inp.getAttribute('data-k')), p = it.params[k], fl = flagOf(inp.value, p, CUR);
+  dEl('fl-' + it.test_id + '-' + k).innerHTML = fl === 'H' ? '&#9650; High' : fl === 'L' ? '&#9660; Low' : '';
+}
+function resCollect() {
+  var out = {}; [].forEach.call(document.querySelectorAll('#res-body .res-in'), function (i) { var t = i.getAttribute('data-t'); out[t] = out[t] || {}; if (i.value.trim() !== '') out[t][i.getAttribute('data-p')] = i.value.trim(); });
+  return out;
+}
+async function resSave(ready) {
+  dShowErr('res-err', '');
+  var vals = resCollect();
+  if (ready) {
+    var missing = 0; (CUR.items || []).forEach(function (it) { (it.params || []).forEach(function (p) { if (!vals[it.test_id] || vals[it.test_id][p.name] === undefined) missing++; }); });
+    if (missing && !confirm(missing + ' result box(es) are empty. They will not appear on the report.\n\nMark ready anyway?')) return;
+  }
+  var r = await _supa.rpc('lab_save_results', { p_order_id: CUR.id, p_results: vals, p_remarks: dEl('res-rem').value, p_ready: !!ready });
+  if (r.error) { dShowErr('res-err', dErr(r.error)); return; }
+  Object.assign(CUR, r.data);
+  showToast(ready ? 'Results ready. Now make the report.' : 'Draft saved.');
+  var b = dEl('res-rep'); if (b) { b.disabled = CUR.status === 'booked'; b.title = ''; }
+  if (dEl('v-pending').classList.contains('on')) loadPending(); if (dEl('v-orders').classList.contains('on')) ordersRender();
+}
+async function reportPdf(o) {
+  var s = lab(), res = o.results || {};
+  var head = labHead('LABORATORY REPORT', o, ['Booked: ' + dDateTime(o.created_at), 'Reported: ' + dDateTime(o.results_at || new Date())]);
+  var thead = '<thead><tr><th style="width:38%">Test</th><th style="width:20%">Result</th><th style="width:14%">Unit</th><th>Normal range</th></tr></thead>';
+  var rows = [];
+  (o.items || []).forEach(function (it) {
+    var tv = res[it.test_id] || {};
+    var filled = (it.params || []).filter(function (p) { return tv[p.name] !== undefined && String(tv[p.name]).trim() !== ''; });
+    if (!filled.length) return;
+    rows.push('<tr><td colspan="4" style="background:#F6F8F7;font-weight:800;font-size:12px;padding-top:8px">' + esc(it.name) + (it.sample ? ' <span style="font-weight:400;font-size:10px;color:#555">(' + esc(it.sample) + ')</span>' : '') + '</td></tr>');
+    filled.forEach(function (p) {
+      var v = tv[p.name], fl = flagOf(v, p, o);
+      rows.push('<tr><td>' + esc(p.name) + '</td><td style="' + (fl ? 'color:#C62828;font-weight:800' : 'font-weight:700') + '">' + esc(v) + (fl ? ' ' + fl : '') + '</td><td>' + esc(p.unit || '') + '</td><td>' + esc(rangeText(p, o)) + '</td></tr>');
+    });
+  });
+  var after = (o.remarks ? '<div style="margin-top:10px;font-size:11.5px"><b>Remarks:</b> ' + esc(o.remarks) + '</div>' : '')
+    + '<div style="text-align:center;font-size:10px;color:#555;margin-top:10px">&mdash; End of report &mdash;<br>Values marked H (high) or L (low) are outside the normal range. Please discuss this report with your doctor.' + (s.footer ? '<br>' + esc(s.footer) : '') + '</div>'
+    + '<div style="display:flex;justify-content:space-between;margin-top:34px;font-size:10.5px"><div style="text-align:center;border-top:1px solid #333;padding-top:3px;min-width:170px">' + esc(o.results_by || s.technician || '') + '<br>Lab technician</div>'
+    + '<div style="text-align:center;border-top:1px solid #333;padding-top:3px;min-width:200px"><b>' + esc(s.pathologist || '') + '</b>' + (s.qualification ? '<br>' + esc(s.qualification) : '') + (s.reg_no ? '<br>Reg. ' + esc(s.reg_no) : '') + '<br>Pathologist</div></div>';
+  return deptMakePdf({ format: 'a4', head: head, thead: thead, rows: rows, after: after, foot: esc(labName()) + ' &middot; ' + esc(o.order_no) + ' &middot; ' + esc(o.patient_name) });
+}
+async function reportMake() {
+  dShowErr('res-err', '');
+  var o = CUR, out = dEl('res-out'); out.innerHTML = '<p class="tiny" style="margin-top:8px">Making the report&hellip;</p>';
+  try {
+    var blob = await reportPdf(o);
+    var path = _clinicId + '/lab/report-' + o.id + '.pdf';
+    await deptUpload('bills', path, blob);
+    var hp = null;
+    if (o.patient_id && !o.health_doc_id) { hp = _clinicId + '/' + o.patient_id + '/lab_' + o.order_no.replace(/[^A-Za-z0-9]+/g, '-') + '.pdf'; try { await deptUpload('nh-documents', hp, blob); } catch (e) { hp = null; } }
+    var r = await _supa.rpc('lab_set_report', { p_order_id: o.id, p_path: path, p_health_path: hp }); if (r.error) throw r.error;
+    Object.assign(o, r.data);
+    out.innerHTML = '<div class="card" style="margin-top:10px;text-align:center"><b>&#9989; Report saved' + (o.health_doc_id ? ' and added to the patient\'s health book' : '') + '.</b><div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">'
+      + '<button class="btn" onclick="deptOpenPdf(\'bills\',\'' + path + '\')">&#128196; Open / print</button><button class="btn btn-g" onclick="reportWa()">&#128242; WhatsApp report</button></div></div>';
+    if (dEl('v-pending').classList.contains('on')) loadPending(); if (dEl('v-orders').classList.contains('on')) ordersRender();
+  } catch (e) { out.innerHTML = ''; dShowErr('res-err', dErr(e)); }
+}
+function reportWa() {
+  var o = CUR; deptWhatsApp(o.patient_phone, labName() + '\nLab report ' + o.order_no + ' for ' + o.patient_name + ' is ready.\nTests: ' + (o.items || []).map(function (i) { return i.name; }).join(', ') + '\nYour report (PDF):', 'bills', o.report_path);
+}
+
+/* ---------------- TESTS ---------------- */
+function onTab_tests() { loadTests().then(testsRender); }
+function testsRender() {
+  dEl('tests-empty').style.display = TESTS.length ? 'none' : 'block';
+  var q = dEl('ts-q').value.trim().toLowerCase();
+  dEl('ts-b').innerHTML = TESTS.filter(function (t) { return !q || t.name.toLowerCase().indexOf(q) >= 0; }).map(function (t) {
+    return '<tr' + (t.is_active ? '' : ' style="opacity:.5"') + '><td><b>' + esc(t.name) + '</b><div class="tiny">' + esc(t.sample || '') + '</div></td><td class="hide-sm">' + esc(t.category) + '</td>'
+      + '<td class="r"><input class="finput" type="number" min="0" step="1" value="' + Number(t.price) + '" style="width:100px;text-align:right;padding:6px" onchange="priceSave(\'' + t.id + '\',this.value)"/></td>'
+      + '<td class="hide-sm tiny">' + (t.params || []).length + ' parameters</td><td class="r"><button class="btn btn-sm" onclick="testEdit(\'' + t.id + '\')">Edit</button></td></tr>';
+  }).join('');
+}
+async function seed() {
+  var r = await _supa.rpc('lab_seed_tests', { p_clinic_id: _clinicId });
+  if (r.error) { showToast(dErr(r.error)); return; }
+  showToast(r.data + ' tests added. Please check prices and ranges.'); await loadTests(); testsRender(); note();
+}
+async function priceSave(id, v) {
+  var t = TMAP[id]; if (!t) return;
+  var r = await _supa.rpc('lab_save_test', { p_clinic_id: _clinicId, p_id: id, p: { name: t.name, category: t.category, sample: t.sample, price: Number(v), params: t.params } });
+  if (r.error) { showToast(dErr(r.error)); return; }
+  t.price = r.data.price; showToast(t.name + ': ' + dMoney0(t.price)); pickRender();
+}
+var TE_PARAMS = [];
+function testEdit(id) {
+  var t = id ? TMAP[id] : { name: '', category: 'Pathology', sample: '', price: 0, params: [{ name: '', unit: '' }], is_active: true };
+  TE_PARAMS = JSON.parse(JSON.stringify(t.params || []));
+  dEl('te-title').textContent = id ? 'Edit ' + t.name : 'New test';
+  dEl('te-body').innerHTML = '<div class="grid4"><div style="grid-column:span 2"><label class="flbl">Test name</label><input class="finput" id="te-name" value="' + esc(t.name) + '"/></div>'
+    + '<div><label class="flbl">Category</label><input class="finput" id="te-cat" value="' + esc(t.category) + '"/></div><div><label class="flbl">Price ₹</label><input class="finput" id="te-price" type="number" min="0" value="' + Number(t.price) + '"/></div>'
+    + '<div style="grid-column:span 2"><label class="flbl">Sample</label><input class="finput" id="te-sample" value="' + esc(t.sample || '') + '"/></div>'
+    + (id ? '<div><label class="flbl">Available</label><select class="finput" id="te-act"><option value="true"' + (t.is_active ? ' selected' : '') + '>Yes</option><option value="false"' + (t.is_active ? '' : ' selected') + '>No (hidden)</option></select></div>' : '') + '</div>'
+    + '<h4 style="margin:14px 0 6px;font-size:13px">Parameters and normal ranges</h4><p class="tiny" style="margin-bottom:6px">Leave Low/High empty for text results (e.g. Negative). Female ranges are optional.</p>'
+    + '<div style="overflow-x:auto"><table class="dt" id="te-pt"></table></div><button class="btn btn-sm" style="margin-top:6px" onclick="teAdd()">&#10133; Add parameter</button>'
+    + '<div style="margin-top:14px"><button class="btn btn-g" onclick="teSave(' + (id ? '\'' + id + '\'' : 'null') + ')">&#10003; Save test</button></div><div class="err" id="te-err"></div>';
+  teRender(); dOpen('m-test');
+}
+function teRender() {
+  var f = function (k, i, w, ty) { var v = TE_PARAMS[i][k]; return '<input class="finput" style="width:' + w + 'px;padding:6px" ' + (ty ? 'type="number" step="any"' : '') + ' value="' + esc(v === undefined || v === null ? '' : v) + '" oninput="TE_PARAMS[' + i + '][\'' + k + '\']=this.value"/>'; };
+  dEl('te-pt').innerHTML = '<thead><tr><th>Parameter</th><th>Unit</th><th>Low</th><th>High</th><th>Low (F)</th><th>High (F)</th><th>Range text</th><th></th></tr></thead><tbody>'
+    + TE_PARAMS.map(function (p, i) { return '<tr><td>' + f('name', i, 160) + '</td><td>' + f('unit', i, 80) + '</td><td>' + f('low', i, 70, 1) + '</td><td>' + f('high', i, 70, 1) + '</td><td>' + f('low_f', i, 70, 1) + '</td><td>' + f('high_f', i, 70, 1) + '</td><td>' + f('ref', i, 150) + '</td><td><button class="btn btn-sm btn-r" onclick="TE_PARAMS.splice(' + i + ',1);teRender()">&times;</button></td></tr>'; }).join('') + '</tbody>';
+}
+function teAdd() { TE_PARAMS.push({ name: '', unit: '' }); teRender(); }
+async function teSave(id) {
+  var params = TE_PARAMS.filter(function (p) { return String(p.name || '').trim(); }).map(function (p) {
+    var o = { name: String(p.name).trim(), unit: String(p.unit || '').trim() };
+    ['low', 'high', 'low_f', 'high_f'].forEach(function (k) { if (p[k] !== undefined && p[k] !== null && String(p[k]).trim() !== '' && !isNaN(Number(p[k]))) o[k] = Number(p[k]); });
+    if (String(p.ref || '').trim()) o.ref = String(p.ref).trim(); return o;
+  });
+  if (!params.length) { dShowErr('te-err', 'Add at least one parameter (e.g. the test name itself).'); return; }
+  var body = { name: dEl('te-name').value, category: dEl('te-cat').value, sample: dEl('te-sample').value, price: Number(dEl('te-price').value) || 0, params: params };
+  if (id) body.is_active = dEl('te-act').value === 'true';
+  var r = await _supa.rpc('lab_save_test', { p_clinic_id: _clinicId, p_id: id, p: body });
+  if (r.error) { dShowErr('te-err', dErr(r.error)); return; }
+  showToast('Test saved.'); dClose('m-test'); await loadTests(); testsRender(); note();
+}
+
+/* ---------------- SETTINGS ---------------- */
+function onTab_settings() {
+  var s = lab(), c = DEPT.clinic;
+  dEl('ls-name').value = s.name || c.name || ''; dEl('ls-phone').value = s.phone || c.phone || ''; dEl('ls-address').value = s.address || c.address || '';
+  dEl('ls-path').value = s.pathologist || ''; dEl('ls-qual').value = s.qualification || ''; dEl('ls-reg').value = s.reg_no || ''; dEl('ls-tech').value = s.technician || '';
+  dEl('ls-paybefore').checked = !!s.pay_before_report; dEl('ls-footer').value = s.footer || '';
+}
+async function setSave() {
+  dShowErr('ls-err', '');
+  var p = { name: dEl('ls-name').value, phone: dEl('ls-phone').value, address: dEl('ls-address').value, pathologist: dEl('ls-path').value, qualification: dEl('ls-qual').value, reg_no: dEl('ls-reg').value, technician: dEl('ls-tech').value, pay_before_report: dEl('ls-paybefore').checked, footer: dEl('ls-footer').value };
+  var r = await _supa.rpc('lab_save_settings', { p_clinic_id: _clinicId, p: p });
+  if (r.error) { dShowErr('ls-err', dErr(r.error)); return; }
+  DEPT.clinic.lab_settings = r.data; note(); showToast('Lab details saved.');
+}
+/* a saved patient (UHID) was picked, but then a different name was typed: do not put this into that patient's records */
+function unlinkIfRenamed(v) {
+  if (LINKED && String(v || '').trim().toLowerCase() !== String(LINKED.n || '').trim().toLowerCase()) {
+    if (dMobile(dEl('o-phone').value) && dMobile(dEl('o-phone').value) === dMobile(LINKED.ph)) dEl('o-phone').value = '';
+    LINKED = null; dEl('o-uhid').value = ''; showToast('Different name typed, so the saved patient (UHID) was removed from this bill.');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
