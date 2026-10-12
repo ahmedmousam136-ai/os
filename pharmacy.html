@@ -166,13 +166,13 @@
         <div><label class="flbl">Phone</label><input class="finput" id="ps-phone"/></div>
         <div style="grid-column:1/-1"><label class="flbl">Address</label><input class="finput" id="ps-address"/></div>
         <div><label class="flbl">GST registration</label>
-          <select class="finput" id="ps-mode" onchange="dEl('ps-gstin-box').style.display=this.value==='none'?'none':'block'">
+          <select class="finput" id="ps-mode" onchange="dEl('ps-gstin-box').style.display=this.value==='none'?'none':'block';setCheck()">
             <option value="regular">Regular GST: TAX INVOICE with CGST + SGST</option>
             <option value="composition">Composition scheme: BILL OF SUPPLY (no tax shown)</option>
             <option value="none">No GSTIN: CASH MEMO</option>
           </select></div>
-        <div id="ps-gstin-box"><label class="flbl">Pharmacy GSTIN</label><input class="finput" id="ps-gstin" maxlength="15" style="text-transform:uppercase"/></div>
-        <div><label class="flbl">Drug licence no(s). (Form 20 / 21)</label><input class="finput" id="ps-dl" placeholder="e.g. WB/24/20B/1234, 21B/1234"/></div>
+        <div id="ps-gstin-box"><label class="flbl">Pharmacy GSTIN</label><input class="finput" id="ps-gstin" maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase().replace(/[^0-9A-Z]/g,'');setCheck()"/><div class="tiny" id="ps-gstin-st" style="margin-top:4px"></div></div>
+        <div><label class="flbl">Drug licence no(s). (Form 20 / 21) *</label><input class="finput" id="ps-dl" maxlength="120" placeholder="e.g. WB/S24P/RCD-1234 (20B), RCD-1235 (21B)" oninput="setCheck()"/><div class="tiny" id="ps-dl-st" style="margin-top:4px">Write it exactly as on the licence certificate.</div></div>
         <div><label class="flbl">Registered pharmacist</label><input class="finput" id="ps-pharmacist"/></div>
         <div style="grid-column:1/-1"><label class="flbl">Line at the bottom of bills (optional)</label><input class="finput" id="ps-footer" placeholder="e.g. Please check medicines before leaving the counter."/></div>
       </div>
@@ -785,10 +785,24 @@ function onTab_settings() {
   dEl('ps-name').value = s.name || DEPT.clinic.name || ''; dEl('ps-phone').value = s.phone || DEPT.clinic.phone || ''; dEl('ps-address').value = s.address || DEPT.clinic.address || '';
   dEl('ps-mode').value = s.gst_mode || 'none'; dEl('ps-gstin').value = s.gstin || ''; dEl('ps-dl').value = s.dl_no || ''; dEl('ps-pharmacist').value = s.pharmacist || ''; dEl('ps-footer').value = s.footer || '';
   dEl('ps-gstin-box').style.display = dEl('ps-mode').value === 'none' ? 'none' : 'block';
+  setCheck();
+}
+/* live check while typing: green tick when it looks right, red reason when it is wrong */
+function setCheck() {
+  var g = dEl('ps-gstin').value, gs = dEl('ps-gstin-st'), d = dEl('ps-dl').value, ds = dEl('ps-dl-st');
+  if (!g) { gs.textContent = ''; } else if (g.length < 15) { gs.textContent = g.length + ' / 15'; gs.style.color = 'var(--text-tertiary)'; }
+  else { var gp = deptGstinProblem(g); gs.textContent = gp || '\u2713 GSTIN is valid'; gs.style.color = gp ? 'var(--red)' : 'var(--green)'; }
+  if (!d.trim()) { ds.textContent = 'Write it exactly as on the licence certificate.'; ds.style.color = ''; }
+  else { var dp = deptDlProblem(d); ds.textContent = dp || '\u2713 Looks like a valid licence number'; ds.style.color = dp ? 'var(--red)' : 'var(--green)'; }
 }
 async function setSave() {
   dShowErr('ps-err', '');
-  var p = { name: dEl('ps-name').value, phone: dEl('ps-phone').value, address: dEl('ps-address').value, gst_mode: dEl('ps-mode').value, gstin: dEl('ps-gstin').value.toUpperCase().trim(), dl_no: dEl('ps-dl').value, pharmacist: dEl('ps-pharmacist').value, footer: dEl('ps-footer').value };
+  var mode = dEl('ps-mode').value, gp = mode === 'none' ? '' : deptGstinProblem(dEl('ps-gstin').value), dp = deptDlProblem(dEl('ps-dl').value);
+  if (!dEl('ps-name').value.trim()) { dShowErr('ps-err', 'Enter the pharmacy name.'); dEl('ps-name').focus(); return; }
+  if (gp) { dShowErr('ps-err', 'GSTIN: ' + gp + ' If the pharmacy has no GSTIN, choose "No GSTIN".'); dEl('ps-gstin').focus(); return; }
+  if (dp) { dShowErr('ps-err', 'Drug licence: ' + dp); dEl('ps-dl').focus(); return; }
+  if (dEl('ps-phone').value.trim() && !deptPhoneOk(dEl('ps-phone').value)) { dShowErr('ps-err', 'The phone number looks wrong. Use 8 to 15 digits.'); dEl('ps-phone').focus(); return; }
+  var p = { name: dEl('ps-name').value, phone: dEl('ps-phone').value, address: dEl('ps-address').value, gst_mode: dEl('ps-mode').value, gstin: dEl('ps-gstin').value.toUpperCase().trim(), dl_no: dEl('ps-dl').value.toUpperCase().replace(/\s+/g, ' ').trim(), pharmacist: dEl('ps-pharmacist').value, footer: dEl('ps-footer').value };
   var r = await _supa.rpc('ph_save_settings', { p_clinic_id: _clinicId, p: p });
   if (r.error) { dShowErr('ps-err', dErr(r.error)); return; }
   DEPT.clinic.ph_settings = r.data; setupNote(); posRender(); showToast('Pharmacy details saved.');
