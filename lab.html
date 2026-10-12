@@ -25,16 +25,15 @@
 
 <div id="app" style="display:none">
   <div class="d-top">
-    <a class="d-back" id="d-back" href="nh.html">&larr; Back</a>
-    <div><div class="d-title">&#129514; Lab &amp; Diagnostics</div><div class="d-sub" id="d-fac"></div></div>
-    <div style="margin-left:auto" class="tiny" id="d-me"></div>
+    <div class="d-brand"><div style="min-width:0"><div class="d-title">&#129514; Lab &amp; Diagnostics</div><div class="d-sub" id="d-fac"></div></div></div>
   </div>
   <div class="d-tabs" id="d-tabs">
-    <button class="d-tab on" data-t="new" onclick="dTab('new')">&#10133; New test order</button>
-    <button class="d-tab" data-t="pending" onclick="dTab('pending')">&#9203; Reports to make</button>
-    <button class="d-tab" data-t="orders" onclick="dTab('orders')">&#128196; All orders</button>
-    <button class="d-tab" data-t="tests" onclick="dTab('tests')">&#129514; Tests &amp; prices</button>
-    <button class="d-tab" data-t="settings" onclick="dTab('settings')" data-owner-only>&#9881; Settings</button>
+    <button class="d-tab on" data-t="new" onclick="dTab('new')"><span class="ti">&#10133;</span><span class="tl">New order</span></button>
+    <button class="d-tab" data-t="pending" onclick="dTab('pending')"><span class="ti">&#9203;</span><span class="tl">To report</span></button>
+    <button class="d-tab" data-t="orders" onclick="dTab('orders')"><span class="ti">&#128196;</span><span class="tl">Orders</span></button>
+    <button class="d-tab" data-t="tests" onclick="dTab('tests')"><span class="ti">&#129514;</span><span class="tl">Tests</span></button>
+    <button class="d-tab" data-t="doctors" onclick="dTab('doctors')" data-owner-only><span class="ti">&#129658;</span><span class="tl">Doctors</span></button>
+    <button class="d-tab" data-t="settings" onclick="dTab('settings')" data-owner-only><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
   </div>
   <div class="d-main" id="d-body">
 
@@ -56,7 +55,7 @@
         <label class="flbl">Admitted patient</label><select class="finput" id="o-adm" style="max-width:520px"></select>
         <p class="tiny" style="margin-top:5px">Test charges go straight onto this patient's nursing-home bill.</p>
       </div>
-      <div style="max-width:420px;margin-bottom:12px"><label class="flbl">Referred by (doctor)</label><input class="finput" id="o-ref" placeholder="Dr. &hellip;"/></div>
+      <div style="max-width:420px;margin-bottom:12px"><label class="flbl">Referred by (doctor)</label><input class="finput" id="o-ref" placeholder="Dr. &hellip;" list="o-ref-list" autocomplete="off"/><datalist id="o-ref-list"></datalist></div>
 
       <label class="flbl">Tests</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
@@ -109,6 +108,28 @@
       <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Test</th><th class="hide-sm">Category</th><th class="r">Price ₹</th><th class="hide-sm">Parameters</th><th></th></tr></thead><tbody id="ts-b"></tbody></table></div>
     </div>
 
+    <!-- ============ DOCTORS & COMMISSION (owner only) ============ -->
+    <div class="d-view" id="v-doctors">
+      <div class="note">Only you (the owner) can see this page. Staff only see doctor names when they book tests.</div>
+      <h3 style="font-size:15px;margin-bottom:8px">Commission for a month</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+        <div><label class="flbl">Month</label><input class="finput" id="cm-month" type="month" style="width:180px"/></div>
+        <button class="btn btn-p" onclick="commLoad()">Calculate</button>
+      </div>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Doctor</th><th class="r">Orders</th><th class="r">Tests amount</th><th class="r">Commission %</th><th class="r">Commission</th><th></th></tr></thead><tbody id="cm-b"></tbody></table></div>
+      <p class="tiny" style="margin-top:6px">Tests amount = what patients were billed after discount (cancelled orders never count). Typed names that are not in your list show as "not saved": save them with a % to include them.</p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:20px 0"/>
+      <h3 style="font-size:15px;margin-bottom:8px">Your referring doctors</h3>
+      <div class="grid4" style="margin-bottom:10px">
+        <div><label class="flbl">Doctor name</label><input class="finput" id="dr-name" placeholder="Dr. &hellip;"/></div>
+        <div><label class="flbl">Phone</label><input class="finput" id="dr-phone" type="tel"/></div>
+        <div><label class="flbl">Commission %</label><input class="finput" id="dr-pct" type="number" min="0" max="100" step="0.5" value="0"/></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-g" style="width:100%" onclick="drSave(null)">&#10133; Add doctor</button></div>
+      </div>
+      <div class="err" id="dr-err"></div>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Doctor</th><th>Phone</th><th class="r">Commission %</th><th></th></tr></thead><tbody id="dr-b"></tbody></table></div>
+    </div>
+
     <!-- ============ SETTINGS ============ -->
     <div class="d-view" id="v-settings">
       <h3 style="font-size:15px;margin-bottom:4px">Lab details printed on bills and reports</h3>
@@ -141,13 +162,11 @@ function labName() { return lab().name || DEPT.clinic.name || 'Laboratory'; }
 
 async function init() {
   var ok = await deptInit('lab', 'Lab'); if (!ok) return;
-  dEl('d-me').textContent = (_myName || '') + ' · ' + (DEPT.role === 'owner' ? 'Owner' : 'Staff');
-  await Promise.all([loadTests(), deptLoadAdmissions()]);
+  await Promise.all([loadTests(), deptLoadAdmissions(), loadDocNames()]);
   dEl('o-adm').innerHTML = deptAdmissionOptions();
   note();
-  var t = 'new'; try { t = localStorage.getItem('aura-dept-tab-lab') || 'new'; } catch (e) {}
-  if (t === 'settings' && !dIsOwner()) t = 'new';
-  dTab(t);
+  if (!DEPT.admissions.length) dEl('k-ipd').parentNode.style.display = 'none';
+  deptStartTab('new');
   document.addEventListener('click', function (e) { if (!e.target.closest('#o-uhid-dd,#o-uhid')) dEl('o-uhid-dd').style.display = 'none'; });
   var fix = function () { dEl('new-bottom').style.gridTemplateColumns = window.innerWidth < 760 ? '1fr' : '1fr 340px'; }; fix(); window.addEventListener('resize', fix);
 }
@@ -206,6 +225,7 @@ async function book() {
   dShowErr('new-err', '');
   if (!SEL.length) { dShowErr('new-err', 'Pick at least one test.'); return; }
   var p = { kind: KIND, tests: SEL.slice(), referred_by: dEl('o-ref').value.trim() };
+  var dm = DOCS.filter(function (d) { return d.name.toLowerCase() === p.referred_by.toLowerCase(); })[0]; if (dm) p.ref_doctor_id = dm.id;
   if (KIND === 'ipd') {
     p.admission_id = dEl('o-adm').value; if (!p.admission_id) { dShowErr('new-err', 'Choose the admitted patient.'); return; }
     var a = DEPT.admissions.filter(function (x) { return x.id === p.admission_id; })[0] || {};
@@ -305,25 +325,47 @@ async function orderCancel(id) {
 }
 
 /* ---------------- bill PDF (walk-in) ---------------- */
-function labHead(title, o, right) {
+function labHead(title, o, right, info) {
   var s = lab(), c = DEPT.clinic;
-  return deptPdfHead({ name: labName(), address: s.address || c.address, phone: s.phone || c.phone,
-    lines: [s.name && c.name && s.name !== c.name ? 'At ' + esc(c.name) : '', c.gstin ? 'GSTIN: ' + esc(c.gstin) : ''], title: title, right: right,
-    party: '<div>Patient: <b>' + esc(o.patient_name) + '</b>' + ((o.age || o.gender) ? ' &middot; ' + esc([o.age ? o.age + ' Y' : '', o.gender].filter(Boolean).join(' / ')) : '') + (o.uhid ? '<br>UHID: ' + esc(o.uhid) : '') + (o.patient_phone ? ' &middot; ' + esc(o.patient_phone) : '') + '</div>'
-      + '<div style="text-align:right">' + (o.referred_by ? 'Referred by: ' + esc(o.referred_by) + '<br>' : '') + 'Order: ' + esc(o.order_no) + '</div>' });
+  return deptPdfHead({ name: labName(),
+    sub: [esc(s.address || c.address || '').replace(/\n/g, ', '),
+      [s.phone || c.phone ? 'Phone: ' + esc(s.phone || c.phone) : '', c.gstin ? 'GSTIN: ' + esc(c.gstin) : ''].filter(Boolean).join(' &nbsp;&middot;&nbsp; '),
+      s.name && c.name && s.name !== c.name ? 'At ' + esc(c.name) : ''],
+    title: title, right: right, info: info });
 }
+function labAgeSex(o) { return [o.age ? esc(o.age) + ' yrs' : '', esc(o.gender || '')].filter(Boolean).join(' / '); }
+var LAB_MODE = { cash: 'Cash', upi: 'UPI', card: 'Card' };
 async function billPdf(o) {
-  var exempt = !!DEPT.clinic.gstin;
-  var head = labHead(exempt ? 'BILL OF SUPPLY' : 'LAB BILL', o, ['No: <b>' + esc(o.order_no) + '</b>', dDateTime(o.created_at)]);
+  var exempt = !!DEPT.clinic.gstin, c = DEPT.clinic, s = lab();
+  var sign = (DEPT.standalone || !s.name || s.name === c.name) ? await deptSignature() : '';
+  var due = Math.round((Number(o.total) - Number(o.paid)) * 100) / 100, ipd = o.kind === 'ipd';
+  var head = labHead(exempt ? 'BILL OF SUPPLY' : 'LAB BILL', o,
+    ['Bill No: <span class="no">' + esc(o.order_no) + '</span>', 'Date: ' + deptPdfDateTime(o.created_at), exempt ? 'SAC 9993 &middot; Healthcare services' : ''],
+    [['Billed to', esc(o.patient_name)], ['Age / Gender', labAgeSex(o)], ['Phone', esc(o.patient_phone || '')], ['UHID', esc(o.uhid || '')], ['Referred by', esc(o.referred_by || 'Self')], ['Sample booked', deptPdfDateTime(o.created_at)]]);
+  var colgroup = '<colgroup><col style="width:6%"><col style="width:50%"><col style="width:26%"><col style="width:18%"></colgroup>';
   var thead = '<thead><tr><th>#</th><th>Test</th><th>Sample</th><th class="r">Amount</th></tr></thead>';
-  var rows = (o.items || []).map(function (i, k) { return '<tr><td>' + (k + 1) + '</td><td><b>' + esc(i.name) + '</b></td><td>' + esc(i.sample || '') + '</td><td class="r">' + Number(i.price).toFixed(2) + '</td></tr>'; });
-  var line = function (a, b, s) { return '<div style="display:flex;justify-content:space-between;gap:20px;' + (s ? 'font-weight:800;font-size:14px;border-top:1.5px solid #333;padding-top:4px;margin-top:3px' : '') + '"><span>' + a + '</span><span>' + b + '</span></div>'; };
-  var pays = (o.payments || []).map(function (p) { return dDateTime(p.at) + ' &middot; ' + String(p.mode).toUpperCase() + ' &middot; &#8377;' + Number(p.amount).toFixed(2); }).join('<br>');
-  var after = '<div style="display:flex;justify-content:space-between;gap:16px;margin-top:10px"><div style="flex:1;font-size:10.5px">' + (exempt ? 'Healthcare services (SAC 9993), exempt from GST.<br>' : '') + (pays ? '<b>Payments</b><br>' + pays : '') + '</div>'
-    + '<div style="min-width:190px;font-size:11.5px">' + line('Tests', Number(o.gross).toFixed(2)) + (Number(o.discount) ? line('Discount', '-' + Number(o.discount).toFixed(2)) : '') + line('TOTAL', '&#8377; ' + Number(o.total).toFixed(2), true)
-    + line('Paid', Number(o.paid).toFixed(2)) + (Number(o.total) - Number(o.paid) > 0 ? line('<b>Balance due</b>', '<b>' + (Number(o.total) - Number(o.paid)).toFixed(2) + '</b>') : '') + '</div></div>'
-    + '<div style="margin-top:26px;font-size:10.5px;display:flex;justify-content:space-between"><span>Billed by: ' + esc(o.created_by_name || '') + '</span><span>For ' + esc(labName()) + '</span></div>';
-  return deptMakePdf({ format: 'a5', head: head, thead: thead, rows: rows, after: after, foot: 'AuraScale Lab &middot; ' + esc(o.order_no) });
+  var rows = (o.items || []).map(function (i, k) { return '<tr><td class="mut">' + (k + 1) + '</td><td><b>' + esc(i.name) + '</b></td><td>' + esc(i.sample || '') + '</td><td class="r"><b>' + deptMoney(i.price) + '</b></td></tr>'; });
+  var row = function (l, v, cls) { return '<div class="row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
+  var after = '<div class="dsplit"><div></div><div class="dtot">' + row(exempt ? 'Healthcare services (exempt from GST)' : 'Tests total', deptMoney(o.gross))
+    + (Number(o.discount) ? row('Less: discount', '-' + deptMoney(o.discount)) : '') + row(ipd ? 'Total charged' : 'Bill amount', deptMoney(o.total), 'grand') + '</div></div>'
+    + '<div class="dwords">' + deptWords(o.total) + '</div>';
+  if (!ipd) {
+    after += '<div class="dph">Payments received</div><div class="dprow h"><span style="width:34%">Date &amp; time</span><span style="width:20%">Mode</span><span style="flex:1">Received by</span><span style="width:18%;text-align:right">Amount</span></div>'
+      + ((o.payments || []).length ? (o.payments || []).map(function (p) { return '<div class="dprow"><span style="width:34%">' + deptPdfDateTime(p.at) + '</span><span style="width:20%">' + esc(LAB_MODE[p.mode] || p.mode || '') + '</span><span style="flex:1">' + esc(p.by || '') + '</span><span style="width:18%;text-align:right"><b>' + deptMoney(p.amount) + '</b></span></div>'; }).join('')
+        : '<div class="dprow"><span class="mut">No payment received yet.</span></div>')
+      + '<div class="dfinal"><div>' + (o.status === 'cancelled' ? '<span class="dstamp red">CANCELLED</span>' : due <= 0 ? '<span class="dstamp">PAID</span>' : '<span class="dstamp red">BALANCE DUE</span>') + '</div><div class="box">'
+      + row('Bill amount', deptMoney(o.total)) + row('Less: payments received (' + (o.payments || []).length + ')', deptMoney(o.paid))
+      + '<div class="due ' + (due <= 0 ? 'due-green' : 'due-red') + '"><span>Balance due</span><span>' + deptMoney(Math.max(due, 0)) + '</span></div></div></div>';
+  } else {
+    after += '<div class="dfinal"><div><span class="dstamp blue">ON PATIENT BILL</span></div><div></div></div>';
+  }
+  after += '<div class="dend"><div class="ddecl">' + (exempt ? '<b>No GST charged.</b> Diagnostic services by a clinical establishment are exempt from GST (Notification No. 12/2017-Central Tax (Rate), Sl. No. 74).<br>' : '')
+    + (ipd ? 'These test charges are added to the patient\'s nursing-home bill; this is not a separate bill.<br>' : 'The report is given on the date and time told at the counter. Please keep this bill to collect the report.<br>')
+    + 'Billed by: ' + esc(o.created_by_name || '') + '</div>'
+    + '<div class="dsign">For ' + esc(labName()) + (sign ? '<img src="' + sign + '" alt="">' : '<div class="sp"></div>') + '<div class="ln">Authorised Signatory</div></div></div>';
+  return deptMakePdf({ format: 'a4', head: head, colgroup: colgroup, thead: thead, rows: rows, after: after,
+    headNext: deptPdfHeadNext('<b>' + esc(labName()) + '</b> &nbsp;&middot;&nbsp; ' + esc(o.patient_name), 'Bill No: ' + esc(o.order_no) + ' (continued)'),
+    foot: 'Computer-generated bill &middot; ' + esc(o.order_no) + ' &middot; AuraScale' });
 }
 async function ensureBill(o) {
   if (o.bill_pdf_path) return o.bill_pdf_path;
@@ -397,24 +439,31 @@ async function resSave(ready) {
 }
 async function reportPdf(o) {
   var s = lab(), res = o.results || {};
-  var head = labHead('LABORATORY REPORT', o, ['Booked: ' + dDateTime(o.created_at), 'Reported: ' + dDateTime(o.results_at || new Date())]);
-  var thead = '<thead><tr><th style="width:38%">Test</th><th style="width:20%">Result</th><th style="width:14%">Unit</th><th>Normal range</th></tr></thead>';
+  var head = labHead('LABORATORY REPORT', o,
+    ['Report No: <span class="no">' + esc(o.order_no) + '</span>', 'Reported: ' + deptPdfDateTime(o.results_at || new Date())],
+    [['Patient', esc(o.patient_name)], ['Age / Gender', labAgeSex(o)], ['UHID', esc(o.uhid || '')], ['Phone', esc(o.patient_phone || '')],
+     ['Referred by', esc(o.referred_by || 'Self')], ['Sample booked', deptPdfDateTime(o.created_at)]]);
+  var colgroup = '<colgroup><col style="width:38%"><col style="width:18%"><col style="width:16%"><col style="width:28%"></colgroup>';
+  var thead = '<thead><tr><th>Investigation</th><th>Result</th><th>Unit</th><th>Biological reference range</th></tr></thead>';
   var rows = [];
   (o.items || []).forEach(function (it) {
     var tv = res[it.test_id] || {};
     var filled = (it.params || []).filter(function (p) { return tv[p.name] !== undefined && String(tv[p.name]).trim() !== ''; });
     if (!filled.length) return;
-    rows.push('<tr><td colspan="4" style="background:#F6F8F7;font-weight:800;font-size:12px;padding-top:8px">' + esc(it.name) + (it.sample ? ' <span style="font-weight:400;font-size:10px;color:#555">(' + esc(it.sample) + ')</span>' : '') + '</td></tr>');
+    rows.push('<tr class="grp"><td colspan="4">' + esc(it.name) + (it.sample ? ' <span style="font-weight:400;font-size:10.5px;color:#4a5b53">&middot; Sample: ' + esc(it.sample) + '</span>' : '') + '</td></tr>');
     filled.forEach(function (p) {
       var v = tv[p.name], fl = flagOf(v, p, o);
-      rows.push('<tr><td>' + esc(p.name) + '</td><td style="' + (fl ? 'color:#C62828;font-weight:800' : 'font-weight:700') + '">' + esc(v) + (fl ? ' ' + fl : '') + '</td><td>' + esc(p.unit || '') + '</td><td>' + esc(rangeText(p, o)) + '</td></tr>');
+      rows.push('<tr><td>' + esc(p.name) + '</td><td' + (fl ? ' class="hi"' : ' style="font-weight:700"') + '>' + esc(v) + (fl ? ' ' + fl : '') + '</td><td class="mut">' + esc(p.unit || '') + '</td><td>' + esc(rangeText(p, o)) + '</td></tr>');
     });
   });
-  var after = (o.remarks ? '<div style="margin-top:10px;font-size:11.5px"><b>Remarks:</b> ' + esc(o.remarks) + '</div>' : '')
-    + '<div style="text-align:center;font-size:10px;color:#555;margin-top:10px">&mdash; End of report &mdash;<br>Values marked H (high) or L (low) are outside the normal range. Please discuss this report with your doctor.' + (s.footer ? '<br>' + esc(s.footer) : '') + '</div>'
-    + '<div style="display:flex;justify-content:space-between;margin-top:34px;font-size:10.5px"><div style="text-align:center;border-top:1px solid #333;padding-top:3px;min-width:170px">' + esc(o.results_by || s.technician || '') + '<br>Lab technician</div>'
-    + '<div style="text-align:center;border-top:1px solid #333;padding-top:3px;min-width:200px"><b>' + esc(s.pathologist || '') + '</b>' + (s.qualification ? '<br>' + esc(s.qualification) : '') + (s.reg_no ? '<br>Reg. ' + esc(s.reg_no) : '') + '<br>Pathologist</div></div>';
-  return deptMakePdf({ format: 'a4', head: head, thead: thead, rows: rows, after: after, foot: esc(labName()) + ' &middot; ' + esc(o.order_no) + ' &middot; ' + esc(o.patient_name) });
+  var after = (o.remarks ? '<div style="margin-top:12px;font-size:12px;padding:9px 12px;border:1px solid #dbe7e1;border-radius:8px;background:#fafcfb"><b>Remarks:</b> ' + esc(o.remarks) + '</div>' : '')
+    + '<div class="dfin">&mdash; End of report &mdash;</div>'
+    + '<div class="ddecl" style="margin-top:12px;font-size:10.5px"><b>H</b> = above and <b>L</b> = below the biological reference range. Results relate only to the sample tested and should be read together with the clinical findings. Please discuss this report with your doctor.' + (s.footer ? '<br>' + esc(s.footer) : '') + '</div>'
+    + '<div class="dend" style="margin-top:22px;align-items:flex-start"><div class="dsign" style="width:220px"><div class="sp"></div><div class="ln">' + esc(s.technician || o.results_by || 'Lab technician') + '</div><div>Lab Technician</div></div>'
+    + '<div class="dsign" style="width:240px"><div class="sp"></div><div class="ln">' + esc(s.pathologist || 'Pathologist') + '</div>' + (s.qualification ? '<div>' + esc(s.qualification) + '</div>' : '') + (s.reg_no ? '<div>Reg. No. ' + esc(s.reg_no) + '</div>' : '') + '<div>Consultant Pathologist</div></div></div>';
+  return deptMakePdf({ format: 'a4', head: head, colgroup: colgroup, thead: thead, rows: rows, after: after,
+    headNext: deptPdfHeadNext('<b>' + esc(labName()) + '</b> &nbsp;&middot;&nbsp; ' + esc(o.patient_name) + (labAgeSex(o) ? ' (' + labAgeSex(o) + ')' : ''), 'Report No: ' + esc(o.order_no) + ' (continued)'),
+    foot: esc(labName()) + ' &middot; ' + esc(o.order_no) + ' &middot; ' + esc(o.patient_name) + ' &middot; AuraScale' });
 }
 async function reportMake() {
   dShowErr('res-err', '');
@@ -491,6 +540,51 @@ async function teSave(id) {
   if (r.error) { dShowErr('te-err', dErr(r.error)); return; }
   showToast('Test saved.'); dClose('m-test'); await loadTests(); testsRender(); note();
 }
+
+/* ---------------- DOCTORS & COMMISSION ---------------- */
+var DOCS = [], DRS = [];
+async function loadDocNames() {
+  var r = await _supa.rpc('lab_doctor_list', { p_clinic_id: _clinicId });
+  DOCS = r.error || !r.data ? [] : (Array.isArray(r.data) ? r.data : [r.data]);
+  dEl('o-ref-list').innerHTML = DOCS.map(function (d) { return '<option value="' + esc(d.name) + '"></option>'; }).join('');
+}
+function onTab_doctors() {
+  if (!dEl('cm-month').value) { var d = new Date(Date.now() + 5.5 * 3600000); dEl('cm-month').value = d.toISOString().slice(0, 7); }
+  drLoad(); commLoad();
+}
+async function drLoad() {
+  var r = await _supa.from('lab_ref_doctors').select('*').eq('clinic_id', _clinicId).order('name');
+  if (r.error) { dEl('dr-b').innerHTML = '<tr><td colspan="4" class="muted">Run modules-part-b.sql in Supabase to use this page.</td></tr>'; return; }
+  DRS = r.data || [];
+  dEl('dr-b').innerHTML = DRS.length ? DRS.map(function (d) {
+    return '<tr' + (d.is_active ? '' : ' style="opacity:.5"') + '><td><b>' + esc(d.name) + '</b></td><td>' + esc(d.phone || '') + '</td><td class="r"><input class="finput" type="number" min="0" max="100" step="0.5" value="' + Number(d.commission_pct) + '" style="width:90px;text-align:right;padding:6px" onchange="drPct(\'' + d.id + '\',this.value)"/></td>'
+      + '<td class="r"><button class="btn btn-sm" onclick="drToggle(\'' + d.id + '\')">' + (d.is_active ? 'Hide' : 'Show') + '</button></td></tr>';
+  }).join('') : '<tr><td colspan="4" class="muted">No doctors yet. Add the doctors who send you patients.</td></tr>';
+}
+async function drSave(id, body) {
+  dShowErr('dr-err', '');
+  body = body || { name: dEl('dr-name').value, phone: dEl('dr-phone').value, commission_pct: dEl('dr-pct').value };
+  var r = await _supa.rpc('lab_save_doctor', { p_clinic_id: _clinicId, p_id: id, p: body });
+  if (r.error) { dShowErr('dr-err', dErr(r.error)); showToast(dErr(r.error)); return false; }
+  if (!id) { dEl('dr-name').value = ''; dEl('dr-phone').value = ''; dEl('dr-pct').value = 0; }
+  showToast('Saved.'); await Promise.all([drLoad(), loadDocNames()]); commLoad(); return true;
+}
+function drFind(id) { return DRS.filter(function (d) { return d.id === id; })[0]; }
+function drPct(id, v) { var d = drFind(id); if (d) drSave(id, { name: d.name, phone: d.phone, commission_pct: v, is_active: d.is_active }); }
+function drToggle(id) { var d = drFind(id); if (d) drSave(id, { name: d.name, phone: d.phone, commission_pct: d.commission_pct, is_active: !d.is_active }); }
+async function commLoad() {
+  var m = dEl('cm-month').value; if (!m) return;
+  var y = Number(m.slice(0, 4)), mo = Number(m.slice(5, 7)), last = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  var r = await _supa.rpc('lab_commission', { p_clinic_id: _clinicId, p_from: m + '-01', p_to: m + '-' + ('0' + last).slice(-2) });
+  if (r.error) { dEl('cm-b').innerHTML = '<tr><td colspan="6" class="muted">' + esc(dErr(r.error)) + '</td></tr>'; return; }
+  var rows = r.data || [], tot = rows.reduce(function (a, x) { return a + Number(x.commission || 0); }, 0), amt = rows.reduce(function (a, x) { return a + Number(x.amount || 0); }, 0);
+  dEl('cm-b').innerHTML = rows.length ? rows.map(function (x) {
+    return '<tr><td><b>' + esc(x.name || '') + '</b>' + (x.not_saved ? ' <span class="tag t-a">not saved</span>' : '') + '<div class="tiny">' + esc(x.phone || '') + '</div></td><td class="r">' + x.orders + '</td><td class="r">' + dMoney0(x.amount) + '</td><td class="r">' + Number(x.pct) + '%</td><td class="r"><b>' + dMoney(x.commission) + '</b></td>'
+      + '<td class="r">' + (x.not_saved ? '<button class="btn btn-sm btn-g" onclick="drQuick(\'' + esc(String(x.name || '').replace(/'/g, '')) + '\')">Save doctor</button>' : '') + '</td></tr>';
+  }).join('') + '<tr style="background:var(--green-bg)"><td><b>Total</b></td><td class="r">' + rows.reduce(function (a, x) { return a + Number(x.orders); }, 0) + '</td><td class="r"><b>' + dMoney0(amt) + '</b></td><td></td><td class="r"><b>' + dMoney(tot) + '</b></td><td></td></tr>'
+    : '<tr><td colspan="6" class="muted">No referred tests in this month.</td></tr>';
+}
+function drQuick(name) { var pc = prompt('Commission % for ' + name + ':', '0'); if (pc === null) return; drSave(null, { name: name, commission_pct: pc }); }
 
 /* ---------------- SETTINGS ---------------- */
 function onTab_settings() {
