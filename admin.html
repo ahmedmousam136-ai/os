@@ -1400,7 +1400,9 @@ setInterval(syncHeaderIdentity, 1500);
 async function loadInvoices() {
   var list = document.getElementById('inv-list'), sel = document.getElementById('inv-clinic');
   list.innerHTML = '<p class="ss">Loading&hellip;</p>';
-  var cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt').eq('facility_type', 'nursing_home').order('name');
+  var cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt,mod_pharmacy,mod_lab').eq('facility_type', 'nursing_home').order('name');
+  _modReady = !cl.error;
+  if (cl.error) cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt').eq('facility_type', 'nursing_home').order('name');
   var planReady = !cl.error;
   if (cl.error) cl = await _supa.from('clinics').select('id,name').eq('facility_type', 'nursing_home').order('name');
   _planRows = cl.data || [];
@@ -1420,17 +1422,19 @@ async function loadInvoices() {
         + '</td><td style="text-align:right;font-weight:700">' + Number(v.total).toFixed(2) + '</td><td>' + esc(v.payment_method || '') + (v.payment_ref ? ' · ' + esc(v.payment_ref) : '') + '</td></tr>';
     }).join('') + '</tbody></table>';
 }
-var _planRows = [];
+var _planRows = [], _modReady = false;
+function modBox(id, on, label) { return '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-right:10px"><input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + (_modReady ? '' : ' disabled') + ' style="appearance:auto;-webkit-appearance:checkbox;width:16px;height:16px"/> ' + label + '</label>'; }
 function planPrice(c) { var p = Number(c && c.monthly_price); return p > 0 ? p : 4999; }
 function renderPlans(ready) {
   var el = document.getElementById('plan-list'); if (!el) return;
   if (!ready) { el.innerHTML = '<p class="ss" style="margin:0">Run <b>per-clinic-plan.sql</b> in Supabase to turn on separate prices and Complimentary plans.</p>'; return; }
   if (!_planRows.length) { el.innerHTML = '<p class="ss" style="margin:0">No nursing homes yet.</p>'; return; }
-  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="text-align:left;color:var(--text-tertiary)"><th style="padding:6px">Nursing home</th><th>Monthly price &#8377; (incl. GST)</th><th>Complimentary</th><th></th></tr></thead><tbody>'
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="text-align:left;color:var(--text-tertiary)"><th style="padding:6px">Nursing home</th><th>Monthly price &#8377; (incl. GST)</th><th>Complimentary</th><th>Extra modules' + (_modReady ? '' : ' <span style="font-weight:400">(run modules-pharmacy-lab.sql)</span>') + '</th><th></th></tr></thead><tbody>'
     + _planRows.map(function (c, i) {
       return '<tr style="border-top:1px solid var(--border)"><td style="padding:8px 6px;font-weight:600">' + esc(c.name || c.id) + '</td>'
         + '<td><input class="finput" id="plan-price-' + i + '" type="number" min="1" step="1" value="' + planPrice(c) + '" style="max-width:130px"' + (c.billing_exempt ? ' disabled' : '') + '/></td>'
         + '<td><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="plan-free-' + i + '"' + (c.billing_exempt ? ' checked' : '') + ' style="appearance:auto;-webkit-appearance:checkbox;width:16px;height:16px" onchange="document.getElementById(\'plan-price-' + i + '\').disabled=this.checked"/> Free</label></td>'
+        + '<td>' + modBox('plan-ph-' + i, c.mod_pharmacy, '&#128138; Pharmacy') + modBox('plan-lab-' + i, c.mod_lab, '&#129514; Lab') + '</td>'
         + '<td style="text-align:right"><button class="btn-green" style="font-size:11px;padding:6px 12px;min-height:28px" onclick="savePlan(' + i + ')">Save</button></td></tr>';
     }).join('') + '</tbody></table>';
 }
@@ -1438,10 +1442,16 @@ async function savePlan(i) {
   var c = _planRows[i]; if (!c) return;
   var price = Number(document.getElementById('plan-price-' + i).value), free = document.getElementById('plan-free-' + i).checked;
   if (!(price >= 1)) { alert('Enter a valid monthly price.'); return; }
-  var msg = free ? 'Make ' + (c.name || '') + ' COMPLIMENTARY (free, never locked, no invoices)?' : 'Set ' + (c.name || '') + ' to ₹' + price.toLocaleString('en-IN') + ' per month (GST included)?\n\nOnly this nursing home changes. Future invoices use this price.';
+  var ph = _modReady && document.getElementById('plan-ph-' + i).checked, lab = _modReady && document.getElementById('plan-lab-' + i).checked;
+  var modTxt = _modReady ? '\n\nPharmacy: ' + (ph ? 'ON' : 'OFF') + '   Lab: ' + (lab ? 'ON' : 'OFF') : '';
+  var msg = (free ? 'Make ' + (c.name || '') + ' COMPLIMENTARY (free, never locked, no invoices)?' : 'Set ' + (c.name || '') + ' to ₹' + price.toLocaleString('en-IN') + ' per month (GST included)?\n\nOnly this nursing home changes. Future invoices use this price.') + modTxt;
   if (!confirm(msg)) return;
   var r = await _supa.rpc('admin_set_plan', { p_clinic_id: c.id, p_monthly_price: price, p_complimentary: free });
   if (r.error) { alert('Not saved: ' + r.error.message); return; }
+  if (_modReady && (!!c.mod_pharmacy !== ph || !!c.mod_lab !== lab)) {
+    var m = await _supa.rpc('admin_set_modules', { p_clinic_id: c.id, p_pharmacy: ph, p_lab: lab, p_monthly_price: null });
+    if (m.error) { alert('Price saved, but the modules were not changed: ' + m.error.message); loadInvoices(); return; }
+  }
   alert('Saved.');
   loadInvoices();
 }
