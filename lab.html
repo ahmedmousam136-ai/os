@@ -48,7 +48,8 @@
         <div><label class="flbl">Patient name *</label><input class="finput" id="o-name" oninput="unlinkIfRenamed(this.value)"/></div>
         <div class="grid2" style="gap:8px"><div><label class="flbl">Age</label><input class="finput" id="o-age" placeholder="e.g. 34"/></div>
           <div><label class="flbl">Sex</label><select class="finput" id="o-sex"><option value="">-</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div></div>
-        <div><label class="flbl">Mobile (for WhatsApp report)</label><input class="finput" id="o-phone" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"/></div>
+        <div><label class="flbl">Mobile (for WhatsApp report)</label><input class="finput" id="o-phone" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"/>
+          <label class="tiny" style="display:flex;gap:6px;align-items:center;margin-top:5px;cursor:pointer"><input type="checkbox" id="o-wa" checked style="width:16px;height:16px"/> Send report on WhatsApp when ready (patient agreed)</label></div>
         <div style="position:relative"><label class="flbl">UHID (puts the report in their health book)</label><input class="finput" id="o-uhid" placeholder="Search UHID / mobile / name" oninput="patSearch(this.value)" autocomplete="off"/><div id="o-uhid-dd" class="dd" style="display:none"></div></div>
       </div>
       <div id="o-ipd" style="display:none;margin-bottom:12px">
@@ -238,8 +239,11 @@ async function book() {
   }
   var btn = dEl('b-book'); btn.disabled = true; btn.textContent = 'Booking…';
   try {
+    var waOk = KIND === 'walkin' && !!dMobile(dEl('o-phone').value) && dEl('o-wa').checked;
     var r = await _supa.rpc('lab_book', { p_clinic_id: _clinicId, p: p }); if (r.error) throw r.error;
     var o = r.data;
+    if (waOk) { var w = await _supa.rpc('lab_set_whatsapp', { p_order_id: o.id, p_ok: true }); if (!w.error && w.data) o = Object.assign(o, w.data); }
+    dEl('o-wa').checked = true;
     SEL = []; LINKED = null; ['o-name', 'o-age', 'o-phone', 'o-uhid', 'o-ref'].forEach(function (id) { dEl(id).value = ''; }); dEl('o-sex').value = ''; dEl('o-disc').value = 0; delete dEl('o-paid').dataset.touched;
     pickRender(); sumRender();
     showDone(o);
@@ -479,6 +483,11 @@ async function reportMake() {
     out.innerHTML = '<div class="card" style="margin-top:10px;text-align:center"><b>&#9989; Report saved' + (o.health_doc_id ? ' and added to the patient\'s health book' : '') + '.</b><div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">'
       + '<button class="btn" onclick="deptOpenPdf(\'bills\',\'' + path + '\')">&#128196; Open / print</button><button class="btn btn-g" onclick="reportWa()">&#128242; WhatsApp report</button></div></div>';
     if (dEl('v-pending').classList.contains('on')) loadPending(); if (dEl('v-orders').classList.contains('on')) ordersRender();
+    if (o.wa_ok) {
+      var st = document.createElement('p'); st.className = 'tiny'; st.style.marginTop = '8px'; st.textContent = 'Sending the report on WhatsApp…'; out.querySelector('.card').appendChild(st);
+      var a = await deptAutoSend({ mode: 'lab_report', order_id: o.id });
+      st.innerHTML = a.text ? '<b style="color:' + (a.ok ? 'var(--green)' : 'var(--amber)') + '">' + esc(a.text) + '</b>' : ''; if (a.ok) o.report_sent_at = new Date().toISOString();
+    }
   } catch (e) { out.innerHTML = ''; dShowErr('res-err', dErr(e)); }
 }
 function reportWa() {
