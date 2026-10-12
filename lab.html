@@ -595,6 +595,7 @@ function onTab_settings() {
 }
 async function setSave() {
   dShowErr('ls-err', '');
+  if (dEl('ls-phone').value.trim() && !deptPhoneOk(dEl('ls-phone').value)) { dShowErr('ls-err', 'The phone number looks wrong. Use 8 to 15 digits.'); dEl('ls-phone').focus(); return; }
   var p = { name: dEl('ls-name').value, phone: dEl('ls-phone').value, address: dEl('ls-address').value, pathologist: dEl('ls-path').value, qualification: dEl('ls-qual').value, reg_no: dEl('ls-reg').value, technician: dEl('ls-tech').value, pay_before_report: dEl('ls-paybefore').checked, footer: dEl('ls-footer').value };
   var r = await _supa.rpc('lab_save_settings', { p_clinic_id: _clinicId, p: p });
   if (r.error) { dShowErr('ls-err', dErr(r.error)); return; }
