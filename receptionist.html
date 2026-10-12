@@ -5475,5 +5475,26 @@ async function stockSaveFix() {
   closeModal('mod-stock-fix'); if (typeof showToast === 'function') showToast('\u2713 Saved'); loadStock();
 }
 </script>
+
+<!-- PHARMACY / LAB links: only shown when AuraScale has switched the module on for this nursing home -->
+<script>
+(function auraModuleLinks(){
+  var tries = 0;
+  async function go(){
+    if (typeof _clinicId === 'undefined' || !_clinicId || typeof _supa === 'undefined') { if (++tries < 90) setTimeout(go, 700); return; }
+    var nav = document.querySelector('nav.sb-nav'); if (!nav || document.getElementById('aura-mod-links')) return;
+    var r = await _supa.from('clinics').select('mod_pharmacy,mod_lab').eq('id', _clinicId).maybeSingle();
+    if (r.error || !r.data || (!r.data.mod_pharmacy && !r.data.mod_lab)) return;
+    var box = document.createElement('div'); box.id = 'aura-mod-links';
+    var h = '<p class="nav-sec">Departments</p>';
+    if (r.data.mod_pharmacy) h += '<a class="nb" href="pharmacy.html"><span class="nb-ic">&#128138;</span>Pharmacy</a>';
+    if (r.data.mod_lab) h += '<a class="nb" href="lab.html"><span class="nb-ic">&#129514;</span>Lab / Diagnostics</a>';
+    box.innerHTML = h;
+    var firstBtn = nav.querySelector('.nb');            /* right after "Home" */
+    nav.insertBefore(box, firstBtn ? firstBtn.nextSibling : nav.firstChild);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
+</script>
 </body>
 </html>
