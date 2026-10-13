@@ -1,3 +1,10 @@
+/* where to sign in again: the Pharmacy / Lab screens send people to their own sign-in page */
+function _auraLoginUrl() {
+  /* a nursing-home owner or receptionist who opened the Pharmacy / Lab goes back to the normal sign-in */
+  try { if (typeof DEPT !== 'undefined' && DEPT && (DEPT.role === 'owner' || DEPT.role === 'receptionist') && !DEPT.standalone) return 'nh.html'; } catch (e) {}
+  var f = /pharmacy\.html/i.test(location.pathname) ? 'pharmacy' : /lab\.html/i.test(location.pathname) ? 'lab' : '';
+  return f ? 'nh.html?for=' + f : 'nh.html';
+}
 /* ══════════════════════════════════════════════════════════════════
    AuraScale NH — nh-shared.js
    Shared foundation for doctor.html and receptionist.html
@@ -70,7 +77,7 @@ async function nhAuthGuard(requiredRole) {
     /* 1. the login saved in this browser (refreshes an expired token by itself) */
     var sess = await withTimeout(_supa.auth.getSession(), 15000, 'session');
     user = sess.data && sess.data.session && sess.data.session.user;
-    if (!user) { window.location.href = 'nh.html'; return null; }   /* really signed out */
+    if (!user) { window.location.href = _auraLoginUrl(); return null; }   /* really signed out */
     _myUid = user.id;
 
     /* 2. which nursing home and role this login belongs to */
@@ -85,7 +92,7 @@ async function nhAuthGuard(requiredRole) {
       _myName  = staffRow.data.full_name || null;
       if (staffRow.data.is_active === false) {
         await _supa.auth.signOut();
-        window.location.href = 'nh.html';
+        window.location.href = _auraLoginUrl();
         return null;
       }
     } else {
@@ -101,7 +108,7 @@ async function nhAuthGuard(requiredRole) {
       }
     }
 
-    if (!clinicId) { window.location.href = 'nh.html'; return null; }
+    if (!clinicId) { window.location.href = _auraLoginUrl(); return null; }
 
     /* Role mismatch → redirect to the right portal */
     if (requiredRole && _myRole !== requiredRole) {
@@ -156,7 +163,7 @@ async function nhAuthGuard(requiredRole) {
     var still = null;
     try { still = (await _supa.auth.getSession()).data.session; } catch (_e) {}
     if (still) { nhLoadFailedScreen(e && e.message); return null; }
-    window.location.href = 'nh.html';
+    window.location.href = _auraLoginUrl();
     return null;
   }
 }
@@ -164,7 +171,7 @@ async function nhAuthGuard(requiredRole) {
 /* ── LOGOUT ─────────────────────────────────────────────────────── */
 async function handleLogout() {
   await _supa.auth.signOut();
-  window.location.href = 'nh.html';
+  window.location.href = _auraLoginUrl();
 }
 
 /* ── TOAST ──────────────────────────────────────────────────────── */
