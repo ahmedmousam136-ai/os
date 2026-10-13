@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="nh-shared.js"></script>
-<script src="aura-dept.js"></script>
+<script src="nh-shared.js?v=20261013b"></script>
+<script src="aura-dept.js?v=20261013b"></script>
 </head>
 <body>
 <div id="loading"><div class="spin"></div><p style="font-size:13px;color:#9E9A93">Loading pharmacy&hellip;</p></div>
@@ -38,7 +38,7 @@
       </div>
       <div id="pos-walkin" class="grid4" style="margin-bottom:12px">
         <div><label class="flbl">Customer name *</label><input class="finput" id="c-name" oninput="unlinkIfRenamed(this.value)" placeholder="Walk-in customer"/></div>
-        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" oninput="deptPhoneInput(this)"/>
+        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" oninput="if(window.deptPhoneInput)deptPhoneInput(this)"/>
           <label class="tiny" style="display:flex;gap:6px;align-items:center;margin-top:5px;cursor:pointer"><input type="checkbox" id="c-wa" checked style="width:16px;height:16px"/> Send bill on WhatsApp (customer agreed)</label></div>
         <div><label class="flbl">Doctor</label><input class="finput" id="c-doctor" placeholder="Prescribed by (optional)"/></div>
         <div style="position:relative"><label class="flbl">UHID (optional)</label><input class="finput" id="c-uhid" placeholder="Link a saved patient" oninput="posPatientSearch(this.value)" autocomplete="off"/><div id="c-uhid-dd" class="dd" style="display:none"></div></div>
@@ -344,7 +344,7 @@ async function posPatientSearch(q) {
 }
 function posLink(p) {
   LINKED = p; dEl('c-uhid').value = p.u || ''; dEl('c-uhid-dd').style.display = 'none';
-  if (!dEl('c-name').value) dEl('c-name').value = p.n || ''; if (!dEl('c-phone').value) dEl('c-phone').value = p.ph || ''; deptPhoneInput(dEl('c-phone'));
+  if (!dEl('c-name').value) dEl('c-name').value = p.n || ''; if (!dEl('c-phone').value) dEl('c-phone').value = p.ph || ''; if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone'));
 }
 async function posSave() {
   dShowErr('pos-err', '');
@@ -371,7 +371,7 @@ async function posSave() {
     /* give the customer a health book (find or make their patient record by name + mobile) */
     if (KIND === 'walkin' && p.patient_phone) { try { var lk = await _supa.rpc('nhx_link_walkin', { p_kind: 'pharmacy', p_id: sale.id }); if (!lk.error && lk.data && lk.data.linked) { sale.patient_id = lk.data.patient_id; sale.uhid = sale.uhid || lk.data.uhid; } } catch (e) {} }
     if (waOk) { var w = await _supa.rpc('ph_set_whatsapp', { p_sale_id: sale.id, p_ok: true, p_refill_days: refill || null }); if (!w.error && w.data) sale = Object.assign(sale, w.data); }
-    CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid'].forEach(function (id) { dEl(id).value = ''; }); deptPhoneInput(dEl('c-phone')); dEl('c-disc').value = 0; dEl('c-refill').value = '0'; dEl('c-wa').checked = true;
+    CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid'].forEach(function (id) { dEl(id).value = ''; }); if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone')); dEl('c-disc').value = 0; dEl('c-refill').value = '0'; dEl('c-wa').checked = true;
     posRender(); loadMeds();
     showDone(sale, true);
   } catch (e) { dShowErr('pos-err', dErr(e)); }
