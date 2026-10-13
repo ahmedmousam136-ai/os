@@ -48,7 +48,7 @@
         <div><label class="flbl">Patient name *</label><input class="finput" id="o-name" oninput="unlinkIfRenamed(this.value)"/></div>
         <div class="grid2" style="gap:8px"><div><label class="flbl">Age</label><input class="finput" id="o-age" placeholder="e.g. 34"/></div>
           <div><label class="flbl">Sex</label><select class="finput" id="o-sex"><option value="">-</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div></div>
-        <div><label class="flbl">Mobile (for WhatsApp report)</label><input class="finput" id="o-phone" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"/>
+        <div><label class="flbl">Mobile (for WhatsApp report)</label><input class="finput" id="o-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" oninput="deptPhoneInput(this)"/>
           <label class="tiny" style="display:flex;gap:6px;align-items:center;margin-top:5px;cursor:pointer"><input type="checkbox" id="o-wa" checked style="width:16px;height:16px"/> Send report on WhatsApp when ready (patient agreed)</label></div>
         <div style="position:relative"><label class="flbl">UHID (puts the report in their health book)</label><input class="finput" id="o-uhid" placeholder="Search UHID / mobile / name" oninput="patSearch(this.value)" autocomplete="off"/><div id="o-uhid-dd" class="dd" style="display:none"></div></div>
       </div>
@@ -219,7 +219,7 @@ async function patSearch(q) {
 }
 function patLink(p) {
   LINKED = p; dEl('o-uhid').value = p.u || ''; dEl('o-uhid-dd').style.display = 'none';
-  dEl('o-name').value = p.n || dEl('o-name').value; if (!dEl('o-phone').value) dEl('o-phone').value = p.ph || '';
+  dEl('o-name').value = p.n || dEl('o-name').value; if (!dEl('o-phone').value) dEl('o-phone').value = p.ph || ''; deptPhoneInput(dEl('o-phone'));
   if (p.a && !dEl('o-age').value) dEl('o-age').value = p.a; if (p.g) { var g = /^f/i.test(p.g) ? 'Female' : /^m/i.test(p.g) ? 'Male' : ''; if (g) dEl('o-sex').value = g; }
 }
 async function book() {
@@ -233,7 +233,7 @@ async function book() {
     p.age = a.patient_age || ''; p.gender = a.patient_gender || ''; p.uhid = a.uhid || '';
   } else {
     p.patient_name = dEl('o-name').value.trim(); if (!p.patient_name) { dShowErr('new-err', 'Patient name is required.'); return; }
-    var ph1 = dEl('o-phone').value.trim(); if (ph1 && !dMobile(ph1)) { dShowErr('new-err', 'Mobile number must be 10 digits starting with 6-9 (or leave it empty).'); return; }
+    var ph1 = dEl('o-phone').value.trim(); if (ph1 && !dMobile(ph1)) { dShowErr('new-err', 'Mobile number must be exactly 10 digits starting with 6-9 (or leave it empty).'); dEl('o-phone').focus(); return; }
     p.patient_phone = dMobile(ph1); p.age = dEl('o-age').value.trim(); p.gender = dEl('o-sex').value; p.uhid = dEl('o-uhid').value.trim(); p.patient_id = LINKED ? LINKED.id : null;
     p.discount = Number(dEl('o-disc').value) || 0; p.paid = Number(dEl('o-paid').value) || 0; p.pay_mode = dEl('o-mode').value;
   }
@@ -242,9 +242,11 @@ async function book() {
     var waOk = KIND === 'walkin' && !!dMobile(dEl('o-phone').value) && dEl('o-wa').checked;
     var r = await _supa.rpc('lab_book', { p_clinic_id: _clinicId, p: p }); if (r.error) throw r.error;
     var o = r.data;
+    /* give the patient a health book (find or make their patient record by name + mobile) */
+    if (KIND === 'walkin' && p.patient_phone) { try { var lk = await _supa.rpc('nhx_link_walkin', { p_kind: 'lab', p_id: o.id }); if (!lk.error && lk.data && lk.data.linked) { o.patient_id = lk.data.patient_id; o.uhid = o.uhid || lk.data.uhid; } } catch (e) {} }
     if (waOk) { var w = await _supa.rpc('lab_set_whatsapp', { p_order_id: o.id, p_ok: true }); if (!w.error && w.data) o = Object.assign(o, w.data); }
     dEl('o-wa').checked = true;
-    SEL = []; LINKED = null; ['o-name', 'o-age', 'o-phone', 'o-uhid', 'o-ref'].forEach(function (id) { dEl(id).value = ''; }); dEl('o-sex').value = ''; dEl('o-disc').value = 0; delete dEl('o-paid').dataset.touched;
+    SEL = []; LINKED = null; ['o-name', 'o-age', 'o-phone', 'o-uhid', 'o-ref'].forEach(function (id) { dEl(id).value = ''; }); deptPhoneInput(dEl('o-phone')); dEl('o-sex').value = ''; dEl('o-disc').value = 0; delete dEl('o-paid').dataset.touched;
     pickRender(); sumRender();
     showDone(o);
   } catch (e) { dShowErr('new-err', dErr(e)); }
