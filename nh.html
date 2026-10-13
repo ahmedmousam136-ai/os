@@ -2235,7 +2235,7 @@ function suMobileInput(el){
   if(d.length>10)d=d.slice(0,10);
   if(el.value!==d)el.value=d;
   var h=document.getElementById('su-mobile-hint'); if(!h)return;
-  if(!d.length){h.textContent='One nursing home per mobile number';h.style.color='';}
+  if(!d.length){h.textContent=/[?&]for=pharmacy/.test(location.search)?'One pharmacy per mobile number':/[?&]for=lab/.test(location.search)?'One diagnostic centre per mobile number':'One nursing home per mobile number';h.style.color='';}
   else if(d.length<10){h.textContent=d.length+'/10 digits — enter all 10 digits';h.style.color='var(--red)';}
   else if(!/^[6-9]/.test(d)){h.textContent='Indian mobile numbers start with 6, 7, 8 or 9';h.style.color='var(--red)';}
   else{h.textContent='✓ +91 '+d.slice(0,5)+' '+d.slice(5);h.style.color='var(--green)';}
@@ -6547,6 +6547,29 @@ var OWN_HELP_IMG={"o_pat1": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     nav.insertBefore(box, firstBtn ? firstBtn.nextSibling : nav.firstChild);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
+</script>
+<script>
+/* Sign-in / register page for a stand-alone PHARMACY or LAB:  nh.html?for=pharmacy  or  nh.html?for=lab
+   Same accounts and passwords as everyone else; only the words on the page change, and "Register"
+   creates a pharmacy / lab (not a nursing home). After sign-in the person lands on their own screen. */
+(function () {
+  var m = /[?&]for=(pharmacy|lab)\b/.exec(location.search); if (!m) return;
+  var t = m[1], ph = t === 'pharmacy';
+  var W = ph ? { os: 'Pharmacy', sub: 'Pharmacy Billing & Stock', reg: 'Register Pharmacy', newTab: 'New Pharmacy', name: 'e.g. Sunrise Medical Store', mail: 'you@yourpharmacy.com', hint: 'One pharmacy per mobile number', title: 'AuraScale Pharmacy · Sign in' }
+               : { os: 'Lab', sub: 'Diagnostic Centre Billing & Reports', reg: 'Register Lab', newTab: 'New Diagnostic Centre', name: 'e.g. Sunrise Diagnostic Centre', mail: 'you@yourlab.com', hint: 'One diagnostic centre per mobile number', title: 'AuraScale Lab · Sign in' };
+  function set(sel, fn) { var e = document.querySelector(sel); if (e) fn(e); }
+  document.title = W.title;
+  set('#auth-screen .auth-word .os', function (e) { e.textContent = W.os; });
+  set('#auth-screen .auth-sub', function (e) { e.textContent = W.sub; });
+  set('#auth-screen .auth-tabs .auth-tab:not(.su-mode-tab):nth-child(2)', function (e) { e.textContent = W.reg; });
+  set('#su-mode-new', function (e) { e.textContent = W.newTab; });
+  set('#su-btype', function (e) { e.value = t; e.parentNode.style.display = 'none'; });
+  set('#su-nhname', function (e) { e.placeholder = W.name; });
+  set('#su-email', function (e) { e.placeholder = W.mail; });
+  set('#login-email', function (e) { e.placeholder = W.mail; });
+  set('#su-mobile-hint', function (e) { e.textContent = W.hint; });
+  set('#su-submit-btn', function (e) { e.textContent = W.reg + ' →'; });
 })();
 </script>
 </body>
