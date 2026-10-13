@@ -130,6 +130,18 @@ async function deptAutoSend(body) {
     return { ok: false, text: why === undefined ? 'Automatic WhatsApp not sent (' + (d.reason || 'error') + '). Use the WhatsApp button.' : why };
   } catch (e) { return { ok: false, text: 'Automatic WhatsApp could not be sent now. Use the WhatsApp button.' }; }
 }
+/* mobile box: digits only, at most 10, with a live hint under it (red until it is a proper 10-digit number) */
+function deptPhoneInput(el) {
+  var d = String(el.value || '').replace(/\D/g, '');
+  if (d.length > 10 && d.indexOf('91') === 0) d = d.slice(2); else if (d.length > 10 && d[0] === '0') d = d.slice(1);
+  d = d.slice(0, 10); if (el.value !== d) el.value = d;
+  var h = el.parentNode.querySelector('.ph-hint');
+  if (!h) { h = document.createElement('div'); h.className = 'tiny ph-hint'; h.style.marginTop = '3px'; el.insertAdjacentElement('afterend', h); }
+  if (!d) { h.textContent = ''; return; }
+  if (!/^[6-9]/.test(d)) { h.textContent = 'A mobile number starts with 6, 7, 8 or 9.'; h.style.color = 'var(--red)'; return; }
+  if (d.length < 10) { h.textContent = d.length + ' / 10 digits'; h.style.color = 'var(--red)'; return; }
+  h.textContent = '✓ OK'; h.style.color = 'var(--green)';
+}
 function deptPhoneOk(p) { var d = String(p || '').replace(/\D/g, ''); return d.length >= 8 && d.length <= 15; }
 function dEl(id) { return document.getElementById(id); }
 function dShowErr(id, msg) { var e = dEl(id); if (!e) { showToast(msg); return; } e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
