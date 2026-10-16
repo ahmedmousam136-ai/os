@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <script src="aura-loader.js?v=1"></script>
+<script src="aura-beds.js?v=1"></script>
 <!-- AuraScale startup animation: decide before the first paint whether it plays (see aura-splash.js) -->
 <script>(function(){try{var d=document.documentElement,q=location.hash+location.search;
 if(/access_token|type=recovery|error_description|[?&]code=/.test(q))return;
@@ -395,7 +396,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 #auth-screen{background:radial-gradient(1100px 560px at 50% -8%,rgba(27,184,128,.15),transparent 62%),radial-gradient(800px 480px at 100% 108%,rgba(27,184,128,.10),transparent 58%),var(--bg)}
 @media (prefers-reduced-motion:reduce){#auth-screen .auth-card,#auth-screen .aura-mark-lg{animation:none}}
 </style>
-<link rel="stylesheet" href="aura-theme.css?v=20261016b"/>
+<link rel="stylesheet" href="aura-theme.css?v=20261016c"/>
 </head>
 <body>
 <!-- ── BACK-BUTTON GUARD: browser Back returns to the AuraScale system chooser ── -->
@@ -1817,6 +1818,7 @@ function nav(id,btn){
   if(btn)btn.classList.add('on');
   var titles={help:'Help & Support',stock:'Stock',dashboard:'Dashboard','doctor-home':'My Patients','reception-home':'Reception',patients:'Patients',beds:'Bed Management',admissions:'Admissions',rounds:'Progress Notes',billing:'Billing',discharge:'Discharge',reports:'Reports',notifications:'Notifications',ayushman:'Ayushman / PM-JAY',staff:'Staff',settings:'Settings',audit:'Audit',subscription:'Subscription'};
   var t=document.getElementById('tab-title');if(t)t.textContent=titles[id]||id;
+  if(id==='dashboard'&&_clinicId)loadDashboard();   /* always redraw from fresh bed data */
   if(id==='doctor-home')loadDoctorHome();
   if(id==='reception-home')loadReceptionHome();
   if(id==='reports')loadReportsPage();
@@ -2639,7 +2641,7 @@ async function loadDashboard(){
 
   var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients, activity, monthCharges, monthPayments, monthExpenses] = await Promise.all([
     _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admitting_doctor,admission_diagnosis,status').eq('clinic_id',_clinicId).eq('status','Active'),
-    _supa.from('beds').select('id,bed_number,ward,status').eq('clinic_id',_clinicId),
+    _supa.from('beds').select('id,bed_number,ward,status,is_active').eq('clinic_id',_clinicId),
     _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00'),
     _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',today+'T00:00:00'),
     _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',today+'T00:00:00'),
@@ -2653,9 +2655,14 @@ async function loadDashboard(){
   ]);
 
   var active   = adm.data || [];
+  if(adm.error){   /* never let one missing column hide who is in which bed */
+    try{ var _a2=await _supa.from('admissions').select('id,patient_name,bed_id,admission_date,status').eq('clinic_id',_clinicId).eq('status','Active'); if(!_a2.error) active=_a2.data||[]; }catch(_e){}
+  }
   var allBeds  = beds.data || [];
-  var occupied = allBeds.filter(function(b){return b.status==='Occupied';}).length;
-  var available= allBeds.filter(function(b){return (b.status||'').toLowerCase()==='vacant';}).length;
+  var _dashAdm = AuraBeds.admMap(active);
+  var _dc      = AuraBeds.counts(allBeds, _dashAdm);   /* same rule as Bed Management */
+  var occupied = _dc.taken;
+  var available= _dc.free;
   var todayRev = (charges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
   var totalCharged = (allCharges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
   var totalPaid    = (payments.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
@@ -2664,7 +2671,7 @@ async function loadDashboard(){
   /* Update DOM */
   var safe = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
   safe('dm-occupied', occupied);
-  safe('dm-total-beds', allBeds.length);
+  safe('dm-total-beds', _dc.total);
   safe('dm-available', available);
   safe('dm-today-adm', (todayAdm.data||[]).length);
   safe('dm-today-dis', (todayDis.data||[]).length);
@@ -2674,7 +2681,7 @@ async function loadDashboard(){
   safe('dm-total-patients',(patients.count||0).toString());
   safe('active-count', active.length);
   safe('nav-occupied-count', occupied);
-  safe('sb-occupancy', occupied+'/'+allBeds.length+' beds occupied');
+  safe('sb-occupancy', occupied+'/'+_dc.total+' beds occupied');
 
   var monthRev = (monthCharges.data||[]).reduce(function(s,c){return s+(c.total_price||0);},0);
   var monthColl = (monthPayments.data||[]).reduce(function(s,p){return s+(p.amount||0);},0);
@@ -2746,10 +2753,11 @@ async function loadDashboard(){
   if(mini){
     mini.className = 'bmini-grid';
     mini.removeAttribute('style');
-    mini.innerHTML = allBeds.map(function(b){
-      var st = (b.status||'Vacant');
-      var cls = st==='Occupied' ? 'occ' : st==='Cleaning' ? 'cln' : st==='Reserved' ? 'res' : st==='Critical' ? 'crit' : 'free';
-      return '<div class="bmini '+cls+'" title="Bed '+esc(b.bed_number||'')+' ('+esc(b.ward||'')+') - '+esc(st)+'" onclick="nav(\'beds\',document.querySelector(\'.nb[onclick*=beds]\'))">'+esc(b.bed_number||'')+'</div>';
+    /* sorted like Bed Management (ward, then bed number) and keyed by the bed's own id, so Bed 12 can never take Bed 13's colour */
+    var _sorted = allBeds.slice().sort(function(a,b){ return String(a.ward||'').localeCompare(String(b.ward||'')) || String(a.bed_number||'').localeCompare(String(b.bed_number||''),undefined,{numeric:true}); });
+    mini.innerHTML = _sorted.map(function(b){
+      var st = AuraBeds.state(b, _dashAdm[b.id]);
+      return '<div class="bmini '+st+'" data-bed-id="'+esc(b.id)+'" title="Bed '+esc(b.bed_number||'')+' ('+esc(b.ward||'')+') - '+AuraBeds.label(st)+'" onclick="nav(\'beds\',document.querySelector(\'.nb[onclick*=beds]\'))">'+esc(b.bed_number||'')+'</div>';
     }).join('') || '<div class="bmini-empty">No beds added yet. Add them in Bed Management.</div>';
   }
 
@@ -2853,9 +2861,10 @@ async function loadBeds(){
   var wardKeys = Object.keys(wards);
   container.innerHTML = '<div class="bm-legend"><span><i class="lg-free"></i>Free</span><span><i class="lg-occ"></i>Occupied</span><span><i class="lg-res"></i>Reserved</span><span><i class="lg-cln"></i>Cleaning</span></div>' + wardKeys.map(function(ward){
     var wBeds   = wards[ward];
-    var occupied = wBeds.filter(function(b){return admMap[b.id]||b.status==='Occupied';}).length;
-    var cleaning = wBeds.filter(function(b){return b.status==='Cleaning';}).length;
-    var active   = wBeds.filter(function(b){return b.is_active!==false;}).length;
+    var wc       = AuraBeds.counts(wBeds, admMap);
+    var occupied = wc.taken;
+    var cleaning = wc.cleaning;
+    var active   = wc.total;
     var col      = WARD_COLORS[ward] || {};
     var isFemale = ward === 'Female';
     var hdrStyle = isFemale ? 'background:'+col.bg+';border-bottom:1px solid '+col.border : '';
@@ -2863,23 +2872,24 @@ async function loadBeds(){
     var bedCards = wBeds.map(function(b){
       var adm     = admMap[b.id];
       var days    = adm ? Math.floor((Date.now()-new Date(adm.admission_date))/86400000) : 0;
-      var isOcc   = !!(adm && adm.patient_name) || b.status==='Occupied';
-      var cls     = isOcc ? 'occupied' : b.status==='Cleaning' ? 'cleaning' : b.status==='Reserved' ? 'reserved' : b.status==='Critical' ? 'critical' : '';
-      var inact   = b.is_active===false ? ' bed-card-inactive' : '';
+      var st      = AuraBeds.state(b, adm);          /* same rule as the Dashboard Bed Map */
+      var isOcc   = AuraBeds.isTaken(st);
+      var cls     = st;
+      var inact   = st==='inactive' ? ' bed-card-inactive' : '';
       var rate    = b.daily_rate ? '₹'+Number(b.daily_rate).toLocaleString('en-IN')+'/d' : '';
       var _oc = isOcc && adm && adm.patient_id
         ? 'openPatientFromBed('+JSON.stringify(adm.patient_id)+','+JSON.stringify(adm.patient_name||'')+','+JSON.stringify(b.bed_number||'')+','+JSON.stringify(ward||'')+')'
         : 'openEditBed('+JSON.stringify(b.id)+','+JSON.stringify(esc(b.bed_number))+','+JSON.stringify(ward)+','+(b.daily_rate||0)+','+JSON.stringify(b.status)+','+(b.is_active!==false)+')';
       var dateTxt = adm && adm.admission_date ? new Date(adm.admission_date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '';
-      return '<div class="bed-card '+(cls||'free')+inact+'" onclick="'+String(_oc).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'
+      return '<div class="bed-card '+cls+inact+'" data-bed-id="'+esc(b.id)+'" onclick="'+String(_oc).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'
         +'<div class="bed-edit-btn" title="Edit bed">✏</div>'
         +'<div class="bm-top">Bed '+esc(b.bed_number)+(isOcc&&adm?' · day '+(days+1):'')+'</div>'
         +(isOcc
-            ? '<div class="bm-name">'+esc((adm&&adm.patient_name)||'Occupied')+'</div><div class="bm-sub">'+(dateTxt?'Admitted '+dateTxt:'')+(b.status==='Critical'?' · Critical':'')+'</div>'
-            : b.status==='Cleaning' ? '<div class="bm-sub">Cleaning</div>'
-            : b.status==='Reserved' ? '<div class="bm-name">Reserved</div>'
+            ? '<div class="bm-name">'+esc((adm&&adm.patient_name)||AuraBeds.label(st))+'</div><div class="bm-sub">'+(dateTxt?'Admitted '+dateTxt:'')+(st==='critical'?(dateTxt?' · ':'')+'Critical':'')+'</div>'
+            : st==='cleaning' ? '<div class="bm-sub">Cleaning</div>'
+            : st==='reserved' ? '<div class="bm-name">Reserved</div>'
+            : st==='inactive' ? '<div class="bm-sub">Deactivated</div>'
             : '<div class="bm-free">Free'+(rate?' · '+rate:'')+'</div>')
-        +(b.is_active===false?'<div class="bm-sub" style="color:var(--red)">Deactivated</div>':'')
         +'</div>';
     }).join('');
 
@@ -2901,8 +2911,9 @@ async function loadBeds(){
   }).join('');
 
   /* Update sidebar occupancy badge */
-  var totalOcc = beds.filter(function(b){return admMap[b.id]||b.status==='Occupied';}).length;
-  var totalAll = beds.length;
+  var _bc = AuraBeds.counts(beds, admMap);
+  var totalOcc = _bc.taken;
+  var totalAll = _bc.total;
   var badge = document.getElementById('nav-occupied-count');
   if(badge) badge.textContent = totalOcc;
   var occ = document.getElementById('sb-occupancy');
@@ -2915,7 +2926,9 @@ function openEditBed(id, num, ward, rate, status, isActive){
   document.getElementById('edit-bed-num').value  = num;
   document.getElementById('edit-bed-ward').value = ward;
   document.getElementById('edit-bed-rate').value = rate || '';
-  document.getElementById('edit-bed-status').value = status || 'Vacant';
+  /* reception saves statuses in lower case: show the matching option, never fall back to Vacant by mistake */
+  var _stMap={vacant:'Vacant',available:'Vacant',free:'Vacant',occupied:'Occupied',cleaning:'Cleaning',reserved:'Reserved',critical:'Critical'};
+  document.getElementById('edit-bed-status').value = _stMap[String(status||'').trim().toLowerCase()] || 'Vacant';
   document.getElementById('edit-bed-active').checked = isActive;
   auraRoomRateWarn('edit-bed-rate', 'edit-bed-ward', 'edit-bed-rate-warn');
   openModal('mod-edit-bed');
@@ -4082,8 +4095,8 @@ async function generateDailyReport(){
   var collected = payments.reduce(function(s,p){return s+(p.amount||0);},0);
   var expTotal = expenses.reduce(function(s,e){return s+(e.amount||0);},0);
   var net = revenue - expTotal;
-  var occRes = await _supa.from('beds').select('status').eq('clinic_id',_clinicId);
-  var occupied = (occRes.data||[]).filter(function(b){return b.status==='Occupied';}).length;
+  var occRes = await _supa.from('beds').select('id,status,is_active').eq('clinic_id',_clinicId);
+  var occupied = (occRes.data||[]).filter(function(b){return AuraBeds.isTaken(AuraBeds.state(b));}).length;
   var totalBeds = (occRes.data||[]).length;
 
   var byType = {};
@@ -4219,7 +4232,7 @@ async function loadOwnerNotifications(){
 
   /* Rule: bed occupancy threshold */
   if(beds.length){
-    var occ = beds.filter(function(b){return b.status==='Occupied';}).length;
+    var occ = beds.filter(function(b){return AuraBeds.isTaken(AuraBeds.state(b));}).length;
     var pct = Math.round(occ/beds.length*100);
     if(pct >= 90){
       alerts.push({icon:'🛏️', title:'Bed occupancy high', detail:pct+'% occupied ('+occ+'/'+beds.length+') — consider planning for capacity', level:'amber'});
@@ -6406,6 +6419,27 @@ function stockStartLive() {
     }).subscribe();
 }
 setInterval(stockStartLive, 3000);
+/* Live beds: any bed status change or admission / discharge (from this screen, reception or another
+   device) redraws Bed Management and the Dashboard Bed Map from the same data, within a second. */
+var _bedChan = null, _bedRefreshT = null;
+function bedsRefreshViews() {
+  clearTimeout(_bedRefreshT);
+  _bedRefreshT = setTimeout(function () {
+    var on = function (id) { var v = document.getElementById(id); return v && v.classList.contains('on'); };
+    if (on('v-dashboard') && typeof loadDashboard === 'function') loadDashboard();
+    if (on('v-beds') && typeof loadBeds === 'function') loadBeds();
+  }, 600);
+}
+function bedsStartLive() {
+  if (_bedChan || !_clinicId || window._auraLocked || typeof _supa === 'undefined' || !_supa.channel) return;
+  _bedChan = _supa.channel('owner-beds-' + _clinicId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'beds', filter: 'clinic_id=eq.' + _clinicId }, bedsRefreshViews)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'admissions', filter: 'clinic_id=eq.' + _clinicId }, bedsRefreshViews)
+    .subscribe();
+}
+setInterval(bedsStartLive, 3000);
+/* coming back to this tab (e.g. after changing a bed in another portal): redraw from fresh data */
+document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && _clinicId) bedsRefreshViews(); });
 async function stockDownloadReport() {
   var d = (document.getElementById('stock-rep-date') || {}).value || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
   var today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
