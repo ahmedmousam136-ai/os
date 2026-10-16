@@ -213,11 +213,12 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
 /* CLINICAL NOTE CARD */
 .cn-card{border-left:3px solid var(--blue);padding:10px 12px;margin-bottom:10px;background:var(--surface2);border-radius:0 var(--r-sm) var(--r-sm) 0}
 </style>
+<script src="aura-loader.js?v=1"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261016a"/>
 </head>
 <body>
 
-<div id="loading"><div class="spin"></div><p>Loading Doctor Portal…</p></div>
+<div id="loading" class="aura-loader" data-label="Loading AuraScale"></div><script>AuraLoader.fill('loading')</script>
 <div id="app-shell">
   <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
   <div id="sidebar">
