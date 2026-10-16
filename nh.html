@@ -7,17 +7,18 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNjQwIiB3aWR0aD0iNjQwIiBoZWlnaHQ9IjY0MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzFCQjg4MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwQTZCNEIiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iNjQwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0gMjI3IDEzMyBBIDExOCAxMTggMCAwIDEgNDEzIDEzMyIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC4zOCIvPgogICAgPHBhdGggZD0iTSAyNjIgMTU0IEEgNzggNzggMCAwIDEgMzc4IDE1NCIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC43Ii8+CiAgPC9nPgogIDxwYXRoIGQ9Ik0gMTk2IDQ1MiBMIDMyMCAyMTQgTCA0NDQgNDUyIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iNTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiM3Q0U2QkMiPgogICAgPHJlY3QgeD0iMjg0IiB5PSIzNDgiIHdpZHRoPSI3MiIgaGVpZ2h0PSIyNCIgcng9IjEyIi8+CiAgICA8cmVjdCB4PSIzMDgiIHk9IjMyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjcyIiByeD0iMTIiLz4KICA8L2c+Cjwvc3ZnPgo="/>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<script src="aura-loader.js?v=1"></script>
 <!-- AuraScale startup animation: decide before the first paint whether it plays (see aura-splash.js) -->
 <script>(function(){try{var d=document.documentElement,q=location.hash+location.search;
 if(/access_token|type=recovery|error_description|[?&]code=/.test(q))return;
 if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('as-reduce');
 var saved=false;for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(/^sb-.*-auth-token$/.test(k)&&localStorage.getItem(k)){saved=true;break;}}
 /* a saved login may still be valid (go straight in) or expired (show sign-in): keep the sign-in screen hidden until aura-splash.js checks */
-if(saved){d.classList.add('as-wait');window.__asFail=setTimeout(function(){d.classList.remove('as-wait')},6000);}
+if(saved){d.classList.add('as-wait');if(window.AuraLoader)AuraLoader.show();window.__asFail=setTimeout(function(){d.classList.remove('as-wait')},6000);}
 else{d.classList.add('as-pending');window.__asFail=setTimeout(function(){d.classList.remove('as-pending')},4000);}
 }catch(e){}})();</script>
 <style>html.as-pending,html.as-pending body{background:#FFFFFF}html.as-pending #auth-screen,html.as-wait #auth-screen{opacity:0}#auth-screen{transition:opacity .35s cubic-bezier(.4,0,.2,1)}</style>
-<script src="aura-splash.js?v=3" defer></script>
+<script src="aura-splash.js?v=4" defer></script>
 <title>AuraScale NH — Nursing Home OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -2484,8 +2485,14 @@ async function _initApp(){
   if(_initInProgress)return;
   _initInProgress=true;
 
+  /* ROLE-SAFE START: nothing of the owner portal is shown until we know who signed in.
+     Until then only the AuraScale loader is on screen. Receptionist / doctor / pharmacy / lab logins
+     are sent to their own portal straight from the loader, so they never see the owner dashboard. */
   document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('app-shell').classList.add('authenticated');
+  document.getElementById('app-shell').classList.remove('authenticated');
+  if(window.AuraLoader) AuraLoader.show();
+  function goTo(url,replace){ window._auraLeaving=true; if(replace) window.location.replace(url); else window.location.href=url; }
+  function showOwnerPortal(){ document.getElementById('app-shell').classList.add('authenticated'); if(window.AuraLoader) AuraLoader.hide(); }
 
   function withTimeout(promise,ms,label){
     return Promise.race([
@@ -2494,6 +2501,7 @@ async function _initApp(){
     ]);
   }
   function failAndReturnToLogin(message){
+    if(window.AuraLoader) AuraLoader.hide();
     document.getElementById('app-shell').classList.remove('authenticated');
     document.getElementById('auth-screen').classList.remove('hidden');
     showToast(message);
@@ -2561,13 +2569,18 @@ async function _initApp(){
     }
     if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
     document.body.setAttribute('data-role',_myRole);
-    /* pharmacy / lab staff go straight to their own screen (they never see the owner portal) */
-    if(_myRole==='pharmacist'){ window.location.replace('pharmacy.html'); return; }
-    if(_myRole==='lab'){ window.location.replace('lab.html'); return; }
+    /* every non-owner login goes straight to its own portal (they never see the owner portal);
+       each of those pages checks approval / subscription itself */
+    if(_myRole==='pharmacist'){ goTo('pharmacy.html',true); return; }
+    if(_myRole==='lab'){ goTo('lab.html',true); return; }
+    if(_myRole==='doctor'){ goTo('doctor.html'); return; }
+    if(_myRole==='receptionist'){ goTo('receptionist.html'); return; }
+    if(_myRole!=='owner'){ failAndReturnToLogin('This login has no portal assigned. Contact your facility owner.'); return; }
 
     var cl=await withTimeout(_supa.from('clinics').select('*').eq('id',clinicId).single(),20000,'your facility details');
     if(!cl.data){failAndReturnToLogin('Clinic record not found.');return;}
     if(!cl.data.is_approved){
+      if(window.AuraLoader) AuraLoader.hide();
       document.getElementById('app-shell').classList.remove('authenticated');
       document.getElementById('auth-screen').classList.remove('hidden');
       document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/918017465987?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a></div></div>';
@@ -2594,13 +2607,11 @@ async function _initApp(){
        inline view within this file. Supabase persists the session in
        this browser (same origin), so the other page picks it up
        automatically without needing to sign in again. */
-    if(_myRole==='doctor'){ window.location.href='doctor.html'; return; }
-    if(_myRole==='receptionist'){ window.location.href='receptionist.html'; return; }
-    if(_myRole==='pharmacist'){ window.location.replace('pharmacy.html'); return; }
-    if(_myRole==='lab'){ window.location.replace('lab.html'); return; }
     /* stand-alone pharmacy / lab: the owner works on that screen (no nursing-home portal) */
-    if(_myRole==='owner'&&cl.data.business_type==='pharmacy'){ window.location.replace('pharmacy.html'); return; }
-    if(_myRole==='owner'&&cl.data.business_type==='lab'){ window.location.replace('lab.html'); return; }
+    if(_myRole==='owner'&&cl.data.business_type==='pharmacy'){ goTo('pharmacy.html',true); return; }
+    if(_myRole==='owner'&&cl.data.business_type==='lab'){ goTo('lab.html',true); return; }
+    /* role and facility are now known: this IS the owner portal, show it */
+    showOwnerPortal();
     if(auraIsLocked(cl.data.subscription_status, cl.data.subscription_expires_at)){ auraEnterLockMode(); return; }
     if(typeof auraCheckAgreement==='function') auraCheckAgreement(cl.data.name);
     _auraAppReady=true;
@@ -2608,6 +2619,7 @@ async function _initApp(){
     renderSubscriptionBanner();
   }catch(e){
     console.error('_initApp failed:',e);
+    if(window.AuraLoader) AuraLoader.hide();
     /* A slow or broken connection is not a sign-out: keep the login and offer a retry. */
     var _still=null; try{ _still=(await _supa.auth.getSession()).data.session; }catch(_e){}
     if(_still){ _auraLoadFailedScreen(e.message||'Could not load your dashboard.'); }
@@ -4807,6 +4819,11 @@ function sendInviteWhatsAppManual(){
    (TOKEN_REFRESHED) no longer reloads the whole dashboard. Only a real sign-out shows the sign-in form. */
 var _auraAppReady=false;
 function _auraShowRestoring(on){
+  if(window.AuraLoader){
+    if(on) AuraLoader.show();
+    else if(!window._auraLeaving && !_initInProgress) AuraLoader.hide();
+    return;
+  }
   var o=document.getElementById('aura-restoring');
   if(on&&!o){
     o=document.createElement('div'); o.id='aura-restoring';
@@ -4821,7 +4838,7 @@ function _auraShowRestoring(on){
   if(hasSaved){
     _auraShowRestoring(true);
     setTimeout(async function(){                 /* safety net: if nothing happened in 12 s, ask once more */
-      if(_auraAppReady||!document.getElementById('aura-restoring')) return;
+      if(_auraAppReady||!(window.AuraLoader?AuraLoader.isOn():document.getElementById('aura-restoring'))) return;
       try{ var r=await _supa.auth.getSession(); if(r.data&&r.data.session){ await _initApp(); return; } }catch(_e){}
       _auraShowRestoring(false);
     },12000);
