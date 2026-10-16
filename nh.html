@@ -10,12 +10,14 @@
 <!-- AuraScale startup animation: decide before the first paint whether it plays (see aura-splash.js) -->
 <script>(function(){try{var d=document.documentElement,q=location.hash+location.search;
 if(/access_token|type=recovery|error_description|[?&]code=/.test(q))return;
-if(sessionStorage.getItem('aura_splash_v1'))return;
-for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(/^sb-.*-auth-token$/.test(k)&&localStorage.getItem(k))return;}
 if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('as-reduce');
-d.classList.add('as-pending');window.__asFail=setTimeout(function(){d.classList.remove('as-pending')},4000);}catch(e){}})();</script>
-<style>html.as-pending,html.as-pending body{background:#FFFFFF}html.as-pending #auth-screen{opacity:0}#auth-screen{transition:opacity .35s cubic-bezier(.4,0,.2,1)}</style>
-<script src="aura-splash.js?v=2" defer></script>
+var saved=false;for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(/^sb-.*-auth-token$/.test(k)&&localStorage.getItem(k)){saved=true;break;}}
+/* a saved login may still be valid (go straight in) or expired (show sign-in): keep the sign-in screen hidden until aura-splash.js checks */
+if(saved){d.classList.add('as-wait');window.__asFail=setTimeout(function(){d.classList.remove('as-wait')},6000);}
+else{d.classList.add('as-pending');window.__asFail=setTimeout(function(){d.classList.remove('as-pending')},4000);}
+}catch(e){}})();</script>
+<style>html.as-pending,html.as-pending body{background:#FFFFFF}html.as-pending #auth-screen,html.as-wait #auth-screen{opacity:0}#auth-screen{transition:opacity .35s cubic-bezier(.4,0,.2,1)}</style>
+<script src="aura-splash.js?v=3" defer></script>
 <title>AuraScale NH — Nursing Home OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -392,7 +394,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 #auth-screen{background:radial-gradient(1100px 560px at 50% -8%,rgba(27,184,128,.15),transparent 62%),radial-gradient(800px 480px at 100% 108%,rgba(27,184,128,.10),transparent 58%),var(--bg)}
 @media (prefers-reduced-motion:reduce){#auth-screen .auth-card,#auth-screen .aura-mark-lg{animation:none}}
 </style>
-<link rel="stylesheet" href="aura-theme.css?v=20261016a"/>
+<link rel="stylesheet" href="aura-theme.css?v=20261016b"/>
 </head>
 <body>
 <!-- ── BACK-BUTTON GUARD: browser Back returns to the AuraScale system chooser ── -->
@@ -2730,16 +2732,13 @@ async function loadDashboard(){
   /* Bed mini map */
   var mini = document.getElementById('dash-bed-mini');
   if(mini){
-    var FEMALE_WARDS = ['Female','Maternity'];
+    mini.className = 'bmini-grid';
+    mini.removeAttribute('style');
     mini.innerHTML = allBeds.map(function(b){
-      var isFemale = FEMALE_WARDS.indexOf(b.ward||'') >= 0;
-      var col = b.status==='Occupied' ? (isFemale?'#C0398A':'var(--green)')
-              : b.status==='Cleaning' ? 'var(--amber)'
-              : b.status==='Reserved' ? 'var(--blue)'
-              : b.status==='Critical' ? 'var(--red)'
-              : 'var(--border)';
-      return '<div title="Bed '+(b.bed_number||'')+' ('+(b.ward||'')+') — '+b.status+'" style="width:100%;aspect-ratio:1;background:'+col+';border-radius:5px;opacity:.8;cursor:default"></div>';
-    }).join('');
+      var st = (b.status||'Vacant');
+      var cls = st==='Occupied' ? 'occ' : st==='Cleaning' ? 'cln' : st==='Reserved' ? 'res' : st==='Critical' ? 'crit' : 'free';
+      return '<div class="bmini '+cls+'" title="Bed '+esc(b.bed_number||'')+' ('+esc(b.ward||'')+') - '+esc(st)+'" onclick="nav(\'beds\',document.querySelector(\'.nb[onclick*=beds]\'))">'+esc(b.bed_number||'')+'</div>';
+    }).join('') || '<div class="bmini-empty">No beds added yet. Add them in Bed Management.</div>';
   }
 
   /* Header date */
