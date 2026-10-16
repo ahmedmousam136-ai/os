@@ -328,6 +328,22 @@ html body .book .sec h3 { color: var(--ink); font-weight: 800; }
 html body .lang button.on { background: var(--g); }
 html body .btn-main, html body .doc.main { background: var(--g); border-color: var(--g); }
 
+/* ONE set of bed colours, used by Bed Management cards AND the Dashboard Bed Map tiles */
+html:root { --bed-occ: #24322B; --bed-occ-ink: #FFFFFF; --bed-free: #E3F2EA; --bed-free-edge: #0B6B4A; --bed-free-ink: #0B5A3F;
+  --bed-res: #F7C979; --bed-res-ink: #3A2300; --bed-cln: #FAFBFA; --bed-cln-edge: #A9B5AF; --bed-cln-ink: #5B6B63; --bed-crit-edge: #D9583B; }
+html[data-theme="dark"] { --bed-free: #12291F; --bed-free-edge: #3FB68B; --bed-free-ink: #7FD8B4; --bed-cln: transparent; }
+html body .bed-card.occupied, html body .bov.occupied, html body .bmini.occupied { background: var(--bed-occ); border-color: var(--bed-occ); color: var(--bed-occ-ink); }
+html body .bed-card.critical, html body .bov.critical, html body .bmini.critical { background: var(--bed-occ); border-color: var(--bed-crit-edge); color: var(--bed-occ-ink); }
+html body .bed-card.free, html body .bov.free, html body .bmini.free { background: var(--bed-free); border-color: var(--bed-free-edge); color: var(--bed-free-ink); }
+html body .bed-card.reserved, html body .bov.reserved, html body .bmini.reserved { background: var(--bed-res); border-color: var(--bed-res); color: var(--bed-res-ink); }
+html body .bed-card.cleaning, html body .bov.cleaning, html body .bmini.cleaning { background: var(--bed-cln); border: 2px dashed var(--bed-cln-edge); color: var(--bed-cln-ink); }
+html body .bed-card.inactive, html body .bov.inactive, html body .bmini.inactive { background: var(--surface2); border: 2px solid var(--border); color: var(--text-tertiary); opacity: .6; }
+html body .bov .bov-num, html body .bov .bov-ward, html body .bov .bov-pt, html body .bov .bov-day { color: inherit; }
+html body .bm-legend .lg-free { background: var(--bed-free); border: 2px solid var(--bed-free-edge); }
+html body .bm-legend .lg-occ { background: var(--bed-occ); }
+html body .bm-legend .lg-res { background: var(--bed-res); }
+html body .bm-legend .lg-cln { border: 2px dashed var(--bed-cln-edge); }
+
 /* dashboard mini bed map (owner "Bed Map", reception "Bed Overview"): numbered tiles in the bed-map colours */
 html body .bmini-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 8px; padding: 16px 20px 20px; }
 html body .bmini {
@@ -335,10 +351,4 @@ html body .bmini {
   font-size: 13px; font-weight: 800; border: 2px solid transparent; transition: transform .15s ease;
 }
 html body .bmini:hover { transform: translateY(-1px); }
-html body .bmini.free { background: #E3F2EA; border-color: #0B6B4A; color: #0B5A3F; }
-html body .bmini.occ { background: #24322B; color: #FFFFFF; }
-html body .bmini.res { background: #F7C979; color: #3A2300; }
-html body .bmini.cln { background: #FAFBFA; border: 2px dashed #A9B5AF; color: #5B6B63; }
-html body .bmini.crit { background: #24322B; border-color: #D9583B; color: #FFFFFF; }
-html[data-theme="dark"] body .bmini.free { background: #12291F; color: #7FD8B4; border-color: #3FB68B; }
 html body .bmini-empty { grid-column: 1 / -1; font-size: 13px; color: var(--text-tertiary); padding: 6px 0; }
