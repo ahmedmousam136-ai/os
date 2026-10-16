@@ -119,6 +119,7 @@ details[open] summary:after{content:"－"}
   .row{grid-template-columns:64px 1fr auto}
 }
 </style>
+<script src="aura-loader.js?v=1"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261016a"/>
 </head>
 <body>
@@ -212,6 +213,7 @@ async function openBook(saved){
   var v = saved || (document.getElementById('uhid').value || '').trim();
   if (!v) { showErr(t('e_enter')); return; }
   showErr(''); var b = document.getElementById('go'); b.disabled = true; b.innerHTML = '<span class="spin"></span>' + esc(t('opening'));
+  if (window.AuraLoader) AuraLoader.show(t('opening'));
   try {
     var r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ k: KEY, uhid: v }) });
     var j = await r.json();
@@ -224,6 +226,7 @@ async function openBook(saved){
     }
   } catch (e) { showErr(t('e_net')); }
   b.disabled = false; b.innerHTML = '<span data-t="go">' + esc(t('go')) + '</span>';
+  if (window.AuraLoader) AuraLoader.hide();
 }
 function closeBook(){ DATA = null; store('aura_portal_' + KEY, null); document.getElementById('book').style.display = 'none'; document.getElementById('book').innerHTML = ''; document.getElementById('gate').style.display = ''; document.getElementById('uhid').value = ''; }
 
