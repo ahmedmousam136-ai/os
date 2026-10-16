@@ -2,8 +2,8 @@
  *
  * How it is wired (unchanged):
  *   - A tiny guard in nh.html's <head> decides, before anything is painted, whether the splash should play:
- *       only when nobody is signed in on this browser, once per browser tab (sessionStorage), never after
- *       a password-reset / email-confirmation link, never inside the app. If it should play, it adds the class
+ *       EVERY time the sign-in screen is about to show (signed out, after Sign Out, or an expired login),
+ *       never after a password-reset / email-confirmation link, never when the app opens straight in. If it should play, it adds the class
  *       "as-pending" to <html>, which keeps the sign-in screen invisible on a white background.
  *   - This file copies the sign-in card's OWN logo block (#auth-screen .auth-logo: the AuraScale mark, the
  *     "AuraScale" wordmark and its subtitle) and places the copy exactly over the real logo, so the last frame
@@ -23,9 +23,38 @@
  */
 (function () {
   var html = document.documentElement;
-  if (!html.classList.contains('as-pending')) return;
+
+  /* A login was saved on this browser: ask Supabase whether it is still valid.
+     Valid   -> the app opens straight away, no animation.
+     Expired -> the sign-in screen will show, so play the animation first. */
+  if (html.classList.contains('as-wait')) {
+    var tries = 0;
+    var giveUp = function () { html.classList.remove('as-wait'); };
+    var waitForApp = function () {
+      var n = 0;
+      (function chk() {
+        var shell = document.getElementById('app-shell'), auth = document.getElementById('auth-screen');
+        if ((shell && shell.classList.contains('authenticated')) || (auth && auth.classList.contains('hidden')) || ++n > 40) { try { clearTimeout(window.__asFail); } catch (e) {} giveUp(); return; }
+        setTimeout(chk, 75);
+      })();
+    };
+    (function ask() {
+      var c = null; try { c = _supa; } catch (e) {}
+      if (!c || !c.auth) { if (++tries < 40) return setTimeout(ask, 75); return giveUp(); }
+      c.auth.getSession().then(function (r) {
+        if (r && r.data && r.data.session) return waitForApp();
+        try { clearTimeout(window.__asFail); } catch (e) {}
+        html.classList.remove('as-wait'); html.classList.add('as-pending');
+        window.__asFail = setTimeout(function () { html.classList.remove('as-pending'); }, 4000);
+        play();
+      }, giveUp);
+    })();
+    return;
+  }
+  if (html.classList.contains('as-pending')) play();
+
+  function play() {
   try { clearTimeout(window.__asFail); } catch (e) {}
-  try { sessionStorage.setItem('aura_splash_v1', '1'); } catch (e) {}
 
   var src = document.querySelector('#auth-screen .auth-logo');
   var reduce = html.classList.contains('as-reduce');
@@ -109,4 +138,5 @@
     if (reduce) { wrap.classList.add('as-quick'); at(650, finish); }
     else { wrap.classList.add('as-go'); at(1950, finish); }
   });
+  }
 })();
