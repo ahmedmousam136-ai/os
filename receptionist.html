@@ -345,7 +345,8 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .wa-cur{font-size:11px;color:var(--text-secondary);margin:-4px 0 2px 2px;display:none}
 </style>
 <script src="aura-loader.js?v=1"></script>
-<link rel="stylesheet" href="aura-theme.css?v=20261016b"/>
+<script src="aura-beds.js?v=1"></script>
+<link rel="stylesheet" href="aura-theme.css?v=20261016c"/>
 </head>
 <body>
 
@@ -1295,7 +1296,7 @@ function generateUHID(){
   return 'NH-'+Date.now().toString().slice(-6);
 }
 var _rtChan=null;
-var _cachedBeds=[];
+var _cachedBeds=[], _cachedAdmMap={};
 
 /* ── WIZARD ── */
 var STEPS=[{n:1,l:'ID Type'},{n:2,l:'Capture'},{n:3,l:'Verify Info'},{n:4,l:'Admission'}];
@@ -1426,6 +1427,12 @@ function startRealtime(){
         else if(p.eventType==='DELETE'&&i>=0)_cachedBeds.splice(i,1);
         if(document.getElementById('v-beds').classList.contains('on'))loadBeds();
         renderBedMini();
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'admissions',filter:'clinic_id=eq.'+_clinicId},async function(){
+        var r=await _supa.from('admissions').select('id,bed_id,patient_id,patient_name').eq('clinic_id',_clinicId).eq('status','Active');
+        if(!r.error) _cachedAdmMap=AuraBeds.admMap(r.data);
+        if(document.getElementById('v-beds').classList.contains('on'))loadBeds();
+        renderBedMini();
       }).subscribe();
   }catch(e){console.warn('Realtime unavailable',e);}
 }
@@ -1537,15 +1544,17 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 
 /* ── HOME ── */
 async function loadHome(){
-  var [act,beds,tod,pend]=await Promise.all([
+  var [act,beds,tod,pend,homeAdm]=await Promise.all([
     _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('status','Active'),
-    _supa.from('beds').select('id,bed_number,ward,status,daily_rate').eq('clinic_id',_clinicId),
+    _supa.from('beds').select('id,bed_number,ward,status,daily_rate,is_active').eq('clinic_id',_clinicId),
     _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).gte('admission_date',new Date().toISOString().slice(0,10)+'T00:00:00'),
-    _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('needs_review',true)
+    _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('needs_review',true),
+    _supa.from('admissions').select('id,bed_id,patient_id,patient_name').eq('clinic_id',_clinicId).eq('status','Active')
   ]);
   _cachedBeds=beds.data||[];
+  _cachedAdmMap=AuraBeds.admMap(homeAdm&&homeAdm.data);
   renderBedMini();   /* draw the bed overview first: the patient list below can return early */
-  var vacant=_cachedBeds.filter(function(b){return(b.status||'').toLowerCase()==='vacant'}).length;
+  var vacant=AuraBeds.counts(_cachedBeds,_cachedAdmMap).free;
   document.getElementById('h-active').textContent=act.count||0;
   document.getElementById('h-vacant').textContent=vacant;
   document.getElementById('h-today').textContent=tod.count||0;
@@ -1632,10 +1641,10 @@ async function openKpiDetail(type){
 function renderBedMini(){
   var m=document.getElementById('home-bed-mini');if(!m)return;
   m.className='bmini-grid';m.removeAttribute('style');
-  m.innerHTML=_cachedBeds.map(function(b){
-    var s=(b.status||'vacant').toLowerCase();
-    var cls=s==='occupied'?'occ':s==='cleaning'?'cln':s==='reserved'?'res':s==='critical'?'crit':'free';
-    return '<div class="bmini '+cls+'" title="Bed '+esc(b.bed_number)+' - '+s+'" onclick="nav(\'beds\',document.querySelector(\'.nb[onclick*=beds]\'))">'+esc(b.bed_number)+'</div>';
+  var _sorted=_cachedBeds.slice().sort(function(a,b){return String(a.ward||'').localeCompare(String(b.ward||''))||String(a.bed_number||'').localeCompare(String(b.bed_number||''),undefined,{numeric:true});});
+  m.innerHTML=_sorted.map(function(b){
+    var st=AuraBeds.state(b,_cachedAdmMap[b.id]);   /* same rule and same data as Bed Management */
+    return '<div class="bmini '+st+'" data-bed-id="'+esc(b.id)+'" title="Bed '+esc(b.bed_number)+' - '+AuraBeds.label(st)+'" onclick="nav(\'beds\',document.querySelector(\'.nb[onclick*=beds]\'))">'+esc(b.bed_number)+'</div>';
   }).join('')||'<div class="bmini-empty">No beds yet.</div>';
 }
 
@@ -1901,9 +1910,8 @@ async function loadBeds(){
   container.innerHTML='<div class="bm-legend"><span><i class="lg-free"></i>Free</span><span><i class="lg-occ"></i>Occupied</span><span><i class="lg-res"></i>Reserved</span><span><i class="lg-cln"></i>Cleaning</span></div>';
   Object.keys(wards).forEach(function(ward){
     var wBeds=wards[ward];
-    var occ=wBeds.filter(function(b){return am[b.id];}).length;
-    var vac=wBeds.filter(function(b){return !am[b.id]&&(b.status||'').toLowerCase()==='vacant';}).length;
-    var cln=wBeds.filter(function(b){return(b.status||'').toLowerCase()==='cleaning';}).length;
+    var wc=AuraBeds.counts(wBeds,am);   /* same rule as the owner Bed Management and Dashboard */
+    var occ=wc.taken, vac=wc.free, cln=wc.cleaning;
     var sec=document.createElement('div');
     sec.className='ward-sec';
     var hd=document.createElement('div');
@@ -1915,23 +1923,24 @@ async function loadBeds(){
     wBeds.forEach(function(b){
       var adm=am[b.id];
       var s=(b.status||'vacant').toLowerCase();
-      var isOcc=!!(adm&&adm.patient_name)||s==='occupied';
-      var cls=isOcc?'occupied':s==='cleaning'?'cleaning':s==='reserved'?'reserved':s==='critical'?'critical':'';
+      var st=AuraBeds.state(b,adm);
+      var isOcc=AuraBeds.isTaken(st);
       var days=adm?Math.floor((Date.now()-new Date(adm.admission_date))/86400000)+1:0;
       var card=document.createElement('div');
-      card.className='bov '+(cls||'free');
+      card.className='bov '+st; card.setAttribute('data-bed-id',b.id);
       var dTxt=adm&&adm.admission_date?new Date(adm.admission_date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
       card.innerHTML='<div class="bm-top">Bed '+esc(b.bed_number)+(adm?' · day '+days:'')+'</div>'
-        +(adm?'<div class="bm-name">'+esc(adm.patient_name||'')+'</div><div class="bm-sub">'+(dTxt?'Admitted '+dTxt:'')+'</div>'
-          :s==='cleaning'?'<div class="bm-sub">Cleaning</div>'
-          :s==='reserved'?'<div class="bm-name">Reserved</div>'
-          :isOcc?'<div class="bm-name">Occupied</div>'
+        +(adm?'<div class="bm-name">'+esc(adm.patient_name||'')+'</div><div class="bm-sub">'+(dTxt?'Admitted '+dTxt:'')+(st==='critical'?' · Critical':'')+'</div>'
+          :st==='cleaning'?'<div class="bm-sub">Cleaning</div>'
+          :st==='reserved'?'<div class="bm-name">Reserved</div>'
+          :st==='inactive'?'<div class="bm-sub">Switched off</div>'
+          :isOcc?'<div class="bm-name">'+AuraBeds.label(st)+'</div>'
           :'<div class="bm-free">+ Admit here</div>');
       if(adm&&adm.patient_id){
         card.onclick=(function(bid,bnum,bward,bst,admId,patId,patName,bdays){
           return function(){openBedProfile(bid,bnum,bward,bst,admId,patId,patName,bdays);};
         })(b.id,b.bed_number,ward,s,adm.id,adm.patient_id,adm.patient_name,days);
-      } else if(!isOcc&&s!=='cleaning'&&s!=='reserved'&&b.is_active!==false){
+      } else if(st==='free'){
         card.onclick=(function(bid,brate,bnum,bward){return function(){admitToBed(bid,brate,bnum,bward);};})(b.id,b.daily_rate||0,b.bed_number,ward);
       }
       grid.appendChild(card);
