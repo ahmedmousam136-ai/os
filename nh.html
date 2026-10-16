@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNjQwIiB3aWR0aD0iNjQwIiBoZWlnaHQ9IjY0MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzFCQjg4MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwQTZCNEIiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iNjQwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0gMjI3IDEzMyBBIDExOCAxMTggMCAwIDEgNDEzIDEzMyIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC4zOCIvPgogICAgPHBhdGggZD0iTSAyNjIgMTU0IEEgNzggNzggMCAwIDEgMzc4IDE1NCIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC43Ii8+CiAgPC9nPgogIDxwYXRoIGQ9Ik0gMTk2IDQ1MiBMIDMyMCAyMTQgTCA0NDQgNDUyIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iNTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiM3Q0U2QkMiPgogICAgPHJlY3QgeD0iMjg0IiB5PSIzNDgiIHdpZHRoPSI3MiIgaGVpZ2h0PSIyNCIgcng9IjEyIi8+CiAgICA8cmVjdCB4PSIzMDgiIHk9IjMyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjcyIiByeD0iMTIiLz4KICA8L2c+Cjwvc3ZnPgo="/>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
-<script src="aura-loader.js?v=1"></script>
+<script src="aura-loader.js?v=2"></script>
 <script src="aura-beds.js?v=1"></script>
 <!-- AuraScale startup animation: decide before the first paint whether it plays (see aura-splash.js) -->
 <script>(function(){try{var d=document.documentElement,q=location.hash+location.search;
@@ -396,7 +396,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 #auth-screen{background:radial-gradient(1100px 560px at 50% -8%,rgba(27,184,128,.15),transparent 62%),radial-gradient(800px 480px at 100% 108%,rgba(27,184,128,.10),transparent 58%),var(--bg)}
 @media (prefers-reduced-motion:reduce){#auth-screen .auth-card,#auth-screen .aura-mark-lg{animation:none}}
 </style>
-<link rel="stylesheet" href="aura-theme.css?v=20261016c"/>
+<link rel="stylesheet" href="aura-theme.css?v=20261016d"/>
 </head>
 <body>
 <!-- ── BACK-BUTTON GUARD: browser Back returns to the AuraScale system chooser ── -->
@@ -2636,15 +2636,16 @@ async function _initApp(){
 async function loadDashboard(){
   if(!_clinicId)return;
   try { auraBillSetupCard(); } catch (e) {}
-  var today = new Date().toISOString().slice(0,10);
+  var today = new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});   /* India date, not UTC */
+  var _todayStart = new Date(today+'T00:00:00+05:30').toISOString();
   var monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
   var [adm, beds, todayAdm, todayDis, charges, allCharges, payments, patients, activity, monthCharges, monthPayments, monthExpenses] = await Promise.all([
     _supa.from('admissions').select('id,patient_name,bed_id,admission_date,admitting_doctor,admission_diagnosis,status').eq('clinic_id',_clinicId).eq('status','Active'),
     _supa.from('beds').select('id,bed_number,ward,status,is_active').eq('clinic_id',_clinicId),
-    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',today+'T00:00:00'),
-    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',today+'T00:00:00'),
-    _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',today+'T00:00:00'),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).gte('admission_date',_todayStart),
+    _supa.from('admissions').select('id').eq('clinic_id',_clinicId).eq('status','Discharged').gte('discharge_date',_todayStart),
+    _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId).gte('created_at',_todayStart),
     _supa.from('admission_charges').select('total_price').eq('clinic_id',_clinicId),
     _supa.from('nh_payments').select('amount').eq('clinic_id',_clinicId),
     _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId),
