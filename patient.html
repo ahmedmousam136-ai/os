@@ -119,11 +119,11 @@ details[open] summary:after{content:"－"}
   .row{grid-template-columns:64px 1fr auto}
 }
 </style>
-<link rel="stylesheet" href="aura-theme.css?v=20261016"/>
+<link rel="stylesheet" href="aura-theme.css?v=20261016a"/>
 </head>
 <body>
 <div class="top"><div class="wrap">
-  <div class="brand"><i>✚</i>AuraScale</div>
+  <div class="brand"><i role="img" aria-label="AuraScale"></i>AuraScale</div>
   <div class="lang"><button id="l-bn" class="on" onclick="setLang('bn')">বাংলা</button><button id="l-en" onclick="setLang('en')">English</button></div>
 </div></div>
 
@@ -233,14 +233,14 @@ function render(){
   var ag = [p.age !== '' && p.age != null ? p.age + ' ' + t('yrs') : '', p.gender || ''].filter(Boolean).join(' · ');
   var h = '<div class="card prof"><small style="color:var(--ink3)">' + esc(t('hello')) + '</small><h2>' + esc(p.name) + '</h2>'
     + '<div class="chips"><span class="chip uhid">UHID ' + esc(p.uhid || '-') + '</span>' + (ag ? '<span class="chip">' + esc(ag) + '</span>' : '') + (p.phone ? '<span class="chip num">📱 ' + esc(p.phone) + '</span>' : '') + '</div>'
-    + '<div class="chips"><span class="chip">🏥 ' + esc(t('at')) + ': <b style="color:var(--ink)">' + esc(c.name) + '</b></span></div>'
+    + '<div class="chips"><span class="chip">🏥 ' + esc(t('at')) + ': <b style="color:var(--ink)">' + esc(c.name) + '</b></span></div></div>'
     + (V.length
       ? '<div class="stats"><div class="stat"><small>' + esc(t('visits')) + '</small><b>' + V.length + '</b></div>'
         + '<div class="stat"><small>' + esc(t('last')) + '</small><b style="font-size:14px">' + esc(V[0] ? d(V[0].admitted_at) : '-') + '</b></div>'
-        + '<div class="stat"><small>' + esc(t('due')) + '</small><b style="color:' + (due > 0 ? 'var(--red)' : 'var(--g)') + '">' + money(due) + '</b></div></div></div>'
+        + '<div class="stat"><small>' + esc(t('due')) + '</small><b style="color:' + (due > 0 ? 'var(--red)' : 'var(--g)') + '">' + money(due) + '</b></div></div>'
       : '<div class="stats"><div class="stat"><small>' + esc(t('reports')) + '</small><b>' + LR.length + '</b></div>'
         + '<div class="stat"><small>' + esc(t('bills')) + '</small><b>' + PB.length + '</b></div>'
-        + '<div class="stat"><small>' + esc(t('meds')) + '</small><b>' + MD.length + '</b></div></div></div>');
+        + '<div class="stat"><small>' + esc(t('meds')) + '</small><b>' + MD.length + '</b></div></div>');
 
   if (V.length || (!LR.length && !PB.length)) h += '<div class="sec"><h3>🩺 ' + esc(t('hist')) + '</h3><span>' + esc(t('histS')) + '</span></div>';
   if (!V.length && !LR.length && !PB.length) h += '<div class="card empty">' + esc(t('noVisit')) + '</div>';
