@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="nh-shared.js?v=20261013b"></script>
-<script src="aura-dept.js?v=20261013b"></script>
-<link rel="stylesheet" href="aura-theme.css?v=20261016"/>
+<script src="aura-dept.js?v=20261016a"></script>
+<link rel="stylesheet" href="aura-theme.css?v=20261016a"/>
 </head>
 <body>
 <div id="loading"><div class="spin"></div><p style="font-size:13px;color:#9E9A93">Loading pharmacy&hellip;</p></div>
@@ -33,24 +33,27 @@
     <!-- ============ NEW BILL (POS) ============ -->
     <div class="d-view on" id="v-pos">
       <div id="pos-setup-note" class="note" style="display:none"></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <div class="pos-grid" id="pos-bottom">
+        <div class="pos-left">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
         <div class="seg"><button id="k-walkin" class="on" onclick="posKind('walkin')">&#128694; Walk-in customer</button><button id="k-ipd" onclick="posKind('ipd')">&#128719; Admitted patient</button></div>
         <span class="tiny" id="k-hint">Counter sale with a pharmacy bill.</span>
       </div>
-      <div id="pos-walkin" class="grid4" style="margin-bottom:12px">
+          <div class="pos-card">
+          <div id="pos-walkin" class="grid4" style="margin-bottom:12px">
         <div><label class="flbl">Customer name *</label><input class="finput" id="c-name" oninput="unlinkIfRenamed(this.value)" placeholder="Walk-in customer"/></div>
-        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" oninput="if(window.deptPhoneInput)deptPhoneInput(this)"/>
-          <label class="tiny" style="display:flex;gap:6px;align-items:center;margin-top:5px;cursor:pointer"><input type="checkbox" id="c-wa" checked style="width:16px;height:16px"/> Send bill on WhatsApp (customer agreed)</label></div>
+        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" oninput="if(window.deptPhoneInput)deptPhoneInput(this)"/></div>
         <div><label class="flbl">Doctor</label><input class="finput" id="c-doctor" placeholder="Prescribed by (optional)"/></div>
         <div style="position:relative"><label class="flbl">UHID (optional)</label><input class="finput" id="c-uhid" placeholder="Link a saved patient" oninput="posPatientSearch(this.value)" autocomplete="off"/><div id="c-uhid-dd" class="dd" style="display:none"></div></div>
       </div>
-      <div id="pos-ipd" style="display:none;margin-bottom:12px">
+          <div id="pos-ipd" style="display:none;margin-bottom:12px">
         <label class="flbl">Admitted patient</label>
         <select class="finput" id="c-adm" style="max-width:520px"></select>
         <p class="tiny" style="margin-top:5px">Medicines go straight onto this patient's nursing-home bill (no separate pharmacy bill, no GST: they are part of treatment). An issue slip is printed for the ward.</p>
       </div>
-
-      <div style="position:relative;margin-bottom:10px">
+          </div>
+          <div class="pos-card">
+          <div style="position:relative;margin-bottom:10px">
         <label class="flbl">Add medicine</label>
         <input class="finput" id="m-search" placeholder="Type 2-3 letters of the name or salt, then press Enter&hellip;" autocomplete="off" oninput="posSearch()" onkeydown="posSearchKey(event)" style="font-size:15px"/>
         <div id="m-dd" class="dd" style="display:none"></div>
@@ -62,21 +65,28 @@
           <tbody id="cart-b"><tr><td colspan="6" class="muted" style="text-align:center;padding:22px">No medicines yet. Search above to add.</td></tr></tbody>
         </table>
       </div>
-
-      <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;margin-top:14px" id="pos-bottom">
-        <div class="grid3" style="align-content:start">
-          <div><label class="flbl">Discount %</label><input class="finput" id="c-disc" type="number" min="0" max="100" step="0.5" value="0" oninput="posRender()"/></div>
-          <div id="refill-box"><label class="flbl">Refill reminder on WhatsApp</label><select class="finput" id="c-refill"><option value="0">No reminder</option><option value="5">After 5 days</option><option value="7">After 7 days</option><option value="10">After 10 days</option><option value="15">After 15 days</option><option value="30">After 30 days (1 month)</option><option value="60">After 60 days</option><option value="90">After 90 days</option></select></div>
-          <div id="pay-box"><label class="flbl">Payment</label><select class="finput" id="c-pay"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="credit">Credit (pay later)</option></select></div>
+          </div>
         </div>
-        <div class="card">
+        <aside class="pos-sum" aria-label="Bill total">
           <div class="sum-row"><span>MRP total</span><span id="s-mrp">₹0.00</span></div>
           <div class="sum-row"><span>Discount</span><span id="s-disc">-₹0.00</span></div>
-          <div class="sum-row" id="s-gst-row" style="display:none"><span>incl. GST</span><span id="s-gst">₹0.00</span></div>
+          <div class="sum-row" id="s-gst-row" style="display:none"><span>Includes GST</span><span id="s-gst">₹0.00</span></div>
           <div class="sum-row big"><span>To pay</span><span id="s-total">₹0</span></div>
-          <button class="btn btn-g" style="width:100%;margin-top:10px;font-size:15px;min-height:48px" id="b-save" onclick="posSave()">&#10003; Save &amp; make bill</button>
+          <div><label class="flbl">Discount %</label><input class="finput" id="c-disc" type="number" min="0" max="100" step="0.5" value="0" oninput="posRender()"/></div>
+          <div id="pay-box"><label class="flbl">Paid by</label>
+            <div class="pay-seg" role="group" aria-label="Paid by">
+              <button type="button" data-pay="cash" class="on" onclick="posPay('cash')">Cash</button><button type="button" data-pay="upi" onclick="posPay('upi')">UPI</button><button type="button" data-pay="card" onclick="posPay('card')">Card</button><button type="button" data-pay="credit" onclick="posPay('credit')">Credit</button>
+            </div>
+            <select class="finput" id="c-pay" style="display:none" onchange="posPay(this.value)"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="credit">Credit (pay later)</option></select>
+          </div>
+          <div id="refill-box">
+            <label class="pos-wa"><input type="checkbox" id="c-wa" checked/> Send bill on WhatsApp <span class="tiny">(customer agreed)</span></label>
+            <label class="flbl">Refill reminder on WhatsApp</label><select class="finput" id="c-refill"><option value="0">No reminder</option><option value="5">After 5 days</option><option value="7">After 7 days</option><option value="10">After 10 days</option><option value="15">After 15 days</option><option value="30">After 30 days (1 month)</option><option value="60">After 60 days</option><option value="90">After 90 days</option></select>
+          </div>
+          <button class="btn btn-g pos-save" id="b-save" onclick="posSave()">Save &amp; make bill</button>
           <div class="err" id="pos-err"></div>
-        </div>
+          <p class="tiny" style="text-align:center;margin:2px 0 0">Stock is updated automatically</p>
+        </aside>
       </div>
     </div>
 
@@ -372,7 +382,7 @@ async function posSave() {
     /* give the customer a health book (find or make their patient record by name + mobile) */
     if (KIND === 'walkin' && p.patient_phone) { try { var lk = await _supa.rpc('nhx_link_walkin', { p_kind: 'pharmacy', p_id: sale.id }); if (!lk.error && lk.data && lk.data.linked) { sale.patient_id = lk.data.patient_id; sale.uhid = sale.uhid || lk.data.uhid; } } catch (e) {} }
     if (waOk) { var w = await _supa.rpc('ph_set_whatsapp', { p_sale_id: sale.id, p_ok: true, p_refill_days: refill || null }); if (!w.error && w.data) sale = Object.assign(sale, w.data); }
-    CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid'].forEach(function (id) { dEl(id).value = ''; }); if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone')); dEl('c-disc').value = 0; dEl('c-refill').value = '0'; dEl('c-wa').checked = true;
+    CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid'].forEach(function (id) { dEl(id).value = ''; }); if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone')); dEl('c-disc').value = 0; dEl('c-refill').value = '0'; dEl('c-wa').checked = true; posPay('cash');
     posRender(); loadMeds();
     showDone(sale, true);
   } catch (e) { dShowErr('pos-err', dErr(e)); }
@@ -822,7 +832,8 @@ async function setSave() {
   if (r.error) { dShowErr('ps-err', dErr(r.error)); return; }
   DEPT.clinic.ph_settings = r.data; setupNote(); posRender(); showToast('Pharmacy details saved.');
 }
-window.addEventListener('resize', function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 760 ? '1fr' : '1fr 340px'; });
+function posPay(v){ var sel=dEl('c-pay'); if(sel) sel.value=v; document.querySelectorAll('.pay-seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-pay')===v); }); }
+window.addEventListener('resize', function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 /* a saved patient (UHID) was picked, but then a different name was typed: do not put this into that patient's records */
 function unlinkIfRenamed(v) {
   if (LINKED && String(v || '').trim().toLowerCase() !== String(LINKED.n || '').trim().toLowerCase()) {
@@ -831,7 +842,7 @@ function unlinkIfRenamed(v) {
   }
 }
 
-init().then(function () { var b = dEl('pos-bottom'); if (b && window.innerWidth < 760) b.style.gridTemplateColumns = '1fr'; });
+init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
 </body>
 </html>
