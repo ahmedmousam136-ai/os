@@ -327,3 +327,18 @@ html body .book .stat b { font-family: Manrope, sans-serif; font-size: 24px; fon
 html body .book .sec h3 { color: var(--ink); font-weight: 800; }
 html body .lang button.on { background: var(--g); }
 html body .btn-main, html body .doc.main { background: var(--g); border-color: var(--g); }
+
+/* dashboard mini bed map (owner "Bed Map", reception "Bed Overview"): numbered tiles in the bed-map colours */
+html body .bmini-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 8px; padding: 16px 20px 20px; }
+html body .bmini {
+  height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 13px; font-weight: 800; border: 2px solid transparent; transition: transform .15s ease;
+}
+html body .bmini:hover { transform: translateY(-1px); }
+html body .bmini.free { background: #E3F2EA; border-color: #0B6B4A; color: #0B5A3F; }
+html body .bmini.occ { background: #24322B; color: #FFFFFF; }
+html body .bmini.res { background: #F7C979; color: #3A2300; }
+html body .bmini.cln { background: #FAFBFA; border: 2px dashed #A9B5AF; color: #5B6B63; }
+html body .bmini.crit { background: #24322B; border-color: #D9583B; color: #FFFFFF; }
+html[data-theme="dark"] body .bmini.free { background: #12291F; color: #7FD8B4; border-color: #3FB68B; }
+html body .bmini-empty { grid-column: 1 / -1; font-size: 13px; color: var(--text-tertiary); padding: 6px 0; }
