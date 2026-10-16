@@ -10,10 +10,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="nh-shared.js?v=20261013b"></script>
 <script src="aura-dept.js?v=20261016a"></script>
+<script src="aura-loader.js?v=1"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261016a"/>
 </head>
 <body>
-<div id="loading"><div class="spin"></div><p style="font-size:13px;color:#9E9A93">Loading pharmacy&hellip;</p></div>
+<div id="loading" class="aura-loader" data-label="Loading AuraScale"></div><script>AuraLoader.fill('loading')</script>
 <div id="nh-toast"></div>
 
 <style>@media(max-width:600px){.hide-sm{display:none}}</style>
