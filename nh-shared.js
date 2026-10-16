@@ -2,7 +2,9 @@
 function _auraLoginUrl() {
   /* a nursing-home owner or receptionist who opened the Pharmacy / Lab goes back to the normal sign-in */
   try { if (typeof DEPT !== 'undefined' && DEPT && (DEPT.role === 'owner' || DEPT.role === 'receptionist') && !DEPT.standalone) return 'nh.html'; } catch (e) {}
-  var f = /pharmacy\.html/i.test(location.pathname) ? 'pharmacy' : /lab\.html/i.test(location.pathname) ? 'lab' : '';
+  /* works for os.aurascale.in/pharmacy.html and the short address os.aurascale.in/pharmacy (same for /lab and /diagnostic) */
+  var p = location.pathname;
+  var f = /\/pharmacy(\.html)?\/?$/i.test(p) ? 'pharmacy' : /\/(lab|diagnostic)(\.html)?\/?$/i.test(p) ? 'lab' : '';
   return f ? 'nh.html?for=' + f : 'nh.html';
 }
 /* ══════════════════════════════════════════════════════════════════
