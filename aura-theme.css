@@ -41,14 +41,13 @@ html body, html body button, html body input, html body textarea, html body sele
   font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', system-ui, sans-serif;
 }
 html body { font-variant-numeric: tabular-nums; }
-/* headings and big numbers that used a serif before */
-html body .auth-title, html body .sb-mark .a, html body .sb-mark .s, html body .bc-root, html body .st,
+/* headings and big numbers that used a serif before (the AuraScale wordmark itself keeps its own serif: brand) */
+html body .auth-title, html body .bc-root, html body .st,
 html body .mc-val, html body .chg-amt, html body .fin-cat-amt, html body .bill-amt, html body .ward-nm,
 html body .exp-amt, html body .qty-val, html body .charge-total-amt, html body .d-title {
   font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', sans-serif;
   font-weight: 800; letter-spacing: -0.02em;
 }
-html body .sb-mark .s { color: #4FD1C5; }
 html body .mc-val { font-size: 30px; }
 html body .num, html body .mono { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
 html body .brand i { background: #0E7C7B; }
@@ -66,3 +65,85 @@ html body ::selection { background: #C4E7E4; color: #18212C; }
 html body input:focus, html body select:focus, html body textarea:focus {
   border-color: #0E7C7B !important; box-shadow: 0 0 0 3px rgba(14,124,123,.18) !important;
 }
+
+/* =====================================================================================
+   STYLE B LAYOUT (owner, reception, doctor portals) on tablets and computers:
+   the dark left menu becomes a navy top bar: logo + facility name on the first row,
+   the menu as tabs on the second row (scrolls sideways if there are many).
+   Phones (600 px and less) keep the existing slide-out menu, now in navy.
+   ===================================================================================== */
+@media (min-width: 601px) {
+  html body #app-shell.authenticated, html body #app-shell.on, html body #app-shell.visible { flex-direction: column; }
+  html body #sidebar {
+    position: sticky; top: 0; bottom: auto; left: auto; width: auto; height: auto; transform: none;
+    flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 18px;
+    overflow: visible; border-right: none; padding: 0 28px; z-index: 40; background: #18212C;
+    box-shadow: 0 1px 0 rgba(0,0,0,.2);
+  }
+  html body #sidebar .sb-logo { border: none; padding: 14px 0 8px; flex: 0 0 auto; }
+  html body #sidebar .sb-tag { display: none; }
+  html body #sidebar .sb-facility { border: none; padding: 14px 0 8px; flex: 1 1 auto; min-width: 0; }
+  html body #sidebar .sb-facility-inner, html body #sidebar .sb-fac-inner { background: transparent; border: none; padding: 0 0 0 18px; border-left: 1px solid rgba(255,255,255,.14); border-radius: 0; }
+  html body #sidebar .sb-fac-name { color: #FFFFFF; font-size: 15px; font-weight: 800; }
+  html body #sidebar .sb-fac-type, html body #sidebar .sb-online { color: #A9B6C4; margin-top: 2px; }
+  html body #sidebar .sb-online .dot { background: #4FD1C5; }
+  html body #sidebar .sb-foot { border: none; padding: 14px 0 8px; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; }
+  html body #sidebar .sb-foot > div:first-child:not(.sb-profile):not(.sb-out) { display: none; }
+  html body #sidebar .sb-profile { margin: 0 !important; padding: 4px 8px !important; }
+  html body #sidebar .sb-profile * { color: #FFFFFF; }
+  html body #sidebar .sb-profile div div:last-child { color: #A9B6C4; }
+  html body #sidebar .sb-out { margin: 0; padding: 6px 4px; }
+  html body #sidebar .sb-controls { margin: 0; }
+  html body #sidebar .theme-toggle { flex: none; background: #243142; border-color: #243142; color: #FFFFFF; border-radius: 999px; padding: 6px 12px; }
+  html body #sidebar .sb-out { color: #A9B6C4; font-weight: 600; }
+  html body #sidebar nav.sb-nav {
+    order: 10; flex: 1 1 100%; flex-direction: row; align-items: stretch; gap: 2px;
+    padding: 4px 0 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  }
+  html body #sidebar nav.sb-nav::-webkit-scrollbar { display: none; }
+  html body #sidebar nav.sb-nav > div { display: flex; }
+  html body #sidebar .nav-sec { display: none; }
+  html body #sidebar .nb {
+    width: auto; flex: none; padding: 12px 14px 11px; border-radius: 0; background: transparent !important;
+    border-bottom: 3px solid transparent; color: #A9B6C4; font-size: 14px; font-weight: 600; gap: 7px; white-space: nowrap; min-width: max-content;
+  }
+  html body #sidebar .nb:hover:not(.on) { color: #FFFFFF; }
+  html body #sidebar .nb.on { color: #FFFFFF; font-weight: 700; border-bottom-color: #4FD1C5; }
+  html body #sidebar .nb.on::before { display: none; }
+  html body #sidebar .nb-ic { display: none; }
+  html body #sidebar .nb-badge { margin-left: 4px; }
+  html body #main { margin-left: 0 !important; width: 100%; }
+  html body .hamburger { display: none !important; }
+  /* the old white page header becomes a light row under the navy bar (language, date, Admit button) */
+  html body #main > header { position: static; background: transparent; border-bottom: none; backdrop-filter: none; padding: 14px 28px 0; height: auto; min-height: 52px; }
+  html body #main > header .bc-root, html body #main > header .bc-sep, html body #main > header .aura-mark-hdr { display: none; }
+  html body #main > header .bc-page { font-size: 13px; font-weight: 700; color: #4E5B69; }
+  html[data-theme="dark"] body #main > header { background: transparent; }
+}
+/* phones: the slide-out menu in navy, white text */
+@media (max-width: 600px) {
+  html body #sidebar .sb-fac-inner,
+  html body #sidebar .sb-facility-inner { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); }
+  html body #sidebar .sb-fac-name { color: #FFFFFF; }
+  html body #sidebar .sb-fac-type, html body #sidebar .sb-online { color: #A9B6C4; }
+}
+
+/* ---------- dashboards: the money card in navy, like the preview ---------- */
+html body .mc { border-radius: 18px; padding: 18px 18px 16px; }
+html body .mc.mc-green { background: #18212C; border-color: #18212C; }
+html body .mc.mc-green .mc-lbl, html body .mc.mc-green .mc-sub { color: #A9B6C4; }
+html body .mc.mc-green .mc-val { color: #FFFFFF; }
+html body .mc.mc-red .mc-val { color: #B3361F; }
+html body .mc-lbl { font-size: 11px; letter-spacing: .06em; color: #5D6B7A; }
+
+/* ---------- Pharmacy and Lab: underline tabs, receipt-style totals ---------- */
+@media (min-width: 701px) {
+  html body .d-tabs { background: #18212C; max-width: none; padding: 0 28px; gap: 2px; }
+  html body .d-tab { color: #A9B6C4; border: none; border-bottom: 3px solid transparent; border-radius: 0; padding: 12px 14px 11px; font-size: 14px; }
+  html body .d-tab.on { background: transparent; color: #FFFFFF; border-bottom-color: #4FD1C5; box-shadow: none; }
+  html body .d-top { border-bottom: none; }
+}
+html body .sum-row span:last-child { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+html body .sum-row.big { font-size: 24px; }
+html body .sum-row.big span:last-child { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
+html body .d-view { border-radius: 18px; margin-top: 20px; }
