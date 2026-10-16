@@ -344,9 +344,9 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 .wa-consent input[type=checkbox]{width:19px!important;height:19px!important;min-height:0!important;margin:1px 0 0!important;flex:none;accent-color:#12976A;-webkit-appearance:checkbox!important;appearance:auto!important;padding:0!important}
 .wa-cur{font-size:11px;color:var(--text-secondary);margin:-4px 0 2px 2px;display:none}
 </style>
-<script src="aura-loader.js?v=1"></script>
+<script src="aura-loader.js?v=2"></script>
 <script src="aura-beds.js?v=1"></script>
-<link rel="stylesheet" href="aura-theme.css?v=20261016c"/>
+<link rel="stylesheet" href="aura-theme.css?v=20261016d"/>
 </head>
 <body>
 
@@ -1547,7 +1547,7 @@ async function loadHome(){
   var [act,beds,tod,pend,homeAdm]=await Promise.all([
     _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('status','Active'),
     _supa.from('beds').select('id,bed_number,ward,status,daily_rate,is_active').eq('clinic_id',_clinicId),
-    _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).gte('admission_date',new Date().toISOString().slice(0,10)+'T00:00:00'),
+    _supa.from('admissions').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).gte('admission_date',auraTodayStartISO()),
     _supa.from('nh_patients').select('id',{count:'exact',head:true}).eq('clinic_id',_clinicId).eq('needs_review',true),
     _supa.from('admissions').select('id,bed_id,patient_id,patient_name').eq('clinic_id',_clinicId).eq('status','Active')
   ]);
@@ -1605,7 +1605,7 @@ async function openKpiDetail(type){
   }
 
   if(type==='today'){
-    var r2 = await _supa.from('admissions').select('id,patient_id,patient_name,bed_id,admitting_doctor,admission_date').eq('clinic_id',_clinicId).gte('admission_date',new Date().toISOString().slice(0,10)+'T00:00:00').order('admission_date',{ascending:false});
+    var r2 = await _supa.from('admissions').select('id,patient_id,patient_name,bed_id,admitting_doctor,admission_date').eq('clinic_id',_clinicId).gte('admission_date',auraTodayStartISO()).order('admission_date',{ascending:false});
     var rows2 = r2.data || [];
     if(!rows2.length){ body.innerHTML='<div class="empty" style="padding:20px"><div class="empty-ic">📋</div><p class="empty-t">No admissions today yet</p></div>'; return; }
     var bedIds2 = rows2.map(function(a){return a.bed_id;}).filter(Boolean);
@@ -1666,6 +1666,17 @@ async function globalSearch(q){
 }
 
 /* ── REGISTER WIZARD ── */
+/* ── INDIA TIME helpers ──
+   An admission used to be saved as "<date>T00:00:00" with no time zone, which the database reads as
+   midnight UTC, so every admission showed 5:30 AM. Now the real time of admission is saved:
+   today -> this exact moment; an earlier date picked by hand -> that date at the current India time. */
+function auraTodayIST(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'}); }
+function auraTodayStartISO(){ return new Date(auraTodayIST()+'T00:00:00+05:30').toISOString(); }
+function auraAdmitTime(d){
+  if(!d||d===auraTodayIST()) return new Date().toISOString();
+  var t=new Date().toLocaleTimeString('en-GB',{timeZone:'Asia/Kolkata',hour12:false});
+  return new Date(d+'T'+t+'+05:30').toISOString();
+}
 async function openRegisterModal(){
   _idType=null;_selBedId=null;_selBedRate=0;_imgs={front:null,back:null};
   ['front','back'].forEach(function(s){
@@ -1677,7 +1688,7 @@ async function openRegisterModal(){
   ['reg-name','reg-age','reg-phone','reg-address','reg-doctor','reg-diag','reg-uhid'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   _extractedDOB=null;
   _dupDecision=null; showDupBanner(); waReset('reg-wa-consent','reg-wa-cur');
-  document.getElementById('reg-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('reg-date').value=auraTodayIST();
   document.getElementById('reg-err').style.display='none';
   document.getElementById('reg-err-3').style.display='none';
   document.getElementById('reg-photo-prev').style.backgroundImage='';
@@ -2566,7 +2577,7 @@ async function doRegisterAndAdmit(){
       patient_age:admAge,patient_gender:admGender,bed_id:_selBedId,
       admitting_doctor:doctor,assigned_doctor_id:docLogin,
       admission_diagnosis:diag,daily_rate:_selBedRate,
-      status:'Active',admission_date:date?date+'T00:00:00':new Date().toISOString(),uhid:regUhid
+      status:'Active',admission_date:auraAdmitTime(date),uhid:regUhid
     }]).select();
     if(admRes.error){err.textContent='Admission error: '+admRes.error.message;err.style.display='block';btn.disabled=false;btn.innerHTML='✓ Assign Bed &amp; Admit Patient';return;}
     // Mark bed occupied
