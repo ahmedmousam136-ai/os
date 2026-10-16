@@ -412,3 +412,20 @@ function deptWords(n) {
   if (cr) out.push(two(cr) + ' Crore'); if (lk) out.push(two(lk) + ' Lakh'); if (th) out.push(two(th) + ' Thousand'); if (r) out.push(three(r));
   return 'Rupees ' + out.join(' ') + ' Only';
 }
+
+/* Style A: AuraScale mark + shop name at the top of the left menu (computers); hidden on phones by aura-theme.css */
+(function () {
+  function addBrand() {
+    var tabs = document.getElementById('d-tabs');
+    if (!tabs || tabs.querySelector('.d-side-brand')) return;
+    var b = document.createElement('div');
+    b.className = 'd-side-brand';
+    b.innerHTML = '<i role="img" aria-label="AuraScale"></i><div><b>AuraScale</b><span id="d-side-fac"></span></div>';
+    tabs.insertBefore(b, tabs.firstChild);
+    var f = document.createElement('div'); f.className = 'd-side-foot'; f.textContent = 'Powered by AuraScale OS'; tabs.appendChild(f);
+    var src = document.getElementById('d-fac'), dst = b.querySelector('#d-side-fac');
+    function sync() { if (src && dst) dst.textContent = (src.textContent || '').split('·')[0].trim(); }
+    sync(); if (src && window.MutationObserver) new MutationObserver(sync).observe(src, { childList: true, characterData: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addBrand); else addBrand();
+})();
