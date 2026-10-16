@@ -1,149 +1,329 @@
-/* AuraScale OS · "Style B" look (navy + teal, Plus Jakarta Sans, receipt-style numbers)
-   One file restyles every portal: owner (nh.html), reception, doctor, pharmacy, lab, patient health book, admin.
-   It only changes colours, fonts, corners and shadows; no screen or button moves or stops working.
-   To go back to the old look, delete the <link ... aura-theme.css> line from a page (or this file). */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+/* AuraScale OS · "Style A" look (from the AuraScale Premium UI Preview PDF)
+   White left menu, AuraScale green #0B6B4A, Manrope type, soft white cards.
+   One file restyles every portal: owner (nh.html), reception, doctor, admin, pharmacy, lab, patient health book.
+   It changes looks only; every screen, button and data flow works as before.
+   To go back to the old look, delete the <link ... aura-theme.css> line from a page. */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
-/* ---------- colours: light ---------- */
+/* the real AuraScale mark, so pages that did not have it (pharmacy, lab, doctor) can show it too */
+html:root { --aura-mark:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNjQwIiB3aWR0aD0iNjQwIiBoZWlnaHQ9IjY0MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzFCQjg4MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwQTZCNEIiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iNjQwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0gMjI3IDEzMyBBIDExOCAxMTggMCAwIDEgNDEzIDEzMyIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC4zOCIvPgogICAgPHBhdGggZD0iTSAyNjIgMTU0IEEgNzggNzggMCAwIDEgMzc4IDE1NCIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC43Ii8+CiAgPC9nPgogIDxwYXRoIGQ9Ik0gMTk2IDQ1MiBMIDMyMCAyMTQgTCA0NDQgNDUyIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iNTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiM3Q0U2QkMiPgogICAgPHJlY3QgeD0iMjg0IiB5PSIzNDgiIHdpZHRoPSI3MiIgaGVpZ2h0PSIyNCIgcng9IjEyIi8+CiAgICA8cmVjdCB4PSIzMDgiIHk9IjMyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjcyIiByeD0iMTIiLz4KICA8L2c+Cjwvc3ZnPgo="); }
+
+/* ---------- colours: light (PDF palette) ---------- */
 html:root:not([data-theme="dark"]) {
-  --bg: #EDF0F3; --surface: #FFFFFF; --surface2: #F6F8FA;
-  --border: #DCE2E8; --border-mid: #C9D2DB; --border-strong: #A9B6C4;
-  --text-primary: #18212C; --text-secondary: #4E5B69; --text-tertiary: #7D8A98;
-  --green: #0E7C7B; --green-bg: #E3F3F2; --green-border: #A8DAD6;
-  /* reception's blue becomes the same teal, so every portal shares one accent */
-  --blue: #0E7C7B; --blue-light: #14908F; --blue-bg: #E3F3F2; --blue-border: #A8DAD6; --blue-hover: #0A6463;
-  --amber: #B4610C; --amber-bg: #FFF4E2; --amber-border: #F1CF9C;
-  --red: #B3361F; --red-bg: #FDECE8; --red-border: #F2BDB2;
-  --r-sm: 10px; --r-md: 14px; --r-lg: 18px; --r-xl: 22px;
-  --sh-xs: 0 1px 2px rgba(24,33,44,.06); --sh-sm: 0 2px 8px rgba(24,33,44,.07);
-  --sh-md: 0 6px 20px rgba(24,33,44,.09); --sh-lg: 0 14px 40px rgba(24,33,44,.14);
-  --sidebar-bg: #18212C; --sidebar-text: #FFFFFF;
-  --sidebar-text-secondary: rgba(255,255,255,.62); --sidebar-text-tertiary: rgba(255,255,255,.42);
-  --sidebar-border: rgba(255,255,255,.08); --sidebar-hover-bg: rgba(255,255,255,.07); --sidebar-active-bg: rgba(79,209,197,.18);
+  --bg: #F5F7F4; --surface: #FFFFFF; --surface2: #FAFBFA;
+  --border: #E3E8E4; --border-mid: #D5DDD8; --border-strong: #A9B5AF;
+  --text-primary: #14201A; --text-secondary: #3D4C45; --text-tertiary: #5B6B63;
+  --green: #0B6B4A; --green-bg: #E8F3EE; --green-border: #B9DCCB;
+  --blue: #0B6B4A; --blue-light: #0E7A55; --blue-bg: #E8F3EE; --blue-border: #B9DCCB; --blue-hover: #08513A;
+  --brand: #0B6B4A; --brand-bg: #E8F3EE; --brand-border: #B9DCCB;
+  --amber: #9A4A00; --amber-bg: #FFF6E5; --amber-border: #F3D9A6;
+  --red: #B23A1E; --red-bg: #FDEEEA; --red-border: #F2C3B6;
+  --r-sm: 10px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+  --sh-xs: 0 1px 2px rgba(20,32,26,.04); --sh-sm: 0 2px 8px rgba(20,32,26,.06);
+  --sh-md: 0 8px 22px rgba(20,32,26,.08); --sh-lg: 0 16px 40px rgba(20,32,26,.12);
+  --sidebar-bg: #FFFFFF; --sidebar-text: #14201A;
+  --sidebar-text-secondary: #3D4C45; --sidebar-text-tertiary: #6B7A72;
+  --sidebar-border: #E3E8E4; --sidebar-hover-bg: #F2F6F3; --sidebar-active-bg: #E8F3EE;
+  --sidebar-av-bg: #E8F3EE; --sidebar-av-border: #B9DCCB;
   /* patient health book */
-  --g: #0E7C7B; --gd: #0A4F4E; --gs: #E3F3F2; --gl: #C4E7E4;
-  --ink: #18212C; --ink2: #4E5B69; --ink3: #7D8A98; --line: #DCE2E8; --card: #FFFFFF;
-  --reds: #FDECE8; --ambers: #FFF4E2; --blues: #ECF1FD;
+  --g: #0B6B4A; --gd: #0F3D2E; --gs: #E3F2EA; --gl: #CFE8DB;
+  --ink: #14201A; --ink2: #3D4C45; --ink3: #5B6B63; --line: #E3E8E4; --card: #FFFFFF;
+  --reds: #FDEEEA; --ambers: #FFF6E5; --blues: #EEF3FB;
 }
 /* ---------- colours: dark ---------- */
 html:root[data-theme="dark"] {
-  --bg: #0F151C; --surface: #18212C; --surface2: #1E2936;
-  --border: #263343; --border-mid: #2F3E50; --border-strong: #42546A;
-  --text-primary: #EEF2F6; --text-secondary: #A3B1C0; --text-tertiary: #6F7F90;
-  --green: #2BB3A9; --green-bg: #0F2A2A; --green-border: #1D4A48;
-  --sidebar-bg: #0B1016; --sidebar-text: #FFFFFF;
-  --sidebar-text-secondary: rgba(255,255,255,.6); --sidebar-text-tertiary: rgba(255,255,255,.4);
-  --sidebar-border: rgba(255,255,255,.07); --sidebar-hover-bg: rgba(255,255,255,.06); --sidebar-active-bg: rgba(79,209,197,.16);
+  --bg: #0E1411; --surface: #161F1A; --surface2: #1B2520;
+  --border: #25312B; --border-mid: #2E3C35; --border-strong: #44544C;
+  --text-primary: #EDF3EF; --text-secondary: #B3C2BA; --text-tertiary: #84948C;
+  --green: #3FB68B; --green-bg: #12291F; --green-border: #1E4A37;
+  --blue: #3FB68B; --blue-bg: #12291F; --blue-border: #1E4A37;
+  --brand: #3FB68B; --brand-bg: #12291F; --brand-border: #1E4A37;
+  --sidebar-bg: #121A16; --sidebar-text: #EDF3EF;
+  --sidebar-text-secondary: #B3C2BA; --sidebar-text-tertiary: #84948C;
+  --sidebar-border: #25312B; --sidebar-hover-bg: #1B2520; --sidebar-active-bg: #12291F;
 }
 
 /* ---------- type ---------- */
 html body, html body button, html body input, html body textarea, html body select {
-  font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', system-ui, sans-serif;
+  font-family: Manrope, 'Noto Sans Bengali', system-ui, sans-serif;
 }
-html body { font-variant-numeric: tabular-nums; }
-/* headings and big numbers that used a serif before (the AuraScale wordmark itself keeps its own serif: brand) */
-html body .auth-title, html body .bc-root, html body .st,
+html body { font-variant-numeric: tabular-nums; color: var(--text-primary); }
+/* page titles and big numbers (the AuraScale wordmark keeps its own brand serif) */
+html body .auth-title, html body .st, html body .d-title,
 html body .mc-val, html body .chg-amt, html body .fin-cat-amt, html body .bill-amt, html body .ward-nm,
-html body .exp-amt, html body .qty-val, html body .charge-total-amt, html body .d-title {
-  font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', sans-serif;
-  font-weight: 800; letter-spacing: -0.02em;
+html body .exp-amt, html body .qty-val, html body .charge-total-amt {
+  font-family: Manrope, 'Noto Sans Bengali', sans-serif; font-weight: 800; letter-spacing: -0.02em;
 }
-html body .mc-val { font-size: 30px; }
-html body .num, html body .mono { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-html body .brand i { background: #0E7C7B; }
+html body .st { font-size: 30px; line-height: 1.15; }
+html body .ss { font-size: 15px; color: var(--text-secondary); }
+html body .num, html body .mono { font-family: Manrope, system-ui, sans-serif; }
+html body ::selection { background: #CFE8DB; color: #14201A; }
 
-/* ---------- Pharmacy and Lab screens: navy top bar like the preview ---------- */
-html body .d-top { background: #18212C; border-bottom: none; color: #FFFFFF; }
-html body .d-top .d-title { color: #FFFFFF; font-size: 18px; }
-html body .d-top .d-sub, html body .d-top .d-pow { color: #A9B6C4; }
-html body .d-top .d-pow b { color: #4FD1C5; }
-html body .d-menu-btn { background: #243142; border-color: #243142; color: #FFFFFF; }
-html body .d-tab.on { box-shadow: inset 0 -3px 0 #0E7C7B; }
+/* ---------- left menu (Style A): white, green selected item ---------- */
+html body #sidebar { background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border); box-shadow: none; }
+html body #sidebar .sb-logo { border-bottom: none; padding: 24px 22px 14px; }
+html body #sidebar .sb-brand { gap: 10px; }
+html body #sidebar .aura-mark { width: 40px; height: 40px; border-radius: 11px; box-shadow: none; }
+html body #sidebar .sb-mark .a { color: var(--sidebar-text); }
+html body #sidebar .sb-tag, html body #sidebar .sb-mark-sub { font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--text-tertiary); }
+html body #sidebar .sb-facility { border-bottom: none; padding: 0 16px 10px; }
+html body #sidebar .sb-facility-inner, html body #sidebar .sb-fac-inner {
+  background: var(--surface2); border: 1px solid var(--sidebar-border); border-radius: 12px; padding: 11px 12px;
+}
+html body #sidebar .sb-fac-name { font-size: 14px; font-weight: 800; color: var(--sidebar-text); }
+html body #sidebar .sb-fac-type { color: var(--text-tertiary); font-size: 12px; font-weight: 600; }
+html body #sidebar .sb-online { font-size: 12px; }
+html body #sidebar .sb-nav { padding: 6px 16px; gap: 4px; }
+html body #sidebar .nav-sec { font-size: 11px; letter-spacing: .08em; color: var(--sidebar-text-tertiary); padding: 14px 12px 4px; }
+html body #sidebar .nb {
+  padding: 11px 12px; border-radius: 10px; gap: 12px; font-size: 14px; font-weight: 600;
+  color: var(--sidebar-text-secondary); background: transparent;
+}
+html body #sidebar .nb:hover:not(.on) { background: var(--sidebar-hover-bg); color: var(--sidebar-text); }
+html body #sidebar .nb.on { background: var(--sidebar-active-bg); color: #0B5A3F; font-weight: 700; }
+html[data-theme="dark"] body #sidebar .nb.on { color: #7FD8B4; }
+html body #sidebar .nb.on::before { display: none; }
+html body #sidebar .nb-ic { width: 18px; height: 18px; opacity: .9; font-size: 16px; }
+html body #sidebar .nb-ic svg { width: 18px; height: 18px; stroke-width: 2; }
+html body #sidebar .nb-badge { font-size: 11px; border-radius: 999px; padding: 2px 8px; }
+html body #sidebar .sb-foot { border-top: 1px solid var(--sidebar-border); padding: 14px 16px; }
+html body #sidebar .theme-toggle { border-radius: 999px; background: var(--surface2); border: 1px solid var(--sidebar-border); color: var(--sidebar-text-secondary); font-size: 12px; font-weight: 600; }
+html body #sidebar .sb-out { color: var(--sidebar-text-tertiary); font-size: 13px; font-weight: 600; }
+html body #sidebar .sb-out:hover { color: var(--red); }
+html body #sidebar .sb-badge { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+html body #sidebar .sb-admin { border-bottom: none; }
+/* doctor portal: show the AuraScale mark beside the wordmark, as on every other portal */
+html body #sidebar .sb-logo > .sb-mark:first-child::before {
+  content: ""; display: inline-block; width: 40px; height: 40px; border-radius: 11px; margin-right: 10px; vertical-align: middle;
+  background: var(--aura-mark) center/126% no-repeat; align-self: center;
+}
+html body #sidebar .sb-logo > .sb-mark:first-child { display: flex; align-items: center; }
 
-/* ---------- small comforts everywhere ---------- */
-html body ::selection { background: #C4E7E4; color: #18212C; }
+/* ---------- page header: no bar, just quiet controls above the page (PDF) ---------- */
+html body #main > header {
+  background: var(--bg); border-bottom: none; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none;
+  padding: 18px 32px 10px; height: auto; min-height: 60px;
+}
+html[data-theme="dark"] body #main > header { background: var(--bg); }
+html body #main > header .bc-root, html body #main > header .bc-sep { display: none; }
+html body #main > header .aura-mark-hdr { display: none; }
+html body #main > header .bc-page { font-size: 14px; font-weight: 600; color: var(--text-tertiary); }
+html body .date-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--text-secondary); padding: 7px 12px; }
+html body main.content, html body #main > .content { padding-left: 32px; padding-right: 32px; }
+@media (max-width: 600px) {
+  html body #main > header { padding: 10px 14px 0; background: var(--bg); position: sticky; top: 0; z-index: 30; }
+  html body main.content, html body #main > .content { padding-left: 14px; padding-right: 14px; }
+  html body .st { font-size: 24px; }
+}
+
+/* ---------- buttons ---------- */
+html body .add-btn, html body .msub, html body .auth-btn, html body .btn-g, html body .btn.btn-g {
+  background: var(--green); color: #FFFFFF; border: none; border-radius: 12px; font-weight: 700; font-size: 14px;
+  min-height: 46px; padding-left: 20px; padding-right: 20px; box-shadow: 0 6px 16px rgba(11,107,74,.22);
+}
+html body .add-btn:hover, html body .msub:hover, html body .auth-btn:hover, html body .btn-g:hover { background: #08513A; }
+html body .qbtn, html body .btn:not(.btn-g) {
+  background: var(--surface); border: 1px solid var(--border-mid); color: var(--text-primary);
+  border-radius: 12px; font-size: 13px; font-weight: 600; padding: 9px 14px;
+}
+html body .qbtn:hover, html body .btn:not(.btn-g):hover { border-color: var(--green); color: var(--green); }
+
+/* ---------- cards and panels ---------- */
+html body .panel, html body .card, html body .d-view {
+  border-radius: 16px; border: 1px solid var(--border); background: var(--surface); box-shadow: var(--sh-xs);
+}
+html body .ph { padding: 18px 20px 14px; border-bottom: 1px solid #EEF1EF; }
+html[data-theme="dark"] body .ph { border-bottom-color: var(--border); }
+html body .pt { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+/* number cards: white, label on top, big number (PDF "Beds occupied / Collected today ...") */
+html body .mg { gap: 16px; background: transparent; border: none; overflow: visible; }
+@media (max-width: 600px) { html body .mg { grid-template-columns: 1fr 1fr !important; gap: 10px; } }
+html body .mc, html body .mc.mc-green, html body .mc.mc-red, html body .mc.mc-amber, html body .mc.mc-blue {
+  background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 16px;
+  padding: 20px; box-shadow: var(--sh-xs);
+}
+html body .mc-lbl { font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text-tertiary); }
+html body .mc-val { font-size: 34px; color: var(--text-primary); margin: 6px 0 4px; }
+html body .mc-sub { font-size: 13px; color: var(--text-secondary); }
+html body .mc.mc-red .mc-val { color: var(--red); }
+html body .mc.mc-amber .mc-val { color: var(--amber); }
+@media (max-width: 600px) { html body .mc { padding: 14px; } html body .mc-val { font-size: 26px; } }
+
+/* dashboard sub-tabs: green underline */
+html body .dash-tab { font-size: 14px; color: var(--text-tertiary); }
+html body .dash-tab.on { color: var(--green); border-bottom-color: var(--green); }
+
+/* ---------- forms (PDF: white fields, soft border, green focus) ---------- */
+html body .flbl { font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text-secondary); margin-bottom: 6px; }
+html body .finput {
+  background: var(--surface); border: 1px solid var(--border-mid); border-radius: 12px; min-height: 46px; font-size: 15px;
+}
 html body input:focus, html body select:focus, html body textarea:focus {
-  border-color: #0E7C7B !important; box-shadow: 0 0 0 3px rgba(14,124,123,.18) !important;
+  border-color: var(--green) !important; box-shadow: 0 0 0 3px rgba(11,107,74,.16) !important; outline: none;
+}
+
+/* ---------- tables (PDF "Admitted today") ---------- */
+html body table.dt th, html body table.ab-t th, html body table.vh-t th {
+  font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text-tertiary);
+  background: transparent; border-bottom: 1px solid var(--border);
+}
+html body table.dt td, html body table.ab-t td, html body table.vh-t td { border-bottom: 1px solid #EEF1EF; font-size: 14px; }
+html[data-theme="dark"] body table.dt td { border-bottom-color: var(--border); }
+
+/* ---------- pop-up windows ---------- */
+html body .modal { border-radius: 20px; }
+
+/* =====================================================================================
+   PHARMACY and LAB: the same white left menu as the other portals (computers and tablets);
+   phones keep the bottom tab bar.
+   ===================================================================================== */
+html body .d-top { background: var(--bg); border-bottom: none; }
+html body .d-title { font-size: 26px; }
+html body .d-pow b { color: var(--green); }
+html body .d-side-brand, html body .d-side-foot { display: none; }
+@media (min-width: 901px) {
+  html body .d-tabs {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 232px; max-width: none; margin: 0; z-index: 40;
+    flex-direction: column; gap: 4px; padding: 0 16px 20px; overflow-y: auto;
+    background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border);
+  }
+  html body .d-side-brand { display: flex; align-items: center; gap: 10px; padding: 24px 6px 22px; }
+  html body .d-side-brand i { width: 40px; height: 40px; border-radius: 11px; flex: none; background: var(--aura-mark) center/126% no-repeat; }
+  html body .d-side-brand b { display: block; font-size: 16px; font-weight: 800; color: var(--text-primary); }
+  html body .d-side-brand span { display: block; font-size: 12px; color: var(--text-tertiary); max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html body .d-tab {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    padding: 11px 12px; border: none; border-radius: 10px; background: transparent; box-shadow: none;
+    color: var(--sidebar-text-secondary); font-size: 14px; font-weight: 600;
+  }
+  html body .d-tab:hover:not(.on) { background: var(--sidebar-hover-bg); color: var(--text-primary); }
+  html body .d-tab.on { background: var(--sidebar-active-bg); color: #0B5A3F; font-weight: 700; box-shadow: none; }
+  html body .d-tab .ti { width: 18px; text-align: center; font-size: 15px; }
+  html body .d-top { margin-left: 232px; padding: 24px 32px 8px; position: static; }
+  html body .d-main { margin-left: 232px; max-width: none; padding: 8px 32px 40px; }
+  html body .d-view { border-radius: 16px; }
+  html body .d-side-foot { display: block; margin-top: auto; padding: 18px 6px 0; font-size: 12px; color: var(--sidebar-text-tertiary); }
+}
+@media (max-width: 900px) and (min-width: 701px) {
+  html body .d-tabs { background: transparent; }
+  html body .d-tab.on { background: var(--surface); border-color: var(--border); color: var(--green); }
+}
+@media (max-width: 700px) {
+  html body .d-tab.on { color: var(--green); background: var(--green-bg); }
+}
+
+/* ---------- Pharmacy "New bill" (PDF page 3) ---------- */
+html body #v-pos.d-view { background: transparent; border: none; box-shadow: none; padding: 0; }
+html body .pos-grid { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 20px; align-items: start; }
+html body .pos-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+html body .pos-left > div:first-child { margin-bottom: 0 !important; }
+html body .pos-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; box-shadow: var(--sh-xs); }
+html body .pos-card > div:last-child { margin-bottom: 0 !important; }
+html body #m-search { border: 2px solid var(--green); min-height: 50px; }
+html body .pos-sum {
+  position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; box-shadow: var(--sh-md);
+}
+html body .pos-sum .sum-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); margin: 0; }
+html body .pos-sum .sum-row span:last-child { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+html body .pos-sum .sum-row.big { border-top: 1px solid var(--border); padding-top: 14px; align-items: baseline; color: var(--text-primary); font-size: 18px; font-weight: 800; }
+html body .pos-sum .sum-row.big span:last-child { font-family: Manrope, sans-serif; font-size: 40px; font-weight: 800; letter-spacing: -0.02em; }
+html body .pay-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: #F0F3F1; border-radius: 12px; padding: 4px; }
+html[data-theme="dark"] body .pay-seg { background: var(--surface2); }
+html body .pay-seg button { height: 40px; border: none; border-radius: 9px; background: transparent; font-size: 14px; font-weight: 600; color: var(--text-secondary); cursor: pointer; }
+html body .pay-seg button.on { background: var(--surface); color: var(--green); font-weight: 800; box-shadow: 0 1px 3px rgba(20,32,26,.12); }
+html body .pos-wa { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; margin-bottom: 12px; cursor: pointer; }
+html body .pos-wa input { width: 20px; height: 20px; accent-color: var(--green); }
+html body .pos-save { width: 100%; min-height: 56px !important; font-size: 17px !important; border-radius: 16px !important; font-weight: 800 !important; }
+@media (max-width: 900px) { html body .pos-grid { grid-template-columns: 1fr; } html body .pos-sum { position: static; } }
+
+/* receipt-style totals elsewhere */
+html body .sum-row span:last-child { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+html body .sum-row.big span:last-child { font-family: Manrope, sans-serif; font-weight: 800; }
+html body .pos-card .grid4 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+/* wordmark: dark "Aura" on the white menu (it was white on the old dark menu); brand green "Scale" unchanged */
+html body #sidebar .sb-mark .a { color: var(--sidebar-text) !important; }
+html body #sidebar .sb-mark .s { color: #37C493 !important; }
+html body #main > header, html body main.content, html body #main > .content { box-sizing: border-box; max-width: 100%; }
+html body #main { min-width: 0; }
+html body .dash-tabs { overflow-x: auto; scrollbar-width: none; }
+
+/* =====================================================================================
+   BED MAP (PDF page 2): wards as white cards; dark = occupied, light green = free,
+   amber = reserved, dashed = cleaning. Same taps as before.
+   ===================================================================================== */
+html body .bm-legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin: 0 0 14px; }
+html body .bm-legend span { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+html body .bm-legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+html body .bm-legend .lg-free { background: #E3F2EA; border: 2px solid #0B6B4A; }
+html body .bm-legend .lg-occ { background: #24322B; }
+html body .bm-legend .lg-res { background: #F2B45A; }
+html body .bm-legend .lg-cln { border: 2px dashed #8A9891; }
+html body .ward-section, html body .ward-sec {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--sh-xs); margin-bottom: 16px; overflow: hidden;
+}
+html body .ward-header, html body .ward-hd { background: transparent !important; border-bottom: none !important; padding: 18px 20px 4px; }
+html body .ward-title, html body .ward-nm { font-family: Manrope, sans-serif; font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+html body .ward-stats .ward-stat, html body .ward-st > span:not(.ward-use) { display: none; }
+html body .ward-stats > span:last-child { display: none; }
+html body .ward-use { font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
+html body .bed-grid-ward, html body .bed-ov-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 12px 20px 20px;
+}
+html body .bed-card, html body .bov, html body .bed-card.occupied, html body .bov.occupied {
+  min-height: 92px; border-radius: 14px; padding: 12px 14px; text-align: left; display: flex; flex-direction: column; gap: 4px;
+  border: 2px solid transparent; background: #24322B; color: #FFFFFF; box-shadow: none; position: relative;
+}
+html body .bed-card:hover, html body .bov:hover { transform: translateY(-1px); box-shadow: var(--sh-md); }
+html body .bm-top { font-size: 12px; font-weight: 600; color: #B9C7C0; padding-right: 18px; }
+html body .bm-name { font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html body .bm-sub { font-size: 12px; color: #B9C7C0; margin-top: auto; }
+html body .bm-free { font-size: 14px; font-weight: 700; margin-top: auto; }
+/* free */
+html body .bed-card.free, html body .bov.free { background: #E3F2EA; border-color: #0B6B4A; color: #0B5A3F; }
+html body .bed-card.free .bm-top, html body .bov.free .bm-top { color: #0B5A3F; }
+/* reserved (amber, like "going home" in the preview) */
+html body .bed-card.reserved, html body .bov.reserved { background: #F7C979; border-color: #F7C979; color: #3A2300; }
+html body .bed-card.reserved .bm-top, html body .bov.reserved .bm-top, html body .bed-card.reserved .bm-sub { color: #5A3A00; }
+/* cleaning */
+html body .bed-card.cleaning, html body .bov.cleaning { background: #FAFBFA; border: 2px dashed #A9B5AF; color: #5B6B63; }
+html body .bed-card.cleaning .bm-top, html body .bov.cleaning .bm-top, html body .bed-card.cleaning .bm-sub, html body .bov.cleaning .bm-sub { color: #5B6B63; }
+/* critical: dark card with a red edge */
+html body .bed-card.critical, html body .bov.critical { color: #FFFFFF; background: #24322B; border-color: #D9583B; }
+html body .bed-card .bed-edit-btn { color: inherit; opacity: .55; top: 10px; right: 10px; }
+html body .bed-card-inactive, html body .bov.inactive { opacity: .45; }
+html[data-theme="dark"] body .bed-card.free, html[data-theme="dark"] body .bov.free { background: #12291F; color: #7FD8B4; border-color: #3FB68B; }
+html[data-theme="dark"] body .bed-card.free .bm-top, html[data-theme="dark"] body .bov.free .bm-top { color: #7FD8B4; }
+html[data-theme="dark"] body .bed-card.cleaning, html[data-theme="dark"] body .bov.cleaning { background: transparent; color: var(--text-tertiary); }
+@media (max-width: 600px) {
+  html body .bed-grid-ward, html body .bed-ov-grid { grid-template-columns: 1fr 1fr; padding: 10px 14px 16px; gap: 10px; }
+  html body .bm-legend { justify-content: flex-start; }
+}
+
+/* phones: page header keeps everything on one line (button text hides, + stays) */
+@media (max-width: 600px) {
+  html body #main > header .bc-page { display: none; }
+  html body #hdr-add-btn span, html body #main > header .add-btn span { display: none; }
+  html body #main > header .add-btn { padding: 0 14px; min-height: 40px; }
 }
 
 /* =====================================================================================
-   STYLE B LAYOUT (owner, reception, doctor portals) on tablets and computers:
-   the dark left menu becomes a navy top bar: logo + facility name on the first row,
-   the menu as tabs on the second row (scrolls sideways if there are many).
-   Phones (600 px and less) keep the existing slide-out menu, now in navy.
+   PATIENT HEALTH BOOK (PDF page 4): real AuraScale mark, dark green welcome card,
+   separate white number tiles.
    ===================================================================================== */
-@media (min-width: 601px) {
-  html body #app-shell.authenticated, html body #app-shell.on, html body #app-shell.visible { flex-direction: column; }
-  html body #sidebar {
-    position: sticky; top: 0; bottom: auto; left: auto; width: auto; height: auto; transform: none;
-    flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 18px;
-    overflow: visible; border-right: none; padding: 0 28px; z-index: 40; background: #18212C;
-    box-shadow: 0 1px 0 rgba(0,0,0,.2);
-  }
-  html body #sidebar .sb-logo { border: none; padding: 14px 0 8px; flex: 0 0 auto; }
-  html body #sidebar .sb-tag { display: none; }
-  html body #sidebar .sb-facility { border: none; padding: 14px 0 8px; flex: 1 1 auto; min-width: 0; }
-  html body #sidebar .sb-facility-inner, html body #sidebar .sb-fac-inner { background: transparent; border: none; padding: 0 0 0 18px; border-left: 1px solid rgba(255,255,255,.14); border-radius: 0; }
-  html body #sidebar .sb-fac-name { color: #FFFFFF; font-size: 15px; font-weight: 800; }
-  html body #sidebar .sb-fac-type, html body #sidebar .sb-online { color: #A9B6C4; margin-top: 2px; }
-  html body #sidebar .sb-online .dot { background: #4FD1C5; }
-  html body #sidebar .sb-foot { border: none; padding: 14px 0 8px; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; }
-  html body #sidebar .sb-foot > div:first-child:not(.sb-profile):not(.sb-out) { display: none; }
-  html body #sidebar .sb-profile { margin: 0 !important; padding: 4px 8px !important; }
-  html body #sidebar .sb-profile * { color: #FFFFFF; }
-  html body #sidebar .sb-profile div div:last-child { color: #A9B6C4; }
-  html body #sidebar .sb-out { margin: 0; padding: 6px 4px; }
-  html body #sidebar .sb-controls { margin: 0; }
-  html body #sidebar .theme-toggle { flex: none; background: #243142; border-color: #243142; color: #FFFFFF; border-radius: 999px; padding: 6px 12px; }
-  html body #sidebar .sb-out { color: #A9B6C4; font-weight: 600; }
-  html body #sidebar nav.sb-nav {
-    order: 10; flex: 1 1 100%; flex-direction: row; align-items: stretch; gap: 2px;
-    padding: 4px 0 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
-  }
-  html body #sidebar nav.sb-nav::-webkit-scrollbar { display: none; }
-  html body #sidebar nav.sb-nav > div { display: flex; }
-  html body #sidebar .nav-sec { display: none; }
-  html body #sidebar .nb {
-    width: auto; flex: none; padding: 12px 14px 11px; border-radius: 0; background: transparent !important;
-    border-bottom: 3px solid transparent; color: #A9B6C4; font-size: 14px; font-weight: 600; gap: 7px; white-space: nowrap; min-width: max-content;
-  }
-  html body #sidebar .nb:hover:not(.on) { color: #FFFFFF; }
-  html body #sidebar .nb.on { color: #FFFFFF; font-weight: 700; border-bottom-color: #4FD1C5; }
-  html body #sidebar .nb.on::before { display: none; }
-  html body #sidebar .nb-ic { display: none; }
-  html body #sidebar .nb-badge { margin-left: 4px; }
-  html body #main { margin-left: 0 !important; width: 100%; }
-  html body .hamburger { display: none !important; }
-  /* the old white page header becomes a light row under the navy bar (language, date, Admit button) */
-  html body #main > header { position: static; background: transparent; border-bottom: none; backdrop-filter: none; padding: 14px 28px 0; height: auto; min-height: 52px; }
-  html body #main > header .bc-root, html body #main > header .bc-sep, html body #main > header .aura-mark-hdr { display: none; }
-  html body #main > header .bc-page { font-size: 13px; font-weight: 700; color: #4E5B69; }
-  html[data-theme="dark"] body #main > header { background: transparent; }
-}
-/* phones: the slide-out menu in navy, white text */
-@media (max-width: 600px) {
-  html body #sidebar .sb-fac-inner,
-  html body #sidebar .sb-facility-inner { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); }
-  html body #sidebar .sb-fac-name { color: #FFFFFF; }
-  html body #sidebar .sb-fac-type, html body #sidebar .sb-online { color: #A9B6C4; }
-}
-
-/* ---------- dashboards: the money card in navy, like the preview ---------- */
-html body .mc { border-radius: 18px; padding: 18px 18px 16px; }
-html body .mc.mc-green { background: #18212C; border-color: #18212C; }
-html body .mc.mc-green .mc-lbl, html body .mc.mc-green .mc-sub { color: #A9B6C4; }
-html body .mc.mc-green .mc-val { color: #FFFFFF; }
-html body .mc.mc-red .mc-val { color: #B3361F; }
-html body .mc-lbl { font-size: 11px; letter-spacing: .06em; color: #5D6B7A; }
-
-/* ---------- Pharmacy and Lab: underline tabs, receipt-style totals ---------- */
-@media (min-width: 701px) {
-  html body .d-tabs { background: #18212C; max-width: none; padding: 0 28px; gap: 2px; }
-  html body .d-tab { color: #A9B6C4; border: none; border-bottom: 3px solid transparent; border-radius: 0; padding: 12px 14px 11px; font-size: 14px; }
-  html body .d-tab.on { background: transparent; color: #FFFFFF; border-bottom-color: #4FD1C5; box-shadow: none; }
-  html body .d-top { border-bottom: none; }
-}
-html body .sum-row span:last-child { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
-html body .sum-row.big { font-size: 24px; }
-html body .sum-row.big span:last-child { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
-html body .d-view { border-radius: 18px; margin-top: 20px; }
+html body .top .brand { color: var(--ink); font-family: Manrope, sans-serif; }
+html body .top .brand i { background: var(--aura-mark) center/126% no-repeat; width: 32px; height: 32px; border-radius: 9px; color: transparent; font-size: 0; }
+html body .book .card { border-radius: 16px; box-shadow: none; }
+html body .card.prof { background: #0F3D2E; border-color: #0F3D2E; color: #FFFFFF; border-radius: 22px; padding: 22px; }
+html body .card.prof:before { display: none; }
+html body .card.prof small { color: #BFE0D1 !important; font-size: 14px; }
+html body .card.prof h2 { font-size: 26px; color: #FFFFFF; }
+html body .card.prof .chip { background: rgba(255,255,255,.14); border-color: transparent; color: #FFFFFF; }
+html body .card.prof .chip b { color: #FFFFFF !important; }
+html body .card.prof .chip.uhid { background: rgba(255,255,255,.14); }
+html body .book .stats { margin-top: 16px; }
+html body .book .stat { background: #FFFFFF; border: 1px solid var(--line); border-radius: 16px; padding: 14px 12px; }
+html body .book .stat b { font-family: Manrope, sans-serif; font-size: 24px; font-weight: 800; }
+html body .book .sec h3 { color: var(--ink); font-weight: 800; }
+html body .lang button.on { background: var(--g); }
+html body .btn-main, html body .doc.main { background: var(--g); border-color: var(--g); }
