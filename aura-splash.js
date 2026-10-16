@@ -44,6 +44,7 @@
       c.auth.getSession().then(function (r) {
         if (r && r.data && r.data.session) return waitForApp();
         try { clearTimeout(window.__asFail); } catch (e) {}
+        if (window.AuraLoader) AuraLoader.hide();   /* the saved login has expired: the sign-in screen is next */
         html.classList.remove('as-wait'); html.classList.add('as-pending');
         window.__asFail = setTimeout(function () { html.classList.remove('as-pending'); }, 4000);
         play();
