@@ -4,7 +4,7 @@ function _auraLoginUrl() {
   try { if (typeof DEPT !== 'undefined' && DEPT && (DEPT.role === 'owner' || DEPT.role === 'receptionist') && !DEPT.standalone) return 'nh.html'; } catch (e) {}
   /* works for os.aurascale.in/pharmacy.html and the short address os.aurascale.in/pharmacy (same for /lab and /diagnostic) */
   var p = location.pathname;
-  var f = /\/pharmacy(\.html)?\/?$/i.test(p) ? 'pharmacy' : /\/(lab|diagnostic)(\.html)?\/?$/i.test(p) ? 'lab' : '';
+  var f = /\/pharmacy(\.html)?\/?$/i.test(p) ? 'pharmacy' : /\/(lab|diagnostic)(\.html)?\/?$/i.test(p) ? 'lab' : /\/wholesale(\.html)?\/?$/i.test(p) ? 'wholesale' : '';
   return f ? 'nh.html?for=' + f : 'nh.html';
 }
 /* ══════════════════════════════════════════════════════════════════
@@ -114,7 +114,7 @@ async function nhAuthGuard(requiredRole) {
 
     /* Role mismatch → redirect to the right portal */
     if (requiredRole && _myRole !== requiredRole) {
-      var portals = { owner: 'nh.html', doctor: 'doctor.html', receptionist: 'receptionist.html', pharmacist: 'pharmacy.html', lab: 'lab.html' };
+      var portals = { owner: 'nh.html', doctor: 'doctor.html', receptionist: 'receptionist.html', pharmacist: 'pharmacy.html', lab: 'lab.html', sales: 'wholesale.html', inventory: 'wholesale.html', accounts: 'wholesale.html' };
       window.location.href = portals[_myRole] || 'nh.html';
       return null;
     }
