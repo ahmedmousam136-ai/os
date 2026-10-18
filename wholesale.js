@@ -39,6 +39,7 @@ function canShow() {
 async function init() {
   var ok = await deptInit('wholesale', 'Wholesale'); if (!ok) return;
   ROLE = DEPT.role;
+  try { whLangBox(); } catch (e) {}
   var R = function (a) { return a.indexOf(ROLE) >= 0; };
   CAN = { sell: R(['owner', 'sales']), sellRead: R(['owner', 'sales', 'accounts']), buy: R(['owner', 'inventory']), buyRead: R(['owner', 'inventory', 'accounts']),
     money: R(['owner', 'accounts']), moneyRead: R(['owner', 'accounts', 'sales']), owner: ROLE === 'owner', moneyEdit: R(['owner', 'accounts']) };
@@ -49,6 +50,7 @@ async function init() {
   partyPicker('buy', ['supplier', 'both'], function () { buyRender(); });
   partyPicker('pret', ['supplier', 'both'], function () { brLoadBills(); });
   partyPicker('pay', null, null);
+  partyPicker('ship', null, null);
   partyPicker('ledg', null, function () { ledgerLoad(); });
   dEl('s-date').value = today(); dEl('b-date').value = today(); dEl('mp-date').value = today();
   var y = Number(today().slice(0, 4)); dEl('lg-from').value = (today().slice(5, 7) >= '04' ? y : y - 1) + '-04-01';   /* start of this financial year */
@@ -236,7 +238,17 @@ function sellRender(keep) {
     + (T.ro ? row('Round off', (T.ro > 0 ? '+' : '') + T.ro.toFixed(2)) : '')
     + row('Invoice total', dMoney0(T.total), 'big')
     + (p && CAN.moneyRead ? row('Customer will owe', dMoney0(bal + T.total - paid)) : '')
-    + (p && p.credit_limit && SPAY === 'credit' && bal + T.total - paid > Number(p.credit_limit) ? '<div class="tiny over">Above the credit limit of ' + dMoney0(p.credit_limit) + (CAN.owner ? ' (you can still save)' : '') + '</div>' : '');
+    + (p && p.credit_limit && SPAY === 'credit' && bal + T.total - paid > Number(p.credit_limit) ? '<div class="tiny over">Above the credit limit of ' + dMoney0(p.credit_limit) + (CAN.owner ? ' (you can still save)' : '') + '</div>' : '')
+    + (T.total > 50000 && !(dEl('tr-eway_no') && dEl('tr-eway_no').value.trim()) ? '<div class="tiny" style="color:var(--amber);margin-top:6px">Above &#8377;50,000: an e-way bill is usually needed to move these goods. Add its number under Delivery &amp; transport (now or later).</div>' : '');
+}
+var TR_KEYS = ['transporter', 'gr_no', 'gr_date', 'cases', 'weight', 'vehicle', 'order_no', 'order_date', 'eway_no', 'eway_date'];
+function trRead(pre) { var o = {}; TR_KEYS.forEach(function (k) { var e = dEl(pre + k); if (e && e.value.trim()) o[k] = e.value.trim(); }); if (o.vehicle) o.vehicle = o.vehicle.toUpperCase(); if (o.eway_no) o.eway_no = o.eway_no.replace(/\s/g, ''); return o; }
+function trClear(pre) { TR_KEYS.forEach(function (k) { var e = dEl(pre + k); if (e) e.value = ''; }); }
+function shipRead() {
+  if (!dEl('s-shipon').checked) return {};
+  if (PICK.ship && PICK.ship.party) return { party_id: PICK.ship.party.id };
+  var o = { name: dEl('sh-name').value.trim(), phone: dEl('sh-phone').value.trim(), address: dEl('sh-address').value.trim() };
+  return o.name ? o : {};
 }
 function sellPay(m) {
   SPAY = m; segOn('s-pay', 'data-p', m);
@@ -252,8 +264,11 @@ async function sellSave(override) {
   var T = sellCalc(); if (T.problems.length) { dShowErr('s-err', T.problems.join(' · ')); return; }
   if (lines.some(function (l) { return l.rate === '' || num(l.rate) <= 0; })) { dShowErr('s-err', 'Enter the rate for every item.'); return; }
   if (SPAY !== 'credit' && SPAY !== 'cash' && !dEl('s-ref').value.trim()) { dShowErr('s-err', 'Enter the UTR / cheque number.'); return; }
+  var trv = trRead('tr-'), shv = shipRead();
+  if (trv.eway_no && !/^\d{12}$/.test(trv.eway_no)) { dShowErr('s-err', 'An e-way bill number has 12 digits.'); return; }
+  if (dEl('s-shipon').checked && !shv.party_id && !shv.name) { dShowErr('s-err', 'Choose or type the shop the goods are delivered to (or untick "Deliver to a different shop").'); return; }
   var body = { customer_id: p.id, inv_date: dEl('s-date').value || today(), pay_mode: SPAY, notes: dEl('s-note').value.trim(), ref_no: dEl('s-ref').value.trim(),
-    paid_now: SPAY === 'credit' ? (num(dEl('s-paid').value) || 0) : null, override_credit: !!override,
+    paid_now: SPAY === 'credit' ? (num(dEl('s-paid').value) || 0) : null, override_credit: !!override, ship_to: shv, transport: trv,
     lines: lines.map(function (l) { return { batch_id: l.batch_id, qty: num(l.qty), free: num(l.free), rate: num(l.rate), disc: num(l.disc) }; }) };
   var btn = dEl('s-save'); btn.disabled = true; btn.textContent = 'Saving…';
   try {
@@ -265,7 +280,9 @@ async function sellSave(override) {
       throw r.error;
     }
     var sale = r.data;
-    SLINES = []; dEl('s-note').value = ''; dEl('s-paid').value = ''; dEl('s-ref').value = ''; sellPay('credit'); ppSet('sell', null); sellRender();
+    SLINES = []; dEl('s-note').value = ''; dEl('s-paid').value = ''; dEl('s-ref').value = ''; sellPay('credit'); ppSet('sell', null);
+    trClear('tr-'); dEl('s-shipon').checked = false; dEl('s-shipbox').style.display = 'none'; ppSet('ship', null); ['sh-name', 'sh-phone', 'sh-address'].forEach(function (k) { dEl(k).value = ''; }); dEl('s-trans').open = false;
+    sellRender();
     loadItems(); loadBalances();
     openSale(sale.id, true);
   } catch (e) { dShowErr('s-err', dErr(e).replace('CREDIT_LIMIT: ', '')); }
@@ -308,6 +325,8 @@ async function openSale(id, fresh) {
     + '<div style="text-align:right;margin:10px 0;font-size:13px">Taxable ' + dMoney(s.taxable) + (s.interstate ? ' &middot; IGST ' + dMoney(s.igst) : ' &middot; CGST ' + dMoney(s.cgst) + ' &middot; SGST ' + dMoney(s.sgst)) + ' &middot; <b style="font-size:16px">Total ' + dMoney0(s.total) + '</b></div>'
     + '<p class="tiny" id="doc-pdf">' + (s.pdf_path ? '' : 'Making the PDF&hellip;') + '</p>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="doc-open" disabled>&#128196; Open / print</button><button class="btn btn-g" id="doc-wa" disabled>&#128242; WhatsApp</button>'
+    + '<button class="btn" id="doc-3c" disabled>&#128424; Print 3 copies</button>'
+    + (CAN.sell && s.status === 'posted' ? '<button class="btn" onclick="transportForm(' + A(s.id) + ')">&#128666; Transport / e-way bill</button>' : '')
     + (canRet ? '<button class="btn" onclick="saleReturnForm(' + A(s.id) + ')">&#8617; Goods returned</button>' : '')
     + (CAN.owner && s.status === 'posted' ? '<button class="btn btn-r" onclick="saleCancel(' + A(s.id) + ')">Cancel invoice</button>' : '')
     + (fresh ? '<button class="btn btn-p" onclick="dClose(\'m-doc\');dEl(\'s-q\').focus()">&#10133; New invoice</button>' : '') + '</div><div id="doc-extra"></div>';
@@ -316,6 +335,7 @@ async function openSale(id, fresh) {
     var path = await ensurePdf('sale', s);
     dEl('doc-pdf').textContent = '';
     dEl('doc-open').disabled = false; dEl('doc-open').onclick = function () { deptOpenPdf('bills', path); };
+    dEl('doc-3c').disabled = false; dEl('doc-3c').onclick = function () { printCopies(s); };
     dEl('doc-wa').disabled = false; dEl('doc-wa').onclick = function () {
       deptWhatsApp(s.buyer.phone, (SET.name || DEPT.clinic.name || '') + '\nInvoice ' + s.inv_no + ' dated ' + dDate(s.inv_date) + '\nAmount ' + dMoney0(s.total) + (s.pay_mode === 'credit' && s.due_date ? ' (due ' + dDate(s.due_date) + ')' : '') + '\nInvoice (PDF):', 'bills', path);
     };
@@ -326,6 +346,38 @@ async function saleCancel(id) {
   var r = await _supa.rpc('wh_cancel_sale', { p_clinic: _clinicId, p_id: id, p_reason: why });
   if (r.error) { showToast(dErr(r.error)); return; }
   showToast('Invoice cancelled.'); loadItems(); loadBalances(); if (dEl('s-list').style.display !== 'none') loadSales(); openSale(id);
+}
+function transportForm(id) {
+  var s0 = SALES.filter(function (x) { return x.id === id; })[0];
+  _supa.from('wh_sales').select('transport,ship_to').eq('id', id).single().then(function (r) {
+    var t = (r.data && r.data.transport) || {}, sh = (r.data && r.data.ship_to) || {};
+    var f = function (k, l, ty) { return '<div><label class="flbl">' + l + '</label><input class="finput" id="tf-' + k + '"' + (ty ? ' type="' + ty + '"' : '') + ' value="' + esc(t[k] || '') + '"/></div>'; };
+    dEl('doc-extra').innerHTML = '<div class="card" style="margin-top:14px"><b>Delivery &amp; transport</b><div class="grid3" style="margin-top:8px">'
+      + f('transporter', 'Transporter') + f('gr_no', 'G.R. / L.R. no.') + f('gr_date', 'G.R. date', 'date') + f('cases', 'Cases') + f('weight', 'Weight') + f('vehicle', 'Vehicle no.')
+      + f('order_no', 'Order no.') + f('order_date', 'Order date', 'date') + f('eway_no', 'E-way bill no. (12 digits)') + f('eway_date', 'E-way bill date', 'date') + '</div>'
+      + '<div class="grid3" style="margin-top:8px"><div><label class="flbl">Shipped to (shop name)</label><input class="finput" id="tf-sh-name" value="' + esc(sh.name || '') + '"/></div><div><label class="flbl">Phone</label><input class="finput" id="tf-sh-phone" value="' + esc(sh.phone || '') + '"/></div><div><label class="flbl">Delivery address</label><input class="finput" id="tf-sh-address" value="' + esc(sh.address || '') + '"/></div></div>'
+      + '<p class="tiny" style="margin-top:6px">Only these details change. Items and amounts of a saved invoice can never change. The PDF is made again.</p>'
+      + '<button class="btn btn-g" style="margin-top:8px" id="tf-go" onclick="transportSave(' + A(id) + ')">&#10003; Save</button><div class="err" id="tf-err"></div></div>';
+  });
+}
+async function transportSave(id) {
+  dShowErr('tf-err', '');
+  var t = trRead('tf-'); if (t.eway_no && !/^\d{12}$/.test(t.eway_no)) { dShowErr('tf-err', 'An e-way bill number has 12 digits.'); return; }
+  var sh = { name: dEl('tf-sh-name').value.trim(), phone: dEl('tf-sh-phone').value.trim(), address: dEl('tf-sh-address').value.trim() };
+  dEl('tf-go').disabled = true;
+  var r = await _supa.rpc('wh_set_transport', { p_clinic: _clinicId, p_id: id, p: { transport: t, ship_to: sh.name ? sh : {} } });
+  dEl('tf-go').disabled = false;
+  if (r.error) { dShowErr('tf-err', dErr(r.error)); return; }
+  showToast('Saved. The invoice PDF is made again.'); openSale(id);
+}
+async function printCopies(s) {
+  var b = dEl('doc-3c'); b.disabled = true; b.textContent = 'Making…';
+  try {
+    var blob = await docPdf('sale', s, ['ORIGINAL FOR RECIPIENT', 'DUPLICATE FOR TRANSPORTER', 'TRIPLICATE FOR SUPPLIER']);
+    var path = _clinicId + '/wholesale/copies/' + s.id + '-3.pdf';
+    await deptUpload('bills', path, blob); deptOpenPdf('bills', path);
+  } catch (e) { showToast('Could not make the copies: ' + dErr(e)); }
+  finally { b.disabled = false; b.innerHTML = '&#128424; Print 3 copies'; }
 }
 function saleReturnForm(id) {
   _supa.from('wh_sale_items').select('*').eq('sale_id', id).order('name').then(function (r) {
@@ -414,7 +466,7 @@ function buyAddLine() {
   if (!BITEM || !BITEM.name) { dShowErr('b-line-err', 'Choose the item (or "New item").'); return; }
   var l = { item_id: BITEM.item_id, name: BITEM.name, batch: dEl('b-batch').value.trim().toUpperCase(), expiry: dEl('b-exp').value, qty: num(dEl('b-qty').value), free: num(dEl('b-free').value),
     rate: num(dEl('b-rate').value), disc: num(dEl('b-disc').value), gst: Number(dEl('b-gst').value), mrp: num(dEl('b-mrp').value), ptr: dEl('b-ptr').value === '' ? null : num(dEl('b-ptr').value) };
-  if (!l.item_id) l.item = { name: l.name, composition: dEl('bn-comp').value.trim(), hsn: dEl('bn-hsn').value.trim(), gst_rate: l.gst, unit: dEl('bn-unit').value, pack: dEl('bn-pack').value.trim() };
+  if (!l.item_id) l.item = { name: l.name, composition: dEl('bn-comp').value.trim(), hsn: dEl('bn-hsn').value.trim(), gst_rate: l.gst, unit: dEl('bn-unit').value, pack: dEl('bn-pack').value.trim(), manufacturer: dEl('bn-mfg').value.trim() };
   if (!l.batch) { dShowErr('b-line-err', 'Enter the batch number.'); return; }
   if (!l.expiry) { dShowErr('b-line-err', 'Enter the expiry month.'); return; }
   if (!(l.qty > 0)) { dShowErr('b-line-err', 'Enter the quantity.'); return; }
@@ -422,7 +474,7 @@ function buyAddLine() {
   if (!(l.mrp > 0)) { dShowErr('b-line-err', 'Enter the MRP of one unit.'); return; }
   if (l.ptr !== null && r2(l.ptr * (1 + l.gst / 100)) > l.mrp) { dShowErr('b-line-err', 'Your selling rate + GST is above the MRP.'); return; }
   PLINES.push(l); BITEM = null;
-  ['b-q', 'b-batch', 'b-exp', 'b-qty', 'b-rate', 'b-mrp', 'b-ptr', 'bn-comp', 'bn-pack'].forEach(function (x) { dEl(x).value = ''; }); dEl('b-free').value = 0; dEl('b-disc').value = 0; dEl('bn-hsn').value = '3004';
+  ['b-q', 'b-batch', 'b-exp', 'b-qty', 'b-rate', 'b-mrp', 'b-ptr', 'bn-comp', 'bn-pack', 'bn-mfg'].forEach(function (x) { dEl(x).value = ''; }); dEl('b-free').value = 0; dEl('b-disc').value = 0; dEl('bn-hsn').value = '3004';
   dEl('b-newitem').style.display = 'none'; dEl('b-picked').textContent = '';
   buyRender(); dEl('b-q').focus();
 }
@@ -435,21 +487,26 @@ function buyRender() {
   }).join('') : '<tr><td colspan="9" class="lines-empty">No lines yet. Add them above, or scan the bill.</td></tr>';
   var g = r2(T.tx + T.c + T.s + T.i), tot = Math.round(g);
   var row = function (l, v, cls) { return '<div class="sum-row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
+  var bt = dEl('b-billtot') ? num(dEl('b-billtot').value) : 0;
   dEl('b-sum').innerHTML = row('Taxable value', dMoney(T.tx)) + (inter ? row('IGST', dMoney(T.i)) : row('CGST', dMoney(T.c)) + row('SGST', dMoney(T.s))) + (tot - g ? row('Round off', (tot - g > 0 ? '+' : '') + (tot - g).toFixed(2)) : '') + row('Bill total', dMoney0(tot), 'big')
-    + '<div class="tiny">Check that this matches the total on the paper bill.</div>';
+    + (bt > 0 ? (Math.abs(bt - tot) <= 2 ? '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; Matches the paper bill (' + dMoney0(bt) + ')</div>' : '<div class="tiny over">&#10007; Paper bill says ' + dMoney0(bt) + ' (difference ' + dMoney0(bt - tot) + '). A line may be missing or wrong.</div>') : '<div class="tiny">Type the grand total from the paper bill to check it.</div>');
 }
 async function buySave() {
   dShowErr('b-err', '');
   var p = PICK.buy.party; if (!p) { dShowErr('b-err', 'Choose the supplier.'); return; }
   if (!dEl('b-billno').value.trim()) { dShowErr('b-err', 'Enter the supplier\'s bill number.'); return; }
   if (!PLINES.length) { dShowErr('b-err', 'Add at least one line.'); return; }
+  var calc = 0, inter0 = isInter(p); PLINES.forEach(function (l) { var tx = r2(l.qty * l.rate * (1 - l.disc / 100)), t = tax(tx, l.gst, inter0); calc += tx + t.c + t.s + t.i; }); calc = Math.round(r2(calc));
+  var bt = num(dEl('b-billtot').value);
+  if (PLINES._doc && !(bt > 0)) { dShowErr('b-err', 'Type the grand total printed on the bill.'); return; }
+  if (bt > 0 && Math.abs(bt - calc) > 2 && dEl('b-note').value.trim().length < 5) { dShowErr('b-err', 'The lines add up to ' + dMoney0(calc) + ' but the paper bill says ' + dMoney0(bt) + '. Fix the lines, or write the reason (e.g. freight) in Note.'); return; }
   var body = { supplier_id: p.id, bill_no: dEl('b-billno').value.trim(), bill_date: dEl('b-date').value || today(), notes: dEl('b-note').value.trim(), doc_path: PLINES._doc || null,
     lines: PLINES.map(function (l) { var x = { batch: l.batch, expiry: l.expiry, qty: l.qty, free: l.free, rate: l.rate, disc: l.disc, gst: l.gst, mrp: l.mrp, ptr: l.ptr }; if (l.item_id) x.item_id = l.item_id; else x.item = l.item; return x; }) };
   var btn = dEl('b-save'); btn.disabled = true; btn.textContent = 'Saving…';
   try {
     var r = await _supa.rpc('wh_purchase', { p_clinic: _clinicId, p: body }); if (r.error) throw r.error;
     showToast('Purchase ' + r.data.our_no + ' saved: ' + dMoney0(r.data.total) + '. Stock updated.');
-    PLINES = []; dEl('b-billno').value = ''; dEl('b-note').value = ''; ppSet('buy', null); buyRender();
+    PLINES = []; dEl('b-billno').value = ''; dEl('b-note').value = ''; dEl('b-billtot').value = ''; ppSet('buy', null); buyRender();
     await loadItems(); buySeg('list');
   } catch (e) { dShowErr('b-err', dErr(e)); }
   finally { btn.disabled = false; btn.innerHTML = '&#10003; Save purchase &amp; add to stock'; }
@@ -571,7 +628,12 @@ async function scanPick(inp) {
     var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
     if (!d || !d.ok) {
       var why = { daily_limit: 'Today\'s limit of bill photos is used up. Please add the lines by hand.', ai_key_not_set: 'Bill reading is not set up on the server yet.', not_allowed: 'Only the owner or inventory staff can scan bills.', nothing_read: 'No product lines could be read. Take a clearer, straight photo of the whole bill in good light.', image_too_large: 'The photo is too large.', not_signed_in: 'Your login has expired. Please log in again.' };
-      st.textContent = '⚠ ' + (why[d && d.reason] || ('Could not read the bill' + (d && d.message ? ': ' + d.message : (r.error ? ': ' + dErr(r.error) : '')) + '.')); return;
+      var msg = why[d && d.reason] || ('Could not read the bill' + (d && d.message ? ': ' + d.message : (r.error ? ': ' + dErr(r.error) : '')) + '.');
+      st.textContent = '⚠ ' + msg;
+      if (!d || ['not_allowed', 'not_signed_in'].indexOf(d.reason) < 0) {   /* the photo could not be read: type the bill by hand on the same check screen */
+        scanReview({ _failed: msg, lines: [{}] }); SCAN[0].manual = true; scanRows(); scanCheck();
+      }
+      return;
     }
     st.textContent = ''; scanReview(d);
   } catch (e) { st.textContent = '⚠ ' + dErr(e); }
@@ -581,46 +643,116 @@ function scanExp(v) {   /* MM/YYYY, MM/YY, MM-YY -> YYYY-MM */
   var mm = Math.min(12, Math.max(1, Number(m[1]))), yy = m[2].length === 2 ? '20' + m[2] : m[2];
   return yy + '-' + ('0' + mm).slice(-2);
 }
+var SCAN_D = null, SCAN_SUP = '';
 function scanReview(d) {
-  var supMatch = PARTIES.filter(function (p) { return (d.supplier_gstin && p.gstin === d.supplier_gstin) || (d.supplier && p.name.toLowerCase() === String(d.supplier).toLowerCase()); })[0];
+  SCAN_D = d;
+  var m = PARTIES.filter(function (p) { return (d.supplier_gstin && p.gstin === String(d.supplier_gstin).toUpperCase()) || (d.supplier && p.name.toLowerCase() === String(d.supplier).toLowerCase()); })[0];
+  SCAN_SUP = m ? m.id : '';
   SCAN = d.lines.map(function (l) {
     var n = String(l.name || '').toLowerCase(), first = n.split(/\s+/)[0] || '';
     var best = ITEMS.filter(function (it) { return it.name.toLowerCase() === n; })[0] || ITEMS.filter(function (it) { return first.length >= 3 && it.name.toLowerCase().indexOf(first) === 0; })[0];
-    var g = [0, 5, 12, 18, 28, 40].indexOf(Number(l.gst)) >= 0 ? Number(l.gst) : (best ? Number(best.gst_rate) : 5);
-    return { inc: true, read: l.name, match: best ? best.id : '', batch: (l.batch || '').toUpperCase(), expiry: scanExp(l.expiry), qty: l.qty || '', free: l.free || 0, rate: l.rate || '', disc: l.disc || 0, gst: g, mrp: l.mrp || '', hsn: l.hsn || '' };
+    var g = (l.gst !== null && l.gst !== undefined && l.gst !== '' && [0, 5, 12, 18, 28, 40].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : '';   /* not read -> must be chosen, never assumed 0 */
+    return { inc: true, read: l.name || '', orig: l.name || '', match: best ? best.id : '', batch: (l.batch || '').toUpperCase(), expiry: scanExp(l.expiry), qty: l.qty == null ? '' : l.qty, free: l.free || 0,
+      rate: l.rate == null ? '' : l.rate, disc: l.disc || 0, gst: g, mrp: l.mrp == null ? '' : l.mrp, hsn: l.hsn || '', mfg: l.mfg || '', pack: l.pack || '' };
   });
-  var cand = function (x) { var w = String(x.read || '').toLowerCase().split(/\s+/)[0] || ''; return ITEMS.filter(function (it) { return w.length >= 3 && it.name.toLowerCase().indexOf(w) >= 0; }).slice(0, 8); };
-  var inp = function (i, k, w, ty) { return '<input class="finput" style="width:' + w + 'px;padding:6px" ' + (ty === 'n' ? 'type="number" step="any" min="0"' : ty === 'm' ? 'type="month"' : '') + ' value="' + esc(SCAN[i][k]) + '" oninput="SCAN[' + i + '][\'' + k + '\']=this.value"/>'; };
-  dEl('scan-body').innerHTML = '<div class="note">AI can misread. <b>Check every line against the paper bill</b> (batch, expiry, MRP, rate) before adding.</div>'
-    + '<div class="grid3" style="margin-bottom:10px"><div><label class="flbl">Supplier on the bill</label><div class="muted">' + esc(d.supplier || '?') + (d.supplier_gstin ? '<br>' + esc(d.supplier_gstin) : '') + '</div>' + (supMatch ? '<div class="tiny" style="color:var(--green)">Matched: ' + esc(supMatch.name) + '</div>' : '<div class="tiny">Not in your list. Choose or add the supplier on the purchase screen.</div>') + '</div>'
-    + '<div><label class="flbl">Bill no.</label><input class="finput" id="sc-no" value="' + esc(d.invoice_no || '') + '"/></div><div><label class="flbl">Bill date</label><input class="finput" id="sc-date" type="date" value="' + esc(scanDate(d.invoice_date)) + '"/></div></div>'
-    + '<div style="overflow-x:auto"><table class="dt wl"><thead><tr><th></th><th>Item (match to your list)</th><th>Batch</th><th>Expiry</th><th>Qty</th><th>Free</th><th>Rate</th><th>Disc %</th><th>GST</th><th>MRP</th></tr></thead><tbody>'
-    + SCAN.map(function (x, i) {
-      var opts = '<option value="">&#10133; New: ' + esc(x.read) + '</option>' + cand(x).map(function (it) { return '<option value="' + it.id + '"' + (it.id === x.match ? ' selected' : '') + '>' + esc(it.name) + '</option>'; }).join('')
-        + (x.match && !cand(x).some(function (it) { return it.id === x.match; }) ? '<option value="' + x.match + '" selected>' + esc(ITEMMAP[x.match].name) + '</option>' : '');
-      return '<tr><td><input type="checkbox" checked onchange="SCAN[' + i + '].inc=this.checked" style="width:18px;height:18px;appearance:auto"/></td><td><div class="tiny">Read: ' + esc(x.read) + '</div><select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value">' + opts + '</select></td>'
-        + '<td>' + inp(i, 'batch', 92) + '</td><td>' + inp(i, 'expiry', 130, 'm') + '</td><td>' + inp(i, 'qty', 64, 'n') + '</td><td>' + inp(i, 'free', 54, 'n') + '</td><td>' + inp(i, 'rate', 76, 'n') + '</td><td>' + inp(i, 'disc', 56, 'n') + '</td>'
-        + '<td><select class="finput" style="width:66px;padding:6px" onchange="SCAN[' + i + '].gst=Number(this.value)">' + [0, 5, 12, 18, 28, 40].map(function (g) { return '<option' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td><td>' + inp(i, 'mrp', 76, 'n') + '</td></tr>';
-    }).join('') + '</tbody></table></div>'
+  dEl('scan-body').innerHTML = (d._failed ? '<div class="note" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)">' + esc(d._failed) + ' The photo is saved with the purchase. Type the details from the paper bill below.</div>' : '')
+    + '<div class="note"><b>AuraScale only goes ahead when nothing is missing.</b> Anything AI could not read (or that is not on the photo) is left empty and marked red: type it from the paper bill. If a line was missed, tap <b>Add a line</b>.</div>'
+    + '<div class="grid4" style="margin-bottom:10px"><div><label class="flbl">Supplier on the bill *</label><div class="muted">' + esc(d.supplier || '(not read)') + (d.supplier_gstin ? '<br>' + esc(d.supplier_gstin) : '') + '</div><div id="sc-sup"></div></div>'
+    + '<div><label class="flbl">Bill no. *</label><input class="finput" id="sc-no" value="' + esc(d.invoice_no || '') + '" oninput="scanCheck()"/></div><div><label class="flbl">Bill date *</label><input class="finput" id="sc-date" type="date" value="' + esc(d.invoice_date ? scanDate(d.invoice_date) : '') + '" oninput="scanCheck()"/></div>'
+    + '<div><label class="flbl">Grand total on the bill &#8377; *</label><input class="finput" id="sc-tot" type="number" step="0.01" min="0" value="' + esc(d.bill_total == null ? '' : d.bill_total) + '" oninput="scanCheck()"/></div></div>'
+    + '<div style="overflow-x:auto"><table class="dt wl" id="sc-t"><thead><tr><th></th><th>Item (match to your list, or type it)</th><th>Mfg.</th><th>Batch *</th><th>Expiry *</th><th>Qty *</th><th>Free</th><th>Rate *</th><th>Disc %</th><th>GST *</th><th>MRP *</th></tr></thead><tbody id="sc-tb"></tbody></table></div>'
+    + '<button class="btn btn-sm" style="margin-top:8px" onclick="scanAddLine()">&#10133; Add a line (missed or not on the photo)</button>'
     + '<p class="tiny" style="margin-top:6px">MRP and rate are per unit you sell (e.g. per strip). If the bill shows per box, divide before adding.</p>'
-    + '<button class="btn btn-g" style="margin-top:10px" onclick="scanUse(' + A(supMatch ? supMatch.id : '') + ')">&#10003; Put the ticked lines into the purchase</button><div class="err" id="scan-err"></div>';
-  dOpen('m-scan');
+    + '<div id="sc-sum" style="margin-top:10px"></div>'
+    + '<div id="sc-why-box" style="display:none;margin-top:8px"><label class="flbl">The total does not match. Write why (e.g. freight added, cash discount on bill) *</label><input class="finput" id="sc-why" oninput="scanCheck()"/></div>'
+    + '<button class="btn btn-g" style="margin-top:10px" id="sc-go" onclick="scanUse()">&#10003; Put the ticked lines into the purchase</button><div class="err" id="scan-err"></div>';
+  scanRows();
+  scanSupBox(); dOpen('m-scan'); scanCheck();
 }
-function scanDate(v) { var m = String(v || '').match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (!m) return today(); var y = m[3].length === 2 ? '20' + m[3] : m[3]; return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
-function scanUse(supId) {
-  var bad = [], add = [];
+function scanRows() {
+  var cand = function (x) { var w = String(x.read || '').toLowerCase().split(/\s+/)[0] || ''; return ITEMS.filter(function (it) { return w.length >= 3 && it.name.toLowerCase().indexOf(w) >= 0; }).slice(0, 8); };
+  var inp = function (i, k, w, ty, ph) { return '<input class="finput" data-i="' + i + '" data-k="' + k + '" style="width:' + w + 'px;padding:6px" ' + (ty === 'n' ? 'type="number" step="any" min="0"' : ty === 'm' ? 'type="month"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(SCAN[i][k]) + '" oninput="SCAN[' + i + '][\'' + k + '\']=this.value;scanCheck()"/>'; };
+  dEl('sc-tb').innerHTML = SCAN.map(function (x, i) {
+    var cs = cand(x);
+    var opts = '<option value="">&#10133; New item (type below)</option>' + cs.map(function (it) { return '<option value="' + it.id + '"' + (it.id === x.match ? ' selected' : '') + '>' + esc(it.name) + '</option>'; }).join('')
+      + (x.match && !cs.some(function (it) { return it.id === x.match; }) ? '<option value="' + x.match + '" selected>' + esc(ITEMMAP[x.match].name) + '</option>' : '');
+    return '<tr id="sc-r' + i + '"><td><input type="checkbox"' + (x.inc ? ' checked' : '') + ' onchange="SCAN[' + i + '].inc=this.checked;scanCheck()" style="width:18px;height:18px;appearance:auto"/></td>'
+      + '<td>' + (x.manual ? '<div class="tiny">Typed by you</div>' : '<div class="tiny">Read: ' + esc(x.orig || '(nothing)') + '</div>')
+      + '<select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value;scanCheck()">' + opts + '</select>'
+      + '<div class="sc-new" id="sc-n' + i + '" style="margin-top:4px">' + inp(i, 'read', 210, '', 'Item name *') + '<div style="display:flex;gap:4px;margin-top:4px">' + inp(i, 'hsn', 100, '', 'HSN') + inp(i, 'pack', 104, '', 'Pack e.g. 1x10') + '</div></div>'
+      + '<div class="tiny over" id="sc-e' + i + '"></div></td>'
+      + '<td>' + inp(i, 'mfg', 70) + '</td><td>' + inp(i, 'batch', 92) + '</td><td>' + inp(i, 'expiry', 130, 'm') + '</td><td>' + inp(i, 'qty', 64, 'n') + '</td><td>' + inp(i, 'free', 54, 'n') + '</td><td>' + inp(i, 'rate', 76, 'n') + '</td><td>' + inp(i, 'disc', 56, 'n') + '</td>'
+      + '<td><select class="finput" data-i="' + i + '" data-k="gst" style="width:70px;padding:6px" onchange="SCAN[' + i + '].gst=this.value===\'\'?\'\':Number(this.value);scanCheck()"><option value="">?</option>' + [0, 5, 12, 18, 28, 40].map(function (g) { return '<option' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td><td>' + inp(i, 'mrp', 76, 'n') + '</td></tr>';
+  }).join('');
+}
+function scanAddLine() {
+  SCAN.push({ inc: true, manual: true, read: '', orig: '', match: '', batch: '', expiry: '', qty: '', free: 0, rate: '', disc: 0, gst: '', mrp: '', hsn: '', mfg: '', pack: '' });
+  scanRows(); scanCheck();
+  var x = document.querySelector('#sc-r' + (SCAN.length - 1) + ' [data-k="read"]'); if (x) x.focus();
+}
+function scanSupBox() {
+  var el = dEl('sc-sup'), p = PARTYMAP[SCAN_SUP], d = SCAN_D || {};
+  el.innerHTML = p ? '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; ' + esc(p.name) + '</div>'
+    : '<div class="tiny over">Not in your list.</div><button class="btn btn-sm" style="margin-top:4px" onclick="partyEdit(null,\'scan\',' + A(d.supplier || '') + ',' + A(d.supplier_gstin || '') + ')">&#10133; Add this supplier</button>'
+      + '<select class="finput" style="margin-top:4px;padding:6px" onchange="SCAN_SUP=this.value;scanSupBox();scanCheck()"><option value="">or choose from your list&hellip;</option>' + PARTIES.filter(function (x) { return x.is_active && x.party_type !== 'customer'; }).map(function (x) { return '<option value="' + x.id + '">' + esc(x.name) + '</option>'; }).join('') + '</select>';
+}
+/* every check; returns the list of problems (empty = OK to go ahead) and marks the missing boxes red */
+function scanCheck() {
+  var probs = [], sup = PARTYMAP[SCAN_SUP], inter = isInter(sup), tot = 0, ticked = 0, untick = 0, today0 = today();
+  [].forEach.call(document.querySelectorAll('#sc-t .finput[data-k]'), function (e) { e.style.borderColor = ''; });
+  var bad = function (i, k) { var e = document.querySelector('#sc-t [data-i="' + i + '"][data-k="' + k + '"]'); if (e) e.style.borderColor = 'var(--red)'; };
   SCAN.forEach(function (x, i) {
+    var e = dEl('sc-e' + i), tr = dEl('sc-r' + i), msg = [];
+    if (!x.inc) { untick++; if (e) e.textContent = ''; if (tr) tr.style.opacity = '.5'; return; }
+    if (tr) tr.style.opacity = '';
+    ticked++;
+    var nb = dEl('sc-n' + i); if (nb) nb.style.display = x.match ? 'none' : 'block';
+    if (!x.match && !String(x.read || '').trim()) { msg.push('item name'); bad(i, 'read'); }
+    if (!String(x.batch || '').trim()) { msg.push('batch'); bad(i, 'batch'); }
+    if (!/^\d{4}-\d{2}$/.test(x.expiry || '')) { msg.push('expiry'); bad(i, 'expiry'); }
+    else if (x.expiry + '-28' < today0.slice(0, 7) + '-01') { msg.push('already expired'); bad(i, 'expiry'); }
+    if (!(num(x.qty) > 0)) { msg.push('quantity'); bad(i, 'qty'); }
+    if (num(x.free) < 0) { msg.push('free'); bad(i, 'free'); }
+    if (!(num(x.rate) > 0)) { msg.push('rate'); bad(i, 'rate'); }
+    if (num(x.disc) < 0 || num(x.disc) > 100) { msg.push('discount'); bad(i, 'disc'); }
+    if (x.gst === '' || [0, 5, 12, 18, 28, 40].indexOf(Number(x.gst)) < 0) { msg.push('GST %'); bad(i, 'gst'); }
+    if (!(num(x.mrp) > 0)) { msg.push('MRP'); bad(i, 'mrp'); }
+    if (num(x.mrp) > 0 && num(x.rate) > 0 && x.gst !== '' && r2(num(x.rate) * (1 - num(x.disc) / 100) * (1 + Number(x.gst) / 100)) > num(x.mrp)) { msg.push('rate + GST is above MRP (per box vs per strip?)'); bad(i, 'rate'); bad(i, 'mrp'); }
+    if (e) e.textContent = msg.length ? 'Missing / wrong: ' + msg.join(', ') : '';
+    if (msg.length) probs.push('line ' + (i + 1) + ' (' + msg.join(', ') + ')');
+    var tx = r2(num(x.qty) * num(x.rate) * (1 - num(x.disc) / 100)), t = tax(tx, Number(x.gst) || 0, inter); tot += tx + t.c + t.s + t.i;
+  });
+  if (!sup) probs.unshift('supplier (add it or choose it)');
+  if (!dEl('sc-no').value.trim()) { probs.unshift('bill no.'); dEl('sc-no').style.borderColor = 'var(--red)'; } else dEl('sc-no').style.borderColor = '';
+  var dt = dEl('sc-date').value; if (!dt || dt > today0) { probs.unshift(dt ? 'bill date is in the future' : 'bill date'); dEl('sc-date').style.borderColor = 'var(--red)'; } else dEl('sc-date').style.borderColor = '';
+  if (!ticked) probs.push('no line is ticked');
+  var billTot = num(dEl('sc-tot').value), lines = Math.round(r2(tot)), diff = r2(billTot - lines), why = dEl('sc-why').value.trim();
+  if (!(billTot > 0)) { probs.push('grand total on the bill'); dEl('sc-tot').style.borderColor = 'var(--red)'; } else dEl('sc-tot').style.borderColor = '';
+  var mismatch = billTot > 0 && Math.abs(diff) > 2;
+  dEl('sc-why-box').style.display = mismatch ? 'block' : 'none';
+  if (mismatch && why.length < 5) probs.push('the lines add up to ' + dMoney0(lines) + ' but the bill total is ' + dMoney0(billTot) + ' (difference ' + dMoney0(diff) + '): a line may be missing or misread' + (untick ? ' (' + untick + ' line(s) unticked)' : '') + '. Fix it, or write the reason below');
+  dEl('sc-sum').innerHTML = '<div class="card" style="' + (probs.length ? 'border-color:var(--red-border);background:var(--red-bg)' : 'border-color:var(--green-border);background:var(--green-bg)') + '">'
+    + 'Lines add up to <b>' + dMoney0(lines) + '</b>' + (billTot > 0 ? ' &middot; bill total <b>' + dMoney0(billTot) + '</b> ' + (mismatch ? '<span class="over">&#10007; does not match</span>' : '<span style="color:var(--green);font-weight:700">&#10003; matches</span>') : '')
+    + (probs.length ? '<div class="over" style="margin-top:6px">Cannot go ahead yet. Missing or wrong: ' + esc(probs.join(' · ')) + '</div>' : '<div style="color:var(--green);font-weight:700;margin-top:6px">&#10003; Everything is filled. You can go ahead.</div>') + '</div>';
+  var go = dEl('sc-go'); if (go) go.disabled = probs.length > 0;
+  return probs;
+}
+function scanDate(v) { var m = String(v || '').match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (!m) return ''; var y = m[3].length === 2 ? '20' + m[3] : m[3]; return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
+function scanUse() {
+  var probs = scanCheck();
+  if (probs.length) { dShowErr('scan-err', 'Cannot go ahead: ' + probs.join(' · ')); return; }
+  var add = [];
+  SCAN.forEach(function (x) {
     if (!x.inc) return;
-    if (!(num(x.qty) > 0) || !(num(x.mrp) > 0) || !(num(x.rate) > 0) || !x.expiry || !x.batch) { bad.push(i + 1); return; }
     var it = x.match ? ITEMMAP[x.match] : null;
-    var l = { item_id: it ? it.id : null, name: it ? it.name : x.read, batch: x.batch.trim().toUpperCase(), expiry: x.expiry, qty: num(x.qty), free: num(x.free), rate: num(x.rate), disc: num(x.disc), gst: Number(x.gst), mrp: num(x.mrp), ptr: null };
-    if (!it) l.item = { name: x.read, hsn: x.hsn || '3004', gst_rate: l.gst, unit: 'strip' };
+    var l = { item_id: it ? it.id : null, name: it ? it.name : String(x.read).trim(), batch: x.batch.trim().toUpperCase(), expiry: x.expiry, qty: num(x.qty), free: num(x.free), rate: num(x.rate), disc: num(x.disc), gst: Number(x.gst), mrp: num(x.mrp), ptr: null };
+    if (!it) l.item = { name: l.name, hsn: x.hsn || '3004', gst_rate: l.gst, unit: /ml|syr|syp|susp|bottle|liq/i.test(x.pack + ' ' + l.name) ? 'bottle' : /vial|inj|amp/i.test(x.pack + ' ' + l.name) ? 'vial' : 'strip', pack: String(x.pack || '').trim(), manufacturer: String(x.mfg || '').trim() };
     add.push(l);
   });
-  if (bad.length) { dShowErr('scan-err', 'Fix line(s) ' + bad.join(', ') + ': batch, expiry, quantity, rate and MRP are needed. Or untick them.'); return; }
   PLINES = PLINES.concat(add); PLINES._doc = SCAN_DOC;
-  if (supId) ppSet('buy', supId);
-  dEl('b-billno').value = dEl('sc-no').value; dEl('b-date').value = dEl('sc-date').value || today();
+  ppSet('buy', SCAN_SUP);
+  dEl('b-billno').value = dEl('sc-no').value.trim(); dEl('b-date').value = dEl('sc-date').value; dEl('b-billtot').value = dEl('sc-tot').value;
+  var why = dEl('sc-why').value.trim(); if (why) dEl('b-note').value = why;
   dClose('m-scan'); buyRender(); showToast(add.length + ' lines added. Check the total, then save.');
 }
 
@@ -802,9 +934,10 @@ function partiesRender() {
   }).join('') : '<tr><td colspan="6" class="lines-empty">' + (PARTIES.length ? 'Nothing matches.' : 'No parties yet. Add your suppliers and customers.') + '</td></tr>';
 }
 var _partyBack = null;
-function partyEdit(id, backKey, name) {
+function partyEdit(id, backKey, name, gstin) {
   _partyBack = backKey || null;
-  var p = id ? PARTYMAP[id] : { name: name || '', party_type: backKey === 'buy' || backKey === 'pret' ? 'supplier' : 'customer', is_active: true, opening_balance: 0 };
+  var g0 = String(gstin || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
+  var p = id ? PARTYMAP[id] : { name: name || '', gstin: gstinOk(g0) ? g0 : '', state_code: gstinOk(g0) ? g0.slice(0, 2) : null, party_type: backKey === 'buy' || backKey === 'pret' || backKey === 'scan' ? 'supplier' : 'customer', is_active: true, opening_balance: 0 };
   var me = CAN.moneyEdit;
   dEl('party-title').textContent = id ? 'Edit ' + p.name : 'New party';
   var f = function (k, lbl, attrs, val) { return '<div><label class="flbl">' + lbl + '</label><input class="finput" id="pe-' + k + '" ' + (attrs || '') + ' value="' + esc(val !== undefined ? val : (p[k] == null ? '' : p[k])) + '"/></div>'; };
@@ -842,7 +975,8 @@ async function partySave(id) {
              : await _supa.from('org_parties').insert(Object.assign({ clinic_id: _clinicId }, row)).select().single();
   if (r.error) { dShowErr('pe-err', /norm_name|duplicate/.test(r.error.message || '') ? 'A party with this name is already in your list.' : dErr(r.error)); return; }
   showToast('Saved.'); dClose('m-party'); await loadParties();
-  if (_partyBack && PICK[_partyBack]) ppPick(_partyBack, r.data.id);
+  if (_partyBack === 'scan') { SCAN_SUP = r.data.id; scanSupBox(); scanCheck(); }
+  else if (_partyBack && PICK[_partyBack]) ppPick(_partyBack, r.data.id);
   if (dEl('v-parties').classList.contains('on')) partiesRender();
 }
 
@@ -851,6 +985,7 @@ async function onTab_settings() {
   var s = SET; dEl('ws-name').value = s.name || DEPT.clinic.name || ''; dEl('ws-phone').value = s.phone || DEPT.clinic.phone || ''; dEl('ws-address').value = s.address || DEPT.clinic.address || '';
   dEl('ws-gstin').value = s.gstin || ''; dEl('ws-dl').value = s.dl_no || ''; dEl('ws-email').value = s.email || ''; dEl('ws-fssai').value = s.fssai || ''; dEl('ws-prefix').value = s.inv_prefix || '';
   dEl('ws-cdays').value = s.credit_days || ''; dEl('ws-bank').value = s.bank_name || ''; dEl('ws-acc').value = s.bank_account || ''; dEl('ws-ifsc').value = s.bank_ifsc || ''; dEl('ws-upi').value = s.upi_id || ''; dEl('ws-terms').value = s.terms || '';
+  dEl('ws-bank2').value = s.bank2_name || ''; dEl('ws-acc2').value = s.bank2_account || ''; dEl('ws-ifsc2').value = s.bank2_ifsc || ''; dEl('ws-qr').value = s.upi_qr === 'off' ? 'off' : 'on';
   wsCheck(); staffLoad();
 }
 function wsCheck() { var g = dEl('ws-gstin').value, st = dEl('ws-gstin-st'); st.innerHTML = !g ? '' : gstinOk(g) ? 'State: <b>' + esc(stName(g.slice(0, 2))) + '</b>' : '<span class="over">15 characters, e.g. 19ABCDE1234F1Z5</span>'; }
@@ -858,7 +993,8 @@ async function wsSave() {
   dShowErr('ws-err', '');
   var p = { name: dEl('ws-name').value.trim(), phone: dEl('ws-phone').value.trim(), address: dEl('ws-address').value.trim(), gstin: dEl('ws-gstin').value.trim(), dl_no: dEl('ws-dl').value.trim(), email: dEl('ws-email').value.trim(),
     fssai: dEl('ws-fssai').value.trim(), inv_prefix: dEl('ws-prefix').value.trim().toUpperCase(), credit_days: dEl('ws-cdays').value.trim(), bank_name: dEl('ws-bank').value.trim(), bank_account: dEl('ws-acc').value.trim(),
-    bank_ifsc: dEl('ws-ifsc').value.trim().toUpperCase(), upi_id: dEl('ws-upi').value.trim(), terms: dEl('ws-terms').value.trim() };
+    bank_ifsc: dEl('ws-ifsc').value.trim().toUpperCase(), upi_id: dEl('ws-upi').value.trim(), terms: dEl('ws-terms').value.trim(),
+    bank2_name: dEl('ws-bank2').value.trim(), bank2_account: dEl('ws-acc2').value.trim(), bank2_ifsc: dEl('ws-ifsc2').value.trim().toUpperCase(), upi_qr: dEl('ws-qr').value };
   if (!p.name || !p.address) { dShowErr('ws-err', 'Business name and address are needed.'); return; }
   if (p.gstin && !gstinOk(p.gstin)) { dShowErr('ws-err', 'The GSTIN is not in the right format.'); return; }
   var r = await _supa.rpc('wh_save_settings', { p_clinic: _clinicId, p: p });
@@ -898,6 +1034,14 @@ async function staffInvite() {
 }
 
 /* =================================================================== PDFs */
+function trRows(t) {
+  var tr = [t.transporter, t.gr_no ? 'G.R. ' + t.gr_no + (t.gr_date ? ' (' + deptPdfDate(t.gr_date) + ')' : '') : '', t.cases ? t.cases + ' cases' : '', t.weight || '', t.vehicle ? 'Vehicle ' + t.vehicle : ''].filter(Boolean).map(esc).join(' &middot; ');
+  var out = [];
+  if (tr) out.push(['Transport', tr, true]);
+  if (t.order_no || t.order_date) out.push(['Order', esc([t.order_no, t.order_date ? deptPdfDate(t.order_date) : ''].filter(Boolean).join(' dated '))]);
+  if (t.eway_no) out.push(['E-way bill', '<b>' + esc(t.eway_no) + '</b>' + (t.eway_date ? ' dated ' + deptPdfDate(t.eway_date) : '')]);
+  return out;
+}
 function sellerBlock(s) {
   s = s || SET;
   return { name: s.name || s.business || DEPT.clinic.name || '', sub: [esc(s.address || '').replace(/\n/g, ', '),
@@ -906,25 +1050,42 @@ function sellerBlock(s) {
     [s.dl_no ? 'Drug Licence: ' + esc(s.dl_no) : '', s.fssai ? 'FSSAI: ' + esc(s.fssai) : ''].filter(Boolean).join(' &nbsp;&middot;&nbsp; ')] };
 }
 var PDF_CSS = '.it{font-size:10.6px}.it th{padding:6px 5px;font-size:10px}.it td{padding:5px 5px}.dpt{font-size:11.5px}.bank{font-size:10.8px;color:#4a5b53;margin-top:4px}';
-async function docPdf(kind, x) {
+function qrLib() {
+  if (window.qrcode) return Promise.resolve();
+  return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = res; s.onerror = function () { rej(new Error('QR')); }; document.head.appendChild(s); });
+}
+async function upiQr(s, x) {
+  try {
+    await qrLib();
+    var u = 'upi://pay?pa=' + encodeURIComponent(s.upi_id) + '&pn=' + encodeURIComponent((s.name || '').slice(0, 40)) + '&am=' + Number(x.total).toFixed(2) + '&cu=INR&tn=' + encodeURIComponent(x.inv_no);
+    var q = window.qrcode(0, 'M'); q.addData(u); q.make(); return q.createDataURL(4, 2);
+  } catch (e) { return ''; }
+}
+async function docPdf(kind, x, copies) {
   var sale = kind === 'sale', s = sale ? x.seller : SET, sb = sellerBlock(s), p = sale ? x.buyer : x.party, inter = x.interstate, items = x._items;
   var title = sale ? (s.gstin ? 'TAX INVOICE' : 'INVOICE') : x.kind === 'sales_return' ? 'CREDIT NOTE' : 'DEBIT NOTE';
   var no = sale ? x.inv_no : x.no, dt = sale ? x.inv_date : x.ret_date;
   var head = deptPdfHead({ name: sb.name, sub: sb.sub, title: title + (x.status === 'cancelled' ? ' (CANCELLED)' : ''),
-    right: [(sale ? 'Invoice No: ' : 'No: ') + '<span class="no">' + esc(no) + '</span>', 'Date: ' + deptPdfDate(dt), sale && x.due_date ? 'Due date: ' + deptPdfDate(x.due_date) : '', sale ? 'Payment: ' + esc(payTxt(x.pay_mode)) : '', !sale && x.sale_id ? 'Against invoice: ' + esc(x._ref || '') : ''],
+    right: [sale ? '<b style="display:inline;font-size:10.5px;letter-spacing:.06em;color:#14201b">%%COPY%%</b>' : '', (sale ? 'Invoice No: ' : 'No: ') + '<span class="no">' + esc(no) + '</span>', 'Date: ' + deptPdfDate(dt), sale && x.due_date ? 'Due date: ' + deptPdfDate(x.due_date) : '', sale ? 'Payment: ' + esc(payTxt(x.pay_mode)) : '', !sale && x.sale_id ? 'Against invoice: ' + esc(x._ref || '') : ''],
     info: [[sale ? 'Bill to' : (x.kind === 'sales_return' ? 'Customer' : 'Supplier'), '<b>' + esc(p.name || '') + '</b>'], ['GSTIN', esc(p.gstin || 'Unregistered')], ['Address', esc(p.address || ''), true],
-      ['Drug licence', esc(p.dl || '')], ['Phone', esc(p.phone || '')], ['Place of supply', esc(stName(p.state_code || (s.state_code || OWN_STATE)))], ['Tax', inter ? 'IGST (inter-state)' : 'CGST + SGST (intra-state)']] });
+      ['Drug licence', esc(p.dl || '')], ['Phone', esc(p.phone || '')], ['Place of supply', esc(stName(p.state_code || (s.state_code || OWN_STATE)))], ['Tax', inter ? 'IGST (inter-state)' : 'CGST + SGST (intra-state)']]
+      .concat(sale && x.ship_to && x.ship_to.name ? [['Shipped to', '<b>' + esc(x.ship_to.name) + '</b>' + (x.ship_to.address ? ', ' + esc(x.ship_to.address) : '') + (x.ship_to.dl ? ' &middot; DL ' + esc(x.ship_to.dl) : '') + (x.ship_to.phone ? ' &middot; ' + esc(x.ship_to.phone) : ''), true]] : [])
+      .concat(sale ? trRows(x.transport || {}) : []) });
   var headNext = deptPdfHeadNext('<b>' + esc(sb.name) + '</b> &nbsp;&middot;&nbsp; ' + esc(p.name || ''), esc(no) + ' (continued)');
-  var colgroup = '<colgroup><col style="width:4%"><col style="width:25%"><col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:5%"><col style="width:8%"><col style="width:8%"><col style="width:6%"><col style="width:6%"><col style="width:15%"></colgroup>';
-  var thead = '<thead><tr><th>#</th><th>Product</th><th>Batch</th><th>Exp</th><th class="r">Qty</th><th class="r">Free</th><th class="r">MRP</th><th class="r">Rate</th><th class="r">Disc</th><th class="r">GST</th><th class="r">Taxable</th></tr></thead>';
+  var colgroup = '<colgroup><col style="width:4%"><col style="width:18%"><col style="width:7%"><col style="width:12%"><col style="width:6%"><col style="width:6%"><col style="width:5%"><col style="width:8%"><col style="width:8%"><col style="width:5%"><col style="width:6%"><col style="width:14%"></colgroup>';
+  var thead = '<thead><tr><th>#</th><th>Product</th><th>Mfg.</th><th>Batch</th><th>Exp</th><th class="r">Qty</th><th class="r">Free</th><th class="r">MRP</th><th class="r">Rate</th><th class="r">Disc</th><th class="r">GST</th><th class="r">Taxable</th></tr></thead>';
   var rows = items.map(function (l, i) {
-    return '<tr><td class="mut">' + (i + 1) + '</td><td><b>' + esc(l.name) + '</b><div class="sm">' + [l.pack ? esc(l.pack) : '', l.hsn ? 'HSN ' + esc(l.hsn) : ''].filter(Boolean).join(' &middot; ') + '</div></td><td>' + esc(l.batch_no || '') + '</td><td>' + dExp(l.expiry) + '</td>'
+    return '<tr><td class="mut">' + (i + 1) + '</td><td><b>' + esc(l.name) + '</b><div class="sm">' + [l.pack ? esc(l.pack) : '', l.hsn ? 'HSN ' + esc(l.hsn) : ''].filter(Boolean).join(' &middot; ') + '</div></td><td class="sm">' + esc(l.mfg || '') + '</td><td>' + esc(l.batch_no || '') + '</td><td>' + dExp(l.expiry) + '</td>'
       + '<td class="r">' + Number(l.qty) + '</td><td class="r">' + (Number(l.free) ? Number(l.free) : '-') + '</td><td class="r">' + (l.mrp != null ? Number(l.mrp).toFixed(2) : '-') + '</td><td class="r">' + Number(l.rate).toFixed(2) + '</td><td class="r">' + (Number(l.disc) ? Number(l.disc) + '%' : '-') + '</td><td class="r">' + Number(l.gst_rate) + '%</td><td class="r"><b>' + Number(l.taxable).toFixed(2) + '</b></td></tr>';
   });
+  var qr = sale && s.upi_id && s.upi_qr !== 'off' && x.pay_mode === 'credit' && x.status === 'posted' ? await upiQr(s, x) : '';
   var by = {}; items.forEach(function (l) { var k = Number(l.gst_rate); by[k] = by[k] || { t: 0, c: 0, s: 0, i: 0 }; by[k].t += Number(l.taxable); by[k].c += Number(l.cgst); by[k].s += Number(l.sgst); by[k].i += Number(l.igst); });
   var gst = '<div style="font-weight:700;color:#0b4f3a;font-size:12px">GST summary</div><table class="dgst"><tr><th>Rate</th><th>Taxable</th>' + (inter ? '<th>IGST</th>' : '<th>CGST</th><th>SGST</th>') + '<th>Total tax</th></tr>'
     + Object.keys(by).sort(function (a, b) { return a - b; }).map(function (k) { var v = by[k]; return '<tr><td>' + k + '%</td><td>' + v.t.toFixed(2) + '</td>' + (inter ? '<td>' + v.i.toFixed(2) + '</td>' : '<td>' + v.c.toFixed(2) + '</td><td>' + v.s.toFixed(2) + '</td>') + '<td>' + (v.c + v.s + v.i).toFixed(2) + '</td></tr>'; }).join('') + '</table>'
-    + (sale && (s.bank_account || s.upi_id) ? '<div class="bank"><b>Bank:</b> ' + [s.bank_name, s.bank_account ? 'A/c ' + s.bank_account : '', s.bank_ifsc ? 'IFSC ' + s.bank_ifsc : ''].filter(Boolean).map(esc).join(' &middot; ') + (s.upi_id ? '<br><b>UPI:</b> ' + esc(s.upi_id) : '') + '</div>' : '');
+    + (sale && (s.bank_account || s.bank2_account || s.upi_id) ? '<div class="bank">' + (s.bank_account ? '<b>Bank:</b> ' + [s.bank_name, 'A/c ' + s.bank_account, s.bank_ifsc ? 'IFSC ' + s.bank_ifsc : ''].filter(Boolean).map(esc).join(' &middot; ') + '<br>' : '')
+      + (s.bank2_account ? '<b>Bank:</b> ' + [s.bank2_name, 'A/c ' + s.bank2_account, s.bank2_ifsc ? 'IFSC ' + s.bank2_ifsc : ''].filter(Boolean).map(esc).join(' &middot; ') + '<br>' : '')
+      + (s.upi_id ? '<b>UPI:</b> ' + esc(s.upi_id) : '') + '</div>' : '')
+    + (qr ? '<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><img src="' + qr + '" style="width:84px;height:84px" alt=""><div class="sm"><b style="color:#14201b">Scan to pay ' + deptMoney(x.total) + '</b><br>with any UPI app</div></div>' : '');
   var row = function (l, v, cls) { return '<div class="row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
   var tot = '<div class="dtot">' + row('Taxable value', deptMoney(x.taxable), 's') + (inter ? row('IGST', deptMoney(x.igst), 's') : row('CGST', deptMoney(x.cgst), 's') + row('SGST', deptMoney(x.sgst), 's'))
     + (Number(x.round_off) ? row('Round off', (Number(x.round_off) > 0 ? '+' : '') + Number(x.round_off).toFixed(2), 's') : '') + row(sale ? 'Invoice total' : 'Total', deptMoney(x.total), 'grand') + '</div>';
@@ -934,7 +1095,7 @@ async function docPdf(kind, x) {
     + '<div class="dend"><div class="ddecl">' + (sale ? '<b>Prices are per unit before GST; MRP includes GST.</b> Please check the goods, batch and expiry on delivery.' + (s.terms ? '<br>' + esc(s.terms) : '') : '<b>Reason:</b> ' + esc(x.reason || ''))
     + (x.notes ? '<br>Note: ' + esc(x.notes) : '') + '<br>Prepared by: ' + esc(x.created_by_name || '') + '</div>'
     + '<div class="dsign">For ' + esc(sb.name) + (sign ? '<img src="' + sign + '" alt="">' : '<div class="sp"></div>') + '<div class="ln">Authorised Signatory</div></div></div>';
-  return deptMakePdf({ format: 'a4', head: head, headNext: headNext, colgroup: colgroup, thead: thead, rows: rows, after: after, css: PDF_CSS,
+  return deptMakePdf({ format: 'a4', head: head, headNext: headNext, colgroup: colgroup, thead: thead, rows: rows, after: after, css: PDF_CSS, copies: copies || (sale ? ['ORIGINAL FOR RECIPIENT'] : null),
     foot: 'Computer-generated ' + title.toLowerCase() + ' &middot; ' + esc(no) + ' &middot; AuraScale' });
 }
 async function ensurePdf(kind, x) {
