@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="nh-shared.js?v=20261019w"></script>
-<script src="aura-dept.js?v=20261019w"></script>
+<script src="aura-dept.js?v=20261019x"></script>
 <script src="aura-loader.js?v=2"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261018a"/>
 <script src="aura-themes.js?v=1"></script>
@@ -32,6 +32,13 @@
 .kpi b{font-size:18px}
 .hl-r{background:var(--red-bg)!important}
 .lines-empty{text-align:center;padding:20px;color:var(--text-secondary);font-size:12.5px}
+.wh-chips{display:flex;flex-wrap:wrap;gap:8px}
+.wh-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:12.5px;font-weight:600;color:var(--text-secondary)}
+.wh-chip.on{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.wh-step{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.wh-num{width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+@media(max-width:700px){.d-tab.wh-help-tab{display:none!important}}
+#m-party{z-index:130}
 </style>
 
 <div id="app" style="display:none">
@@ -46,6 +53,7 @@
     <button class="d-tab" data-t="money" data-can="moneyRead" onclick="dTab('money')"><span class="ti">&#128176;</span><span class="tl">Accounts</span></button>
     <button class="d-tab" data-t="parties" onclick="dTab('parties')"><span class="ti">&#128101;</span><span class="tl">Parties</span></button>
     <button class="d-tab" data-t="settings" data-can="owner" onclick="dTab('settings')"><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
+    <button class="d-tab wh-help-tab" data-t="help" onclick="dTab('help')"><span class="ti">&#10067;</span><span class="tl">Help</span></button>
   </div>
   <div class="d-main" id="d-body">
 
@@ -89,6 +97,28 @@
               <div id="s-ref-box" style="display:none"><label class="flbl">UTR / cheque no.</label><input class="finput" id="s-ref"/></div>
             </div>
             <div style="margin-top:10px"><label class="flbl">Note on invoice (optional)</label><input class="finput" id="s-note" maxlength="200" placeholder="e.g. Order by phone, delivered by Raju"/></div>
+            <details class="card" id="s-trans" style="margin-top:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700;font-size:13px">&#128666; Delivery &amp; transport (optional)</summary>
+              <div style="margin-top:10px"><label style="display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600"><input type="checkbox" id="s-shipon" onchange="dEl('s-shipbox').style.display=this.checked?'block':'none'" style="width:17px;height:17px;appearance:auto"/> Deliver to a different shop than the one billed</label></div>
+              <div id="s-shipbox" style="display:none;margin-top:8px">
+                <div style="position:relative"><label class="flbl">Shipped to (party from your list)</label><div id="pp-ship"></div></div>
+                <div class="tiny" style="margin:6px 0">or type it:</div>
+                <div class="grid2"><div><label class="flbl">Shop name</label><input class="finput" id="sh-name"/></div><div><label class="flbl">Phone</label><input class="finput" id="sh-phone"/></div>
+                  <div style="grid-column:1/-1"><label class="flbl">Delivery address</label><input class="finput" id="sh-address"/></div></div>
+              </div>
+              <div class="grid3" style="margin-top:10px">
+                <div><label class="flbl">Transporter</label><input class="finput" id="tr-transporter" placeholder="e.g. Delhivery"/></div>
+                <div><label class="flbl">G.R. / L.R. no.</label><input class="finput" id="tr-gr_no"/></div>
+                <div><label class="flbl">G.R. date</label><input class="finput" id="tr-gr_date" type="date"/></div>
+                <div><label class="flbl">Cases</label><input class="finput" id="tr-cases" inputmode="numeric"/></div>
+                <div><label class="flbl">Weight</label><input class="finput" id="tr-weight" placeholder="e.g. 51 KG"/></div>
+                <div><label class="flbl">Vehicle no.</label><input class="finput" id="tr-vehicle" style="text-transform:uppercase"/></div>
+                <div><label class="flbl">Order no.</label><input class="finput" id="tr-order_no"/></div>
+                <div><label class="flbl">Order date</label><input class="finput" id="tr-order_date" type="date"/></div>
+                <div><label class="flbl">E-way bill no. (12 digits)</label><input class="finput" id="tr-eway_no" inputmode="numeric" maxlength="14"/></div>
+                <div><label class="flbl">E-way bill date</label><input class="finput" id="tr-eway_date" type="date"/></div>
+              </div>
+              <p class="tiny" style="margin-top:6px">You can also add these after saving (e.g. when the e-way bill is made later): open the invoice &rarr; Transport / e-way bill.</p>
+            </details>
           </div>
           <div class="sumbox" id="s-sum"></div>
         </div>
@@ -142,6 +172,7 @@
             <div><label class="flbl">HSN</label><input class="finput" id="bn-hsn" value="3004"/></div>
             <div><label class="flbl">Sold per</label><select class="finput" id="bn-unit"><option>strip</option><option>box</option><option>bottle</option><option>vial</option><option>tube</option><option>pcs</option><option>sachet</option><option>kit</option></select></div>
             <div><label class="flbl">Pack (e.g. 1x10)</label><input class="finput" id="bn-pack"/></div>
+            <div><label class="flbl">Manufacturer (Mfg.)</label><input class="finput" id="bn-mfg" placeholder="e.g. Cipla"/></div>
           </div>
           <div class="grid4">
             <div><label class="flbl">Batch no.</label><input class="finput" id="b-batch" style="text-transform:uppercase"/></div>
@@ -159,7 +190,11 @@
         </div>
         <div style="overflow-x:auto"><table class="dt wl"><thead><tr><th>Item</th><th>Batch / Exp</th><th class="r">Qty + free</th><th class="r">Rate</th><th class="r">Disc</th><th class="r">GST</th><th class="r">MRP</th><th class="r">Amount</th><th></th></tr></thead><tbody id="b-lines"></tbody></table></div>
         <div class="row2" style="margin-top:12px;justify-content:space-between">
-          <div style="flex:1;min-width:240px"><label class="flbl">Note (optional)</label><input class="finput" id="b-note" maxlength="200"/></div>
+          <div style="flex:1;min-width:240px">
+            <label class="flbl">Grand total printed on the bill &#8377;</label><input class="finput" id="b-billtot" type="number" min="0" step="0.01" oninput="buyRender()" placeholder="type it from the paper bill"/>
+            <div class="tiny" style="margin:4px 0 10px">AuraScale checks that the lines add up to this total, so a missed or misread line is caught.</div>
+            <label class="flbl">Note (optional; required if the total does not match)</label><input class="finput" id="b-note" maxlength="200" placeholder="e.g. freight ₹200 added on the bill"/>
+          </div>
           <div class="sumbox" id="b-sum"></div>
         </div>
         <button class="btn btn-g" style="margin-top:14px;min-width:220px" id="b-save" onclick="buySave()">&#10003; Save purchase &amp; add to stock</button>
@@ -269,6 +304,9 @@
       <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Type</th><th class="hide-sm">Phone</th><th class="hide-sm">GSTIN</th><th class="r" data-can="moneyRead">Balance</th><th></th></tr></thead><tbody id="pt-b"></tbody></table></div>
     </div>
 
+    <!-- ============ HELP & SUPPORT ============ -->
+    <div class="d-view" id="v-help"><div id="help-root"></div></div>
+
     <!-- ============ SETTINGS ============ -->
     <div class="d-view" id="v-settings">
       <h3 style="font-size:15px;margin-bottom:4px">Business details printed on every invoice</h3>
@@ -287,6 +325,10 @@
         <div><label class="flbl">Account no.</label><input class="finput" id="ws-acc"/></div>
         <div><label class="flbl">IFSC</label><input class="finput" id="ws-ifsc" style="text-transform:uppercase"/></div>
         <div><label class="flbl">UPI ID</label><input class="finput" id="ws-upi"/></div>
+        <div><label class="flbl">Second bank (optional)</label><input class="finput" id="ws-bank2" placeholder="Bank name"/></div>
+        <div><label class="flbl">Second account no.</label><input class="finput" id="ws-acc2"/></div>
+        <div><label class="flbl">Second IFSC</label><input class="finput" id="ws-ifsc2" style="text-transform:uppercase"/></div>
+        <div><label class="flbl">UPI QR code on credit invoices</label><select class="finput" id="ws-qr"><option value="on">Yes, print "Scan to pay"</option><option value="off">No</option></select></div>
         <div style="grid-column:1/-1"><label class="flbl">Terms printed at the bottom of invoices</label><input class="finput" id="ws-terms" placeholder="e.g. Goods once sold will be taken back only as per company policy. Interest @18% after due date."/></div>
       </div>
       <button class="btn btn-g" style="margin-top:14px" onclick="wsSave()">&#10003; Save details</button>
@@ -313,6 +355,7 @@
 <div class="modal-bg" id="m-party"><div class="modal" style="max-width:720px"><div class="modal-h"><span id="party-title">Party</span><button class="btn btn-sm" onclick="dClose('m-party')">&times;</button></div><div class="modal-b" id="party-body"></div></div></div>
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
-<script src="wholesale.js?v=1"></script>
+<script src="wholesale-lang.js?v=1"></script>
+<script src="wholesale.js?v=4"></script>
 </body>
 </html>
