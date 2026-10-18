@@ -454,6 +454,7 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
         <div class="adm-av" id="bpp-av" style="width:42px;height:42px;border-radius:10px;font-size:18px;flex-shrink:0">?</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:13.5px" id="bpp-name">—</div>
+          <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:2px;letter-spacing:.02em" id="bpp-uhid"></div>
           <div style="font-size:10.5px;color:var(--text-secondary);margin-top:2px" id="bpp-meta">—</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
@@ -534,6 +535,7 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
   <div class="modal">
     <div class="mh"><div class="mtitle">💊 Write Prescription</div><button class="mclose" onclick="closeModal('mod-prescription')">✕</button></div>
     <div class="mb">
+      <div id="rx-who" style="font-size:12px;color:var(--text-secondary)"></div>
       <div><label class="flbl">Diagnosis / Clinical Impression</label><input class="finput" id="rx-diagnosis" placeholder="e.g. Viral fever, Pneumonia, Post-op day 2"/></div>
       <div><label class="flbl">Prescription (Drug · Dose · Frequency · Duration)</label><textarea class="finput ftextarea" id="rx-drugs" rows="5" placeholder="Tab Paracetamol 500mg — 1 tab TDS × 5 days&#10;Inj Amoxicillin 500mg IV — BD × 3 days&#10;Tab Pantoprazole 40mg — 1 tab OD before breakfast"></textarea></div>
       <div><label class="flbl">Treatment Instructions / Notes</label><textarea class="finput ftextarea" id="rx-instructions" rows="2" placeholder="Bed rest, plenty of fluids, avoid spicy food…"></textarea></div>
@@ -587,8 +589,11 @@ function nav(id,btn){
   if(id==='beds')loadBeds();
   if(window.innerWidth<=600){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-backdrop').classList.remove('open');}
 }
-function openModal(id){document.getElementById(id).classList.add('open')}
-function closeModal(id){document.getElementById(id).classList.remove('open')}
+/* Modal stack: whichever popup opens last is always in front (with its own dark backdrop over the one below).
+   Closing it shows the popup underneath again, untouched. */
+var _modalZ=80;
+function openModal(id){var el=document.getElementById(id);if(!document.querySelector('.mod-ov.open'))_modalZ=80;el.style.zIndex=String(++_modalZ);el.classList.add('open');}
+function closeModal(id){var el=document.getElementById(id);el.classList.remove('open');el.style.zIndex='';}
 
 /* ── HOME ── */
 async function loadHome(){
@@ -649,7 +654,7 @@ function openNoteModal(edit){
     var f={'note-bp':'bp','note-temp':'temperature','note-pulse':'pulse','note-spo2':'spo2','note-weight':'weight','note-subj':'subjective','note-plan':'plan','note-doc':'doctor_name'};
     Object.keys(f).forEach(function(id){document.getElementById(id).value=edit[f[id]]||'';});
   }
-  document.getElementById('note-title').textContent=(edit?'✏️ Correct note':'📋 Progress Note')+(_currentAdmName?' · '+_currentAdmName:'');
+  document.getElementById('note-title').textContent=(edit?'✏️ Correct note':'📋 Progress Note')+(_currentAdmName?' · '+_currentAdmName:'')+(_uhidOf[_notePid]?' · '+_uhidOf[_notePid]:'');
   document.getElementById('note-err').style.display='none';
   openModal('mod-note');
   setTimeout(function(){var t=document.getElementById('note-subj');if(t)t.focus();},60);
@@ -727,8 +732,9 @@ function closeSearchAndOpen(id,name){
 }
 
 /* ── PATIENT PROFILE ── */
+var _ppTok=0;
 async function openProfile(id,name){
-  _pid=id;
+  _pid=id;var tok=++_ppTok;
   document.getElementById('pp-name').textContent=name||'Patient';
   document.getElementById('pp-av').textContent=(name||'?').charAt(0).toUpperCase();
   document.getElementById('pp-uhid').textContent='';
@@ -739,8 +745,11 @@ async function openProfile(id,name){
   /* Load patient details */
   var p=await _supa.from('nh_patients').select('*').eq('id',id).single();
   var adms=await _supa.from('admissions').select('*').eq('patient_id',id).order('admission_date',{ascending:false});
+  if(tok!==_ppTok)return;   /* another patient was opened meanwhile */
   var pd=p.data||{};
-  if(pd.uhid)document.getElementById('pp-uhid').textContent='UHID: '+pd.uhid;
+  var ppU=pd.uhid||((adms.data||[]).find(function(a){return a.uhid;})||{}).uhid||'';
+  _uhidOf[id]=ppU;
+  document.getElementById('pp-uhid').textContent=ppU?'UHID: '+ppU:'UHID not set';
   var activeAdm=(adms.data||[]).find(function(a){return a.status==='Active';});
   _admId=activeAdm?activeAdm.id:null; _latestAdmId=(adms.data&&adms.data[0])?adms.data[0].id:null; _notePid=id;
   document.getElementById('t-overview').innerHTML=
@@ -824,7 +833,7 @@ function openDocUpload(patientId){
   if(!patientId){showToast('Open a patient first');return;}
   _docUploadPatientId=patientId;
   var nm=(_bppPatientId===patientId&&document.getElementById('mod-bed-profile').classList.contains('open'))?document.getElementById('bpp-name').textContent:document.getElementById('pp-name').textContent;
-  document.getElementById('du-who').textContent='Patient: '+(nm||'');
+  document.getElementById('du-who').innerHTML=whoLine(patientId,nm);
   document.getElementById('du-file').value='';document.getElementById('du-err').style.display='none';
   openModal('mod-doc-upload');
 }
@@ -943,7 +952,10 @@ function switchTab(tab,el){
 /* ══════════════════════════════════════════════════════════════
    BED OVERVIEW
 ══════════════════════════════════════════════════════════════ */
-var _bppPatientId=null,_bppAdmId=null,_bppBedId=null;
+var _bppPatientId=null,_bppAdmId=null,_bppBedId=null,_bppTok=0;
+/* UHID of each opened patient, exactly as stored (nh_patients.uhid, else the admission's uhid). Never generated here. */
+var _uhidOf={};
+function whoLine(pid,name){var u=pid&&_uhidOf[pid];return 'Patient: <b>'+esc(name||'')+'</b>'+(u?' · UHID <b>'+esc(u)+'</b>':'');}
 
 async function loadBeds(){
   var [bedsRes,admsRes]=await Promise.all([
@@ -986,7 +998,8 @@ async function loadBeds(){
 }
 
 async function openBedPatientProfile(bedId,num,ward,admId,patientId,patientName,days){
-  _bppBedId=bedId;_bppAdmId=admId;_bppPatientId=patientId;
+  _bppBedId=bedId;_bppAdmId=admId;_bppPatientId=patientId;var tok=++_bppTok;
+  document.getElementById('bpp-uhid').textContent='';document.getElementById('bpp-meta').textContent='—';document.getElementById('bpp-adm-info').innerHTML='';
   document.getElementById('bpp-title').textContent='Bed '+num+' — '+ward;
   document.getElementById('bpp-sub').textContent=ward+' Ward · Occupied · Day '+days;
   document.getElementById('bpp-av').textContent=(patientName||'?').charAt(0).toUpperCase();
@@ -998,13 +1011,19 @@ async function openBedPatientProfile(bedId,num,ward,admId,patientId,patientName,
     _supa.from('admissions').select('*').eq('id',admId).single(),
     _supa.from('nh_patients').select('*').eq('id',patientId).single()
   ]);
+  if(tok!==_bppTok)return;   /* another bed was clicked meanwhile */
   var d=adm.data||{};
   var pd=pt.data||{};
+  var uhid=pd.uhid||d.uhid||'';
+  if(patientId)_uhidOf[patientId]=uhid;
+  document.getElementById('bpp-uhid').textContent=uhid?'UHID: '+uhid:'UHID not set';
   document.getElementById('bpp-meta').textContent=(pd.age?pd.age+'y ':'')+(pd.gender||'')+(pd.phone?' · '+pd.phone:'')+(d.admitting_doctor?' · '+(/^dr\.?\s/i.test(d.admitting_doctor)?'':'Dr. ')+d.admitting_doctor:'');
   /* Mark reviewed */
   if(patientId)await _supa.from('nh_patients').update({needs_review:false}).eq('id',patientId).eq('assigned_doctor_id',_myUid);
+  if(tok!==_bppTok)return;
   document.getElementById('bpp-adm-info').innerHTML=
-    '<div class="ir"><span class="il">Patient Name</span><span class="iv">'+esc(pd.full_name||'—')+'</span></div>'
+    '<div class="ir"><span class="il">Patient Name</span><span class="iv">'+esc(pd.full_name||d.patient_name||'—')+'</span></div>'
+    +'<div class="ir"><span class="il">UHID</span><span class="iv" style="font-weight:700">'+esc(uhid||'Not set')+'</span></div>'
     +'<div class="ir"><span class="il">Age / Gender</span><span class="iv">'+(pd.age||'—')+' / '+(pd.gender||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Phone</span><span class="iv">'+(pd.phone||'—')+'</span></div>'
     +'<div class="ir"><span class="il">Diagnosis</span><span class="iv">'+esc(d.admission_diagnosis||'—')+'</span></div>'
@@ -1050,7 +1069,7 @@ async function openOrderTestModal(fromProfile){
   if(!pid){showToast('This bed has no registered patient');return;}
   _ot.pid=pid;_ot.adm=adm;_ot.sel={};
   var nm=fromProfile?document.getElementById('pp-name').textContent:document.getElementById('bpp-name').textContent;
-  document.getElementById('ot-who').innerHTML='Patient: <b>'+esc(nm||'')+'</b>'+(adm?'':' · <span style="color:var(--amber)">not admitted now</span>');
+  document.getElementById('ot-who').innerHTML=whoLine(pid,nm)+(adm?'':' · <span style="color:var(--amber)">not admitted now</span>');
   ['ot-test-name','ot-notes','ot-search'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('ot-urgent').checked=false;
   document.getElementById('ot-err').style.display='none';document.getElementById('ot-picked').textContent='';
@@ -1116,11 +1135,12 @@ async function openPrescriptionModal(){
   ['rx-diagnosis','rx-drugs','rx-instructions','rx-followup-note'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('rx-followup').value='';
   document.getElementById('rx-err').style.display='none';
+  document.getElementById('rx-who').innerHTML=whoLine(_pid,document.getElementById('pp-name').textContent);
   openModal('mod-prescription');
 }
 async function savePrescription(){
-  var pid=_bppPatientId||_pid;
-  var admid=_bppAdmId||_admId;
+  var pid=_pid;          /* the patient whose clinical profile is open */
+  var admid=_admId;
   if(!pid){showToast('No patient selected');return;}
   var diag=(document.getElementById('rx-diagnosis').value||'').trim();
   var drugs=(document.getElementById('rx-drugs').value||'').trim();
