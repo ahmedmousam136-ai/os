@@ -129,6 +129,15 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
 /* MODALS */
 .mod-ov{position:fixed;inset:0;z-index:70;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(8px)}
 .mod-ov.open{display:flex}
+#mod-note,#mod-order-test,#mod-prescription,#mod-doc-upload{z-index:80}
+.ot-list{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:var(--r-md);padding:4px 0}
+.ot-item{display:flex;align-items:center;gap:9px;padding:7px 12px;font-size:12.5px;cursor:pointer}
+.ot-item:hover{background:var(--surface2)}.ot-item input,#mod-order-test input[type=checkbox]{width:17px;height:17px;flex:none;-webkit-appearance:checkbox;appearance:auto;accent-color:var(--green);display:inline-block;opacity:1;position:static;margin:0}
+.ot-item.on{background:var(--green-bg);font-weight:600}.ot-item small{color:var(--text-tertiary);margin-left:auto;font-size:10.5px}
+.ot-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary);padding:8px 12px 2px}
+.st-chip{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--text-secondary);border:1px solid var(--border)}
+.st-chip.s-ordered{background:#FFF4E0;color:#9A5B00;border-color:#F3D49B}.st-chip.s-done{background:#E6F6EE;color:#0F7A4F;border-color:#BFE6D2}.st-chip.s-cancelled{background:#FDECEC;color:#B42318;border-color:#F5C2C2}
+.note-edit{border:1px solid var(--border);background:var(--surface);border-radius:8px;font-size:11px;font-weight:600;padding:3px 9px;cursor:pointer;color:var(--text-secondary)}
 @media(min-width:600px){.mod-ov{align-items:center;padding:20px}}
 .modal{background:var(--surface);border:1px solid var(--border);width:100%;max-width:520px;box-shadow:var(--sh-lg);animation:slideUp .22s ease;border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:94vh;overflow-y:auto;padding-bottom:max(16px,env(safe-area-inset-bottom))}
 @media(min-width:600px){.modal{border-radius:var(--r-xl);max-height:90vh;padding-bottom:0}}
@@ -362,7 +371,7 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
 <!-- PROGRESS NOTE MODAL -->
 <div class="mod-ov" id="mod-note">
   <div class="modal">
-    <div class="mh"><div class="mtitle">📋 Progress Note</div><button class="mclose" onclick="closeModal('mod-note')">✕</button></div>
+    <div class="mh"><div class="mtitle" id="note-title">📋 Progress Note</div><button class="mclose" onclick="closeModal('mod-note')">✕</button></div>
     <div class="mb">
       <div><label class="flbl">Doctor Name</label><input class="finput" id="note-doc" placeholder="Your name"/></div>
       <!-- Vitals -->
@@ -379,7 +388,8 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
       <!-- SOAP -->
       <div><label class="flbl">Subjective (S) — Patient's complaints & history</label><textarea class="finput ftextarea" id="note-subj" rows="3" placeholder="Patient reports…"></textarea></div>
       <div><label class="flbl">Assessment / Plan (A/P) — Clinical findings & next steps</label><textarea class="finput ftextarea" id="note-plan" rows="3" placeholder="Assessment: … Plan: …"></textarea></div>
-      <button class="msub" onclick="saveNote()">✓ Save Note</button>
+      <div id="note-err" style="color:var(--red);font-size:11.5px;display:none"></div>
+      <button class="msub" id="note-save" onclick="saveNote()">✓ Save Note</button>
     </div>
   </div>
 </div>
@@ -406,7 +416,7 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
     <div class="mb" style="padding-top:0">
       <div class="ptab active" id="t-overview"></div>
       <div class="ptab" id="t-notes">
-        <button class="qbtn" style="margin-bottom:10px;width:100%;justify-content:center" onclick="openNoteModal()">+ Add Progress Note</button>
+        <button class="qbtn" style="margin-bottom:10px;width:100%;justify-content:center" onclick="openNoteFromProfile()">+ Add Progress Note</button>
         <div id="t-notes-list"></div>
       </div>
       <div class="ptab" id="t-prescription">
@@ -416,7 +426,8 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
         <div id="t-rx-list"></div>
       </div>
       <div class="ptab" id="t-documents">
-        <div class="note-box note-amber" style="margin-bottom:10px;font-size:11px">Documents uploaded by reception — view originals to verify. Never rely solely on extracted text for clinical decisions.</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><button class="qbtn" onclick="openDocUpload(_pid)">📎 Upload Document</button><button class="qbtn" onclick="openOrderTestModal(true)">🧪 Order Test</button></div>
+        <div class="note-box note-amber" style="margin-bottom:10px;font-size:11px">Medical documents of this patient (originals). ID cards (Aadhaar, Voter ID) are kept private and are not shown here. Never rely solely on extracted text for clinical decisions.</div>
         <div id="pp-doc-list"></div>
       </div>
       <div class="ptab" id="t-history">
@@ -455,7 +466,7 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
 
       <!-- Quick actions -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0">
-        <button class="qbtn" style="flex-direction:column;height:62px;gap:5px;font-size:10.5px" onclick="triggerDocUpload(_bppPatientId)">
+        <button class="qbtn" style="flex-direction:column;height:62px;gap:5px;font-size:10.5px" onclick="openDocUpload(_bppPatientId)">
           <span style="font-size:18px">📎</span>Upload Doc
         </button>
         <button class="qbtn" style="flex-direction:column;height:62px;gap:5px;font-size:10.5px" onclick="openNoteModalFromBed()">
@@ -470,6 +481,10 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
         <div class="ph"><div class="pt">📎 Documents</div></div>
         <div id="bpp-doc-list"></div>
       </div>
+      <div class="panel" style="margin-top:12px">
+        <div class="ph"><div class="pt">📋 Clinical notes &amp; test orders</div></div>
+        <div id="bpp-notes-list" style="padding:4px 12px 10px"></div>
+      </div>
 
       <p class="ss" style="text-align:center;margin-top:14px">
         <a href="#" onclick="event.preventDefault();closeModal('mod-bed-profile');openProfile(_bppPatientId,document.getElementById('bpp-name').textContent)" style="color:var(--navy);font-weight:600">View full clinical profile (notes, prescriptions, history) →</a>
@@ -483,15 +498,36 @@ main.content{flex:1;padding:26px 34px;overflow-y:auto}
   <div class="modal">
     <div class="mh"><div class="mtitle">🧪 Order Test</div><button class="mclose" onclick="closeModal('mod-order-test')">✕</button></div>
     <div class="mb">
-      <div class="note-box note-amber" style="font-size:11px">AuraScale doesn't have a dedicated diagnostic-centre/lab workflow connected yet — this saves the order into the patient's clinical record so it's visible in their history and to reception.</div>
-      <div><label class="flbl">Test Name *</label><input class="finput" id="ot-test-name" placeholder="e.g. CBC, X-Ray Chest, Blood Sugar (Fasting)"/></div>
-      <div><label class="flbl">Notes / Instructions</label><textarea class="finput ftextarea" id="ot-notes" rows="3" placeholder="Urgency, clinical reason, special instructions…"></textarea></div>
+      <div id="ot-who" style="font-size:12px;color:var(--text-secondary)"></div>
+      <div id="ot-lab-note" class="note-box" style="font-size:11px">The order goes straight to the Lab. Reception does not need to type it again.</div>
+      <div><label class="flbl">Find a test</label><input class="finput" id="ot-search" placeholder="Type to search: CBC, Sugar, Urine…" oninput="otRender()"/></div>
+      <div class="ot-list" id="ot-list"><p class="ss" style="padding:10px 12px">Loading the test list…</p></div>
+      <div id="ot-picked" style="font-size:11.5px;color:var(--text-secondary)"></div>
+      <div><label class="flbl">Other test (not in the list)</label><input class="finput" id="ot-test-name" placeholder="e.g. HRCT Chest — the lab will match it"/></div>
+      <div><label class="flbl">Instructions / clinical notes for the lab</label><textarea class="finput ftextarea" id="ot-notes" rows="2" placeholder="Clinical reason, fasting, special instructions…"></textarea></div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:600"><input type="checkbox" id="ot-urgent" style="width:17px;height:17px"/> Urgent</label>
       <div id="ot-err" style="color:var(--red);font-size:11.5px;display:none"></div>
-      <button class="msub" onclick="saveTestOrder()">✓ Save Test Order</button>
+      <button class="msub" id="ot-save" onclick="saveTestOrder()">✓ Send order to Lab</button>
     </div>
   </div>
 </div>
 <input type="file" id="doctor-doc-input" style="display:none" accept="application/pdf,image/*" onchange="handleDoctorDocUpload(event)"/>
+<!-- UPLOAD DOCUMENT MODAL -->
+<div class="mod-ov" id="mod-doc-upload">
+  <div class="modal">
+    <div class="mh"><div class="mtitle">📎 Upload Document</div><button class="mclose" onclick="closeModal('mod-doc-upload')">✕</button></div>
+    <div class="mb">
+      <div id="du-who" style="font-size:12px;color:var(--text-secondary)"></div>
+      <div><label class="flbl">What is it?</label><select class="finput" id="du-type">
+        <option>Investigation report</option><option>Imaging (X-ray / USG / CT / MRI)</option><option>Discharge summary</option>
+        <option>Referral letter</option><option>Previous prescription</option><option>Consent form</option><option>Other medical document</option></select></div>
+      <div><label class="flbl">File (photo or PDF) *</label><input class="finput" id="du-file" type="file" accept="application/pdf,image/*"/></div>
+      <div class="note-box" style="font-size:11px">The original file is saved exactly as it is, in the patient's record and health book. Do not upload ID cards here.</div>
+      <div id="du-err" style="color:var(--red);font-size:11.5px;display:none"></div>
+      <button class="msub" id="du-save" onclick="saveDocUpload()">✓ Upload</button>
+    </div>
+  </div>
+</div>
 
 <!-- PRESCRIPTION MODAL -->
 <div class="mod-ov" id="mod-prescription">
@@ -591,40 +627,68 @@ async function loadHome(){
 }
 
 /* ── ROUNDS ── */
-var _currentAdmId=null,_currentAdmName='';
+var _currentAdmId=null,_currentAdmName='',_notePid=null,_noteEditId=null,_latestAdmId=null;
 function quickAddNote(admId,name){
-  _currentAdmId=admId;_currentAdmName=name;
+  _currentAdmId=admId;_currentAdmName=name;_notePid=_pid;
   openNoteModal();
 }
-
-function openNoteModal(){
-  if(!_currentAdmId){showToast('Select a patient first');return;}
-  /* Reset form */
+/* Clinical Profile -> Clinical Notes -> Add Progress Note: for the patient that is open (active admission, else the latest one, else no admission) */
+function openNoteFromProfile(){
+  if(!_pid){showToast('Open a patient first');return;}
+  _notePid=_pid;_currentAdmId=_admId||_latestAdmId||null;
+  _currentAdmName=document.getElementById('pp-name').textContent;
+  openNoteModal();
+}
+function openNoteModal(edit){
+  if(!_notePid&&!_pid){showToast('Select a patient first');return;}
+  if(!_notePid)_notePid=_pid;
+  _noteEditId=edit?edit.id:null;
   ['note-bp','note-temp','note-pulse','note-spo2','note-weight','note-subj','note-plan'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('note-doc').value=_myDocName;
+  if(edit){
+    var f={'note-bp':'bp','note-temp':'temperature','note-pulse':'pulse','note-spo2':'spo2','note-weight':'weight','note-subj':'subjective','note-plan':'plan','note-doc':'doctor_name'};
+    Object.keys(f).forEach(function(id){document.getElementById(id).value=edit[f[id]]||'';});
+  }
+  document.getElementById('note-title').textContent=(edit?'✏️ Correct note':'📋 Progress Note')+(_currentAdmName?' · '+_currentAdmName:'');
+  document.getElementById('note-err').style.display='none';
   openModal('mod-note');
+  setTimeout(function(){var t=document.getElementById('note-subj');if(t)t.focus();},60);
+}
+var _noteCache={};
+function editNote(id){var n=_noteCache[id];if(!n)return;_notePid=n.patient_id||_pid;_currentAdmId=n.admission_id;openNoteModal(n);}
+function refreshNoteViews(pid){
+  if(document.getElementById('mod-profile').classList.contains('open')&&_pid===pid){loadNotesTab(pid);loadFullHistoryTab(pid);}
+  if(document.getElementById('mod-bed-profile').classList.contains('open')&&_bppPatientId===pid)loadBedNotes(pid);
 }
 async function saveNote(){
-  if(!_currentAdmId){showToast('No patient selected');return;}
+  var pid=_notePid||_pid,err=document.getElementById('note-err'),btn=document.getElementById('note-save');
+  err.style.display='none';
+  if(!pid){err.textContent='No patient selected.';err.style.display='block';return;}
   var doc=(document.getElementById('note-doc').value||'').trim()||_myDocName;
   var subj=(document.getElementById('note-subj').value||'').trim();
   var plan=(document.getElementById('note-plan').value||'').trim();
-  if(!subj&&!plan){showToast('Add at least one note (Subjective or Assessment/Plan)');return;}
-  var r=await _supa.from('progress_notes').insert({
-    clinic_id:_clinicId,admission_id:_currentAdmId,patient_id:_pid||null,
-    created_by:_myUid,doctor_name:doc,
+  if(!subj&&!plan){err.textContent='Write the note (Subjective or Assessment / Plan).';err.style.display='block';return;}
+  var row={doctor_name:doc,
     bp:(document.getElementById('note-bp').value||'').trim(),
     temperature:(document.getElementById('note-temp').value||'').trim(),
     spo2:(document.getElementById('note-spo2').value||'').trim(),
     pulse:(document.getElementById('note-pulse').value||'').trim(),
     weight:(document.getElementById('note-weight').value||'').trim(),
-    subjective:subj,plan:plan,
-    note_date:new Date().toISOString().slice(0,10)
-  });
-  if(r.error){showToast('Error: '+r.error.message);return;}
+    subjective:subj,plan:plan};
+  if(btn.disabled)return;btn.disabled=true;
+  var r;
+  if(_noteEditId){ r=await _supa.from('progress_notes').update(row).eq('id',_noteEditId).select('id'); if(!r.error&&(!r.data||!r.data.length))r={error:{message:'You can correct only your own notes.'}}; }
+  else {
+    row.clinic_id=_clinicId;row.admission_id=_currentAdmId||null;row.patient_id=pid;row.created_by=_myUid;row.note_date=new Date().toISOString().slice(0,10);
+    r=await _supa.from('progress_notes').insert(row);
+  }
+  btn.disabled=false;
+  if(r.error){err.textContent='Could not save: '+String(r.error.message||'').replace(/^[A-Z_]{4,}:\s*/,'');err.style.display='block';return;}
   closeModal('mod-note');
-  showToast('Note saved · '+_currentAdmName);
-  loadNotes(_currentAdmId);
+  showToast('✓ Note saved'+(_currentAdmName?' · '+_currentAdmName:'')+' · added to the patient\'s health record');
+  _noteEditId=null;
+  refreshNoteViews(pid);
+  loadHome();
 }
 
 
@@ -678,7 +742,7 @@ async function openProfile(id,name){
   var pd=p.data||{};
   if(pd.uhid)document.getElementById('pp-uhid').textContent='UHID: '+pd.uhid;
   var activeAdm=(adms.data||[]).find(function(a){return a.status==='Active';});
-  if(activeAdm)_admId=activeAdm.id;
+  _admId=activeAdm?activeAdm.id:null; _latestAdmId=(adms.data&&adms.data[0])?adms.data[0].id:null; _notePid=id;
   document.getElementById('t-overview').innerHTML=
     '<div style="display:flex;flex-direction:column;gap:4px">'
     +'<div class="ir"><span class="il">Name</span><span class="iv">'+esc(pd.full_name||'—')+'</span></div>'
@@ -697,7 +761,7 @@ async function openProfile(id,name){
         +'<div><b>Doctor:</b> '+(a.admitting_doctor||'—')+'</div>'
         +'<div><b>Diagnosis:</b> '+(a.admission_diagnosis||'Not recorded')+'</div>'
         +(a.status==='Active'?'<div><b>Duration:</b> '+(days+1)+' day(s)</div>':'')
-        +(a.status==='Active'?'<button class="qbtn" style="margin-top:8px" onclick="quickAddNote(\''+a.id+'\',\''+esc(pd.full_name||'')+'\')" >📋 Add Progress Note</button>':'')
+        +(a.status==='Active'?'<button class="qbtn" style="margin-top:8px" onclick="_notePid=_pid;quickAddNote(\''+a.id+'\',\''+esc(pd.full_name||'')+'\')" >📋 Add Progress Note</button>':'')
         +'</div>';
     }).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No admissions yet.</p>');
   loadNotesTab(id);
@@ -716,7 +780,8 @@ async function loadNotesTab(patientId){
     var vitals=[];
     if(n.bp)vitals.push('BP:'+n.bp);if(n.temperature)vitals.push('T:'+n.temperature+'°F');
     if(n.pulse)vitals.push('P:'+n.pulse);if(n.spo2)vitals.push('SpO₂:'+n.spo2+'%');if(n.weight)vitals.push('Wt:'+n.weight+'kg');
-    return '<div class="note-row"><div style="display:flex;justify-content:space-between"><span class="note-doc">'+esc(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
+    _noteCache[n.id]=n;
+    return '<div class="note-row"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span class="note-doc">'+esc(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+(n.created_by===_myUid?' <button class="note-edit" onclick="editNote(\''+n.id+'\')">Edit</button>':'')+'</span></div>'
       +(vitals.length?'<div class="note-vitals">'+vitals.map(function(v){return '<span class="vital-pill">'+v+'</span>';}).join('')+'</div>':'')
       +(n.subjective?'<div class="note-text"><b>S:</b> '+esc(n.subjective)+'</div>':'')
       +(n.plan?'<div class="note-text"><b>A/P:</b> '+esc(n.plan)+'</div>':'')+'</div>';
@@ -730,8 +795,11 @@ async function loadNotesTab(patientId){
 async function loadPatientDocumentsInto(patientId,targetElId,canUpload){
   var el=document.getElementById(targetElId);
   if(!el||!patientId)return;
+  /* ID cards (Aadhaar / Voter ID / photo) are never returned to a doctor: the database itself filters them out */
   var r=await _supa.from('nh_patient_documents').select('*').eq('patient_id',patientId).order('created_at',{ascending:false});
-  var rows=r.data||[];
+  var rows=(r.data||[]).filter(function(d){return d.doc_category!=='identity';});
+  var ids=[];rows.forEach(function(d){if(d.uploaded_by&&ids.indexOf(d.uploaded_by)<0)ids.push(d.uploaded_by);});
+  var who={};if(ids.length){var st=await _supa.from('nh_staff').select('id,full_name,role').in('id',ids);(st.data||[]).forEach(function(x){who[x.id]=x;});}
   if(!rows.length){
     el.innerHTML='<div class="empty" style="padding:18px"><div class="empty-ic">📎</div><p class="empty-t">No documents yet</p><p class="empty-s">'+(canUpload?'Upload one, or ask reception to add it':'Reception hasn\'t uploaded anything yet')+'</p></div>';
     return;
@@ -740,18 +808,45 @@ async function loadPatientDocumentsInto(patientId,targetElId,canUpload){
     var t=new Date(d.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     return '<div class="doc-card">'
       +'<div class="doc-ic">📄</div>'
-      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px">'+esc(d.file_name||'Document')+'</div>'
-      +'<div class="ss">'+esc(d.doc_type||'document')+' · '+t+'</div></div>'
-      +'<button class="qbtn" onclick="viewDoctorDoc(\''+d.file_path+'\')">View</button>'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px">'+esc(d.document_type&&!/^[a-z]+\/[a-z0-9.+-]+$/i.test(d.document_type)?d.document_type:(d.file_name||'Document'))+'</div>'
+      +'<div class="ss" style="font-size:11px">'+esc((d.file_name&&d.document_type&&d.file_name!==d.document_type?d.file_name+' · ':'')+t+(who[d.uploaded_by]?' · by '+who[d.uploaded_by].full_name:''))+'</div></div>'
+      +'<button class="qbtn" onclick="viewDoctorDoc('+jsAttr(d.file_path)+')">View</button>'
       +'</div>';
   }).join('');
 }
 async function viewDoctorDoc(path){
   var r=await _supa.storage.from('nh-documents').createSignedUrl(path,300);
-  if(r.error||!r.data){showToast('Could not open document');return;}
+  if(r.error||!r.data){showToast('This document cannot be opened from the doctor portal');return;}
   window.open(r.data.signedUrl,'_blank');
 }
 var _docUploadPatientId=null;
+function openDocUpload(patientId){
+  if(!patientId){showToast('Open a patient first');return;}
+  _docUploadPatientId=patientId;
+  var nm=(_bppPatientId===patientId&&document.getElementById('mod-bed-profile').classList.contains('open'))?document.getElementById('bpp-name').textContent:document.getElementById('pp-name').textContent;
+  document.getElementById('du-who').textContent='Patient: '+(nm||'');
+  document.getElementById('du-file').value='';document.getElementById('du-err').style.display='none';
+  openModal('mod-doc-upload');
+}
+async function saveDocUpload(){
+  var file=document.getElementById('du-file').files[0],err=document.getElementById('du-err'),btn=document.getElementById('du-save'),pid=_docUploadPatientId;
+  err.style.display='none';
+  if(!file){err.textContent='Choose the file to upload.';err.style.display='block';return;}
+  if(file.size>25*1024*1024){err.textContent='The file is bigger than 25 MB.';err.style.display='block';return;}
+  if(btn.disabled)return;btn.disabled=true;btn.textContent='Uploading…';
+  try{
+    var path=_clinicId+'/'+pid+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    var up=await _supa.storage.from('nh-documents').upload(path,file);
+    if(up.error)throw up.error;
+    var ins=await _supa.from('nh_patient_documents').insert({clinic_id:_clinicId,patient_id:pid,file_path:path,file_name:file.name,doc_type:file.type||'document',document_type:document.getElementById('du-type').value,uploaded_by:_myUid});
+    if(ins.error)throw ins.error;
+    closeModal('mod-doc-upload');
+    showToast('✓ Document saved to the patient\'s record and health book');
+    if(_bppPatientId===pid)loadPatientDocumentsInto(pid,'bpp-doc-list',true);
+    if(_pid===pid){loadPatientDocumentsInto(pid,'pp-doc-list',true);loadFullHistoryTab(pid);}
+  }catch(e){err.textContent='Upload failed: '+String((e&&e.message)||e);err.style.display='block';}
+  finally{btn.disabled=false;btn.textContent='✓ Upload';}
+}
 function triggerDocUpload(patientId){
   _docUploadPatientId=patientId;
   document.getElementById('doctor-doc-input').click();
@@ -905,7 +1000,7 @@ async function openBedPatientProfile(bedId,num,ward,admId,patientId,patientName,
   ]);
   var d=adm.data||{};
   var pd=pt.data||{};
-  document.getElementById('bpp-meta').textContent=(pd.age?pd.age+'y ':'')+(pd.gender||'')+(pd.phone?' · '+pd.phone:'')+(d.admitting_doctor?' · Dr. '+d.admitting_doctor:'');
+  document.getElementById('bpp-meta').textContent=(pd.age?pd.age+'y ':'')+(pd.gender||'')+(pd.phone?' · '+pd.phone:'')+(d.admitting_doctor?' · '+(/^dr\.?\s/i.test(d.admitting_doctor)?'':'Dr. ')+d.admitting_doctor:'');
   /* Mark reviewed */
   if(patientId)await _supa.from('nh_patients').update({needs_review:false}).eq('id',patientId).eq('assigned_doctor_id',_myUid);
   document.getElementById('bpp-adm-info').innerHTML=
@@ -919,15 +1014,28 @@ async function openBedPatientProfile(bedId,num,ward,admId,patientId,patientName,
     +'<div class="ir"><span class="il">Ward / Bed</span><span class="iv">'+esc(ward)+' / '+esc(num)+'</span></div>'
     +(pd.guardian?'<div class="ir"><span class="il">Guardian</span><span class="iv">'+esc(pd.guardian)+'</span></div>':'');
   loadPatientDocumentsInto(patientId,'bpp-doc-list',true);
+  loadBedNotes(patientId);
   /* Set pid/admId for notes/prescription modals reached from this popup */
   _pid=patientId;_admId=admId;
 }
 
 function openNoteModalFromBed(){
-  if(!_bppAdmId){showToast('No active admission');return;}
-  _admId=_bppAdmId;_pid=_bppPatientId;
-  _currentAdmId=_bppAdmId;_currentAdmName=document.getElementById('bpp-name').textContent;
+  if(!_bppPatientId){showToast('This bed has no registered patient');return;}
+  _admId=_bppAdmId;_pid=_bppPatientId;_notePid=_bppPatientId;
+  _currentAdmId=_bppAdmId||null;_currentAdmName=document.getElementById('bpp-name').textContent;
   openNoteModal();
+}
+/* recent notes + test orders shown inside the bed popup */
+async function loadBedNotes(pid){
+  var el=document.getElementById('bpp-notes-list');if(!el||!pid)return;
+  var [n,o]=await Promise.all([
+    _supa.from('progress_notes').select('*').eq('patient_id',pid).order('created_at',{ascending:false}).limit(5),
+    _supa.from('nh_test_requests').select('*').eq('patient_id',pid).order('created_at',{ascending:false}).limit(5)
+  ]);
+  (n.data||[]).forEach(function(x){_noteCache[x.id]=x;});
+  var h=(o.data&&o.data.length)?renderTestOrders(o.data):'';
+  h+=(n.data&&n.data.length)?renderNoteCards(n.data):'<p class="ss" style="padding:6px 0">No notes yet. Tap “Add Note”.</p>';
+  el.innerHTML=h;
 }
 
 /* ── ORDER TEST ──
@@ -936,28 +1044,69 @@ function openNoteModalFromBed(){
    tagged entry into the same progress_notes table used elsewhere, so
    the order is genuinely visible in the patient's real clinical
    history rather than living in a disconnected mock system. */
-function openOrderTestModal(){
-  if(!_bppAdmId){showToast('No active admission');return;}
-  document.getElementById('ot-test-name').value='';
-  document.getElementById('ot-notes').value='';
-  document.getElementById('ot-err').style.display='none';
+var _ot={pid:null,adm:null,tests:[],sel:{},labOn:true};
+async function openOrderTestModal(fromProfile){
+  var pid=fromProfile?_pid:(_bppPatientId||_pid), adm=fromProfile?(_admId||null):(_bppAdmId||_admId||null);
+  if(!pid){showToast('This bed has no registered patient');return;}
+  _ot.pid=pid;_ot.adm=adm;_ot.sel={};
+  var nm=fromProfile?document.getElementById('pp-name').textContent:document.getElementById('bpp-name').textContent;
+  document.getElementById('ot-who').innerHTML='Patient: <b>'+esc(nm||'')+'</b>'+(adm?'':' · <span style="color:var(--amber)">not admitted now</span>');
+  ['ot-test-name','ot-notes','ot-search'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('ot-urgent').checked=false;
+  document.getElementById('ot-err').style.display='none';document.getElementById('ot-picked').textContent='';
   openModal('mod-order-test');
+  var r=await _supa.rpc('doctor_test_catalog',{p_clinic_id:_clinicId});
+  if(r.error){_ot.tests=[];_ot.labOn=false;}else{_ot.tests=(r.data&&r.data.tests)||[];_ot.labOn=!!(r.data&&r.data.lab_on);}
+  var ln=document.getElementById('ot-lab-note');
+  if(_ot.labOn){ln.className='note-box';ln.textContent='The order goes straight to the Lab of this nursing home. Reception does not need to type it again.';}
+  else{ln.className='note-box note-amber';ln.textContent='The Lab module is not switched on for this nursing home. The order is still saved in the patient\'s record and reception can see it.';}
+  otRender();
 }
+function otRender(){
+  var q=(document.getElementById('ot-search').value||'').toLowerCase().trim(),box=document.getElementById('ot-list');
+  var list=_ot.tests.filter(function(t){return !q||(t.name+' '+(t.category||'')).toLowerCase().indexOf(q)>=0;});
+  if(!_ot.tests.length){box.innerHTML='<p class="ss" style="padding:10px 12px">No test list yet. Type the test name under “Other test”.</p>';}
+  else if(!list.length){box.innerHTML='<p class="ss" style="padding:10px 12px">No test matches. Type it under “Other test”.</p>';}
+  else{var cat=null,h='';list.slice(0,150).forEach(function(t){if(t.category!==cat){cat=t.category;h+='<div class="ot-cat">'+esc(cat||'Tests')+'</div>';}
+    h+='<label class="ot-item'+(_ot.sel[t.id]?' on':'')+'"><input type="checkbox" '+(_ot.sel[t.id]?'checked ':'')+'onchange="otToggle('+jsAttr(t.id)+',this.checked)"/><span>'+esc(t.name)+'</span>'+(t.sample?'<small>'+esc(t.sample)+'</small>':'')+'</label>';});box.innerHTML=h;}
+  var names=_ot.tests.filter(function(t){return _ot.sel[t.id];}).map(function(t){return t.name;});
+  document.getElementById('ot-picked').innerHTML=names.length?'<b>'+names.length+' selected:</b> '+esc(names.join(', ')):'';
+}
+function otToggle(id,on){if(on)_ot.sel[id]=true;else delete _ot.sel[id];otRender();}
 async function saveTestOrder(){
-  var name=(document.getElementById('ot-test-name').value||'').trim();
+  var other=(document.getElementById('ot-test-name').value||'').trim();
   var notes=(document.getElementById('ot-notes').value||'').trim();
-  var err=document.getElementById('ot-err');
+  var err=document.getElementById('ot-err'),btn=document.getElementById('ot-save');
   err.style.display='none';
-  if(!name){err.textContent='Enter a test name';err.style.display='block';return;}
-  var text='🧪 Lab test ordered: '+name+(notes?' — '+notes:'');
-  var r=await _supa.from('progress_notes').insert({
-    clinic_id:_clinicId,admission_id:_bppAdmId,patient_id:_bppPatientId,created_by:_myUid,
-    doctor_name:(document.getElementById('note-doc')||{}).value||'Doctor',
-    plan:text,note_date:new Date().toISOString().slice(0,10)
-  });
-  if(r.error){err.textContent='Error: '+r.error.message;err.style.display='block';return;}
+  var tests=_ot.tests.filter(function(t){return _ot.sel[t.id];}).map(function(t){return {test_id:t.id,name:t.name};});
+  other.split(/[,;\n]+/).map(function(x){return x.trim();}).filter(function(x){return x.length>1;}).forEach(function(x){tests.push({name:x});});
+  if(!tests.length){err.textContent='Choose at least one test (or type it under “Other test”).';err.style.display='block';return;}
+  if(btn.disabled)return;btn.disabled=true;btn.textContent='Sending…';
+  var r=await _supa.rpc('doctor_order_tests',{p_patient_id:_ot.pid,p_admission_id:_ot.adm,p_tests:tests,p_notes:notes,p_priority:document.getElementById('ot-urgent').checked?'urgent':'routine'});
+  btn.disabled=false;btn.textContent='✓ Send order to Lab';
+  if(r.error){err.textContent='Could not send: '+String(r.error.message||'');err.style.display='block';return;}
   closeModal('mod-order-test');
-  showToast('Test order saved to patient record');
+  showToast(_ot.labOn?'✓ Test order sent to the Lab ('+tests.length+' test'+(tests.length>1?'s':'')+')':'✓ Test order saved in the patient\'s record');
+  refreshNoteViews(_ot.pid);
+}
+var OT_STATUS={ordered:'Ordered',accepted:'Accepted by lab',sample_collected:'Sample collected',processing:'Processing',report_ready:'Report ready',completed:'Completed',cancelled:'Cancelled'};
+function renderTestOrders(rows){
+  return rows.map(function(o){
+    var t=new Date(o.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    var cls=o.status==='ordered'?'s-ordered':(o.status==='completed'||o.status==='report_ready')?'s-done':o.status==='cancelled'?'s-cancelled':'';
+    return '<div class="cn-card" style="border-left-color:var(--amber)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:4px"><span class="note-doc">🧪 Test order · '+esc(o.ordered_by_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
+      +'<div class="note-text"><b>'+esc((o.tests||[]).map(function(x){return x.name;}).join(', '))+'</b>'+(o.priority==='urgent'?' <span class="st-chip s-cancelled">URGENT</span>':'')+'</div>'
+      +(o.notes?'<div class="note-text" style="margin-top:3px">'+esc(o.notes)+'</div>':'')
+      +'<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="st-chip '+cls+'">'+esc(OT_STATUS[o.status]||o.status)+'</span>'
+      +(o.status==='ordered'&&o.ordered_by===_myUid?'<button class="note-edit" onclick="cancelTestOrder('+jsAttr(o.id)+','+jsAttr(o.patient_id)+')">Cancel order</button>':'')
+      +((o.status==='report_ready'||o.status==='completed')?'<span class="ss" style="font-size:10.5px">Report in Documents</span>':'')+'</div></div>';
+  }).join('');
+}
+async function cancelTestOrder(id,pid){
+  if(!confirm('Cancel this test order? The lab has not accepted it yet.'))return;
+  var r=await _supa.rpc('doctor_cancel_test',{p_request_id:id,p_reason:'Cancelled by doctor'});
+  showToast(r.error?String(r.error.message):'Test order cancelled');
+  refreshNoteViews(pid);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1000,7 +1149,7 @@ async function savePrescription(){
   await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'prescription_saved',target_table:'nh_prescriptions',target_id:pid,details:{diagnosis:diag}});
   closeModal('mod-prescription');showToast('Prescription saved');
   /* Reload prescription tab if the full profile is open */
-  if(document.getElementById('mod-profile').classList.contains('open'))loadPrescriptionTab(pid);
+  if(document.getElementById('mod-profile').classList.contains('open')){loadPrescriptionTab(pid);loadFullHistoryTab(pid);}
 }
 async function loadPrescriptionTab(patientId){
   /* Try nh_prescriptions table first, fall back to prescription-type notes */
@@ -1028,14 +1177,26 @@ function renderRxList(elId,rows){
 ══════════════════════════════════════════════════════════════ */
 async function loadFullHistoryTab(patientId){
   var el=document.getElementById('t-history-list');if(!el)return;
-  var [adms,notes]=await Promise.all([
+  var [adms,notes,rx,orders]=await Promise.all([
     _supa.from('admissions').select('*').eq('patient_id',patientId).order('admission_date',{ascending:false}),
-    _supa.from('progress_notes').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(30)
+    _supa.from('progress_notes').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(50),
+    _supa.from('nh_prescriptions').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(30),
+    _supa.from('nh_test_requests').select('*').eq('patient_id',patientId).order('created_at',{ascending:false}).limit(30)
   ]);
-  el.innerHTML='<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">All Admissions</div>'
+  var H=function(t,n){return '<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px">'+t+(n!=null?' ('+n+')':'')+'</div>';};
+  (notes.data||[]).forEach(function(x){_noteCache[x.id]=x;});
+  /* latest diagnosis written by a doctor (prescription), else the admission diagnosis */
+  var dx=(rx.data||[]).filter(function(r){return r.diagnosis;})[0];
+  el.innerHTML=(dx?'<div class="note-box" style="font-size:12px;margin-bottom:6px"><b>Latest diagnosis:</b> '+esc(dx.diagnosis)+' <span class="ss" style="font-size:11px">· '+esc(dx.doctor_name||'')+', '+new Date(dx.created_at).toLocaleDateString('en-GB')+'</span></div>':'')
+    +H('All Admissions').replace('margin:16px','margin:4px')
     +renderAdmissionHistory(adms.data||[])
-    +'<div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px">All Clinical Notes ('+((notes.data||[]).length)+')</div>'
-    +(notes.data&&notes.data.length?renderNoteCards(notes.data):'<p style="font-size:12px;color:var(--text-tertiary)">No notes recorded.</p>');
+    +H('Clinical Notes',(notes.data||[]).length)
+    +(notes.data&&notes.data.length?renderNoteCards(notes.data):'<p style="font-size:12px;color:var(--text-tertiary)">No notes recorded.</p>')
+    +H('Prescriptions',(rx.data||[]).length)
+    +((rx.data&&rx.data.length)?'<div id="t-history-rx"></div>':'<p style="font-size:12px;color:var(--text-tertiary)">No prescriptions recorded.</p>')
+    +H('Test Orders',(orders.data||[]).length)
+    +((orders.data&&orders.data.length)?renderTestOrders(orders.data):'<p style="font-size:12px;color:var(--text-tertiary)">No tests ordered.</p>');
+  if(rx.data&&rx.data.length)renderRxList('t-history-rx',rx.data);
 }
 function renderAdmissionHistory(adms){
   if(!adms||!adms.length)return '<p style="font-size:12px;color:var(--text-tertiary)">No admissions recorded.</p>';
@@ -1059,7 +1220,7 @@ function renderNoteCards(notes){
     if(n.bp)vitals.push('BP:'+n.bp);if(n.temperature)vitals.push('T:'+n.temperature+'°F');
     if(n.pulse)vitals.push('P:'+n.pulse);if(n.spo2)vitals.push('SpO₂:'+n.spo2+'%');if(n.weight)vitals.push('Wt:'+n.weight+'kg');
     return '<div class="cn-card">'
-      +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span class="note-doc">'+esc(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:5px"><span class="note-doc">'+esc(n.doctor_name||'Doctor')+'</span><span class="note-time">'+t+(n.created_by===_myUid&&_noteCache[n.id]?' <button class="note-edit" onclick="editNote(\''+n.id+'\')">Edit</button>':'')+'</span></div>'
       +(vitals.length?'<div class="note-vitals">'+vitals.map(function(v){return '<span class="vital-pill">'+v+'</span>';}).join('')+'</div>':'')
       +(n.subjective?'<div class="note-text" style="margin-top:5px"><b>S:</b> '+esc(n.subjective)+'</div>':'')
       +(n.plan?'<div class="note-text"><b>A/P:</b> '+esc(n.plan)+'</div>':'')
