@@ -307,10 +307,16 @@ async function deptMakePdf(o) {
     if (afterOwnPage) pages.push([]);
     host.removeChild(meas);
     var n = pages.length, out = document.createElement('div'); host.appendChild(out);
-    out.innerHTML = pages.map(function (rows, i) {
-      var tbl = rows.length ? '<table class="it">' + (o.colgroup || '') + (o.thead || '') + '<tbody>' + rows.join('') + '</tbody></table>' : '';
-      var tail = (i === n - 1) ? (o.after || '') : '<div style="text-align:right;font-size:10.5px;color:#6b7a73;margin-top:6px">Continued on next page&hellip;</div>';
-      return '<div class="pg">' + (i && o.headNext ? o.headNext : o.head) + tbl + tail + '<div class="foot"><span>' + (o.foot || '') + '</span><span>Page ' + (i + 1) + ' of ' + n + '</span></div></div>';
+    /* o.copies: the same document printed several times, e.g. ['ORIGINAL FOR RECIPIENT', 'DUPLICATE FOR TRANSPORTER'];
+       the text replaces %%COPY%% in the header. Without o.copies nothing changes. */
+    var copies = (o.copies && o.copies.length) ? o.copies : [null];
+    out.innerHTML = copies.map(function (cp) {
+      var sub = function (h) { return String(h || '').split('%%COPY%%').join(cp || ''); };
+      return pages.map(function (rows, i) {
+        var tbl = rows.length ? '<table class="it">' + (o.colgroup || '') + (o.thead || '') + '<tbody>' + rows.join('') + '</tbody></table>' : '';
+        var tail = (i === n - 1) ? (o.after || '') : '<div style="text-align:right;font-size:10.5px;color:#6b7a73;margin-top:6px">Continued on next page&hellip;</div>';
+        return '<div class="pg">' + sub(i && o.headNext ? o.headNext : o.head) + tbl + tail + '<div class="foot"><span>' + (o.foot || '') + '</span><span>Page ' + (i + 1) + ' of ' + n + '</span></div></div>';
+      }).join('');
     }).join('');
     var doc = new window.jspdf.jsPDF({ unit: 'mm', format: o.format || 'a4', compress: true });
     var Wmm = doc.internal.pageSize.getWidth(), Hmm = doc.internal.pageSize.getHeight();
