@@ -416,3 +416,5 @@ html body .aura-mark-lg {
 html body #sidebar .sb-logo > .sb-mark:first-child::before {
   box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 0 rgba(0,0,0,.18) inset, 0 3px 6px rgba(8,60,40,.18), 0 8px 18px rgba(11,107,74,.22);
 }
+/* Dark mode: selected Pharmacy / Lab menu item readable */
+html[data-theme="dark"] body .d-tab.on { color: #7FD8B4; }
