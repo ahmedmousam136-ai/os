@@ -166,7 +166,7 @@ details[open] summary:after{content:"－"}
 var API = 'https://qquyqejqrxfhtmidmgkb.supabase.co/functions/v1/patient-portal';
 var LANG = 'bn', DATA = null, KEY = '';
 var T = {
-  bn: { badge:'✨ আপনার ডিজিটাল স্বাস্থ্য খাতা', h1:'চিকিৎসার পুরো ইতিহাস,<br>এক ছোঁয়ায়', sub:'ভর্তি ও ছুটির তথ্য, কী কারণে ভর্তি, কী কী ব্যবহার হয়েছে, প্রতিটি বিল ও রসিদ — সব সাজানো এক জায়গায়।',
+  bn: { notes:'ডাক্তারের নোট', notesS:'সাম্প্রতিক আগে', noNotes:'এখনও কোনো ডাক্তারের নোট নেই।', cmpl:'সমস্যা', asmt:'মূল্যায়ন ও পরিকল্পনা', vit:'পরীক্ষা', rx:'প্রেসক্রিপশন', rxS:'ডাক্তারের লেখা', noRx:'এখনও কোনো প্রেসক্রিপশন নেই।', rxInst:'নির্দেশ', fu:'আবার দেখাবেন', ordered:'ডাক্তার পরীক্ষা লিখেছেন', badge:'✨ আপনার ডিজিটাল স্বাস্থ্য খাতা', h1:'চিকিৎসার পুরো ইতিহাস,<br>এক ছোঁয়ায়', sub:'ভর্তি ও ছুটির তথ্য, কী কারণে ভর্তি, কী কী ব্যবহার হয়েছে, প্রতিটি বিল ও রসিদ — সব সাজানো এক জায়গায়।',
     i1:'ভর্তি', i2:'রোগ নির্ণয়', i3:'বিল', i4:'রসিদ', i5:'রিপোর্ট', lbl:'আপনার রোগী আইডি (UHID)',
     hint:'UHID পাবেন WhatsApp-এর স্বাগত বার্তায় বা বিলে। UHID না পেলে রেজিস্টার করা মোবাইল নম্বরও দিতে পারেন।', go:'স্বাস্থ্য খাতা খুলুন', opening:'খোলা হচ্ছে…',
     safe:'এই পাতা শুধু আপনার জন্য। লিংকটি অন্য কাউকে পাঠাবেন না।', nl1:'লিংকটি সম্পূর্ণ নয়', nl2:'আপনার WhatsApp-এ পাঠানো বিলের নিচে “আমার স্বাস্থ্য খাতা” বোতামে চাপ দিয়ে খুলুন।',
@@ -178,7 +178,7 @@ var T = {
     noCh:'এখনও কোনো খরচ যোগ হয়নি।', noPay:'এখনও কোনো জমা নেই।', noVisit:'এখনও কোনো ভর্তির তথ্য নেই।',
     docs:'রিপোর্ট ও কাগজপত্র', docsS:'আপলোড করা কাগজ', noDocs:'এখনও কোনো রিপোর্ট বা কাগজ আপলোড হয়নি।', view:'দেখুন',
     meds:'ওষুধের তালিকা', medsS:'যে ওষুধ কেনা হয়েছে, সাম্প্রতিক আগে', noMeds:'এখনও কোনো ওষুধ কেনার তথ্য নেই।', phB:'ওষুধের বিল', lastB:'শেষ কেনা', times:'বার', labR:'ল্যাব ও ডায়াগনস্টিক রিপোর্ট', labRS:'সাম্প্রতিক আগে', noLab:'এখনও কোনো ল্যাব রিপোর্ট নেই।', pend:'রিপোর্ট তৈরি হচ্ছে', reports:'রিপোর্ট', bills:'ওষুধের বিল', refBy:'রেফার করেছেন', close:'খাতা বন্ধ করুন', foot:'AuraScale · আপনার তথ্য সুরক্ষিত ও শুধু আপনার জন্য', gst:'GST' },
-  en: { badge:'✨ Your digital health book', h1:'Your complete medical history,<br>in one tap', sub:'Admission and discharge details, why you were admitted, everything used, every bill and receipt, all in one place.',
+  en: { notes:"Doctor's notes", notesS:'latest first', noNotes:'No doctor notes yet.', cmpl:'Complaints', asmt:'Assessment & plan', vit:'Checks', rx:'Prescriptions', rxS:'written by the doctor', noRx:'No prescriptions yet.', rxInst:'Instructions', fu:'Follow-up', ordered:'Ordered by the doctor', badge:'✨ Your digital health book', h1:'Your complete medical history,<br>in one tap', sub:'Admission and discharge details, why you were admitted, everything used, every bill and receipt, all in one place.',
     i1:'Admissions', i2:'Diagnosis', i3:'Bills', i4:'Receipts', i5:'Reports', lbl:'Your patient ID (UHID)',
     hint:'Your UHID is in the WhatsApp welcome message and on your bill. You can also enter your registered mobile number.', go:'Open my health book', opening:'Opening…',
     safe:'This page is only for you. Do not forward the link to anyone.', nl1:'This link is incomplete', nl2:'Please open it from the “আমার স্বাস্থ্য খাতা” button under the bill sent to your WhatsApp.',
@@ -231,7 +231,7 @@ async function openBook(saved){
 function closeBook(){ DATA = null; store('aura_portal_' + KEY, null); document.getElementById('book').style.display = 'none'; document.getElementById('book').innerHTML = ''; document.getElementById('gate').style.display = ''; document.getElementById('uhid').value = ''; }
 
 function render(){
-  var D = DATA, p = D.patient, c = D.clinic, V = D.visits || [], LR = D.lab_reports || [], PB = D.pharmacy_bills || [], MD = D.medicines || [];
+  var D = DATA, p = D.patient, c = D.clinic, V = D.visits || [], LR = D.lab_reports || [], PB = D.pharmacy_bills || [], MD = D.medicines || [], CN = D.clinical_notes || [], RX = D.prescriptions || [];
   var due = V.reduce(function(s, v){ return s + Math.max(Number(v.due) || 0, 0); }, 0);
   var ag = [p.age !== '' && p.age != null ? p.age + ' ' + t('yrs') : '', p.gender || ''].filter(Boolean).join(' · ');
   var h = '<div class="card prof"><small style="color:var(--ink3)">' + esc(t('hello')) + '</small><h2>' + esc(p.name) + '</h2>'
@@ -279,8 +279,25 @@ function render(){
     h += '</div>';
   });
 
+  // the doctor's notes and prescriptions (entered once by the doctor; nothing to upload)
+  h += '<div class="sec"><h3>📋 ' + esc(t('notes')) + '</h3><span>' + esc(t('notesS')) + '</span></div>';
+  h += CN.length ? '<div class="card" style="padding:6px 18px">' + CN.slice(0, 50).map(function(n){
+      return '<div class="pay" style="display:block"><div style="display:flex;justify-content:space-between;gap:8px"><b>' + esc(n.doctor || t('doc')) + '</b><small style="margin:0">' + esc(dt(n.at)) + '</small></div>'
+        + (n.vitals && n.vitals.length ? '<small>' + esc(t('vit')) + ': ' + esc(n.vitals.join(' · ')) + '</small>' : '')
+        + (n.complaints ? '<div style="margin-top:4px;white-space:pre-wrap"><small style="display:inline">' + esc(t('cmpl')) + ':</small> ' + esc(n.complaints) + '</div>' : '')
+        + (n.assessment ? '<div style="margin-top:3px;white-space:pre-wrap"><small style="display:inline">' + esc(t('asmt')) + ':</small> ' + esc(n.assessment) + '</div>' : '') + '</div>';
+    }).join('') + '</div>' : '<div class="card empty">' + esc(t('noNotes')) + '</div>';
+  h += '<div class="sec"><h3>💊 ' + esc(t('rx')) + '</h3><span>' + esc(t('rxS')) + '</span></div>';
+  h += RX.length ? '<div class="card" style="padding:6px 18px">' + RX.slice(0, 50).map(function(r){
+      return '<div class="pay" style="display:block"><div style="display:flex;justify-content:space-between;gap:8px"><b>' + esc(r.diagnosis || t('rx')) + '</b><small style="margin:0">' + esc(dt(r.at)) + '</small></div>'
+        + '<small>' + esc(r.doctor) + '</small>'
+        + (r.drugs ? '<div style="margin-top:4px;white-space:pre-wrap">' + esc(r.drugs) + '</div>' : '')
+        + (r.instructions ? '<div style="margin-top:3px"><small style="display:inline">' + esc(t('rxInst')) + ':</small> ' + esc(r.instructions) + '</div>' : '')
+        + (r.follow_up ? '<div style="margin-top:3px"><small style="display:inline">' + esc(t('fu')) + ':</small> ' + esc(d(r.follow_up)) + (r.follow_up_note ? ' · ' + esc(r.follow_up_note) : '') + '</div>' : '') + '</div>';
+    }).join('') + '</div>' : '<div class="card empty">' + esc(t('noRx')) + '</div>';
+
   h += '<div class="sec"><h3>🧪 ' + esc(t('labR')) + '</h3><span>' + esc(t('labRS')) + '</span></div>';
-  h += LR.length ? '<div class="card" style="padding:6px 18px">' + LR.map(function(r){ return '<div class="pay"><div><b>' + esc((r.tests || []).join(', ') || r.no) + '</b><small><span class="num">' + esc(r.no) + '</span> · ' + esc(dt(r.at)) + (r.doctor ? ' · ' + esc(t('refBy')) + ': ' + esc(r.doctor) : '') + '</small></div>' + (r.url ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(t('view')) + '</a>' : '<small style="color:var(--ink3)">' + esc(t('pend')) + '</small>') + '</div>'; }).join('') + '</div>'
+  h += LR.length ? '<div class="card" style="padding:6px 18px">' + LR.map(function(r){ return '<div class="pay"><div><b>' + esc((r.tests || []).join(', ') || r.no) + '</b><small><span class="num">' + esc(r.no) + '</span> · ' + esc(dt(r.at)) + (r.doctor ? ' · ' + esc(t('refBy')) + ': ' + esc(r.doctor) : '') + '</small></div>' + (r.url ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(t('view')) + '</a>' : '<small style="color:var(--ink3)">' + esc(r.ordered ? t('ordered') : t('pend')) + '</small>') + '</div>'; }).join('') + '</div>'
     : '<div class="card empty">' + esc(t('noLab')) + '</div>';
 
   h += '<div class="sec"><h3>📄 ' + esc(t('docs')) + '</h3><span>' + esc(t('docsS')) + '</span></div>';
