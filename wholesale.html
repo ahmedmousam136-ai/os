@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Wholesale · AuraScale</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="nh-shared.js?v=20261019w"></script>
+<script src="aura-dept.js?v=20261019w"></script>
+<script src="aura-loader.js?v=2"></script>
+<link rel="stylesheet" href="aura-theme.css?v=20261018a"/>
+<script src="aura-themes.js?v=1"></script>
+</head>
+<body>
+<div id="loading" class="aura-loader" data-label="Loading AuraScale"></div><script>AuraLoader.fill('loading')</script>
+<div id="nh-toast"></div>
+
+<style>
+@media(max-width:600px){.hide-sm{display:none}}
+.subseg{margin-bottom:14px}
+.wl td input.finput,.wl td select.finput{padding:6px 7px;font-size:13px}
+.wl td{vertical-align:top}
+.sumbox{border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:var(--surface2);min-width:260px}
+.row2{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.pinfo{font-size:12px;color:var(--text-secondary);margin-top:5px}
+.pinfo b{color:var(--text-primary)}
+.over{color:var(--red);font-weight:700}
+.link{color:var(--blue);font-weight:600;cursor:pointer;text-decoration:underline}
+.kpi b{font-size:18px}
+.hl-r{background:var(--red-bg)!important}
+.lines-empty{text-align:center;padding:20px;color:var(--text-secondary);font-size:12.5px}
+</style>
+
+<div id="app" style="display:none">
+  <div class="d-top">
+    <div class="d-brand"><div style="min-width:0"><div class="d-title">&#128666; Wholesale</div><div class="d-sub" id="d-fac"></div></div></div>
+  </div>
+  <div class="d-tabs" id="d-tabs">
+    <button class="d-tab on" data-t="home" onclick="dTab('home')"><span class="ti">&#127968;</span><span class="tl">Home</span></button>
+    <button class="d-tab" data-t="sell" data-can="sellRead" onclick="dTab('sell')"><span class="ti">&#129534;</span><span class="tl">Sales</span></button>
+    <button class="d-tab" data-t="buy" data-can="buyRead" onclick="dTab('buy')"><span class="ti">&#128229;</span><span class="tl">Purchase</span></button>
+    <button class="d-tab" data-t="stock" onclick="dTab('stock')"><span class="ti">&#128230;</span><span class="tl">Stock</span></button>
+    <button class="d-tab" data-t="money" data-can="moneyRead" onclick="dTab('money')"><span class="ti">&#128176;</span><span class="tl">Accounts</span></button>
+    <button class="d-tab" data-t="parties" onclick="dTab('parties')"><span class="ti">&#128101;</span><span class="tl">Parties</span></button>
+    <button class="d-tab" data-t="settings" data-can="owner" onclick="dTab('settings')"><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
+  </div>
+  <div class="d-main" id="d-body">
+
+    <!-- ============ HOME ============ -->
+    <div class="d-view on" id="v-home">
+      <div id="setup-note" class="note" style="display:none"></div>
+      <div class="stat" id="h-stats"></div>
+      <div class="grid2" style="align-items:start">
+        <div class="card" id="h-due-card"><b>Customers to collect from</b><div id="h-due" style="margin-top:8px"></div></div>
+        <div class="card"><b>Stock needing attention</b><div id="h-stock" style="margin-top:8px"></div></div>
+      </div>
+    </div>
+
+    <!-- ============ SALES ============ -->
+    <div class="d-view" id="v-sell">
+      <div class="seg subseg" id="sell-seg">
+        <button data-s="new" data-can="sell" onclick="sellSeg('new')">&#10133; New invoice</button>
+        <button data-s="list" onclick="sellSeg('list')">&#128196; Invoices</button>
+        <button data-s="ret" onclick="sellSeg('ret')">&#8617; Credit notes</button>
+      </div>
+      <!-- new invoice -->
+      <div id="s-new">
+        <div class="row2" style="margin-bottom:12px">
+          <div style="flex:1;min-width:260px;position:relative"><label class="flbl">Customer *</label><div id="pp-sell"></div></div>
+          <div style="width:160px"><label class="flbl">Invoice date</label><input class="finput" id="s-date" type="date"/></div>
+        </div>
+        <div style="position:relative;margin-bottom:10px">
+          <label class="flbl">Add item</label>
+          <input class="finput" id="s-q" placeholder="Type 2-3 letters of the product or salt&hellip;" autocomplete="off" oninput="sellSearch()" onkeydown="ddKey(event,'s-dd')" style="font-size:15px"/>
+          <div id="s-dd" class="dd" style="display:none"></div>
+        </div>
+        <div style="overflow-x:auto"><table class="dt wl"><thead><tr><th>Product</th><th>Batch</th><th class="r">Qty</th><th class="r">Free</th><th class="r">Rate</th><th class="r">Disc %</th><th class="r">Amount</th><th></th></tr></thead><tbody id="s-lines"></tbody></table></div>
+        <div class="row2" style="margin-top:14px;justify-content:space-between">
+          <div style="flex:1;min-width:260px">
+            <label class="flbl">Payment</label>
+            <div class="seg" id="s-pay">
+              <button data-p="credit" class="on" onclick="sellPay('credit')">Credit</button><button data-p="cash" onclick="sellPay('cash')">Cash</button><button data-p="upi" onclick="sellPay('upi')">UPI</button><button data-p="bank" onclick="sellPay('bank')">Bank</button><button data-p="cheque" onclick="sellPay('cheque')">Cheque</button>
+            </div>
+            <div class="grid2" style="margin-top:10px">
+              <div id="s-paid-box"><label class="flbl">Paid now (optional)</label><input class="finput" id="s-paid" type="number" min="0" step="0.01" placeholder="0" oninput="sellRender(true)"/></div>
+              <div id="s-ref-box" style="display:none"><label class="flbl">UTR / cheque no.</label><input class="finput" id="s-ref"/></div>
+            </div>
+            <div style="margin-top:10px"><label class="flbl">Note on invoice (optional)</label><input class="finput" id="s-note" maxlength="200" placeholder="e.g. Order by phone, delivered by Raju"/></div>
+          </div>
+          <div class="sumbox" id="s-sum"></div>
+        </div>
+        <button class="btn btn-g" style="margin-top:14px;min-width:220px" id="s-save" onclick="sellSave()">&#10003; Save &amp; make invoice</button>
+        <div class="err" id="s-err"></div>
+      </div>
+      <!-- invoice list -->
+      <div id="s-list" style="display:none">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <div class="seg" id="sl-range"><button class="on" data-r="1" onclick="slRange(1)">Today</button><button data-r="7" onclick="slRange(7)">7 days</button><button data-r="30" onclick="slRange(30)">30 days</button><button data-r="365" onclick="slRange(365)">1 year</button></div>
+          <input class="finput" id="sl-q" placeholder="Invoice no. or customer&hellip;" oninput="slRender()" style="max-width:260px"/>
+        </div>
+        <div class="stat" id="sl-stats"></div>
+        <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th class="r">Amount</th><th>Payment</th><th></th></tr></thead><tbody id="sl-b"></tbody></table></div>
+      </div>
+      <!-- credit notes -->
+      <div id="s-ret" style="display:none">
+        <p class="tiny" style="margin-bottom:10px">Goods a customer sent back. To make a new one, open the invoice (Invoices) and tap <b>Goods returned</b>.</p>
+        <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Date</th><th>Credit note</th><th>Customer</th><th>Reason</th><th class="r">Amount</th><th></th></tr></thead><tbody id="sr-b"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ============ PURCHASE ============ -->
+    <div class="d-view" id="v-buy">
+      <div class="seg subseg" id="buy-seg">
+        <button data-s="new" data-can="buy" onclick="buySeg('new')">&#10133; New purchase</button>
+        <button data-s="list" onclick="buySeg('list')">&#128196; Purchases</button>
+        <button data-s="ret" onclick="buySeg('ret')">&#8618; Return to supplier</button>
+      </div>
+      <div id="b-new">
+        <div class="card" style="margin-bottom:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">
+          <div style="font-size:28px">&#128248;</div>
+          <div style="flex:1;min-width:220px"><b>Scan the supplier's bill</b><div class="tiny">Take a clear photo of the whole bill. AI reads the supplier, bill number and every line. You check the lines, then save.</div></div>
+          <label class="btn btn-g" style="cursor:pointer">&#128247; Take / choose photo<input type="file" id="b-scan" accept="image/*" capture="environment" onchange="scanPick(this)" style="display:none"/></label>
+          <div class="tiny" id="b-scan-st" style="width:100%"></div>
+        </div>
+        <div class="row2" style="margin-bottom:12px">
+          <div style="flex:1;min-width:260px;position:relative"><label class="flbl">Supplier *</label><div id="pp-buy"></div></div>
+          <div style="width:170px"><label class="flbl">Supplier's bill no. *</label><input class="finput" id="b-billno" maxlength="40"/></div>
+          <div style="width:160px"><label class="flbl">Bill date *</label><input class="finput" id="b-date" type="date"/></div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div style="position:relative;margin-bottom:10px">
+            <label class="flbl">Item</label>
+            <input class="finput" id="b-q" placeholder="Type the product name&hellip;" autocomplete="off" oninput="buySearch()" onkeydown="ddKey(event,'b-dd')"/>
+            <div id="b-dd" class="dd" style="display:none"></div>
+            <div class="tiny" id="b-picked" style="margin-top:4px"></div>
+          </div>
+          <div id="b-newitem" class="grid4" style="display:none;margin-bottom:10px">
+            <div><label class="flbl">Salt / composition</label><input class="finput" id="bn-comp"/></div>
+            <div><label class="flbl">HSN</label><input class="finput" id="bn-hsn" value="3004"/></div>
+            <div><label class="flbl">Sold per</label><select class="finput" id="bn-unit"><option>strip</option><option>box</option><option>bottle</option><option>vial</option><option>tube</option><option>pcs</option><option>sachet</option><option>kit</option></select></div>
+            <div><label class="flbl">Pack (e.g. 1x10)</label><input class="finput" id="bn-pack"/></div>
+          </div>
+          <div class="grid4">
+            <div><label class="flbl">Batch no.</label><input class="finput" id="b-batch" style="text-transform:uppercase"/></div>
+            <div><label class="flbl">Expiry (month)</label><input class="finput" id="b-exp" type="month"/></div>
+            <div><label class="flbl">Qty</label><input class="finput" id="b-qty" type="number" min="0" step="1"/></div>
+            <div><label class="flbl">Free</label><input class="finput" id="b-free" type="number" min="0" step="1" value="0"/></div>
+            <div><label class="flbl">Rate (before GST) &#8377;</label><input class="finput" id="b-rate" type="number" min="0" step="0.01"/></div>
+            <div><label class="flbl">Discount %</label><input class="finput" id="b-disc" type="number" min="0" max="100" step="0.01" value="0"/></div>
+            <div><label class="flbl">GST %</label><select class="finput" id="b-gst"><option>5</option><option>0</option><option>12</option><option>18</option><option>28</option><option>40</option></select></div>
+            <div><label class="flbl">MRP (per unit) &#8377;</label><input class="finput" id="b-mrp" type="number" min="0" step="0.01"/></div>
+            <div><label class="flbl">Your selling rate (PTR) &#8377;</label><input class="finput" id="b-ptr" type="number" min="0" step="0.01" placeholder="optional"/></div>
+            <div style="display:flex;align-items:flex-end"><button class="btn btn-p" style="width:100%" onclick="buyAddLine()">&#10133; Add line</button></div>
+          </div>
+          <div class="err" id="b-line-err"></div>
+        </div>
+        <div style="overflow-x:auto"><table class="dt wl"><thead><tr><th>Item</th><th>Batch / Exp</th><th class="r">Qty + free</th><th class="r">Rate</th><th class="r">Disc</th><th class="r">GST</th><th class="r">MRP</th><th class="r">Amount</th><th></th></tr></thead><tbody id="b-lines"></tbody></table></div>
+        <div class="row2" style="margin-top:12px;justify-content:space-between">
+          <div style="flex:1;min-width:240px"><label class="flbl">Note (optional)</label><input class="finput" id="b-note" maxlength="200"/></div>
+          <div class="sumbox" id="b-sum"></div>
+        </div>
+        <button class="btn btn-g" style="margin-top:14px;min-width:220px" id="b-save" onclick="buySave()">&#10003; Save purchase &amp; add to stock</button>
+        <div class="err" id="b-err"></div>
+      </div>
+      <div id="b-list" style="display:none">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <div class="seg" id="bl-range"><button data-r="7" onclick="blRange(7)">7 days</button><button class="on" data-r="30" onclick="blRange(30)">30 days</button><button data-r="365" onclick="blRange(365)">1 year</button></div>
+          <input class="finput" id="bl-q" placeholder="Bill no. or supplier&hellip;" oninput="blRender()" style="max-width:260px"/>
+        </div>
+        <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Bill date</th><th>Supplier / bill no.</th><th>Our ref.</th><th class="r">Amount</th><th>Entered by</th><th></th></tr></thead><tbody id="bl-b"></tbody></table></div>
+      </div>
+      <div id="b-ret" style="display:none">
+        <div id="br-form" data-can="buy">
+          <p class="tiny" style="margin-bottom:10px">Goods going back to the supplier (expired, damaged, short-dated). Stock goes down and the supplier owes you (debit note).</p>
+          <div class="row2" style="margin-bottom:10px">
+            <div style="flex:1;min-width:260px;position:relative"><label class="flbl">Supplier *</label><div id="pp-pret"></div></div>
+            <div style="flex:1;min-width:220px"><label class="flbl">From purchase bill (optional)</label><select class="finput" id="br-bill" onchange="brBill()"><option value="">Any batch in stock</option></select></div>
+          </div>
+          <div class="row2" style="margin-bottom:10px">
+            <div style="flex:2;min-width:220px;position:relative"><label class="flbl">Item</label><input class="finput" id="br-q" placeholder="Type the product name&hellip;" autocomplete="off" oninput="brSearch()"/><div id="br-dd" class="dd" style="display:none"></div></div>
+          </div>
+          <div style="overflow-x:auto"><table class="dt wl"><thead><tr><th>Item / batch</th><th class="r">In stock</th><th class="r">Qty back</th><th class="r">Rate</th><th class="r">Amount</th><th></th></tr></thead><tbody id="br-lines"></tbody></table></div>
+          <div class="row2" style="margin-top:10px;justify-content:space-between">
+            <div style="flex:1;min-width:240px"><label class="flbl">Reason *</label><input class="finput" id="br-reason" placeholder="e.g. Expired / damaged / short expiry"/></div>
+            <div class="sumbox" id="br-sum"></div>
+          </div>
+          <button class="btn btn-g" style="margin-top:12px" id="br-save" onclick="brSave()">&#10003; Save debit note</button>
+          <div class="err" id="br-err"></div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:20px 0"/>
+        </div>
+        <h3 style="font-size:14px;margin-bottom:8px">Debit notes</h3>
+        <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Date</th><th>Debit note</th><th>Supplier</th><th>Reason</th><th class="r">Amount</th><th></th></tr></thead><tbody id="dn-b"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ============ STOCK ============ -->
+    <div class="d-view" id="v-stock">
+      <div class="stat" id="st-stats"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input class="finput" id="st-q" placeholder="Search product or salt&hellip;" oninput="stockRender()" style="max-width:300px"/>
+        <div class="seg" id="st-f">
+          <button class="on" data-f="all" onclick="stockFilter('all')">All</button>
+          <button data-f="low" onclick="stockFilter('low')">Low / out</button>
+          <button data-f="exp90" onclick="stockFilter('exp90')">Expiring &le; 90 days</button>
+          <button data-f="expired" onclick="stockFilter('expired')">Expired</button>
+        </div>
+        <button class="btn btn-sm" data-can="buy" onclick="itemEdit(null)">&#10133; New item</button>
+      </div>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Product</th><th class="r">In stock</th><th>Nearest expiry</th><th class="r">MRP</th><th class="r hide-sm">PTR</th><th>Status</th><th></th></tr></thead><tbody id="st-b"></tbody></table></div>
+    </div>
+
+    <!-- ============ ACCOUNTS ============ -->
+    <div class="d-view" id="v-money">
+      <div class="seg subseg" id="money-seg">
+        <button data-s="due" onclick="moneySeg('due')">&#9201; Outstanding</button>
+        <button data-s="pay" data-can="money" onclick="moneySeg('pay')">&#128181; Receive / pay</button>
+        <button data-s="list" onclick="moneySeg('list')">&#128203; Payments</button>
+        <button data-s="ledger" onclick="moneySeg('ledger')">&#128210; Party ledger</button>
+      </div>
+      <div id="m-due">
+        <div class="stat" id="od-stats"></div>
+        <h3 style="font-size:14px;margin:4px 0 8px">To receive (customers owe you)</h3>
+        <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Party</th><th class="r">Due</th><th class="r">Overdue</th><th>Oldest unpaid</th><th></th></tr></thead><tbody id="od-in"></tbody></table></div>
+        <h3 style="font-size:14px;margin:18px 0 8px">To pay (you owe suppliers)</h3>
+        <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Party</th><th class="r">You owe</th><th></th></tr></thead><tbody id="od-out"></tbody></table></div>
+      </div>
+      <div id="m-pay" style="display:none">
+        <div class="seg" id="mp-dir" style="margin-bottom:12px"><button data-d="in" class="on" onclick="payDir('in')">&#11015; Money received</button><button data-d="out" onclick="payDir('out')">&#11014; Money paid</button></div>
+        <div class="grid2" style="max-width:760px">
+          <div style="grid-column:1/-1;position:relative"><label class="flbl" id="mp-plbl">Received from *</label><div id="pp-pay"></div></div>
+          <div><label class="flbl">Amount &#8377; *</label><input class="finput" id="mp-amt" type="number" min="0" step="0.01"/></div>
+          <div><label class="flbl">Date</label><input class="finput" id="mp-date" type="date"/></div>
+          <div><label class="flbl">Mode</label><select class="finput" id="mp-mode" onchange="dEl('mp-ref-l').textContent=this.value==='cash'?'Reference (optional)':'UTR / cheque / UPI ref. *'"><option value="cash">Cash</option><option value="upi">UPI</option><option value="bank">Bank transfer (NEFT/RTGS/IMPS)</option><option value="cheque">Cheque</option></select></div>
+          <div><label class="flbl" id="mp-ref-l">Reference (optional)</label><input class="finput" id="mp-ref" maxlength="60"/></div>
+          <div style="grid-column:1/-1"><label class="flbl">Note (optional)</label><input class="finput" id="mp-note" maxlength="200"/></div>
+        </div>
+        <button class="btn btn-g" style="margin-top:14px" id="mp-save" onclick="paySave()">&#10003; Save</button>
+        <div class="err" id="mp-err"></div>
+        <div id="mp-done" style="margin-top:12px"></div>
+      </div>
+      <div id="m-list" style="display:none">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <div class="seg" id="ml-range"><button data-r="7" onclick="mlRange(7)">7 days</button><button class="on" data-r="30" onclick="mlRange(30)">30 days</button><button data-r="365" onclick="mlRange(365)">1 year</button></div>
+        </div>
+        <div class="stat" id="ml-stats"></div>
+        <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Date</th><th>No.</th><th>Party</th><th>Mode / ref.</th><th class="r">Received</th><th class="r">Paid</th><th></th></tr></thead><tbody id="ml-b"></tbody></table></div>
+      </div>
+      <div id="m-ledger" style="display:none">
+        <div class="row2" style="margin-bottom:12px">
+          <div style="flex:2;min-width:260px;position:relative"><label class="flbl">Party</label><div id="pp-ledg"></div></div>
+          <div style="width:150px"><label class="flbl">From</label><input class="finput" id="lg-from" type="date"/></div>
+          <div style="width:150px"><label class="flbl">To</label><input class="finput" id="lg-to" type="date"/></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn btn-p" onclick="ledgerLoad()">Show</button></div>
+        </div>
+        <div id="lg-out"></div>
+      </div>
+    </div>
+
+    <!-- ============ PARTIES ============ -->
+    <div class="d-view" id="v-parties">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <input class="finput" id="pt-q" placeholder="Search name, phone, GSTIN&hellip;" oninput="partiesRender()" style="max-width:280px"/>
+        <div class="seg" id="pt-f"><button class="on" data-f="all" onclick="ptFilter('all')">All</button><button data-f="customer" onclick="ptFilter('customer')">Customers</button><button data-f="supplier" onclick="ptFilter('supplier')">Suppliers</button></div>
+        <button class="btn btn-sm btn-g" onclick="partyEdit(null)">&#10133; New party</button>
+      </div>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Type</th><th class="hide-sm">Phone</th><th class="hide-sm">GSTIN</th><th class="r" data-can="moneyRead">Balance</th><th></th></tr></thead><tbody id="pt-b"></tbody></table></div>
+    </div>
+
+    <!-- ============ SETTINGS ============ -->
+    <div class="d-view" id="v-settings">
+      <h3 style="font-size:15px;margin-bottom:4px">Business details printed on every invoice</h3>
+      <p class="tiny" style="margin-bottom:12px">A wholesale invoice must show your GSTIN and drug licence numbers (Form 20B / 21B). Ask your CA if unsure.</p>
+      <div class="grid2">
+        <div><label class="flbl">Business name *</label><input class="finput" id="ws-name"/></div>
+        <div><label class="flbl">Phone</label><input class="finput" id="ws-phone"/></div>
+        <div style="grid-column:1/-1"><label class="flbl">Address *</label><input class="finput" id="ws-address"/></div>
+        <div><label class="flbl">GSTIN *</label><input class="finput" id="ws-gstin" maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase().replace(/[^0-9A-Z]/g,'');wsCheck()"/><div class="tiny" id="ws-gstin-st" style="margin-top:4px"></div></div>
+        <div><label class="flbl">Drug licence no(s). (20B / 21B) *</label><input class="finput" id="ws-dl" maxlength="120" placeholder="e.g. WB/KOL/20B-1234, 21B-1235"/></div>
+        <div><label class="flbl">Email</label><input class="finput" id="ws-email" type="email"/></div>
+        <div><label class="flbl">FSSAI no. (if you sell food supplements)</label><input class="finput" id="ws-fssai"/></div>
+        <div><label class="flbl">Invoice number starts with</label><input class="finput" id="ws-prefix" maxlength="5" placeholder="INV" style="text-transform:uppercase"/><div class="tiny">e.g. INV &rarr; INV/26-27/0001. A new series starts every 1 April.</div></div>
+        <div><label class="flbl">Usual credit days for customers</label><input class="finput" id="ws-cdays" type="number" min="0" max="365" placeholder="30"/></div>
+        <div><label class="flbl">Bank name</label><input class="finput" id="ws-bank"/></div>
+        <div><label class="flbl">Account no.</label><input class="finput" id="ws-acc"/></div>
+        <div><label class="flbl">IFSC</label><input class="finput" id="ws-ifsc" style="text-transform:uppercase"/></div>
+        <div><label class="flbl">UPI ID</label><input class="finput" id="ws-upi"/></div>
+        <div style="grid-column:1/-1"><label class="flbl">Terms printed at the bottom of invoices</label><input class="finput" id="ws-terms" placeholder="e.g. Goods once sold will be taken back only as per company policy. Interest @18% after due date."/></div>
+      </div>
+      <button class="btn btn-g" style="margin-top:14px" onclick="wsSave()">&#10003; Save details</button>
+      <div class="err" id="ws-err"></div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0"/>
+      <h3 style="font-size:15px;margin-bottom:4px">Staff</h3>
+      <p class="tiny" style="margin-bottom:12px"><b>Sales</b>: invoices, customer returns, cash with the invoice. <b>Inventory</b>: purchases, supplier returns, stock. <b>Accounts</b>: payments, ledgers, outstanding. Only you (owner) can cancel anything.</p>
+      <div class="grid4" style="max-width:860px">
+        <div><label class="flbl">Role</label><select class="finput" id="sf-role"><option value="sales">Sales</option><option value="inventory">Inventory</option><option value="accounts">Accounts</option></select></div>
+        <div><label class="flbl">Name / label</label><input class="finput" id="sf-label" placeholder="e.g. Rakib (counter)"/></div>
+        <div><label class="flbl">WhatsApp number *</label><input class="finput" id="sf-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile"/></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-g" style="width:100%" id="sf-go" onclick="staffInvite()">&#128242; Invite</button></div>
+      </div>
+      <div class="err" id="sf-err"></div>
+      <div id="sf-res" style="margin-top:10px"></div>
+      <div style="overflow-x:auto;margin-top:12px"><table class="dt"><thead><tr><th>Name</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="sf-b"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-doc"><div class="modal" style="max-width:860px"><div class="modal-h"><span id="doc-title">Invoice</span><button class="btn btn-sm" onclick="dClose('m-doc')">&times;</button></div><div class="modal-b" id="doc-body"></div></div></div>
+<div class="modal-bg" id="m-item"><div class="modal" style="max-width:820px"><div class="modal-h"><span id="item-title">Item</span><button class="btn btn-sm" onclick="dClose('m-item')">&times;</button></div><div class="modal-b" id="item-body"></div></div></div>
+<div class="modal-bg" id="m-party"><div class="modal" style="max-width:720px"><div class="modal-h"><span id="party-title">Party</span><button class="btn btn-sm" onclick="dClose('m-party')">&times;</button></div><div class="modal-b" id="party-body"></div></div></div>
+<div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
+
+<script src="wholesale.js?v=1"></script>
+</body>
+</html>
