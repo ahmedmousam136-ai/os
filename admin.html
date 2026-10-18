@@ -943,7 +943,7 @@ const SA_EMAILS=['ceo@aurascale.in','mousham@aurascale.in','admin@aurascale.in']
 
 var _saUid=null,_saEmail=null;
 var _allHomes=[],_currentNhId=null;
-function btypeTag(h){var t=h&&h.business_type;return t==='pharmacy'?' <span class="chip" style="background:#e0f2fe;color:#0369a1">&#128138; Pharmacy</span>':t==='lab'?' <span class="chip" style="background:#f3e8ff;color:#7e22ce">&#129514; Lab</span>':'';}
+function btypeTag(h){var t=h&&h.business_type;return t==='wholesale_pharmacy'?' <span class="chip" style="background:#fef3c7;color:#92400e">&#128666; Wholesale</span>':t==='pharmacy'?' <span class="chip" style="background:#e0f2fe;color:#0369a1">&#128138; Pharmacy</span>':t==='lab'?' <span class="chip" style="background:#f3e8ff;color:#7e22ce">&#129514; Lab</span>':'';}
 
 /* ── UTILS ── */
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
