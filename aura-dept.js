@@ -168,7 +168,11 @@ async function deptInit(module, title) {
   try { if (localStorage.getItem('nh-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
   var g = await nhAuthGuard(null); if (!g) return false;
   DEPT.role = g.role;
-  if (['owner', 'receptionist', 'pharmacist', 'lab'].indexOf(g.role) < 0) { location.href = g.role === 'doctor' ? 'doctor.html' : 'nh.html'; return false; }
+  var WH_ROLES = ['sales', 'inventory', 'accounts'];
+  /* wholesale staff only open the Wholesale screen; nobody else opens it */
+  if (module !== 'wholesale' && WH_ROLES.indexOf(g.role) >= 0) { location.replace('wholesale.html'); return false; }
+  if (module === 'wholesale' && WH_ROLES.indexOf(g.role) < 0 && g.role !== 'owner') { location.href = g.role === 'doctor' ? 'doctor.html' : 'nh.html'; return false; }
+  if (module !== 'wholesale' && ['owner', 'receptionist', 'pharmacist', 'lab'].indexOf(g.role) < 0) { location.href = g.role === 'doctor' ? 'doctor.html' : 'nh.html'; return false; }
   /* pharmacy staff only open the Pharmacy, lab staff only the Lab */
   if (g.role === 'pharmacist' && module !== 'pharmacy') { location.replace('pharmacy.html'); return false; }
   if (g.role === 'lab' && module !== 'lab') { location.replace('lab.html'); return false; }
@@ -176,14 +180,17 @@ async function deptInit(module, title) {
   if (!c.data) { try { var r2 = await _supa.rpc('nhx_my_clinic', { p_clinic: _clinicId }); if (r2.data) c = { data: r2.data }; } catch (e) {} }
   DEPT.clinic = c.data || {};
   DEPT.title = title;
-  DEPT.standalone = DEPT.clinic.business_type === 'pharmacy' || DEPT.clinic.business_type === 'lab';
+  DEPT.standalone = DEPT.clinic.business_type === 'pharmacy' || DEPT.clinic.business_type === 'lab' || DEPT.clinic.business_type === 'wholesale_pharmacy';
+  /* a wholesale business has only the Wholesale screen; any other business never sees it */
+  if (DEPT.clinic.business_type === 'wholesale_pharmacy' && module !== 'wholesale') { location.replace('wholesale.html'); return false; }
+  if (module === 'wholesale' && DEPT.clinic.business_type !== 'wholesale_pharmacy') { location.replace('nh.html'); return false; }
   var back = DEPT.standalone ? '' : (g.role === 'owner' ? 'nh.html' : g.role === 'receptionist' ? 'receptionist.html' : '');
   dEl('d-fac').innerHTML = esc(DEPT.clinic.name || g.facilityName || '') + ' &middot; <span class="d-pow">Powered by <b>AuraScale OS</b></span>';
   deptMenu(back, g);
   window.addEventListener('popstate', function () { var t = (location.hash || '').slice(1); if (t) dTab(t, true); });
   dEl('loading').style.display = 'none';
   dEl('app').style.display = 'block';
-  var on = module === 'pharmacy' ? DEPT.clinic.mod_pharmacy : DEPT.clinic.mod_lab;
+  var on = module === 'wholesale' ? true : module === 'pharmacy' ? DEPT.clinic.mod_pharmacy : DEPT.clinic.mod_lab;
   if (!on) {
     dEl('d-body').innerHTML = '<div class="d-view on" style="border-radius:var(--r-lg);text-align:center;padding:40px 16px"><div style="font-size:40px">&#128274;</div>'
       + '<h2 style="margin:10px 0 6px">' + esc(title) + ' is not switched on for your account</h2>'
@@ -203,7 +210,7 @@ function deptMenu(back, g) {
   var old = dEl('d-back'); if (old) old.remove();
   var b = document.createElement('button'); b.className = 'd-menu-btn'; b.innerHTML = '&#8942;'; b.setAttribute('aria-label', 'Menu');
   var m = document.createElement('div'); m.className = 'd-menu'; m.id = 'd-menu';
-  var roleTxt = { owner: 'Owner', receptionist: 'Reception', pharmacist: 'Pharmacist', lab: 'Lab staff' }[g.role] || 'Staff';
+  var roleTxt = { owner: 'Owner', receptionist: 'Reception', pharmacist: 'Pharmacist', lab: 'Lab staff', sales: 'Sales', inventory: 'Inventory', accounts: 'Accounts' }[g.role] || 'Staff';
   m.innerHTML = '<div class="who">Signed in: <b>' + esc(g.name || '') + '</b> (' + roleTxt + ')</div>'
     + (back ? '<a href="' + back + '">&#8617; ' + (back === 'nh.html' ? 'Owner portal' : 'Reception portal') + '</a>' : '')
     + (DEPT.module === 'pharmacy' && DEPT.clinic.mod_lab && DEPT.role !== 'pharmacist' ? '<a href="lab.html">&#129514; Lab</a>' : '')
