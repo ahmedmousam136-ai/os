@@ -12,10 +12,15 @@
 
    The original file is never replaced: the storage bucket has no overwrite or delete permission, and the
    database refuses any change to the saved file path or to AuraScale's first reading. Corrections are saved
-   as new values with a full before / after history. Needs deploy/10-stock-bills.sql and the "stock-bills" function. */
+   as new values with a full before / after history. Needs deploy/10-stock-bills.sql and the "stock-bills" function.
+
+   GST (deploy/11-nh-tax-master.sql): every line is checked against AuraScale's Tax Master (server side):
+     ✓ GST VERIFIED  |  ⚠ GST/TAX MISMATCH (invoice % vs verified rule %)  |  not checkable (no %, no rule, class unknown).
+   The supplier's figures are only READ, never changed. A mismatch is reviewed by the owner (decision + note, logged).
+   The stock item keeps its tax class; that class (not the supplier's GST) decides the tax on the patient bill. */
 (function () {
   var BUCKET = 'stock-bills';
-  var S = { items: [], bills: [], editing: null, doc: null, extracted: null, busy: false };
+  var S = { items: [], bills: [], classes: [], editing: null, doc: null, extracted: null, busy: false, taxOn: true, chkT: null };
   function owner() { return typeof STOCK_IS_OWNER !== 'undefined' && STOCK_IS_OWNER === true; }
   function cid() { return typeof _clinicId !== 'undefined' ? _clinicId : null; }
   function db() { return typeof _supa !== 'undefined' ? _supa : null; }
@@ -35,6 +40,7 @@
   }
   function err(msg) {
     var m = String((msg && msg.message) || msg || '');
+    if (/stock_tax_review|stock_item_set_tax_class|nh_tax_/i.test(m)) return 'The Tax Master is not set up yet. Run 11-nh-tax-master.sql in Supabase first.';
     if (/stock_bill_confirm|stock_bill_edit|nh_stock_bills|schema cache|PGRST20/i.test(m)) return 'Stock bills are not set up yet. Run 10-stock-bills.sql in Supabase first.';
     if (/bucket not found/i.test(m)) return 'The "stock-bills" storage is not set up yet. Run 10-stock-bills.sql in Supabase first.';
     if (/row-level security|not allowed|403/i.test(m)) return 'Your login is not allowed to change stock.';
@@ -52,7 +58,7 @@
     + '.sb-acts{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}'
     + '.sb-acts button{border-radius:9px;font-size:12.5px;font-weight:600;padding:7px 11px;border:1px solid var(--border);background:var(--surface);color:var(--text-primary);cursor:pointer}'
     + '.sb-acts button.sb-orig{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}'
-    + '.sb-modal{max-width:880px!important;width:min(880px,100%)!important}'
+    + '.sb-modal{max-width:1080px!important;width:min(1080px,100%)!important}'
     + '.sb-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
     + '.sb-pick label{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:110px;border:2px dashed var(--border-mid);border-radius:14px;cursor:pointer;font-weight:700;font-size:14px;color:var(--text-primary);background:var(--surface2);text-align:center;padding:12px}'
     + '.sb-pick label:hover{border-color:var(--green)}.sb-pick label span{font-size:28px}.sb-pick small{font-weight:500;color:var(--text-tertiary);font-size:11.5px}'
@@ -91,7 +97,26 @@
     + '.sb-viewer-body iframe{width:100%;height:100%;border:0;background:#fff;min-height:70vh}'
     + '.sb-alert{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px}'
     + '.sb-alert input[type=tel]{max-width:170px}'
-    + '@media (max-width:700px){.sb-review{grid-template-columns:1fr}.sb-thumb img{max-height:180px}.sb-pick{grid-template-columns:1fr}}';
+    + '.sb-tx{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;letter-spacing:.02em;padding:3px 8px;border-radius:999px;white-space:nowrap}'
+    + '.sb-tx.ok{background:#E6F6EE;color:#0F7A4F;border:1px solid #BFE6D2}.sb-tx.bad{background:#FFF4E0;color:#9A5B00;border:1px solid #F3D49B}'
+    + '.sb-tx.info{background:var(--surface2);color:var(--text-secondary);border:1px solid var(--border)}.sb-tx.rev{background:#EEF2FF;color:#3949AB;border:1px solid #C9D1F5}'
+    + '.sb-txd{font-size:11px;color:var(--text-secondary);margin-top:4px;line-height:1.4;white-space:normal}.sb-txd b{color:var(--text-primary)}'
+    + '.sb-txd select{margin-top:4px;width:100%;min-height:32px;font-size:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text-primary)}'
+    + '.sb-taxbar{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;padding:10px 12px;border-radius:12px;margin:0 0 12px;font-size:12.5px;line-height:1.45}'
+    + '.sb-taxbar.ok{background:#E6F6EE;color:#0F5E3D;border:1px solid #BFE6D2}.sb-taxbar.bad{background:#FFF4E0;color:#7A4600;border:1px solid #F3D49B}.sb-taxbar.info{background:var(--surface2);color:var(--text-secondary);border:1px solid var(--border)}'
+    + '.sb-rv{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px;background:var(--surface2)}'
+    + '.sb-rv h5{margin:0 0 6px;font-size:13.5px}.sb-rv label{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:5px 0;cursor:pointer}'
+    + '.sb-rv input[type=radio]{width:18px;height:18px;flex:none;margin-top:1px}.sb-rv select{min-height:36px;width:100%;max-width:340px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text-primary);margin:2px 0 0 26px}'
+    + '.sb-cls{padding:10px 16px;border-top:1px solid var(--border)}.sb-cls h4{margin:0 0 6px;font-size:13px}'
+    + '.sb-cls .r{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px dashed var(--border);font-size:12.5px}.sb-cls .r:last-child{border-bottom:0}'
+    + '.sb-cls .r b{flex:1 1 160px;min-width:0}.sb-cls select{min-height:34px;max-width:100%;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text-primary)}'
+    + '.sb-disc{font-size:11px;color:var(--text-tertiary);margin-top:6px;line-height:1.45}'
+    + '@media (max-width:700px){.sb-review{grid-template-columns:1fr}.sb-thumb img{max-height:180px}.sb-pick{grid-template-columns:1fr}'
+    + '.sb-tablewrap{overflow:visible;border:0}.sb-t{min-width:0!important;display:block}.sb-t thead{display:none}.sb-t tbody{display:block}'
+    + '.sb-t tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;padding:12px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface)}'
+    + '.sb-t td{display:block;border:0!important;padding:0!important;min-width:0}.sb-t td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}'
+    + '.sb-t td.sb-wide{grid-column:1 / -1}.sb-t td.sb-xc{grid-column:1 / -1;text-align:right}.sb-t td.sb-xc .sb-x{width:auto;padding:0 12px}.sb-t td.sb-xc .sb-x::after{content:" Remove line";font-size:12px;font-weight:600}'
+    + '.sb-t .sb-hint{white-space:normal}.sb-modal .mb{padding-left:14px!important;padding-right:14px!important}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   /* ---------------------------------------------------------------- page parts */
@@ -125,8 +150,13 @@
   async function load() {
     mount();
     var c = cid(), d = db(); if (!c || !d) return;
-    var it = await d.from('nh_stock_items').select('id,name,unit,quantity,is_active').eq('clinic_id', c).order('name');
+    var it = await d.from('nh_stock_items').select('id,name,unit,quantity,is_active,tax_class_code,hsn,tax_review').eq('clinic_id', c).order('name');
+    if (it.error) { it = await d.from('nh_stock_items').select('id,name,unit,quantity,is_active').eq('clinic_id', c).order('name'); }
     S.items = it.data || [];
+    if (!S.classes.length) {
+      var cl = await d.from('nh_tax_classes').select('code,name,kind,hsn_sac,is_active').eq('is_active', true).order('kind').order('name');
+      S.classes = cl.error ? [] : (cl.data || []); S.taxOn = !cl.error;
+    }
     var r = await d.from('nh_stock_bills').select('*').eq('clinic_id', c).order('created_at', { ascending: false }).limit(60);
     var list = $('sb-list'); if (!list) return;
     if (r.error) { list.innerHTML = '<p class="ss" style="padding:12px 16px">' + E(err(r.error)) + '</p>'; return; }
@@ -135,16 +165,77 @@
     list.innerHTML = S.bills.length ? S.bills.map(row).join('')
       : '<div class="empty" style="padding:20px"><p class="empty-t">No stock bills yet</p><p class="ss">'
         + (owner() ? 'When reception adds stock from a supplier bill, it appears here with the original bill.' : 'Tap <b>Add stock from bill</b> and take a photo of the supplier’s bill. AuraScale reads it for you.') + '</p></div>';
-    if (owner()) loadAlert();
+    if (owner()) { loadAlert(); classPanel(); }
+  }
+  function clsName(code) { var c = S.classes.filter(function (x) { return x.code === code; })[0]; return c ? c.name : (code || ''); }
+  function clsOptions(sel, goodsFirst) {
+    var g = S.classes.filter(function (c) { return c.kind === 'goods'; }), sv = S.classes.filter(function (c) { return c.kind !== 'goods'; });
+    var o = function (c) { return '<option value="' + E(c.code) + '"' + (c.code === sel ? ' selected' : '') + '>' + E(c.name) + (c.hsn_sac ? ' (' + E(c.hsn_sac) + ')' : '') + '</option>'; };
+    return '<optgroup label="Goods / stock items">' + g.map(o).join('') + '</optgroup><optgroup label="Services">' + sv.map(o).join('') + '</optgroup>';
+  }
+  /* GST check badge for one line (from the Tax Master; the supplier's figures are only read, never changed) */
+  function taxBadge(t) {
+    if (!t || !t.status) return '';
+    var rv = t.review ? '<span class="sb-tx rev">&#10003; Reviewed by ' + E(t.review.by || 'owner') + '</span>' : '';
+    if (t.status === 'verified') return '<span class="sb-tx ok">&#10003; GST VERIFIED</span>' + rv;
+    if (t.status === 'mismatch') return '<span class="sb-tx bad">&#9888; GST/TAX MISMATCH</span>' + rv;
+    if (t.status === 'unclassified') return '<span class="sb-tx info">Tax class not known</span>' + rv;
+    if (t.status === 'not_stated') return '<span class="sb-tx info">GST % not on bill</span>' + rv;
+    return '<span class="sb-tx info">No verified GST rule</span>' + rv;
+  }
+  function pct(n) { return n == null || n === '' ? '-' : (Math.round(Number(n) * 100) / 100) + '%'; }
+  function taxDetail(t) {
+    if (!t || !t.status) return '';
+    var parts = [];
+    if (t.class_name) parts.push('Class: <b>' + E(t.class_name) + '</b>');
+    parts.push('Invoice GST: <b>' + E(pct(t.invoice_rate)) + '</b>');
+    if (t.rule_rate != null) parts.push('Verified GST rule: <b>' + E(pct(t.rule_rate)) + '</b>');
+    var amt = [];
+    if (t.invoice_cgst) amt.push('CGST ' + inr(t.invoice_cgst)); if (t.invoice_sgst) amt.push('SGST ' + inr(t.invoice_sgst)); if (t.invoice_igst) amt.push('IGST ' + inr(t.invoice_igst));
+    if (amt.length) parts.push(E(amt.join(' + ')));
+    var h = parts.join(' · ');
+    if (t.note) h += '<br/>' + E(t.note);
+    if (t.status === 'mismatch' && !t.review) h += '<br/>The supplier’s bill is kept as printed. ' + (owner() ? 'Please review it.' : 'The owner will review it.');
+    if (t.review) h += '<br/>Owner decision: ' + E(({ accept_invoice: 'supplier’s GST is right for this item', supplier_error: 'supplier’s bill is wrong (rule kept)', reclassify: 'class changed to ' + clsName(t.review.class_code) })[t.review.decision] || t.review.decision) + (t.review.note ? ' – “' + E(t.review.note) + '”' : '');
+    return h;
+  }
+  function billTaxChip(b) {
+    if (!b.tax_status) return '';
+    if (b.tax_status === 'verified') return ' <span class="sb-tx ok">&#10003; GST verified</span>';
+    if (b.tax_status === 'reviewed') return ' <span class="sb-tx rev">&#10003; GST reviewed</span>';
+    if (b.tax_status === 'mismatch') return ' <span class="sb-tx bad">&#9888; GST mismatch</span>';
+    return ' <span class="sb-tx info">GST partly checked</span>';
+  }
+
+  /* owner: stock items whose tax class is not known yet (used when the item is billed to a patient) */
+  function classPanel() {
+    var p = $('sb-panel'); if (!p || !S.taxOn || !S.classes.length) return;
+    var box = $('sb-cls'); if (!box) { box = document.createElement('div'); box.className = 'sb-cls'; box.id = 'sb-cls'; p.appendChild(box); }
+    var todo = S.items.filter(function (i) { return i.is_active !== false && (i.tax_review || !i.tax_class_code); });
+    if (!todo.length) { box.innerHTML = '<h4>Tax class of stock items</h4><div class="ss" style="font-size:12px">Every stock item has a tax class. AuraScale uses it when the item is billed to a patient.</div>'; return; }
+    box.innerHTML = '<h4>Tax class of stock items (' + todo.length + ' to check)</h4>'
+      + '<div class="ss" style="font-size:12px;margin-bottom:4px">Choose what each item is. AuraScale then applies the verified GST rule of that class on the patient bill. No rate is typed.</div>'
+      + todo.slice(0, 40).map(function (i) {
+          return '<div class="r"><b>' + E(i.name) + (i.hsn ? ' <span class="ss">HSN ' + E(i.hsn) + '</span>' : '') + (i.tax_review ? ' <span class="sb-tx bad">check</span>' : '') + '</b>'
+            + '<select aria-label="Tax class for ' + E(i.name) + '" id="sb-ic-' + i.id + '"><option value="">Choose class…</option>' + clsOptions(i.tax_class_code) + '</select>'
+            + '<button class="qbtn" type="button" onclick="AuraStockBills.setItemClass(\'' + i.id + '\')">Save</button></div>';
+        }).join('');
+  }
+  async function setItemClass(id) {
+    var v = ($('sb-ic-' + id) || {}).value; if (!v) return toast('Choose a class first');
+    var r = await db().rpc('stock_item_set_tax_class', { p_item_id: id, p_class_code: v });
+    if (r.error) return toast(err(r.error));
+    toast('✓ Tax class saved'); load();
   }
   function row(b) {
     var n = (b.items || []).length;
     return '<div class="sb-row"><div class="sb-ic" aria-hidden="true">&#128196;</div>'
-      + '<div class="sb-main"><b>' + E(b.supplier || 'Supplier not named') + (b.invoice_no ? ' · Bill ' + E(b.invoice_no) : '') + '</b>'
+      + '<div class="sb-main"><b>' + E(b.supplier || 'Supplier not named') + (b.invoice_no ? ' · Bill ' + E(b.invoice_no) : '') + billTaxChip(b) + '</b>'
       + '<span>' + E(dmy(b.invoice_date)) + ' · ' + n + ' item' + (n === 1 ? '' : 's') + (b.gst_total ? ' · GST ' + E(inr(b.gst_total)) : '')
       + ' · added by ' + E(b.created_by_name || '-') + ', ' + E(when(b.created_at)) + (b.edit_count ? ' · corrected ' + b.edit_count + '×' : '') + '</span></div>'
       + '<div class="sb-amt">' + E(inr(b.total)) + '</div>'
       + '<div class="sb-acts"><button type="button" onclick="AuraStockBills.view(\'' + b.id + '\')">View</button>'
+      + (owner() && b.tax_status === 'mismatch' ? '<button type="button" style="border-color:#F3D49B;color:#9A5B00" onclick="AuraStockBills.view(\'' + b.id + '\',true)">Review GST</button>' : '')
       + '<button type="button" onclick="AuraStockBills.openEdit(\'' + b.id + '\')">Edit</button>'
       + '<button type="button" class="sb-orig" onclick="AuraStockBills.original(\'' + b.id + '\')">View original bill</button></div></div>';
   }
@@ -158,7 +249,7 @@
     box.innerHTML = '<label style="display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600"><input type="checkbox" id="sb-al-on"' + (on ? ' checked' : '') + ' style="width:18px;height:18px"/> WhatsApp me when stock is added</label>'
       + '<input class="finput" id="sb-al-num" type="tel" inputmode="numeric" maxlength="14" placeholder="10-digit WhatsApp number" value="' + E(num) + '"/>'
       + '<button class="qbtn" type="button" onclick="AuraStockBills.saveAlert()">Save</button>'
-      + '<span class="ss" style="font-size:12px">Only supplier, bill no, date, total and who added it. No patient details.</span>';
+      + '<span class="ss" style="font-size:12px">Only supplier, bill no, date, total (with GST) and who added it. No patient details.</span>';
   }
   async function saveAlert() {
     var r = await db().rpc('stock_alert_set', { p_clinic_id: cid(), p_on: $('sb-al-on').checked, p_number: $('sb-al-num').value });
@@ -247,10 +338,13 @@
       + fld('sb-h-sup', 'Supplier', d.supplier) + fld('sb-h-gstin', 'Supplier GSTIN', d.supplier_gstin, 'maxlength="15"')
       + fld('sb-h-no', 'Bill / invoice no', d.invoice_no) + '<div><label class="flbl" for="sb-h-date">Bill date</label><input class="finput" id="sb-h-date" type="date" value="' + E(toISODate(d.invoice_date)) + '"/></div>'
       + fld('sb-h-sub', 'Amount before GST (₹)', d.subtotal, 'type="number" step="0.01" min="0"') + fld('sb-h-gst', 'GST total (₹)', d.gst_total, 'type="number" step="0.01" min="0"')
+      + fld('sb-h-cgst', 'CGST (₹)', d.cgst_total, 'type="number" step="0.01" min="0"') + fld('sb-h-sgst', 'SGST (₹)', d.sgst_total, 'type="number" step="0.01" min="0"')
+      + fld('sb-h-igst', 'IGST (₹)', d.igst_total, 'type="number" step="0.01" min="0"')
       + fld('sb-h-tot', 'Bill total (₹)', d.total, 'type="number" step="0.01" min="0"')
       + '</div>'
+      + '<div id="sb-taxbar"></div>'
       + '<datalist id="sb-names">' + S.items.map(function (i) { return '<option value="' + E(i.name) + '"></option>'; }).join('') + '</datalist>'
-      + '<div class="sb-tablewrap"><table class="sb-t"><thead><tr><th style="width:26%">Item</th><th style="width:9%">Qty</th><th style="width:8%">Unit</th><th style="width:10%">Rate ₹</th><th style="width:7%">GST %</th><th style="width:11%">Amount ₹</th><th style="width:11%">Batch</th><th style="width:10%">Expiry</th><th></th></tr></thead>'
+      + '<div class="sb-tablewrap"><table class="sb-t" style="min-width:800px"><thead><tr><th style="width:28%">Item &amp; GST check</th><th style="width:8%">Qty</th><th style="width:7%">Unit</th><th style="width:9%">Rate ₹</th><th style="width:10%">HSN</th><th style="width:7%">GST %</th><th style="width:10%">Amount ₹</th><th style="width:9%">Batch</th><th style="width:9%">Expiry</th><th></th></tr></thead>'
       + '<tbody id="sb-lines"></tbody></table></div>'
       + '<button type="button" class="sb-add" onclick="AuraStockBills.addLine()">+ Add a line</button>'
       + (isEdit ? '<div style="margin-top:12px"><label class="flbl" for="sb-reason">Why are you correcting this bill? *</label><input class="finput" id="sb-reason" maxlength="200" placeholder="e.g. quantity read wrong, supplier corrected"/></div>' : '')
@@ -261,6 +355,34 @@
       + '</div></div>';
     $('sb-body').innerHTML = h;
     (d.lines && d.lines.length ? d.lines : [{}]).forEach(function (l) { addLine(l); });
+    ['sb-h-gstin', 'sb-h-date'].forEach(function (id) { var x = $(id); if (x) x.addEventListener('change', checkSoon); });
+    checkTax();
+  }
+  /* GST check against the Tax Master (server side, same rules everywhere). Runs again when a line changes. */
+  function checkSoon() { clearTimeout(S.chkT); S.chkT = setTimeout(checkTax, 600); }
+  async function checkTax() {
+    var bar = $('sb-taxbar'); if (!bar || !S.taxOn) return;
+    var g = gather(true), trs = [].slice.call(document.querySelectorAll('#sb-lines tr'));
+    if (!g.lines.length) { bar.innerHTML = ''; return; }
+    var r = await db().rpc('stock_tax_check', { p_clinic_id: cid(), p_header: g.header, p_items: g.lines });
+    if (r.error) { if (/stock_tax_check|PGRST202|schema cache/i.test(String(r.error.message || ''))) { S.taxOn = false; bar.innerHTML = ''; } return; }
+    var res = r.data || [], n = { ok: 0, bad: 0, other: 0 };
+    g.rows.forEach(function (tr, i) {
+      var t = res[i] || {}, cell = tr.querySelector('.sb-txc'); if (!cell) return;
+      if (t.status === 'verified') n.ok++; else if (t.status === 'mismatch') n.bad++; else n.other++;
+      var sel = tr.getAttribute('data-cls') || '';
+      var pick = (t.status === 'unclassified' || (sel && t.matched_by === 'chosen')) && !tr.getAttribute('data-item')
+        ? '<select aria-label="What is this item?" onchange="this.closest(\'tr\').setAttribute(\'data-cls\',this.value);AuraStockBills.checkSoon()"><option value="">What is this item?</option>' + clsOptions(sel) + '</select>' : '';
+      cell.innerHTML = taxBadge(t) + '<div class="sb-txd">' + taxDetail(t) + pick + '</div>';
+    });
+    trs.forEach(function (tr) { if (g.rows.indexOf(tr) < 0) { var c = tr.querySelector('.sb-txc'); if (c) c.innerHTML = ''; } });
+    var cls = n.bad ? 'bad' : (n.other ? 'info' : 'ok');
+    bar.className = 'sb-taxbar ' + cls;
+    bar.innerHTML = n.bad
+      ? '<span>&#9888; <b>GST/TAX MISMATCH on ' + n.bad + ' line' + (n.bad === 1 ? '' : 's') + '.</b> The GST printed on the supplier’s bill is different from AuraScale’s verified rule. Nothing on the supplier’s bill is changed: you can still confirm the stock, and ' + (owner() ? 'you can review the GST afterwards.' : 'the owner will review the GST.') + '</span>'
+      : n.other ? '<span><b>GST checked: ' + n.ok + ' verified.</b> ' + n.other + ' line' + (n.other === 1 ? '' : 's') + ' could not be checked (no GST % on the bill, no verified rule, or the item is not classified yet).</span>'
+      : '<span>&#10003; <b>GST VERIFIED</b> – every line matches AuraScale’s verified GST rule.</span>';
+    bar.innerHTML += '<div class="sb-disc" style="flex-basis:100%">GST rules come from AuraScale’s Tax Master (published GST notifications). This check helps you; it is not a legal tax opinion.</div>';
   }
   function fld(id, label, val, attrs) {
     return '<div><label class="flbl" for="' + id + '">' + label + '</label><input class="finput" id="' + id + '" ' + (attrs || '') + ' value="' + E(val == null ? '' : val) + '"/></div>';
@@ -268,18 +390,22 @@
   function addLine(l) {
     l = l || {}; var tb = $('sb-lines'); if (!tb) return;
     var tr = document.createElement('tr'); if (l.item_id) tr.setAttribute('data-item', l.item_id);
-    tr.innerHTML = '<td><input class="finput" data-k="name" list="sb-names" maxlength="80" value="' + E(l.name || '') + '"' + (l.item_id ? ' readonly title="Saved line: the item cannot be changed. Remove the line and add a new one instead."' : '') + '/><div class="sb-hint"></div></td>'
-      + '<td><input class="finput" data-k="qty" type="number" step="any" min="0" value="' + E(l.qty == null ? '' : l.qty) + '"/></td>'
-      + '<td><input class="finput" data-k="unit" maxlength="20" value="' + E(l.unit || '') + '" placeholder="pcs"/></td>'
-      + '<td><input class="finput" data-k="rate" type="number" step="any" min="0" value="' + E(l.rate == null ? '' : l.rate) + '"/></td>'
-      + '<td><input class="finput" data-k="gst" type="number" step="any" min="0" value="' + E(l.gst == null ? '' : l.gst) + '"/></td>'
-      + '<td><input class="finput" data-k="amount" type="number" step="any" min="0" value="' + E(l.amount == null ? '' : l.amount) + '"/></td>'
-      + '<td><input class="finput" data-k="batch" maxlength="40" value="' + E(l.batch || '') + '"/></td>'
-      + '<td><input class="finput" data-k="expiry" maxlength="20" placeholder="MM/YYYY" value="' + E(l.expiry || '') + '"/></td>'
-      + '<td><button type="button" class="sb-x" aria-label="Remove this line" onclick="this.closest(\'tr\').remove()">&#10005;</button></td>';
+    ['cgst', 'sgst', 'igst'].forEach(function (k) { if (l[k] != null && l[k] !== '') tr.setAttribute('data-' + k, l[k]); });
+    if (l.class_code) tr.setAttribute('data-cls', l.class_code);
+    tr.innerHTML = '<td class="sb-wide" data-l="Item"><input class="finput" data-k="name" list="sb-names" maxlength="80" value="' + E(l.name || '') + '"' + (l.item_id ? ' readonly title="Saved line: the item cannot be changed. Remove the line and add a new one instead."' : '') + '/><div class="sb-hint"></div><div class="sb-txc" style="margin-top:6px"></div></td>'
+      + '<td data-l="Qty"><input class="finput" data-k="qty" type="number" step="any" min="0" inputmode="decimal" value="' + E(l.qty == null ? '' : l.qty) + '"/></td>'
+      + '<td data-l="Unit"><input class="finput" data-k="unit" maxlength="20" value="' + E(l.unit || '') + '" placeholder="pcs"/></td>'
+      + '<td data-l="Rate ₹"><input class="finput" data-k="rate" type="number" step="any" min="0" inputmode="decimal" value="' + E(l.rate == null ? '' : l.rate) + '"/></td>'
+      + '<td data-l="HSN"><input class="finput" data-k="hsn" maxlength="12" inputmode="numeric" value="' + E(l.hsn || '') + '"/></td>'
+      + '<td data-l="GST % (as on bill)"><input class="finput" data-k="gst" type="number" step="any" min="0" inputmode="decimal" value="' + E(l.gst == null ? '' : l.gst) + '"/></td>'
+      + '<td data-l="Amount ₹"><input class="finput" data-k="amount" type="number" step="any" min="0" inputmode="decimal" value="' + E(l.amount == null ? '' : l.amount) + '"/></td>'
+      + '<td data-l="Batch"><input class="finput" data-k="batch" maxlength="40" value="' + E(l.batch || '') + '"/></td>'
+      + '<td data-l="Expiry"><input class="finput" data-k="expiry" maxlength="20" placeholder="MM/YYYY" value="' + E(l.expiry || '') + '"/></td>'
+      + '<td class="sb-xc"><button type="button" class="sb-x" aria-label="Remove this line" onclick="this.closest(\'tr\').remove();AuraStockBills.checkSoon()">&#10005;</button></td>';
     tb.appendChild(tr);
     var nm = tr.querySelector('[data-k=name]');
     nm.addEventListener('input', function () { hint(tr); }); hint(tr);
+    ['name', 'hsn', 'gst'].forEach(function (k) { var x = tr.querySelector('[data-k=' + k + ']'); if (x) x.addEventListener('input', checkSoon); });
   }
   function hint(tr) {
     var nm = tr.querySelector('[data-k=name]').value.trim().toLowerCase(), h = tr.querySelector('.sb-hint');
@@ -288,11 +414,15 @@
     if (it) { h.className = 'sb-hint'; h.textContent = 'Adds to ' + it.name + ' (' + q(it.quantity) + ' ' + it.unit + ' now)'; var u = tr.querySelector('[data-k=unit]'); if (!u.value) u.value = it.unit; }
     else { h.className = 'sb-hint new'; h.textContent = 'New stock item'; }
   }
-  function gather() {
-    var lines = [], bad = '';
+  function gather(forCheck) {
+    var lines = [], bad = '', rows = [];
     [].forEach.call(document.querySelectorAll('#sb-lines tr'), function (tr) {
       var o = {}; [].forEach.call(tr.querySelectorAll('[data-k]'), function (i) { o[i.getAttribute('data-k')] = i.value.trim(); });
-      if (!o.name && !o.qty) return;
+      if (forCheck ? !o.name : (!o.name && !o.qty)) return;
+      ['cgst', 'sgst', 'igst'].forEach(function (k) { var v = tr.getAttribute('data-' + k); if (v != null && v !== '') o[k] = Number(v); });
+      if (tr.getAttribute('data-cls')) o.class_code = tr.getAttribute('data-cls');
+      if (!o.hsn) delete o.hsn;
+      rows.push(tr);
       if (!o.name) bad = bad || 'Every line needs an item name.';
       if (!(Number(o.qty) > 0)) bad = bad || 'Quantity must be more than 0 for ' + (o.name || 'every line') + '.';
       ['qty', 'rate', 'gst', 'amount'].forEach(function (k) { o[k] = o[k] === '' ? null : Number(o[k]); });
@@ -302,10 +432,11 @@
     if (!lines.length) bad = bad || 'Add at least one item.';
     var header = {
       supplier: $('sb-h-sup').value.trim(), supplier_gstin: $('sb-h-gstin').value.trim().toUpperCase(), invoice_no: $('sb-h-no').value.trim(),
-      invoice_date: $('sb-h-date').value || '', subtotal: $('sb-h-sub').value, gst_total: $('sb-h-gst').value, total: $('sb-h-tot').value
+      invoice_date: $('sb-h-date').value || '', subtotal: $('sb-h-sub').value, gst_total: $('sb-h-gst').value, total: $('sb-h-tot').value,
+      cgst_total: ($('sb-h-cgst') || {}).value || '', sgst_total: ($('sb-h-sgst') || {}).value || '', igst_total: ($('sb-h-igst') || {}).value || ''
     };
     if (header.supplier_gstin && !/^[0-9]{2}[A-Z0-9]{13}$/.test(header.supplier_gstin)) bad = bad || 'The supplier GSTIN should be 15 letters / numbers (or leave it empty).';
-    return { lines: lines, header: header, bad: bad };
+    return { lines: lines, header: header, bad: bad, rows: rows };
   }
   async function save() {
     if (S.busy) return;
@@ -324,7 +455,8 @@
     if (r.error) return showErr('sb-err2', err(r.error));
     var saved = r.data || {};
     closeModal('mod-sb-edit');
-    toast(S.editing ? '✓ Bill corrected' : '✓ Stock added from bill ' + (saved.invoice_no || ''));
+    toast((S.editing ? '✓ Bill corrected' : '✓ Stock added from bill ' + (saved.invoice_no || ''))
+      + (saved.tax_status === 'mismatch' ? ' · ⚠ GST mismatch flagged for the owner' : saved.tax_status === 'verified' ? ' · GST verified' : ''));
     if (!S.editing && saved.id) {   /* optional owner WhatsApp: never blocks or undoes the stock entry */
       try { db().functions.invoke('stock-bills', { body: { mode: 'notify', bill_id: saved.id } }).catch(function () {}); } catch (e) {}
     }
@@ -340,29 +472,45 @@
     $('sb-body').innerHTML = '';
     openModal('mod-sb-edit');
     review({ supplier: b.supplier, supplier_gstin: b.supplier_gstin, invoice_no: b.invoice_no, invoice_date: b.invoice_date,
-             subtotal: b.subtotal, gst_total: b.gst_total, total: b.total, lines: b.items || [] },
+             subtotal: b.subtotal, gst_total: b.gst_total, cgst_total: b.cgst_total, sgst_total: b.sgst_total, igst_total: b.igst_total,
+             total: b.total, lines: b.items || [] },
       'Correct the values below. Your change is saved with your name, the time and the reason; the earlier values stay in the history.');
     signed(b.doc_path, function (u) { var t = document.querySelector('#sb-body .sb-thumb'); if (u && t && /^image\//.test(b.doc_mime || '')) t.firstChild.outerHTML = '<img alt="Original bill" src="' + E(u) + '"/>'; });
   }
 
   /* ---------------------------------------------------------------- view a saved bill + its history */
-  async function view(id) {
+  async function view(id, focusReview) {
     var b = S.bills.filter(function (x) { return x.id === id; })[0]; if (!b) return;
     mount();
     $('sb-v-title').textContent = (b.supplier || 'Stock bill') + (b.invoice_no ? ' · ' + b.invoice_no : '');
     var lines = b.items || [];
+    var tx = function (k) { return b[k] != null && Number(b[k]) > 0; };
+    var openLines = lines.map(function (l, i) { return { l: l, i: i }; }).filter(function (x) { var t = x.l.tax || {}; return (t.status === 'mismatch' || t.status === 'unclassified') && !t.review; });
     $('sb-v-body').innerHTML = '<div class="sb-facts">'
       + fact('Supplier', b.supplier) + fact('Supplier GSTIN', b.supplier_gstin) + fact('Bill no', b.invoice_no) + fact('Bill date', dmy(b.invoice_date))
-      + fact('Before GST', inr(b.subtotal)) + fact('GST', inr(b.gst_total)) + fact('Bill total', inr(b.total)) + fact('Added by', (b.created_by_name || '-') + ', ' + when(b.created_at))
-      + '</div><div class="sb-tablewrap"><table class="sb-t" style="min-width:640px"><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>GST %</th><th>Amount</th><th>Batch</th><th>Expiry</th></tr></thead><tbody>'
-      + lines.map(function (l) { return '<tr><td><b>' + E(l.name) + '</b>' + (l.new_item ? ' <span class="sb-hint new">new item</span>' : '') + '</td><td>' + E(q(l.qty) + ' ' + (l.unit || '')) + '</td><td>' + E(inr(l.rate)) + '</td><td>' + E(l.gst == null ? '-' : l.gst) + '</td><td>' + E(inr(l.amount)) + '</td><td>' + E(l.batch || '-') + '</td><td>' + E(l.expiry || '-') + '</td></tr>'; }).join('')
+      + fact('Before GST', inr(b.subtotal)) + fact('GST (as on bill)', inr(b.gst_total))
+      + (tx('cgst_total') ? fact('CGST', inr(b.cgst_total)) : '') + (tx('sgst_total') ? fact('SGST', inr(b.sgst_total)) : '') + (tx('igst_total') ? fact('IGST', inr(b.igst_total)) : '')
+      + fact('Bill total', inr(b.total)) + fact('Added by', (b.created_by_name || '-') + ', ' + when(b.created_at))
+      + '</div>'
+      + (b.tax_status ? '<div class="sb-taxbar ' + (b.tax_status === 'mismatch' ? 'bad' : b.tax_status === 'partial' ? 'info' : 'ok') + '"><span>'
+          + (b.tax_status === 'verified' ? '&#10003; <b>GST VERIFIED</b> – every line matches the verified GST rule.'
+            : b.tax_status === 'reviewed' ? '&#10003; <b>GST reviewed</b> by ' + E(b.tax_reviewed_by_name || 'owner') + ', ' + E(when(b.tax_reviewed_at)) + '.'
+            : b.tax_status === 'mismatch' ? (function () { var mm = openLines.filter(function (x) { return (x.l.tax || {}).status === 'mismatch'; }).length, uc = openLines.length - mm;
+                return (mm ? '&#9888; <b>GST/TAX MISMATCH</b> on ' + mm + ' line' + (mm === 1 ? '' : 's') + '. ' : '') + (uc ? '<b>' + uc + ' item' + (uc === 1 ? '' : 's') + ' to classify.</b> ' : '')
+                  + 'The supplier’s bill is kept exactly as printed. ' + (owner() ? 'Please review below.' : 'The owner will review it.'); })()
+            : '<b>GST partly checked.</b> Some lines have no GST % on the bill or no verified rule.') + '</span></div>' : '')
+      + '<div class="sb-tablewrap"><table class="sb-t" style="min-width:860px"><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>HSN</th><th>GST % (bill)</th><th>Amount</th><th>Batch</th><th>Expiry</th><th>GST check</th></tr></thead><tbody>'
+      + lines.map(function (l) { return '<tr><td class="sb-wide" data-l="Item"><b>' + E(l.name) + '</b>' + (l.new_item ? ' <span class="sb-hint new">new item</span>' : '') + '</td><td data-l="Qty">' + E(q(l.qty) + ' ' + (l.unit || '')) + '</td><td data-l="Rate">' + E(inr(l.rate)) + '</td><td data-l="HSN">' + E(l.hsn || '-') + '</td><td data-l="GST % (bill)">' + E(l.gst == null ? '-' : l.gst) + '</td><td data-l="Amount">' + E(inr(l.amount)) + '</td><td data-l="Batch">' + E(l.batch || '-') + '</td><td data-l="Expiry">' + E(l.expiry || '-') + '</td>'
+          + '<td class="sb-wide" data-l="GST check">' + (l.tax ? taxBadge(l.tax) + '<div class="sb-txd">' + taxDetail(l.tax) + '</div>' : '<span class="ss" style="font-size:11px">Not checked</span>') + '</td></tr>'; }).join('')
       + '</tbody></table></div>'
+      + (owner() && openLines.length ? reviewBox(b, openLines) : '')
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="msub" type="button" style="width:auto;padding:0 18px" onclick="AuraStockBills.original(\'' + b.id + '\')">View original bill</button>'
       + '<button class="qbtn" type="button" onclick="closeModal(\'mod-sb-view\');AuraStockBills.openEdit(\'' + b.id + '\')">Edit</button></div>'
       + '<div class="sb-log" id="sb-log"><h4>History</h4><div>Loading&hellip;</div></div>';
     openModal('mod-sb-view');
+    if (focusReview && $('sb-rv-box')) setTimeout(function () { $('sb-rv-box').scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 120);
     var lg = await db().from('nh_stock_bill_log').select('*').eq('bill_id', id).order('at');
-    var order = { uploaded: 0, extracted: 1, confirmed: 2, notified: 3, edited: 4 };
+    var order = { uploaded: 0, extracted: 1, confirmed: 2, tax_checked: 3, notified: 4, edited: 5, tax_reviewed: 6 };
     var rows = (lg.data || []).sort(function (a, c) { return new Date(a.at) - new Date(c.at) || (order[a.action] - order[c.action]); });
     $('sb-log').innerHTML = '<h4>History</h4>' + (rows.length ? rows.map(function (x) {
       var t = when(x.at) + ' · ';
@@ -370,9 +518,47 @@
       if (x.action === 'extracted') return '<div>' + t + (x.after && x.after.ok === false ? 'AuraScale could not read it; typed by hand' : 'Read by AuraScale (' + E(((x.after && x.after.lines) || []).length) + ' lines)') + '</div>';
       if (x.action === 'confirmed') return '<div>' + t + 'Checked and confirmed by <b>' + E(x.by_name) + '</b>; added to stock</div>';
       if (x.action === 'notified') return '<div>' + t + 'Owner told on WhatsApp</div>';
+      if (x.action === 'tax_checked') return '<div>' + t + 'GST checked against the Tax Master: <b>' + E(({ verified: 'verified', mismatch: 'mismatch found', partial: 'partly checked' })[(x.after && x.after.status) || ''] || (x.after && x.after.status) || '-') + '</b>'
+        + (x.after && x.after.lines ? '<br/><span style="color:var(--text-tertiary)">' + E(x.after.lines.map(function (l) { return l.name + ': bill ' + pct(l.invoice_gst) + ', rule ' + pct(l.rule_gst) + ' (' + (l.result || '-') + ')'; }).join(' · ')) + '</span>' : '') + '</div>';
+      if (x.action === 'tax_reviewed') return '<div>' + t + 'GST reviewed by <b>' + E(x.by_name) + '</b>: “' + E(x.reason) + '”</div>';
       if (x.action === 'edited') return '<div>' + t + 'Corrected by <b>' + E(x.by_name) + '</b>: “' + E(x.reason) + '”' + diff(x.before, x.after) + '</div>';
       return '<div>' + t + E(x.action) + '</div>';
     }).join('') : '<div>No history.</div>');
+  }
+  /* owner review of GST mismatches: the decision is written next to the supplier's line; the bill itself is not changed */
+  function reviewBox(b, open) {
+    return '<div class="sb-rv" id="sb-rv-box"><h5>&#9888; Review GST (' + open.length + ' line' + (open.length === 1 ? '' : 's') + ')</h5>'
+      + '<div class="ss" style="font-size:12px;margin-bottom:6px">For each line, choose what is right. The supplier’s figures stay exactly as printed; your decision and note are saved in the history.</div>'
+      + open.map(function (x) {
+          var t = x.l.tax || {}, n = 'sb-rv-' + x.i;
+          return '<div style="padding:8px 0;border-top:1px dashed var(--border)"><b style="font-size:13px">' + E(x.l.name) + '</b> ' + taxBadge(t) + '<div class="sb-txd">' + taxDetail(t) + '</div>'
+            + (t.status === 'mismatch' ? '<label><input type="radio" name="' + n + '" value="supplier_error"/> <span>The verified rule is right; the supplier’s bill is wrong (I will ask the supplier for a correction)</span></label>'
+              + '<label><input type="radio" name="' + n + '" value="accept_invoice"/> <span>The supplier’s GST is right for this particular item (keep the class)</span></label>' : '')
+            + '<label><input type="radio" name="' + n + '" value="reclassify"' + (t.status === 'unclassified' ? ' checked' : '') + '/> <span>This item belongs to another class:</span></label>'
+            + '<select id="' + n + '-cls" aria-label="Class for ' + E(x.l.name) + '"><option value="">Choose class…</option>' + clsOptions(t.class_code) + '</select></div>';
+        }).join('')
+      + '<label class="flbl" for="sb-rv-note" style="margin-top:8px">Note for the record *</label><input class="finput" id="sb-rv-note" maxlength="300" placeholder="e.g. supplier used the old 12% rate; credit note asked"/>'
+      + '<div class="sb-err" id="sb-rv-err"></div>'
+      + '<button class="msub" type="button" id="sb-rv-save" style="margin-top:10px" onclick="AuraStockBills.saveReview(\'' + b.id + '\')">Save GST review</button></div>';
+  }
+  async function saveReview(id) {
+    var b = S.bills.filter(function (x) { return x.id === id; })[0]; if (!b) return;
+    var dec = [], bad = '';
+    (b.items || []).forEach(function (l, i) {
+      var r = document.querySelector('input[name="sb-rv-' + i + '"]:checked'); if (!document.querySelector('input[name="sb-rv-' + i + '"]')) return;
+      if (!r) { bad = bad || 'Choose a decision for ' + l.name + '.'; return; }
+      var o = { index: i, decision: r.value };
+      if (r.value === 'reclassify') { o.class_code = ($('sb-rv-' + i + '-cls') || {}).value || ''; if (!o.class_code) bad = bad || 'Choose the class for ' + l.name + '.'; }
+      dec.push(o);
+    });
+    var note = ($('sb-rv-note').value || '').trim();
+    if (!bad && note.length < 3) bad = 'Please write a short note for the record.';
+    if (bad) return showErr('sb-rv-err', bad);
+    var btn = $('sb-rv-save'); btn.disabled = true;
+    var r = await db().rpc('stock_tax_review', { p_bill_id: id, p_decisions: dec, p_note: note });
+    btn.disabled = false;
+    if (r.error) return showErr('sb-rv-err', err(r.error));
+    toast('✓ GST review saved'); closeModal('mod-sb-view'); await load(); view(id);
   }
   function fact(k, v) { return '<div><small>' + k + '</small><b>' + E(v == null || v === '' ? '-' : v) + '</b></div>'; }
   function diff(a, b) {
@@ -407,7 +593,8 @@
   }
 
   window.AuraStockBills = { load: load, openAdd: openAdd, closeAdd: closeAdd, addLine: addLine, save: save, openEdit: openEdit, view: view,
-                            original: original, originalOf: originalOf, saveAlert: saveAlert };
+                            original: original, originalOf: originalOf, saveAlert: saveAlert, checkSoon: checkSoon,
+                            saveReview: saveReview, setItemClass: setItemClass };
 
   /* refresh the bills list every time the Stock page loads */
   function hook() {
