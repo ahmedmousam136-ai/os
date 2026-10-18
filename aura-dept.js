@@ -208,7 +208,7 @@ function deptMenu(back, g) {
     + (back ? '<a href="' + back + '">&#8617; ' + (back === 'nh.html' ? 'Owner portal' : 'Reception portal') + '</a>' : '')
     + (DEPT.module === 'pharmacy' && DEPT.clinic.mod_lab && DEPT.role !== 'pharmacist' ? '<a href="lab.html">&#129514; Lab</a>' : '')
     + (DEPT.module === 'lab' && DEPT.clinic.mod_pharmacy && DEPT.role !== 'lab' ? '<a href="pharmacy.html">&#128138; Pharmacy</a>' : '')
-    + '<button onclick="if(typeof toggleTheme===\'function\')toggleTheme()">&#127763; Light / dark</button>'
+    + '<button onclick="if(typeof toggleTheme===\'function\')toggleTheme()">&#127912; Theme</button>'
     + '<button onclick="handleLogout()" style="color:var(--red)">&#10162; Log out</button>';
   var wrap = document.createElement('div'); wrap.style.marginLeft = 'auto';
   wrap.appendChild(b); top.appendChild(wrap); top.appendChild(m);
