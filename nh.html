@@ -2249,7 +2249,7 @@ function suMobileInput(el){
   if(d.length>10)d=d.slice(0,10);
   if(el.value!==d)el.value=d;
   var h=document.getElementById('su-mobile-hint'); if(!h)return;
-  if(!d.length){h.textContent=/[?&]for=pharmacy/.test(location.search)?'One pharmacy per mobile number':/[?&]for=lab/.test(location.search)?'One diagnostic centre per mobile number':'One nursing home per mobile number';h.style.color='';}
+  if(!d.length){h.textContent=/[?&]for=pharmacy/.test(location.search)?'One pharmacy per mobile number':/[?&]for=lab/.test(location.search)?'One diagnostic centre per mobile number':/[?&]for=wholesale/.test(location.search)?'One distributor per mobile number':'One nursing home per mobile number';h.style.color='';}
   else if(d.length<10){h.textContent=d.length+'/10 digits — enter all 10 digits';h.style.color='var(--red)';}
   else if(!/^[6-9]/.test(d)){h.textContent='Indian mobile numbers start with 6, 7, 8 or 9';h.style.color='var(--red)';}
   else{h.textContent='✓ +91 '+d.slice(0,5)+' '+d.slice(5);h.style.color='var(--green)';}
@@ -2298,11 +2298,11 @@ async function handleSignup(){
   }
 }
 /* Creates the nursing home, owner membership and owner staff record for a signed-in user. */
-function _auraSignupType(){ var e=document.getElementById('su-btype'); var v=e?e.value:'nursing_home'; return (v==='pharmacy'||v==='lab')?v:'nursing_home'; }
+function _auraSignupType(){ var e=document.getElementById('su-btype'); var v=e?e.value:'nursing_home'; if(v==='wholesale_pharmacy'&&/[?&]for=wholesale\b/.test(location.search)) return v; return (v==='pharmacy'||v==='lab')?v:'nursing_home'; }
 async function _auraCreateFacility(uid,nhname,name,mobile,btype){
   var row={ owner_id:uid, name:nhname, doctor_name:name, phone:mobile, facility_type:'nursing_home', is_approved:false, plan:'pending' };
   btype=btype||_auraSignupType();
-  if(btype==='pharmacy'||btype==='lab') row.business_type=btype;   /* stand-alone pharmacy / lab (column from dept-logins.sql) */
+  if(btype==='pharmacy'||btype==='lab'||btype==='wholesale_pharmacy') row.business_type=btype;   /* stand-alone pharmacy / lab / wholesale (only by its own sign-up link) */
   var ins=await _supa.from('clinics').insert(row).select().single();
   if(ins.error||!ins.data){
     var m=ins.error?ins.error.message:'unknown error';
@@ -2580,6 +2580,7 @@ async function _initApp(){
        each of those pages checks approval / subscription itself */
     if(_myRole==='pharmacist'){ goTo('pharmacy.html',true); return; }
     if(_myRole==='lab'){ goTo('lab.html',true); return; }
+    if(_myRole==='sales'||_myRole==='inventory'||_myRole==='accounts'){ goTo('wholesale.html',true); return; }
     if(_myRole==='doctor'){ goTo('doctor.html'); return; }
     if(_myRole==='receptionist'){ goTo('receptionist.html'); return; }
     if(_myRole!=='owner'){ failAndReturnToLogin('This login has no portal assigned. Contact your facility owner.'); return; }
@@ -2617,6 +2618,7 @@ async function _initApp(){
     /* stand-alone pharmacy / lab: the owner works on that screen (no nursing-home portal) */
     if(_myRole==='owner'&&cl.data.business_type==='pharmacy'){ goTo('pharmacy.html',true); return; }
     if(_myRole==='owner'&&cl.data.business_type==='lab'){ goTo('lab.html',true); return; }
+    if(_myRole==='owner'&&cl.data.business_type==='wholesale_pharmacy'){ goTo('wholesale.html',true); return; }
     /* role and facility are now known: this IS the owner portal, show it */
     showOwnerPortal();
     if(auraIsLocked(cl.data.subscription_status, cl.data.subscription_expires_at)){ auraEnterLockMode(); return; }
@@ -5999,9 +6001,15 @@ var OWN_HELP_IMG={"o_pat1": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
    Same accounts and passwords as everyone else; only the words on the page change, and "Register"
    creates a pharmacy / lab (not a nursing home). After sign-in the person lands on their own screen. */
 (function () {
-  var m = /[?&]for=(pharmacy|lab)\b/.exec(location.search); if (!m) return;
+  var m = /[?&]for=(pharmacy|lab|wholesale)\b/.exec(location.search); if (!m) return;
   var t = m[1], ph = t === 'pharmacy';
-  var W = ph ? { os: 'Pharmacy', sub: 'Pharmacy Billing & Stock', reg: 'Register Pharmacy', newTab: 'New Pharmacy', name: 'e.g. Sunrise Medical Store', mail: 'you@yourpharmacy.com', hint: 'One pharmacy per mobile number', title: 'AuraScale Pharmacy · Sign in' }
+  if (t === 'wholesale') {   /* private sign-up link given by AuraScale to a distributor; the account stays locked until AuraScale approves it */
+    var sel = document.getElementById('su-btype');
+    if (sel && !sel.querySelector('option[value="wholesale_pharmacy"]')) { var o = document.createElement('option'); o.value = 'wholesale_pharmacy'; o.textContent = 'Wholesale / distributor'; sel.appendChild(o); }
+    t = 'wholesale_pharmacy';
+  }
+  var W = t === 'wholesale_pharmacy' ? { os: 'Wholesale', sub: 'Distributor Billing, Stock & Accounts', reg: 'Register Distributor', newTab: 'New Distributor', name: 'e.g. Ma Durga Pharma Distributors', mail: 'you@yourfirm.com', hint: 'One distributor per mobile number', title: 'AuraScale Wholesale · Sign in' }
+        : ph ? { os: 'Pharmacy', sub: 'Pharmacy Billing & Stock', reg: 'Register Pharmacy', newTab: 'New Pharmacy', name: 'e.g. Sunrise Medical Store', mail: 'you@yourpharmacy.com', hint: 'One pharmacy per mobile number', title: 'AuraScale Pharmacy · Sign in' }
                : { os: 'Lab', sub: 'Diagnostic Centre Billing & Reports', reg: 'Register Lab', newTab: 'New Diagnostic Centre', name: 'e.g. Sunrise Diagnostic Centre', mail: 'you@yourlab.com', hint: 'One diagnostic centre per mobile number', title: 'AuraScale Lab · Sign in' };
   function set(sel, fn) { var e = document.querySelector(sel); if (e) fn(e); }
   document.title = W.title;
