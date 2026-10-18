@@ -32,6 +32,7 @@
   </div>
   <div class="d-tabs" id="d-tabs">
     <button class="d-tab on" data-t="new" onclick="dTab('new')"><span class="ti">&#10133;</span><span class="tl">New order</span></button>
+    <button class="d-tab" data-t="requests" onclick="dTab('requests')"><span class="ti">&#129658;</span><span class="tl">Doctor orders <b id="rq-badge" style="display:none;background:var(--amber,#B45309);color:#fff;border-radius:999px;padding:0 6px;font-size:10px;margin-left:3px"></b></span></button>
     <button class="d-tab" data-t="pending" onclick="dTab('pending')"><span class="ti">&#9203;</span><span class="tl">To report</span></button>
     <button class="d-tab" data-t="orders" onclick="dTab('orders')"><span class="ti">&#128196;</span><span class="tl">Orders</span></button>
     <button class="d-tab" data-t="tests" onclick="dTab('tests')"><span class="ti">&#129514;</span><span class="tl">Tests</span></button>
@@ -89,6 +90,12 @@
     </div>
 
     <!-- ============ PENDING ============ -->
+    <div class="d-view" id="v-requests">
+      <p class="muted" style="margin-bottom:10px">Tests ordered by the doctors of this nursing home. <b>Accept</b> books the order (same as a new order, charges go on the admitted patient's bill), then mark the sample and enter the results as usual.</p>
+      <div class="seg" id="rq-seg" style="margin-bottom:10px"><button class="on" data-s="open" onclick="rqFilter('open')">To do</button><button data-s="done" onclick="rqFilter('done')">Done (30 days)</button></div>
+      <div id="rq-list"></div>
+    </div>
+
     <div class="d-view" id="v-pending">
       <p class="muted" style="margin-bottom:10px">Tests booked in the last 30 days whose report has not been sent yet.</p>
       <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Booked</th><th>Order</th><th>Patient</th><th class="hide-sm">Tests</th><th>Status</th><th></th></tr></thead><tbody id="pd-b"></tbody></table></div>
@@ -171,6 +178,7 @@ async function init() {
   note();
   if (!DEPT.admissions.length) dEl('k-ipd').parentNode.style.display = 'none';
   deptStartTab('new');
+  rqCount();
   document.addEventListener('click', function (e) { if (!e.target.closest('#o-uhid-dd,#o-uhid')) dEl('o-uhid-dd').style.display = 'none'; });
   var fix = function () { dEl('new-bottom').style.gridTemplateColumns = window.innerWidth < 760 ? '1fr' : '1fr 340px'; }; fix(); window.addEventListener('resize', fix);
 }
@@ -624,6 +632,79 @@ function unlinkIfRenamed(v) {
 }
 
 init();
+</script>
+<script>
+/* ===== DOCTOR ORDERS (nh_test_requests): doctor portal -> this lab =====
+   ORDERED -> ACCEPTED (books a normal lab order) -> SAMPLE COLLECTED -> PROCESSING -> REPORT READY -> COMPLETED
+   Report ready / completed follow the lab order by themselves (results ready / report sent). */
+var RQ = [], RQ_F = 'open';
+var RQ_ST = { ordered: 'Ordered', accepted: 'Accepted', sample_collected: 'Sample collected', processing: 'Processing', report_ready: 'Report ready', completed: 'Completed', cancelled: 'Cancelled' };
+function onTab_requests() { loadRequests(); }
+function rqFilter(f) { RQ_F = f; [].forEach.call(dEl('rq-seg').children, function (b) { b.classList.toggle('on', b.getAttribute('data-s') === f); }); loadRequests(); }
+async function rqCount() {
+  try {
+    var r = await _supa.from('nh_test_requests').select('id').eq('clinic_id', _clinicId).eq('status', 'ordered');
+    var n = (r.data || []).length, b = dEl('rq-badge'); if (b) { b.textContent = n; b.style.display = n ? '' : 'none'; }
+  } catch (e) {}
+}
+async function loadRequests() {
+  var box = dEl('rq-list'); box.innerHTML = '<p class="tiny">Loading&hellip;</p>';
+  var from = new Date(Date.now() - 30 * 864e5).toISOString();
+  var q = _supa.from('nh_test_requests').select('*').eq('clinic_id', _clinicId).gte('created_at', from).order('created_at', { ascending: RQ_F === 'open' }).limit(200);
+  q = RQ_F === 'open' ? q.in('status', ['ordered', 'accepted', 'sample_collected', 'processing']) : q.in('status', ['report_ready', 'completed', 'cancelled']);
+  var r = await q;
+  if (r.error) { box.innerHTML = '<p class="muted">' + esc(/nh_test_requests/.test(r.error.message || '') ? 'Doctor orders are not set up yet (run 15-doctor-clinical.sql).' : r.error.message) + '</p>'; return; }
+  RQ = r.data || []; rqCount();
+  if (!RQ.length) { box.innerHTML = '<div class="card" style="text-align:center;padding:22px"><b>' + (RQ_F === 'open' ? 'No doctor orders waiting.' : 'Nothing finished in the last 30 days.') + '</b></div>'; return; }
+  box.innerHTML = RQ.map(rqCard).join('');
+}
+function rqCard(o) {
+  var unmatched = (o.tests || []).filter(function (t) { return !t.test_id; });
+  var acts = '';
+  if (o.status === 'ordered') {
+    acts += unmatched.length ? unmatched.map(function (t, i) {
+      return '<div style="margin-top:6px"><label class="tiny">Match “' + esc(t.name) + '” to your test list</label><select class="finput rq-map" data-rq="' + o.id + '" style="max-width:340px"><option value="">— leave out —</option>'
+        + TESTS.filter(function (x) { return x.is_active; }).map(function (x) { return '<option value="' + x.id + '"' + (x.name.toLowerCase() === t.name.toLowerCase() ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('') + '</select></div>';
+    }).join('') : '';
+    acts += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-p" onclick="rqAccept(\'' + o.id + '\',this)">&#10003; Accept &amp; book</button><button class="btn" onclick="rqStatus(\'' + o.id + '\',\'cancelled\',this)">Decline</button></div>';
+  } else if (o.status === 'accepted') {
+    acts = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-p" onclick="rqStatus(\'' + o.id + '\',\'sample_collected\',this)">&#129514; Sample collected</button><button class="btn" onclick="resOpen(\'' + o.lab_order_id + '\')">&#9998; Results</button></div>';
+  } else if (o.status === 'sample_collected') {
+    acts = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-p" onclick="rqStatus(\'' + o.id + '\',\'processing\',this)">&#9881; Processing</button><button class="btn" onclick="resOpen(\'' + o.lab_order_id + '\')">&#9998; Results</button></div>';
+  } else if (o.status === 'processing') {
+    acts = '<div style="margin-top:10px"><button class="btn btn-p" onclick="resOpen(\'' + o.lab_order_id + '\')">&#9998; Enter results &amp; make report</button></div>';
+  } else if (o.lab_order_id && o.status !== 'cancelled') {
+    acts = '<div style="margin-top:10px"><button class="btn" onclick="resOpen(\'' + o.lab_order_id + '\')">&#128196; Open order</button></div>';
+  }
+  var last = (o.history || [])[(o.history || []).length - 1] || {};
+  return '<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start">'
+    + '<div style="min-width:0"><b style="font-size:15px">' + esc(o.patient_name) + '</b> <span class="tiny">' + esc([o.uhid ? 'UHID ' + o.uhid : '', o.age ? o.age + ' Y' : '', o.gender].filter(Boolean).join(' · ')) + '</span>'
+    + '<div class="muted" style="margin-top:3px">' + esc((o.tests || []).map(function (t) { return t.name; }).join(', ')) + '</div>'
+    + (o.notes ? '<div class="tiny" style="margin-top:3px">&#128221; ' + esc(o.notes) + '</div>' : '')
+    + '<div class="tiny" style="margin-top:3px">' + (/^dr\.?\s/i.test(o.ordered_by_name || '') ? '' : 'Dr. ') + esc(o.ordered_by_name || '-') + ' · ' + esc(dDateTime(o.created_at)) + (o.admission_id ? ' · admitted patient' : '') + '</div></div>'
+    + '<div style="text-align:right">' + (o.priority === 'urgent' ? '<span class="tag t-r">URGENT</span> ' : '') + '<span class="tag ' + (o.status === 'ordered' ? 't-a' : o.status === 'cancelled' ? 't-r' : (o.status === 'report_ready' || o.status === 'completed') ? 't-g' : 't-b') + '">' + esc(RQ_ST[o.status] || o.status) + '</span>'
+    + (last.at ? '<div class="tiny" style="margin-top:4px">' + esc(dDateTime(last.at)) + '</div>' : '') + '</div></div>' + acts + '</div>';
+}
+async function rqAccept(id, btn) {
+  var o = RQ.filter(function (x) { return x.id === id; })[0]; if (!o) return;
+  var ids = (o.tests || []).filter(function (t) { return t.test_id; }).map(function (t) { return t.test_id; });
+  [].forEach.call(document.querySelectorAll('.rq-map[data-rq="' + id + '"]'), function (sel) { if (sel.value && ids.indexOf(sel.value) < 0) ids.push(sel.value); });
+  if (!ids.length) { if (typeof showToast === 'function') showToast('Match the test to your test list first.'); return; }
+  btn.disabled = true;
+  var r = await _supa.rpc('lab_request_accept', { p_request_id: id, p_test_ids: ids });
+  btn.disabled = false;
+  if (r.error) { if (typeof showToast === 'function') showToast(String(r.error.message || r.error)); return; }
+  if (typeof showToast === 'function') showToast('Accepted and booked. Mark the sample when collected.');
+  loadRequests();
+}
+async function rqStatus(id, st, btn) {
+  if (st === 'cancelled' && !confirm('Decline this doctor order? The doctor will see it as cancelled.')) return;
+  btn.disabled = true;
+  var r = await _supa.rpc('lab_request_status', { p_request_id: id, p_status: st, p_reason: st === 'cancelled' ? 'Declined by lab' : null });
+  btn.disabled = false;
+  if (r.error) { if (typeof showToast === 'function') showToast(String(r.error.message || r.error)); return; }
+  loadRequests();
+}
 </script>
 </body>
 </html>
