@@ -203,7 +203,7 @@ function dIsOwner() { return DEPT.role === 'owner'; }
 async function deptInit(module, title) {
   DEPT.module = module;
   try { if (localStorage.getItem('nh-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
-  var g = await nhAuthGuard(null); if (!g) return false;
+  var g = await nhAuthGuard(null, module); if (!g) return false;
   DEPT.role = g.role;
   var WH_ROLES = ['sales', 'inventory', 'accounts'];
   /* wholesale staff only open the Wholesale screen; nobody else opens it */
@@ -249,6 +249,7 @@ function deptMenu(back, g) {
   var m = document.createElement('div'); m.className = 'd-menu'; m.id = 'd-menu';
   var roleTxt = { owner: 'Owner', receptionist: 'Reception', pharmacist: 'Pharmacist', lab: 'Lab staff', sales: 'Sales', inventory: 'Inventory', accounts: 'Accounts' }[g.role] || 'Staff';
   m.innerHTML = '<div class="who">Signed in: <b>' + esc(g.name || '') + '</b> (' + roleTxt + ')</div>'
+    + (typeof auraBizMenuHtml === 'function' ? auraBizMenuHtml(_clinicId) : '')
     + (back ? '<a href="' + back + '">&#8617; ' + (back === 'nh.html' ? 'Owner portal' : 'Reception portal') + '</a>' : '')
     + (DEPT.module === 'pharmacy' && DEPT.clinic.mod_lab && DEPT.role !== 'pharmacist' ? '<a href="lab.html">&#129514; Lab</a>' : '')
     + (DEPT.module === 'lab' && DEPT.clinic.mod_pharmacy && DEPT.role !== 'lab' ? '<a href="pharmacy.html">&#128138; Pharmacy</a>' : '')
