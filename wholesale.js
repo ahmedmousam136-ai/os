@@ -316,7 +316,7 @@ async function openSale(id, fresh) {
   var it = await _supa.from('wh_sale_items').select('*').eq('sale_id', id).order('name'); s._items = it.data || [];
   dEl('doc-title').textContent = 'Invoice ' + s.inv_no;
   var canRet = CAN.sell && s.status === 'posted' && s._items.some(function (x) { return Number(x.returned) < Number(x.qty) || Number(x.returned_free) < Number(x.free); });
-  dEl('doc-body').innerHTML = (fresh ? '<div style="text-align:center;margin-bottom:12px"><div style="font-size:30px">&#9989;</div><div style="font-size:22px;font-weight:800">' + dMoney0(s.total) + '</div><div class="muted">' + esc(s.buyer.name || '') + ' &middot; ' + esc(payTxt(s.pay_mode)) + '</div></div>' : '')
+  dEl('doc-body').innerHTML = (fresh ? deptSuccessHtml({ title: 'Invoice ' + s.inv_no + ' saved', amount: s.total, sub: esc(s.buyer.name || '') + ' &middot; ' + esc(payTxt(s.pay_mode)) }) : '')
     + '<div class="muted" style="margin-bottom:10px">' + dDate(s.inv_date) + ' &middot; ' + esc(s.buyer.name || '') + (s.buyer.gstin ? ' &middot; GSTIN ' + esc(s.buyer.gstin) : '') + ' &middot; ' + esc(payTxt(s.pay_mode)) + (s.due_date ? ' &middot; due ' + dDate(s.due_date) : '') + ' &middot; by ' + esc(s.created_by_name || '')
     + (s.status === 'cancelled' ? '<div class="note" style="margin-top:8px">Cancelled: ' + esc(s.cancel_reason || '') + '</div>' : '') + '</div>'
     + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Item</th><th>Batch</th><th class="r">Qty + free</th><th class="r">Rate</th><th class="r">GST</th><th class="r">Amount</th></tr></thead><tbody>'
@@ -331,6 +331,7 @@ async function openSale(id, fresh) {
     + (CAN.owner && s.status === 'posted' ? '<button class="btn btn-r" onclick="saleCancel(' + A(s.id) + ')">Cancel invoice</button>' : '')
     + (fresh ? '<button class="btn btn-p" onclick="dClose(\'m-doc\');dEl(\'s-q\').focus()">&#10133; New invoice</button>' : '') + '</div><div id="doc-extra"></div>';
   dOpen('m-doc');
+  if (fresh) { deptSuccessPlay(); todayLine(); }
   try {
     var path = await ensurePdf('sale', s);
     dEl('doc-pdf').textContent = '';
@@ -346,6 +347,14 @@ async function saleCancel(id) {
   var r = await _supa.rpc('wh_cancel_sale', { p_clinic: _clinicId, p_id: id, p_reason: why });
   if (r.error) { showToast(dErr(r.error)); return; }
   showToast('Invoice cancelled.'); loadItems(); loadBalances(); if (dEl('s-list').style.display !== 'none') loadSales(); openSale(id);
+}
+/* "Today is now ₹X from N invoices" under the success tick */
+async function todayLine() {
+  try {
+    var r = await _supa.from('wh_sales').select('total').eq('clinic_id', _clinicId).eq('inv_date', today()).eq('status', 'posted');
+    var rows = r.data || [], el = dEl('ds-day'); if (!el || !rows.length) return;
+    el.textContent = 'Today is now ' + dMoney0(rows.reduce(function (t, x) { return t + Number(x.total); }, 0)) + ' from ' + rows.length + ' invoice' + (rows.length === 1 ? '' : 's');
+  } catch (e) {}
 }
 function transportForm(id) {
   var s0 = SALES.filter(function (x) { return x.id === id; })[0];
