@@ -46,7 +46,7 @@ async function init() {
   SET = DEPT.clinic.wh_settings || {};
   OWN_STATE = (SET.gstin || '').slice(0, 2) || SET.state_code || DEPT.clinic.billing_state_code || '19';
   canShow();
-  partyPicker('sell', ['customer', 'both'], function () { sellRender(); });
+  partyPicker('sell', ['customer', 'both'], function (p) { sellRender(); repeatOffer(p); });
   partyPicker('buy', ['supplier', 'both'], function () { buyRender(); });
   partyPicker('pret', ['supplier', 'both'], function () { brLoadBills(); });
   partyPicker('pay', null, null);
@@ -280,6 +280,7 @@ async function sellSave(override) {
       throw r.error;
     }
     var sale = r.data;
+    if (dEl('s-repeat')) dEl('s-repeat').innerHTML = ''; if (dEl('s-scan-st')) dEl('s-scan-st').innerHTML = ''; LASTSALE = null; LASTRATE = {};
     SLINES = []; dEl('s-note').value = ''; dEl('s-paid').value = ''; dEl('s-ref').value = ''; sellPay('credit'); ppSet('sell', null);
     trClear('tr-'); dEl('s-shipon').checked = false; dEl('s-shipbox').style.display = 'none'; ppSet('ship', null); ['sh-name', 'sh-phone', 'sh-address'].forEach(function (k) { dEl(k).value = ''; }); dEl('s-trans').open = false;
     sellRender();
@@ -1163,3 +1164,297 @@ async function ledgerPdf(wa) {
 }
 
 init();
+
+/* =================================================================== LESS TYPING
+   1. photo of a chemist's order  -> the bill fills itself (orderPick)
+   2. "repeat last order"         -> the customer's previous invoice, again (repeatOffer)
+   3. bring the old lists in      -> customers, suppliers, products and stock from Marg / Busy / Tally / Excel (impPick) */
+
+/* ---------- matching what is written to what is in the list ---------- */
+function mNorm(s) {
+  return String(s || '').toLowerCase()
+    .replace(/\btablets?\b|\btabs?\b|\btbl\b/g, ' tab ').replace(/\bcapsules?\b|\bcaps?\b/g, ' cap ').replace(/\bsyrups?\b|\bsyr\b/g, ' syp ')
+    .replace(/\binjections?\b/g, ' inj ').replace(/\bsuspension\b/g, ' susp ').replace(/\bointment\b/g, ' oint ')
+    .replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function mBigrams(s) { var t = s.replace(/ /g, ''), o = {}; for (var i = 0; i < t.length - 1; i++) { var g = t.substr(i, 2); o[g] = (o[g] || 0) + 1; } return o; }
+function mDice(a, b) {
+  var A = mBigrams(a), B = mBigrams(b), n = 0, ta = 0, tb = 0, k;
+  for (k in A) ta += A[k]; for (k in B) tb += B[k];
+  for (k in A) if (B[k]) n += Math.min(A[k], B[k]);
+  return ta + tb ? 2 * n / (ta + tb) : 0;
+}
+function mScore(q, name) {
+  var a = mNorm(q), b = mNorm(name); if (!a || !b) return 0;
+  if (a === b) return 1;
+  var s = mDice(a, b);
+  var na = a.match(/\d+(\.\d+)?/g) || [], nb = b.match(/\d+(\.\d+)?/g) || [];
+  if (na.length) { var all = na.every(function (x) { return nb.indexOf(x) >= 0; }); s += all ? 0.15 : -0.25; }
+  var fa = a.split(' ')[0], fb = b.split(' ')[0];
+  if (fa.length >= 3 && fb.indexOf(fa.slice(0, 4)) === 0) s += 0.1;
+  if (b.indexOf(a) === 0 || a.indexOf(b) === 0) s += 0.1;
+  return Math.max(0, Math.min(1, s));
+}
+function mBest(q, list, nameOf, n) {
+  return list.map(function (x) { return { x: x, s: mScore(q, nameOf(x)) }; }).filter(function (o) { return o.s >= 0.3; })
+    .sort(function (a, b) { return b.s - a.s; }).slice(0, n || 8);
+}
+
+/* ---------- this customer's last rates (so the rate is the one they usually get) ---------- */
+var LASTRATE = {}, LASTSALE = null;
+async function custHistory(p) {
+  LASTRATE = {}; LASTSALE = null;
+  if (!p) return;
+  var s = await _supa.from('wh_sales').select('id,inv_no,inv_date,total').eq('clinic_id', _clinicId).eq('customer_id', p.id).eq('status', 'posted')
+    .order('inv_date', { ascending: false }).order('created_at', { ascending: false }).limit(30);
+  if (s.error || !s.data || !s.data.length) return;
+  LASTSALE = s.data[0];
+  var ids = s.data.map(function (x) { return x.id; });
+  var it = await _supa.from('wh_sale_items').select('sale_id,item_id,qty,free,rate,disc').in('sale_id', ids);
+  if (it.error) return;
+  var order = {}; ids.forEach(function (id, i) { order[id] = i; });
+  (it.data || []).sort(function (a, b) { return order[a.sale_id] - order[b.sale_id]; }).forEach(function (l) {
+    if (!LASTRATE[l.item_id]) LASTRATE[l.item_id] = { rate: Number(l.rate), disc: Number(l.disc) || 0 };
+  });
+  LASTSALE.items = (it.data || []).filter(function (l) { return l.sale_id === LASTSALE.id; });
+}
+async function repeatOffer(p) {
+  var box = dEl('s-repeat'); if (!box) return;
+  box.innerHTML = '';
+  await custHistory(p);
+  if (!p || !LASTSALE || !LASTSALE.items || !LASTSALE.items.length || PICK.sell.party !== p) return;
+  box.innerHTML = '<button class="btn" onclick="repeatLoad()">&#8635; Repeat last order <span class="tiny" style="font-weight:500">&middot; ' + esc(LASTSALE.inv_no) + ' &middot; ' + dDate(LASTSALE.inv_date)
+    + ' &middot; ' + LASTSALE.items.length + ' item' + (LASTSALE.items.length === 1 ? '' : 's') + ' &middot; ' + dMoney0(LASTSALE.total) + '</span></button>';
+}
+/* add an item with a quantity: the batch that expires first, then the next one if it runs short */
+function sellAddQty(id, qty, free, rate, disc) {
+  var it = ITEMMAP[id]; if (!it) return { added: 0, short: qty, why: 'not in the list' };
+  if (!it.sellable.length) return { added: 0, short: qty, why: 'out of stock' };
+  var need = Math.max(0, num(qty)), fr = Math.max(0, num(free)), added = 0;
+  var lr = LASTRATE[id];
+  for (var k = 0; k < it.sellable.length && need > 0; k++) {
+    var b = it.sellable[k], used = SLINES.filter(function (l) { return l.batch_id === b.id; }).reduce(function (a, l) { return a + num(l.qty) + num(l.free); }, 0);
+    var avail = b.qty - used; if (avail <= 0) continue;
+    var take = Math.min(need, avail), f = fr > 0 && avail - take >= fr ? fr : 0; if (f) fr = 0;
+    var rt = rate != null && rate !== '' ? Number(rate) : lr ? lr.rate : (b.ptr != null ? Number(b.ptr) : '');
+    var same = SLINES.filter(function (l) { return l.batch_id === b.id; })[0];
+    if (same) { same.qty = num(same.qty) + take; same.free = num(same.free) + f; }
+    else SLINES.push({ item_id: id, batch_id: b.id, qty: take, free: f, rate: rt, disc: disc != null ? Number(disc) || 0 : lr ? lr.disc : 0 });
+    need -= take; added++;
+  }
+  return { added: added, short: need, why: need > 0 ? 'only part in stock' : '' };
+}
+function repeatLoad() {
+  if (!LASTSALE) return;
+  var notes = [];
+  LASTSALE.items.forEach(function (l) {
+    var r = sellAddQty(l.item_id, Number(l.qty), Number(l.free) || 0, Number(l.rate), Number(l.disc) || 0);
+    if (r.short > 0) notes.push(((ITEMMAP[l.item_id] || {}).name || 'An item') + ': ' + (r.why === 'out of stock' ? 'out of stock' : r.short + ' short'));
+  });
+  sellRender();
+  dEl('s-repeat').innerHTML = '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; Last order filled in &mdash; change any quantity, then save.</div>'
+    + (notes.length ? '<div class="tiny over">' + esc(notes.join(' · ')) + '</div>' : '');
+}
+
+/* ---------- photo of the chemist's order ---------- */
+var ORD = [];
+async function orderPick(inp) {
+  var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+  var st = dEl('s-scan-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the order&hellip; about 15-30 seconds.';
+  try {
+    var img = await scanResize(f);
+    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale', kind: 'order' } });
+    var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok || d.kind !== 'order') {
+      var why = { daily_limit: 'Today\'s limit of photos is used up. Please add the items by typing.', ai_key_not_set: 'Photo reading is not set up on the server yet.', not_allowed: 'Only the owner or sales staff can do this.', nothing_read: 'No medicines could be read. Take a clearer photo of the whole order.', not_signed_in: 'Your login has expired. Please log in again.' };
+      st.textContent = '⚠ ' + (why[d && d.reason] || ((d && d.ok && d.kind !== 'order') ? 'Please update the bill-scan function on the server (see the setup steps).' : 'Could not read the order. Please try again or type the items.'));
+      return;
+    }
+    st.textContent = '';
+    /* the customer, when the slip shows it */
+    var custNote = '';
+    if (!PICK.sell.party && d.customer) {
+      var cands = mBest(d.customer, PARTIES.filter(function (p) { return p.is_active && p.party_type !== 'supplier'; }), function (p) { return p.name; }, 1);
+      if (cands.length && cands[0].s >= 0.6) { ppPick('sell', cands[0].x.id); custNote = 'Customer from the photo: <b>' + esc(cands[0].x.name) + '</b> &mdash; change it above if wrong.'; }
+      else custNote = 'Name on the order: <b>' + esc(d.customer) + '</b> &mdash; choose the customer above.';
+    }
+    var pool = ITEMS.filter(function (it) { return it.is_active; });
+    ORD = d.lines.map(function (l) {
+      var c = mBest(l.name, pool, function (it) { return it.name; }, 8);
+      var auto = c.length && c[0].s >= 0.55 && (!c[1] || c[0].s - c[1].s >= 0.08);   /* two look-alikes (Shelcal / Shelcal HD): ask */
+      return { read: l.name, raw: l.raw || '', qty: l.qty != null ? l.qty : '', free: l.free || 0, cands: c.map(function (o) { return o.x.id; }), item_id: auto ? c[0].x.id : '', sure: !!auto };
+    });
+    orderReview(custNote);
+  } catch (e) { st.textContent = '⚠ ' + dErr(e); }
+}
+function orderReview(custNote) {
+  var rows = ORD.map(function (o, i) {
+    var opts = '<option value="">&mdash; skip this line &mdash;</option>' + o.cands.map(function (id) {
+      var it = ITEMMAP[id]; return '<option value="' + id + '"' + (id === o.item_id ? ' selected' : '') + '>' + esc(it.name) + (it.pack ? ' (' + esc(it.pack) + ')' : '') + ' &middot; ' + (it.stock > 0 ? it.stock + ' in stock' : 'OUT OF STOCK') + '</option>';
+    }).join('');
+    return '<tr id="or-' + i + '"><td><b>' + esc(o.read) + '</b>' + (o.raw && o.raw !== o.read ? '<div class="tiny">written: ' + esc(o.raw) + '</div>' : '') + '</td>'
+      + '<td><select class="finput" style="min-width:230px" onchange="ORD[' + i + '].item_id=this.value;orderCheck()">' + opts + '</select>'
+      + (o.cands.length ? (o.sure ? '' : '<div class="tiny" style="color:var(--amber)">Not sure &mdash; please choose</div>') : '<div class="tiny over">Not found in your list &mdash; add it later by typing</div>') + '</td>'
+      + '<td class="r"><input class="finput" type="number" min="0" step="1" value="' + esc(o.qty) + '" style="width:76px;text-align:right" oninput="ORD[' + i + '].qty=this.value;orderCheck()"/></td>'
+      + '<td class="r"><input class="finput" type="number" min="0" step="1" value="' + esc(o.free) + '" style="width:62px;text-align:right" oninput="ORD[' + i + '].free=this.value"/></td></tr>';
+  }).join('');
+  dEl('ord-body').innerHTML = (custNote ? '<div class="card" style="margin-bottom:10px;padding:10px 12px">' + custNote + '</div>' : '')
+    + '<p class="tiny" style="margin-bottom:8px">Check each line: the product on the right must be the one the chemist wrote. The batch that expires first is used automatically, and the rate is the one this customer got last time (or your usual rate).</p>'
+    + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Read from the photo</th><th>Product in your stock</th><th class="r">Qty</th><th class="r">Free</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<div class="err" id="ord-err"></div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn" onclick="dClose(\'m-ord\')">Cancel</button><button class="btn btn-g" onclick="orderUse()">&#10003; Add to the bill</button></div>';
+  dOpen('m-ord'); orderCheck();
+}
+function orderCheck() {
+  var bad = 0;
+  ORD.forEach(function (o, i) {
+    var tr = dEl('or-' + i); if (!tr) return;
+    var need = o.item_id && !(num(o.qty) > 0);
+    var sel = tr.querySelector('select'), q = tr.querySelector('input');
+    sel.style.borderColor = !o.item_id && o.cands.length && !o.sure ? 'var(--amber)' : ''; q.style.borderColor = need ? 'var(--red)' : '';
+    if (need) bad++;
+  });
+  return bad;
+}
+function orderUse() {
+  if (orderCheck()) { dShowErr('ord-err', 'Type the quantity for every chosen product (red boxes), or choose "skip this line".'); return; }
+  var notes = [], n = 0;
+  ORD.forEach(function (o) {
+    if (!o.item_id) return;
+    var r = sellAddQty(o.item_id, num(o.qty), num(o.free), null, null);
+    if (r.added) n++;
+    if (r.short > 0) notes.push(ITEMMAP[o.item_id].name + ': ' + (r.why === 'out of stock' ? 'out of stock' : r.short + ' short'));
+  });
+  var skipped = ORD.filter(function (o) { return !o.item_id; }).map(function (o) { return o.read; });
+  dClose('m-ord'); sellRender();
+  dEl('s-scan-st').innerHTML = '<span style="color:var(--green);font-weight:700">&#10003; ' + n + ' item' + (n === 1 ? '' : 's') + ' added from the photo.</span>'
+    + (notes.length ? '<div class="over">' + esc(notes.join(' · ')) + '</div>' : '')
+    + (skipped.length ? '<div>Not added: ' + esc(skipped.join(', ')) + ' &mdash; add them by typing if needed.</div>' : '');
+}
+
+/* ---------- bring the old lists in (owner, Settings) ---------- */
+var IMP = { kind: 'parties', head: [], rows: [], map: {} };
+var IMP_FIELDS = {
+  parties: [['name', 'Name *', ['party name', 'name', 'customer name', 'supplier name', 'account name', 'ledger name', 'ledger', 'party', 'firm name', 'shop name']],
+    ['type', 'Customer / supplier', ['type', 'party type', 'group', 'account group', 'under', 'category']],
+    ['phone', 'Mobile', ['mobile', 'mobile no', 'phone', 'phone no', 'contact', 'contact no', 'whatsapp', 'mob', 'mob no', 'cell']],
+    ['gstin', 'GSTIN', ['gstin', 'gst no', 'gstin no', 'gst number', 'gstin uin', 'gst']],
+    ['address', 'Address', ['address', 'address1', 'addr', 'full address']],
+    ['dl', 'Drug licence', ['dl no', 'dl', 'drug licence', 'drug license', 'd l no', 'licence no', 'license no', 'dl number']],
+    ['credit_days', 'Credit days', ['credit days', 'cr days', 'due days', 'days']],
+    ['credit_limit', 'Credit limit', ['credit limit', 'cr limit', 'limit']],
+    ['opening_balance', 'Balance today', ['closing balance', 'balance', 'opening balance', 'opening', 'op bal', 'outstanding', 'due', 'amount due']],
+    ['email', 'Email', ['email', 'e mail', 'email id']]],
+  items: [['name', 'Product name *', ['item name', 'product name', 'product', 'item', 'name', 'description', 'medicine', 'item description']],
+    ['company', 'Company', ['company', 'company name', 'mfr', 'manufacturer', 'mfg', 'brand', 'mfg name']],
+    ['salt', 'Salt / composition', ['salt', 'composition', 'generic', 'generic name', 'content', 'molecule']],
+    ['pack', 'Pack', ['pack', 'packing', 'pack size', 'unit pack']],
+    ['hsn', 'HSN', ['hsn', 'hsn code', 'hsn sac', 'hsn no']],
+    ['gst', 'GST %', ['gst', 'gst%', 'gst rate', 'tax', 'tax%', 'igst%', 'igst', 'gst per']],
+    ['batch', 'Batch', ['batch', 'batch no', 'batch number', 'b no']],
+    ['expiry', 'Expiry', ['expiry', 'exp', 'exp date', 'expiry date', 'expdt']],
+    ['qty', 'Stock qty', ['closing stock', 'stock', 'qty', 'quantity', 'cl stock', 'balance qty', 'closing qty', 'current stock', 'stock qty']],
+    ['mrp', 'MRP', ['mrp', 'm r p']],
+    ['rate', 'Purchase rate', ['purchase rate', 'pur rate', 'p rate', 'cost', 'cost rate', 'purchase price', 'rate']],
+    ['ptr', 'Selling rate (PTR)', ['ptr', 'sale rate', 'selling rate', 's rate', 'trade rate', 'sales rate']]]
+};
+function impNormH(h) { return String(h || '').toLowerCase().replace(/[%]/g, '%').replace(/[^a-z0-9%]+/g, ' ').trim(); }
+function impKind(k) { IMP.kind = k; segOn('imp-kind', 'data-k', k); dEl('imp-area').innerHTML = ''; dEl('imp-file').value = ''; }
+function impLib() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = res; s.onerror = function () { rej(new Error('Could not load the Excel reader. Check the internet and try again.')); }; document.head.appendChild(s); });
+}
+async function impPick(inp) {
+  var f = inp.files && inp.files[0]; if (!f) return;
+  dShowErr('imp-err', ''); dEl('imp-area').innerHTML = '<div class="tiny">Reading the file&hellip;</div>';
+  try {
+    await impLib();
+    var isCsv = /\.csv$/i.test(f.name || '') || /csv/.test(f.type || '');
+    var wb = isCsv ? XLSX.read(await f.text(), { type: 'string', raw: true })        /* CSV: keep "08/27" as written, never turn it into a date */
+                   : XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var all = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+    /* the header is the first row that has a name-like column */
+    var hi = 0; for (var i = 0; i < Math.min(all.length, 15); i++) { if (all[i].some(function (c) { return /name|product|item|party|ledger/i.test(String(c)); })) { hi = i; break; } }
+    IMP.head = all[hi].map(function (h) { return String(h || '').trim(); });
+    IMP.rows = all.slice(hi + 1).filter(function (r) { return r.some(function (c) { return String(c).trim() !== ''; }); });
+    IMP.map = {};
+    var used = {};
+    IMP_FIELDS[IMP.kind].forEach(function (fd) {
+      var hs = IMP.head.map(impNormH), pick = -1;
+      fd[2].some(function (syn) { var j = hs.indexOf(syn); if (j >= 0 && !used[j]) { pick = j; return true; } return false; });
+      if (pick < 0) fd[2].some(function (syn) { var j = hs.findIndex(function (h, k) { return !used[k] && h && (h.indexOf(syn) === 0); }); if (j >= 0) { pick = j; return true; } return false; });
+      if (pick >= 0) { IMP.map[fd[0]] = pick; used[pick] = 1; }
+    });
+    impShow();
+  } catch (e) { dEl('imp-area').innerHTML = ''; dShowErr('imp-err', dErr(e)); }
+}
+function impShow() {
+  var F = IMP_FIELDS[IMP.kind];
+  var sel = function (key) { return '<select class="finput" onchange="IMP.map[' + A(key) + ']=this.value===\'\'?undefined:Number(this.value);impPreview()"><option value="">&mdash; not in file &mdash;</option>' + IMP.head.map(function (h, j) { return '<option value="' + j + '"' + (IMP.map[key] === j ? ' selected' : '') + '>' + esc(h || ('Column ' + (j + 1))) + '</option>'; }).join('') + '</select>'; };
+  dEl('imp-area').innerHTML = '<p class="tiny" style="margin:10px 0 6px"><b>' + IMP.rows.length + ' rows</b> found. Check that each box points to the right column of your file:</p>'
+    + '<div class="grid4" style="max-width:980px">' + F.map(function (fd) { return '<div><label class="flbl">' + fd[1] + '</label>' + sel(fd[0]) + '</div>'; }).join('') + '</div>'
+    + '<div id="imp-prev" style="margin-top:12px"></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="impRun(true)">&#128269; Check first (nothing is saved)</button><button class="btn btn-g" onclick="impRun(false)">&#11015; Import now</button></div>'
+    + '<div id="imp-res" style="margin-top:12px"></div>';
+  impPreview();
+}
+function impCell(r, key) { var j = IMP.map[key]; return j == null ? '' : r[j]; }
+function impExp(v) {
+  if (v instanceof Date && !isNaN(v)) { var d = new Date(v.getTime() + 12 * 3600000); if (d.getFullYear() < 2015 || d.getFullYear() > 2045) return ''; return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  var s = String(v || '').trim(); if (!s) return '';
+  var m, M = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+  var end = function (y, mo) { y = Number(y); if (y < 100) y += 2000; var d = new Date(y, mo, 0); return y + '-' + ('0' + mo).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  if ((m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/))) { var y = Number(m[3]); if (y < 100) y += 2000; return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
+  if ((m = s.match(/^(\d{1,2})[\/\-.](\d{2,4})$/))) return end(m[2], Number(m[1]));
+  if ((m = s.match(/^([a-z]{3})[a-z]*[\/\-. ]?'?(\d{2,4})$/i)) && M[m[1].toLowerCase()]) return end(m[2], M[m[1].toLowerCase()]);
+  if (/^\d{5}$/.test(s)) { var dd = new Date(Math.round((Number(s) - 25569) * 86400000)); return impExp(dd); }
+  return '';
+}
+function impBuild() {
+  return IMP.rows.map(function (r) {
+    var o = {};
+    IMP_FIELDS[IMP.kind].forEach(function (fd) { var v = impCell(r, fd[0]); if (v instanceof Date) v = impExp(v); o[fd[0]] = v == null ? '' : String(v).trim(); });
+    if (IMP.kind === 'parties') {
+      var t = (o.type || '').toLowerCase();
+      o.type = /creditor|supplier|purchase|vendor/.test(t) ? 'supplier' : /both/.test(t) ? 'both' : 'customer';
+      var bal = String(impCell(r, 'opening_balance') || '');
+      if (/\bcr\b/i.test(bal) && o.type === 'customer') o.opening_balance = '-' + bal.replace(/[^0-9.]/g, '');
+    } else {
+      o.expiry = impExp(impCell(r, 'expiry'));
+    }
+    return o;
+  }).filter(function (o) { return o.name; });
+}
+function impPreview() {
+  var rows = impBuild().slice(0, 5), F = IMP_FIELDS[IMP.kind].filter(function (fd) { return IMP.map[fd[0]] != null; });
+  dEl('imp-prev').innerHTML = rows.length ? '<div class="tiny" style="margin-bottom:4px">First rows, as AuraScale will read them:</div><div style="overflow-x:auto"><table class="dt"><thead><tr>' + F.map(function (fd) { return '<th>' + fd[1].replace(' *', '') + '</th>'; }).join('') + '</tr></thead><tbody>'
+    + rows.map(function (o) { return '<tr>' + F.map(function (fd) { return '<td>' + esc(o[fd[0]]) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>'
+    : '<div class="over tiny">No rows with a name. Choose the name column above.</div>';
+}
+async function impRun(dry) {
+  var rows = impBuild(); if (!rows.length) { dShowErr('imp-err', 'Nothing to import: choose the name column.'); return; }
+  if (!dry && !confirm('Import ' + rows.length + ' rows into ' + (IMP.kind === 'parties' ? 'customers & suppliers' : 'products & stock') + '?')) return;
+  var res = dEl('imp-res'); res.innerHTML = '<div class="tiny">' + (dry ? 'Checking' : 'Importing') + '&hellip;</div>';
+  var tot = { rows: 0, added: 0, updated: 0, skipped: 0, stock_added: 0, errors: [] };
+  for (var i = 0; i < rows.length; i += 1000) {
+    var r = await _supa.rpc('wh_import', { p_clinic: _clinicId, p_kind: IMP.kind, p_rows: rows.slice(i, i + 1000), p_dry: dry });
+    if (r.error) { res.innerHTML = ''; dShowErr('imp-err', dErr(r.error)); return; }
+    ['rows', 'added', 'updated', 'skipped', 'stock_added'].forEach(function (k) { tot[k] += Number(r.data[k]) || 0; });
+    (r.data.errors || []).forEach(function (e) { e.row += i; tot.errors.push(e); });
+  }
+  var what = IMP.kind === 'parties' ? 'customers / suppliers' : 'products';
+  res.innerHTML = '<div class="card" style="padding:12px">' + (dry ? '<b>Check only &mdash; nothing saved yet.</b><br>' : '<b style="color:var(--green)">&#10003; Imported.</b><br>')
+    + tot.added + ' new ' + what + (dry ? ' would be added' : ' added') + ' &middot; ' + tot.updated + ' already in your list' + (dry ? ' (empty details would be filled in)' : ' (empty details filled in)')
+    + (IMP.kind === 'items' ? ' &middot; ' + tot.stock_added + ' stock batches' : '') + (tot.skipped ? ' &middot; ' + tot.skipped + ' rows without a name skipped' : '')
+    + (tot.errors.length ? '<div class="over" style="margin-top:6px">' + tot.errors.length + ' rows need attention:</div><div style="max-height:220px;overflow:auto"><table class="dt"><tbody>' + tot.errors.slice(0, 200).map(function (e) { return '<tr><td>Row ' + (e.row + 1) + '</td><td>' + esc(e.name || '') + '</td><td class="over">' + esc(e.error) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '')
+    + '</div>';
+  if (!dry) { await Promise.all([loadItems(), loadParties()]); showToast('Imported.'); }
+}
+function impSample() {
+  var csv = IMP.kind === 'parties'
+    ? 'Name,Type,Mobile,GSTIN,Address,DL No,Credit Days,Credit Limit,Balance\nSharma Medical Hall,Customer,9830012345,19ABCDE1234F1Z5,"Main Road, Jaynagar",WB/SPG/20B-123,30,50000,12500\nCipla Ltd,Supplier,,19AAACC1450B1ZS,Kolkata,,45,,40000\n'
+    : 'Product Name,Company,Salt,Pack,HSN,GST %,Batch,Expiry,Stock,MRP,Purchase Rate,PTR\nDolo 650 Tab,Micro Labs,Paracetamol 650mg,15s,30049099,12,DL2401,03/27,100,33.60,20.50,24.00\nCalpol Syp 60ml,GSK,Paracetamol,60ml,30049099,12,CP99,12/26,40,55.00,32.00,38.00\n';
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = IMP.kind === 'parties' ? 'aurascale-parties-sample.csv' : 'aurascale-products-sample.csv'; a.click();
+}
