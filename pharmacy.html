@@ -45,7 +45,7 @@
           <div class="pos-card">
           <div id="pos-walkin" class="grid4" style="margin-bottom:12px">
         <div><label class="flbl">Customer name *</label><input class="finput" id="c-name" oninput="unlinkIfRenamed(this.value)" placeholder="Walk-in customer"/></div>
-        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" oninput="if(window.deptPhoneInput)deptPhoneInput(this)"/></div>
+        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" oninput="if(window.deptPhoneInput)deptPhoneInput(this);repeatOffer()"/></div>
         <div><label class="flbl">Doctor</label><input class="finput" id="c-doctor" placeholder="Prescribed by (optional)"/></div>
         <div style="position:relative"><label class="flbl">UHID (optional)</label><input class="finput" id="c-uhid" placeholder="Link a saved patient" oninput="posPatientSearch(this.value)" autocomplete="off"/><div id="c-uhid-dd" class="dd" style="display:none"></div></div>
       </div>
@@ -56,6 +56,12 @@
       </div>
           </div>
           <div class="pos-card">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;border-radius:10px;background:var(--green-bg);border:1px solid var(--green-border)">
+            <div style="flex:1;min-width:200px"><b>&#128221; Photo of the prescription</b><div class="tiny">Doctor's prescription or a handwritten list. AI reads the medicines and how many, and fills the bill. You check, then save.</div></div>
+            <label class="btn btn-g btn-sm" style="cursor:pointer">&#128247; Take / choose photo<input type="file" id="rx-file" accept="image/*" onchange="rxPick(this)" style="display:none"/></label>
+            <div class="tiny" id="rx-st" style="width:100%"></div>
+          </div>
+          <div id="c-repeat" style="margin-bottom:10px"></div>
           <div style="position:relative;margin-bottom:10px">
         <label class="flbl">Add medicine</label>
         <input class="finput" id="m-search" placeholder="Type 2-3 letters of the name or salt, then press Enter&hellip;" autocomplete="off" oninput="posSearch()" onkeydown="posSearchKey(event)" style="font-size:15px"/>
@@ -202,6 +208,8 @@
 <div class="modal-bg" id="m-done"><div class="modal"><div class="modal-h"><span id="done-title">Bill saved</span><button class="btn btn-sm" onclick="dClose('m-done')">&times;</button></div>
   <div class="modal-b" id="done-body"></div></div></div>
 <!-- scanned bill: check the lines -->
+<div class="modal-bg" id="m-rx"><div class="modal" style="max-width:960px"><div class="modal-h"><span>Check the prescription read from the photo</span><button class="btn btn-sm" onclick="dClose('m-rx')">&times;</button></div>
+  <div class="modal-b" id="rx-body"></div></div></div>
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1180px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div>
   <div class="modal-b" id="scan-body"></div></div></div>
 <!-- medicine batches / edit -->
@@ -359,6 +367,7 @@ async function posPatientSearch(q) {
 function posLink(p) {
   LINKED = p; dEl('c-uhid').value = p.u || ''; dEl('c-uhid-dd').style.display = 'none';
   if (!dEl('c-name').value) dEl('c-name').value = p.n || ''; if (!dEl('c-phone').value) dEl('c-phone').value = p.ph || ''; if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone'));
+  repeatOffer();
 }
 async function posSave() {
   dShowErr('pos-err', '');
@@ -385,6 +394,7 @@ async function posSave() {
     /* give the customer a health book (find or make their patient record by name + mobile) */
     if (KIND === 'walkin' && p.patient_phone) { try { var lk = await _supa.rpc('nhx_link_walkin', { p_kind: 'pharmacy', p_id: sale.id }); if (!lk.error && lk.data && lk.data.linked) { sale.patient_id = lk.data.patient_id; sale.uhid = sale.uhid || lk.data.uhid; } } catch (e) {} }
     if (waOk) { var w = await _supa.rpc('ph_set_whatsapp', { p_sale_id: sale.id, p_ok: true, p_refill_days: refill || null }); if (!w.error && w.data) sale = Object.assign(sale, w.data); }
+    if (dEl('c-repeat')) dEl('c-repeat').innerHTML = ''; if (dEl('rx-st')) dEl('rx-st').innerHTML = ''; _repKey = '';
     CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid'].forEach(function (id) { dEl(id).value = ''; }); if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone')); dEl('c-disc').value = 0; dEl('c-refill').value = '0'; dEl('c-wa').checked = true; posPay('cash');
     posRender(); loadMeds();
     showDone(sale, true);
@@ -679,7 +689,7 @@ async function impGo() {
 }
 
 /* ---------------- SCAN A DISTRIBUTOR BILL (photo -> lines -> check -> stock) ---------------- */
-var SCAN = [];
+var SCAN = [], SCAN_BILL = {};
 function scanResize(file) {
   return new Promise(function (res, rej) {
     var fr = new FileReader();
@@ -716,40 +726,73 @@ function scanCandidates(name) {
   return { list: cands.slice(0, 8), best: best };
 }
 function scanReview(d) {
+  SCAN_BILL = { supplier: d.supplier || '', gstin: d.supplier_gstin || '', no: d.invoice_no || '', date: d.invoice_date || '', total: d.bill_total != null ? d.bill_total : '' };
   SCAN = d.lines.map(function (l) {
     var c = scanCandidates(l.name);
     var med = c.best;
     return { pack: l.pack || '', inc: true, read: l.name, match: med ? med.id : '', cands: c.list, batch: l.batch || '', expiry: l.expiry || '', qty: l.qty || 0, free: l.free || 0, upp: l.units_per_pack || 1,
-      mrp: l.mrp || '', rate: l.rate || '', gst: (l.gst !== null && l.gst !== undefined && [0, 5, 12, 18, 28].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : 5,
+      mrp: l.mrp || '', rate: l.rate || '', disc: l.disc || 0,
+      gst: (l.gst !== null && l.gst !== undefined && [0, 5, 12, 18, 28].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : '',      /* never assume a GST rate */
       per: med ? (/^(tab|cap|pcs)$/.test(med.unit) && (l.units_per_pack || 1) > 1 ? 'unit' : 'pack') : 'pack' };
   });
-  var inp = function (i, k, w, ty) { return '<input class="finput" style="width:' + w + 'px;padding:6px" ' + (ty ? 'type="number" step="any" min="0"' : '') + ' value="' + esc(SCAN[i][k]) + '" oninput="SCAN[' + i + '][\'' + k + '\']=this.value"/>'; };
+  var inp = function (i, k, w, ty) { return '<input class="finput" data-k="' + k + '" style="width:' + w + 'px;padding:6px" ' + (ty ? 'type="number" step="any" min="0"' : '') + ' value="' + esc(SCAN[i][k]) + '" oninput="SCAN[' + i + '][\'' + k + '\']=this.value;scanTotals()"/>'; };
   var rows = SCAN.map(function (x, i) {
     var opts = '<option value="">&#10133; New: ' + esc(x.read) + '</option>' + x.cands.map(function (m) { return '<option value="' + m.id + '"' + (m.id === x.match ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
-    return '<tr><td><input type="checkbox" checked onchange="SCAN[' + i + '].inc=this.checked" style="width:18px;height:18px"/></td>'
+    return '<tr id="sr-' + i + '"><td><input type="checkbox" checked onchange="SCAN[' + i + '].inc=this.checked;scanTotals()" style="width:18px;height:18px"/></td>'
       + '<td><div class="tiny">Read: ' + esc(x.read || '(nothing)') + '</div><select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value;this.nextElementSibling.style.display=this.value?\'none\':\'block\'">' + opts + '</select>'
       + '<input class="finput" style="width:210px;padding:6px;margin-top:4px;display:' + (x.match ? 'none' : 'block') + '" placeholder="Medicine name (type it if not read)" value="' + esc(x.read || '') + '" oninput="SCAN[' + i + '].read=this.value"/></td>'
       + '<td>' + inp(i, 'batch', 90) + '</td><td>' + inp(i, 'expiry', 82) + '</td><td>' + inp(i, 'qty', 64, 1) + '</td><td>' + inp(i, 'free', 54, 1) + '</td><td>' + inp(i, 'upp', 54, 1) + '</td>'
-      + '<td>' + inp(i, 'mrp', 76, 1) + '</td><td>' + inp(i, 'rate', 76, 1) + '</td>'
-      + '<td><select class="finput" style="width:70px;padding:6px" onchange="SCAN[' + i + '].gst=Number(this.value)">' + [0, 5, 12, 18, 28].map(function (g) { return '<option' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td>'
+      + '<td>' + inp(i, 'mrp', 76, 1) + '</td><td>' + inp(i, 'rate', 76, 1) + '</td><td>' + inp(i, 'disc', 56, 1) + '</td>'
+      + '<td><select class="finput" data-k="gst" style="width:74px;padding:6px" onchange="SCAN[' + i + '].gst=this.value===\'\'?\'\':Number(this.value);scanTotals()"><option value=""' + (x.gst === '' ? ' selected' : '') + '>?</option>' + [0, 5, 12, 18, 28].map(function (g) { return '<option value="' + g + '"' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td>'
       + '<td><select class="finput" style="width:110px;padding:6px" onchange="SCAN[' + i + '].per=this.value"><option value="pack"' + (x.per === 'pack' ? ' selected' : '') + '>Whole pack</option><option value="unit"' + (x.per === 'unit' ? ' selected' : '') + '>Loose (tab/cap)</option></select></td></tr>';
   }).join('');
-  dEl('scan-body').innerHTML = '<div class="note">AI can misread. <b>Check every line against the paper bill</b> (especially batch, expiry and MRP) before adding.</div>'
-    + '<div class="grid3" style="margin-bottom:10px"><div><label class="flbl">Supplier</label><input class="finput" id="scan-sup" value="' + esc(d.supplier || '') + '"/></div><div><label class="flbl">Bill no.</label><input class="finput" value="' + esc(d.invoice_no || '') + '" disabled/></div><div><label class="flbl">Bill date</label><input class="finput" value="' + esc(d.invoice_date || '') + '" disabled/></div></div>'
-    + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th></th><th>Medicine (match to your list)</th><th>Batch</th><th>Expiry MM/YY</th><th>Packs</th><th>Free</th><th>Units / pack</th><th>MRP / pack</th><th>Rate / pack</th><th>GST %</th><th>Sell as</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+  var B = SCAN_BILL;
+  dEl('scan-body').innerHTML = '<div class="note">AI can misread. <b>Check every line against the paper bill</b> (especially batch, expiry and MRP) before adding. Red boxes must be filled.</div>'
+    + '<div class="grid4" style="margin-bottom:10px"><div><label class="flbl">Supplier *</label><input class="finput" id="scan-sup" value="' + esc(B.supplier) + '"/>' + (B.gstin ? '<div class="tiny">GSTIN ' + esc(B.gstin) + '</div>' : '') + '</div>'
+    + '<div><label class="flbl">Bill no.</label><input class="finput" id="scan-no" value="' + esc(B.no) + '"/></div><div><label class="flbl">Bill date</label><input class="finput" id="scan-date" value="' + esc(B.date) + '" placeholder="DD/MM/YYYY"/></div>'
+    + '<div><label class="flbl">Grand total on the bill &#8377;</label><input class="finput" id="scan-billtot" type="number" step="0.01" min="0" value="' + esc(B.total) + '" oninput="scanTotals()"/></div></div>'
+    + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th></th><th>Medicine (match to your list)</th><th>Batch</th><th>Expiry MM/YY</th><th>Packs</th><th>Free</th><th>Units / pack</th><th>MRP / pack</th><th>Rate / pack</th><th>Disc %</th><th>GST %</th><th>Sell as</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<div id="scan-tot" class="card" style="margin-top:10px;padding:10px 12px"></div>'
+    + '<div id="scan-why-box" style="display:none;margin-top:8px"><label class="flbl">The totals do not match. Why? (needed to continue)</label><input class="finput" id="scan-why" placeholder="e.g. bill has a cash discount / one line is a scheme item / some lines not received"/></div>'
     + '<button class="btn btn-g" style="margin-top:12px" id="scan-go" onclick="scanSave()">&#10003; Add checked lines to stock</button><div class="err" id="scan-err"></div><div id="scan-res"></div>';
-  dOpen('m-scan');
+  dOpen('m-scan'); scanTotals();
 }
+/* the lines' total (rate - discount + GST) against the grand total printed on the bill */
+function scanLinesTotal() {
+  var t = 0;
+  SCAN.forEach(function (x) { if (!x.inc) return; var q = Number(x.qty) || 0, r = Number(x.rate) || 0, d = Number(x.disc) || 0, g = x.gst === '' ? 0 : Number(x.gst); t += q * r * (1 - d / 100) * (1 + g / 100); });
+  return Math.round(t * 100) / 100;
+}
+function scanTotals() {
+  var lt = scanLinesTotal(), bt = Number(dEl('scan-billtot') && dEl('scan-billtot').value), box = dEl('scan-tot'); if (!box) return;
+  var ok = !(bt > 0) || Math.abs(lt - bt) <= Math.max(2, bt * 0.002);
+  box.innerHTML = 'Lines total (with discount + GST): <b>' + dMoney(lt) + '</b>' + (bt > 0 ? ' &middot; Bill grand total: <b>' + dMoney(bt) + '</b> &middot; ' + (ok ? '<span style="color:var(--green);font-weight:700">&#10003; matches</span>' : '<span class="over">differs by ' + dMoney(Math.abs(lt - bt)) + '</span>') : ' &middot; <span class="tiny">type the bill\'s grand total to check it</span>');
+  dEl('scan-why-box').style.display = ok ? 'none' : 'block';
+  /* red boxes: what is still missing on ticked lines */
+  SCAN.forEach(function (x, i) {
+    var tr = dEl('sr-' + i); if (!tr) return;
+    var mark = function (k, bad) { var e = tr.querySelector('[data-k="' + k + '"]'); if (e) e.style.borderColor = x.inc && bad ? 'var(--red)' : ''; };
+    var exp = impExpiry(x.expiry);
+    mark('batch', !String(x.batch || '').trim()); mark('expiry', !exp || exp.slice(0, 7) < dTodayIST().slice(0, 7)); mark('qty', !((Number(x.qty) || 0) + (Number(x.free) || 0) > 0));
+    mark('mrp', !(Number(x.mrp) > 0)); mark('gst', x.gst === ''); mark('rate', !(Number(x.rate) >= 0) || x.rate === '');
+    var r = Number(x.rate) || 0, g = x.gst === '' ? 0 : Number(x.gst), m = Number(x.mrp) || 0;
+    if (x.inc && m > 0 && r * (1 + g / 100) > m + 0.01) mark('rate', true);   /* rate + GST above MRP: misread */
+  });
+  return ok;
+}
+function scanDateIso(v) { var m = String(v || '').match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (!m) return ''; var y = m[3].length === 2 ? '20' + m[3] : m[3]; return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
 async function scanSave() {
   dShowErr('scan-err', '');
   var sup = dEl('scan-sup').value.trim(), rows = [], bad = [];
   SCAN.forEach(function (x, i) {
     if (!x.inc) return;
     if (!x.match && !String(x.read || '').trim()) { bad.push(i + 1); return; }
-    var med = x.match ? MEDMAP[x.match] : null, upp = Math.max(1, Math.round(Number(x.upp) || 1)), q = Number(x.qty) || 0, fr = Number(x.free) || 0, mrp = Number(x.mrp), rate = Number(x.rate) || 0;
+    var med = x.match ? MEDMAP[x.match] : null, upp = Math.max(1, Math.round(Number(x.upp) || 1)), q = Number(x.qty) || 0, fr = Number(x.free) || 0, mrp = Number(x.mrp), rate = Number(x.rate) || 0, disc = Number(x.disc) || 0;
     var exp = impExpiry(x.expiry);
-    if (!(q + fr > 0) || !(mrp > 0) || !exp || !String(x.batch || '').trim() || exp.slice(0, 7) < dTodayIST().slice(0, 7)) { bad.push(i + 1); return; }
-    var effRate = q + fr > 0 ? rate * q / (q + fr) : rate;            /* free packs lower the real cost */
+    if (!(q + fr > 0) || !(mrp > 0) || !exp || !String(x.batch || '').trim() || exp.slice(0, 7) < dTodayIST().slice(0, 7) || x.gst === '' || x.rate === '') { bad.push(i + 1); return; }
+    if (rate * (1 + Number(x.gst) / 100) > mrp + 0.01) { bad.push(i + 1); return; }
+    var net = rate * (1 - disc / 100);
+    var effRate = q + fr > 0 ? net * q / (q + fr) : net;            /* discount and free packs lower the real cost */
     var guess = /ml|syr|susp|bottle|liq/i.test(x.pack + ' ' + x.read) ? 'bottle' : /inj|vial|amp/i.test(x.read) ? 'vial' : /cream|gel|oint|tube/i.test(x.read) ? 'tube' : /(\d+\s*'?\s*s\b|x\s*\d+|tab|cap|strip)/i.test(x.pack + ' ' + x.read) ? 'strip' : 'pcs';
     var unit = x.per === 'unit' ? (med && /^(tab|cap)$/.test(med.unit) ? med.unit : 'tab') : (med ? med.unit : guess);
     var k = x.per === 'unit' ? upp : 1;
@@ -757,16 +800,142 @@ async function scanSave() {
       mrp: String(Math.round(mrp / k * 100) / 100), purchase_rate: String(Math.round(effRate / k * 100) / 100), qty: String((q + fr) * k), supplier: sup });
   });
   if (!sup) { dShowErr('scan-err', 'Write the supplier name (it was not read from the bill).'); return; }
-  if (bad.length) { dShowErr('scan-err', 'Cannot add yet. Fix line(s) ' + bad.join(', ') + ': medicine name, batch, quantity, MRP and expiry (MM/YY, not already expired) are needed: type anything that was not read. Or untick them.'); return; }
+  if (bad.length) { dShowErr('scan-err', 'Cannot add yet. Fix line(s) ' + bad.join(', ') + ' (red boxes): medicine name, batch, quantity, MRP, rate, GST and expiry (MM/YY, not already expired) are needed, and rate + GST cannot be above MRP. Type what was not read, or untick the line.'); return; }
   if (!rows.length) { dShowErr('scan-err', 'No lines are ticked.'); return; }
+  var why = dEl('scan-why') ? dEl('scan-why').value.trim() : '';
+  if (!scanTotals() && !why) { dShowErr('scan-err', 'The lines do not add up to the bill\'s grand total. Check the quantities and rates, or write why they differ.'); dEl('scan-why').focus(); return; }
+  var bill = { supplier: sup, supplier_gstin: SCAN_BILL.gstin, bill_no: dEl('scan-no').value.trim(), bill_date: scanDateIso(dEl('scan-date').value), bill_total: dEl('scan-billtot').value, lines_total: String(scanLinesTotal()), note: why };
   var btn = dEl('scan-go'); btn.disabled = true; btn.textContent = 'Adding…';
-  var r = await _supa.rpc('ph_import', { p_clinic_id: _clinicId, p_rows: rows });
+  var r = await _supa.rpc('ph_import_bill', { p_clinic_id: _clinicId, p_bill: bill, p_rows: rows });
+  if (r.error && /PGRST202|Could not find the function|does not exist/i.test((r.error.message || '') + ' ' + (r.error.code || ''))) r = await _supa.rpc('ph_import', { p_clinic_id: _clinicId, p_rows: rows });   /* database not updated yet */
   btn.disabled = false; btn.innerHTML = '&#10003; Add checked lines to stock';
-  if (r.error) { dShowErr('scan-err', dErr(r.error)); return; }
+  if (r.error) { dShowErr('scan-err', dErr(r.error).replace(/^BILL_EXISTS:\s*/, '')); return; }
   var e = r.data.errors || [];
   dEl('scan-res').innerHTML = '<div class="card" style="margin-top:10px"><b>' + r.data.stock_lines_added + '</b> lines added to stock' + (r.data.medicines_added ? ', <b>' + r.data.medicines_added + '</b> new medicines' : '') + '.' + (e.length ? '<div style="color:var(--red);margin-top:6px">' + e.map(function (x) { return 'Line ' + x.row + ' ' + esc(x.name || '') + ': ' + esc(x.error); }).join('<br>') + '</div>' : '') + '</div>';
   if (!e.length) { showToast('Bill added to stock.'); setTimeout(function () { dClose('m-scan'); }, 1200); }
   await loadMeds(); loadRecent();
+}
+
+/* ---------------- LESS TYPING AT THE COUNTER ----------------
+   1. photo of the prescription -> the bill fills itself (rxPick)
+   2. "repeat last bill" for a regular customer (repeatOffer)                          */
+function mNorm(s) {
+  return String(s || '').toLowerCase()
+    .replace(/\btablets?\b|\btabs?\b|\btbl\b/g, ' tab ').replace(/\bcapsules?\b|\bcaps?\b/g, ' cap ').replace(/\bsyrups?\b|\bsyr\b/g, ' syp ')
+    .replace(/\binjections?\b/g, ' inj ').replace(/\bsuspension\b/g, ' susp ').replace(/\bointment\b/g, ' oint ')
+    .replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function mBigrams(s) { var t = s.replace(/ /g, ''), o = {}; for (var i = 0; i < t.length - 1; i++) { var g = t.substr(i, 2); o[g] = (o[g] || 0) + 1; } return o; }
+function mDice(a, b) { var A = mBigrams(a), B = mBigrams(b), n = 0, ta = 0, tb = 0, k; for (k in A) ta += A[k]; for (k in B) tb += B[k]; for (k in A) if (B[k]) n += Math.min(A[k], B[k]); return ta + tb ? 2 * n / (ta + tb) : 0; }
+function mScore(q, name) {
+  var a = mNorm(q), b = mNorm(name); if (!a || !b) return 0; if (a === b) return 1;
+  var s = mDice(a, b), na = a.match(/\d+(\.\d+)?/g) || [], nb = b.match(/\d+(\.\d+)?/g) || [];
+  if (na.length) { var all = na.every(function (x) { return nb.indexOf(x) >= 0; }); s += all ? 0.15 : -0.25; }
+  var fa = a.split(' ')[0], fb = b.split(' ')[0]; if (fa.length >= 3 && fb.indexOf(fa.slice(0, 4)) === 0) s += 0.1;
+  if (b.indexOf(a) === 0 || a.indexOf(b) === 0) s += 0.1;
+  return Math.max(0, Math.min(1, s));
+}
+function mBest(q, list, n) { return list.map(function (x) { return { x: x, s: mScore(q, x.name) }; }).filter(function (o) { return o.s >= 0.3; }).sort(function (a, b) { return b.s - a.s; }).slice(0, n || 8); }
+function cartAdd(id, qty) {
+  var m = MEDMAP[id]; if (!m || !(qty > 0)) return { short: qty };
+  var ex = CART.filter(function (c) { return c.medicine_id === id; })[0], have = ex ? ex.qty : 0, can = Math.max(0, m.stock - have), take = Math.min(qty, can);
+  if (take > 0) { if (ex) ex.qty = have + take; else CART.push({ medicine_id: id, qty: take }); }
+  return { short: qty - take };
+}
+
+var RX = [];
+async function rxPick(inp) {
+  var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+  var st = dEl('rx-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the prescription&hellip; about 15-30 seconds.';
+  try {
+    var data = await scanResize(f);
+    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: data.split(',')[1], mime_type: 'image/jpeg', kind: 'rx' } });
+    var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok || d.kind !== 'rx') {
+      var why = { daily_limit: 'Today\'s limit of photos is used up. Please add the medicines by typing.', ai_key_not_set: 'Photo reading is not set up on the server yet.', pharmacy_module_off: 'The Pharmacy module is not active.', nothing_read: 'No medicines could be read. Take a clearer photo of the whole prescription.', not_signed_in: 'Your login has expired. Please log in again.' };
+      st.textContent = '⚠ ' + (why[d && d.reason] || ((d && d.ok) ? 'Please update the bill-scan function on the server (see the setup steps).' : 'Could not read the prescription. Please add the medicines by typing.'));
+      return;
+    }
+    st.textContent = '';
+    if (KIND === 'walkin') {
+      if (d.patient && !dEl('c-name').value.trim()) dEl('c-name').value = d.patient;
+      if (d.doctor && !dEl('c-doctor').value.trim()) dEl('c-doctor').value = d.doctor;
+    }
+    var pool = MEDS.filter(function (m) { return m.is_active; });
+    RX = d.lines.map(function (l) {
+      var c = mBest(l.name, pool, 8);
+      var auto = c.length && c[0].s >= 0.55 && (!c[1] || c[0].s - c[1].s >= 0.08);
+      var x = { read: l.name, raw: l.raw || '', per_day: l.per_day, days: l.days, qty0: l.qty, unit0: l.unit || '', cands: c.map(function (o) { return o.x.id; }), med: auto ? c[0].x.id : '', sure: !!auto };
+      x.qty = rxQty(x); return x;
+    });
+    rxReview();
+  } catch (e) { st.textContent = '⚠ ' + dErr(e); }
+}
+/* how many to give: loose tablets = doses a day x days; otherwise the written quantity */
+function rxQty(x) {
+  var m = x.med ? MEDMAP[x.med] : null, loose = m ? /^(tab|cap)$/.test(m.unit) : /tab|cap/i.test(x.unit0 + ' ' + x.read);
+  if (x.qty0 > 0 && !(loose && /strip/i.test(x.unit0))) return x.qty0;
+  if (loose && x.per_day > 0 && x.days > 0) return x.per_day * x.days;
+  if (!loose && x.qty0 > 0) return x.qty0;
+  return '';
+}
+function rxHow(x) {
+  var p = [];
+  if (x.per_day) p.push(x.per_day + ' a day'); if (x.days) p.push(x.days + ' day' + (x.days === 1 ? '' : 's')); if (x.qty0) p.push('written: ' + x.qty0 + (x.unit0 ? ' ' + x.unit0 : ''));
+  return p.join(' &middot; ');
+}
+function rxReview() {
+  var rows = RX.map(function (x, i) {
+    var opts = '<option value="">&mdash; skip this line &mdash;</option>' + x.cands.map(function (id) { var m = MEDMAP[id]; return '<option value="' + id + '"' + (id === x.med ? ' selected' : '') + '>' + esc(m.name) + ' &middot; ' + (m.stock > 0 ? m.stock + ' ' + esc(m.unit) + ' in stock' : 'OUT OF STOCK') + '</option>'; }).join('');
+    var m = x.med ? MEDMAP[x.med] : null;
+    return '<tr id="rx-' + i + '"><td><b>' + esc(x.read) + '</b>' + (x.raw && x.raw !== x.read ? '<div class="tiny">written: ' + esc(x.raw) + '</div>' : '') + (rxHow(x) ? '<div class="tiny">' + rxHow(x) + '</div>' : '') + '</td>'
+      + '<td><select class="finput" style="min-width:230px" onchange="RX[' + i + '].med=this.value;if(RX[' + i + '].qty===\'\')RX[' + i + '].qty=rxQty(RX[' + i + ']);rxReview()">' + opts + '</select>'
+      + (x.cands.length ? (x.sure || x.med ? '' : '<div class="tiny" style="color:var(--amber)">Not sure &mdash; please choose</div>') : '<div class="tiny over">Not in your stock list</div>') + '</td>'
+      + '<td class="r"><input class="finput" type="number" min="0" step="1" value="' + esc(x.qty) + '" style="width:80px;text-align:right" oninput="RX[' + i + '].qty=this.value;rxCheck()"/><div class="tiny">' + esc(m ? m.unit : '') + '</div></td></tr>';
+  }).join('');
+  dEl('rx-body').innerHTML = '<p class="tiny" style="margin-bottom:8px">Check each line against the prescription: the medicine on the right must be the one the doctor wrote, and the quantity right for the days written. Loose tablets are counted as doses a day &times; days.</p>'
+    + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Read from the prescription</th><th>Medicine in your stock</th><th class="r">Qty</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<div class="err" id="rx-err"></div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn" onclick="dClose(\'m-rx\')">Cancel</button><button class="btn btn-g" onclick="rxUse()">&#10003; Add to the bill</button></div>';
+  dOpen('m-rx'); rxCheck();
+}
+function rxCheck() {
+  var bad = 0;
+  RX.forEach(function (x, i) { var tr = dEl('rx-' + i); if (!tr) return; var need = x.med && !(Number(x.qty) > 0); tr.querySelector('input').style.borderColor = need ? 'var(--red)' : ''; if (need) bad++; });
+  return bad;
+}
+function rxUse() {
+  if (rxCheck()) { dShowErr('rx-err', 'Type the quantity for every chosen medicine (red boxes), or choose "skip this line".'); return; }
+  var n = 0, notes = [];
+  RX.forEach(function (x) { if (!x.med) return; var r = cartAdd(x.med, Number(x.qty)); if (r.short < Number(x.qty)) n++; if (r.short > 0) notes.push(MEDMAP[x.med].name + ': ' + (r.short === Number(x.qty) ? 'out of stock' : r.short + ' short')); });
+  var skipped = RX.filter(function (x) { return !x.med; }).map(function (x) { return x.read; });
+  dClose('m-rx'); posRender();
+  dEl('rx-st').innerHTML = '<span style="color:var(--green);font-weight:700">&#10003; ' + n + ' medicine' + (n === 1 ? '' : 's') + ' added from the prescription.</span>'
+    + (notes.length ? '<div class="over">' + esc(notes.join(' · ')) + '</div>' : '') + (skipped.length ? '<div>Not added: ' + esc(skipped.join(', ')) + ' &mdash; add them by typing if needed.</div>' : '');
+}
+
+/* the customer's last bill, again */
+var _repKey = '', _repSale = null;
+async function repeatOffer() {
+  var box = dEl('c-repeat'); if (!box || KIND !== 'walkin') return;
+  var ph1 = dMobile(dEl('c-phone').value), pid = LINKED && LINKED.id, key = pid || ph1 || '';
+  if (key === _repKey) return; _repKey = key; box.innerHTML = ''; _repSale = null;
+  if (!key) return;
+  var q = _supa.from('ph_sales').select('id,bill_no,created_at,total').eq('clinic_id', _clinicId).eq('kind', 'walkin').eq('cancelled', false).order('created_at', { ascending: false }).limit(1);
+  q = pid ? q.eq('patient_id', pid) : q.eq('patient_phone', ph1);
+  var s = await q; if (s.error || !s.data || !s.data.length || _repKey !== key) return;
+  var it = await _supa.from('ph_sale_items').select('medicine_id,qty,name').eq('sale_id', s.data[0].id);
+  if (it.error || !it.data || !it.data.length || _repKey !== key) return;
+  var by = {}; it.data.forEach(function (l) { if (!l.medicine_id) return; by[l.medicine_id] = (by[l.medicine_id] || 0) + Number(l.qty); });
+  _repSale = { sale: s.data[0], items: by };
+  box.innerHTML = '<button class="btn" onclick="repeatLoad()">&#8635; Repeat last bill <span class="tiny" style="font-weight:500">&middot; ' + esc(s.data[0].bill_no || '') + ' &middot; ' + dDate(s.data[0].created_at) + ' &middot; ' + Object.keys(by).length + ' medicine' + (Object.keys(by).length === 1 ? '' : 's') + ' &middot; ' + dMoney0(s.data[0].total) + '</span></button>';
+}
+function repeatLoad() {
+  if (!_repSale) return;
+  var notes = [];
+  Object.keys(_repSale.items).forEach(function (id) { var r = cartAdd(id, _repSale.items[id]); if (r.short > 0) notes.push(((MEDMAP[id] || {}).name || 'A medicine') + ': ' + (r.short === _repSale.items[id] ? 'out of stock' : r.short + ' short')); });
+  posRender();
+  dEl('c-repeat').innerHTML = '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; Last bill filled in &mdash; change any quantity, then save.</div>' + (notes.length ? '<div class="tiny over">' + esc(notes.join(' · ')) + '</div>' : '');
 }
 
 /* ---------------- BILLS ---------------- */
