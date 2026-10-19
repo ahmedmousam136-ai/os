@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="nh-shared.js?v=20261016a"></script>
-<script src="aura-dept.js?v=20261018a"></script>
+<script src="aura-dept.js?v=20261019y"></script>
 <script src="aura-loader.js?v=2"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261018a"/>
 <script src="aura-themes.js?v=1"></script>
@@ -469,12 +469,14 @@ async function ensureSalePdf(sale) {
 async function showDone(sale, fresh) {
   dEl('done-title').textContent = (sale.kind === 'ipd' ? 'Issued ' : 'Bill ') + sale.bill_no;
   var body = dEl('done-body');
-  body.innerHTML = '<div style="text-align:center"><div style="font-size:34px">&#9989;</div><div style="font-size:22px;font-weight:800">' + (sale.kind === 'ipd' ? dMoney(sale.total) : dMoney0(sale.total)) + '</div>'
-    + '<div class="muted">' + esc(sale.patient_name || '') + (sale.kind === 'ipd' ? ' &middot; added to the nursing-home bill' : ' &middot; ' + esc(String(sale.pay_mode).toUpperCase())) + '</div>'
+  body.innerHTML = '<div style="text-align:center">' + (fresh ? deptSuccessHtml({ title: (sale.kind === 'ipd' ? 'Issued ' : 'Bill ') + sale.bill_no + ' saved', amount: sale.total, decimals: sale.kind === 'ipd',
+      sub: esc(sale.patient_name || '') + (sale.kind === 'ipd' ? ' &middot; added to the nursing-home bill' : ' &middot; ' + esc(String(sale.pay_mode).toUpperCase())) })
+      : '<div style="font-size:22px;font-weight:800">' + (sale.kind === 'ipd' ? dMoney(sale.total) : dMoney0(sale.total)) + '</div><div class="muted">' + esc(sale.patient_name || '') + '</div>')
     + '<p class="tiny" id="done-pdf" style="margin:10px 0">Making the PDF&hellip;</p>'
     + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" id="done-open" disabled>&#128196; Open / print</button>'
     + '<button class="btn btn-g" id="done-wa" disabled>&#128242; WhatsApp</button><button class="btn btn-p" onclick="dClose(\'m-done\');dTab(\'pos\');dEl(\'m-search\').focus()">&#10133; New bill</button></div></div>';
   dOpen('m-done');
+  if (fresh) deptSuccessPlay();
   try {
     var path = await ensureSalePdf(sale);
     dEl('done-pdf').textContent = 'PDF saved.';
