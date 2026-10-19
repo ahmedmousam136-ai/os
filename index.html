@@ -168,6 +168,8 @@ body::before,body::after{background:none!important}
 (function(){
   var h=window.location.hash||'';
   var s=window.location.search||'';
+  /* a sign-in (Google / email link) that came back to this page: hand it to the sign-in page */
+  if(/(^|[#&])access_token=/.test(h)&&!h.includes('type=recovery')){ window.location.replace('nh.html'+s+h); return; }
   if(h.includes('type=recovery')||(s.includes('code=')&&!s.includes('error='))||s.includes('type=recovery')){
     window.location.replace('reset-password.html'+s+h);
   }
