@@ -308,6 +308,7 @@
         <input class="finput" id="pt-q" placeholder="Search name, phone, GSTIN&hellip;" oninput="partiesRender()" style="max-width:280px"/>
         <div class="seg" id="pt-f"><button class="on" data-f="all" onclick="ptFilter('all')">All</button><button data-f="customer" onclick="ptFilter('customer')">Customers</button><button data-f="supplier" onclick="ptFilter('supplier')">Suppliers</button></div>
         <button class="btn btn-sm btn-g" onclick="partyEdit(null)">&#10133; New party</button>
+        <button class="btn btn-sm" onclick="partyFromPhoto()">&#128247; New party from photo</button>
       </div>
       <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Type</th><th class="hide-sm">Phone</th><th class="hide-sm">GSTIN</th><th class="r" data-can="moneyRead">Balance</th><th></th></tr></thead><tbody id="pt-b"></tbody></table></div>
     </div>
@@ -394,7 +395,7 @@
 <div class="modal-bg" id="m-ord"><div class="modal" style="max-width:980px"><div class="modal-h"><span>Check the order read from the photo</span><button class="btn btn-sm" onclick="dClose('m-ord')">&times;</button></div><div class="modal-b" id="ord-body"></div></div></div>
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
-<script src="wholesale-lang.js?v=4"></script>
-<script src="wholesale.js?v=7"></script>
+<script src="wholesale-lang.js?v=5"></script>
+<script src="wholesale.js?v=8"></script>
 </body>
 </html>
