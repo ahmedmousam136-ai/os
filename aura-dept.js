@@ -67,6 +67,43 @@ var DEPT = { clinic: null, module: null, role: null, admissions: [] };
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 })();
 
+/* ---------- the success moment after saving a bill / invoice ----------
+   A green tick draws itself, the amount counts up to the total in about 0.6 s, and phones give one soft vibration. */
+(function () {
+  var css = '.ds-ok{text-align:center;padding:6px 0 10px}'
+    + '.ds-ok svg{display:block;margin:0 auto}'
+    + '.ds-ok .c{stroke-dasharray:170;stroke-dashoffset:170;animation:dsDraw .45s ease-out .05s forwards}'
+    + '.ds-ok .p{stroke-dasharray:50;stroke-dashoffset:50;animation:dsDraw .3s ease-out .4s forwards}'
+    + '@keyframes dsDraw{to{stroke-dashoffset:0}}'
+    + '.ds-ok .amt{font-size:42px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:2px;line-height:1.15}'
+    + '.ds-ok .sub{font-size:13px;color:var(--text-secondary)}.ds-ok .day{font-size:12.5px;color:var(--green);font-weight:600;margin-top:8px}'
+    + '.ds-pop{animation:dsPop .28s cubic-bezier(.2,.9,.3,1.2) both}@keyframes dsPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}'
+    + '@media (prefers-reduced-motion:reduce){.ds-ok .c,.ds-ok .p{animation:none;stroke-dashoffset:0}.ds-pop{animation:none}}';
+  var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+})();
+/* o: { title, amount, decimals, sub, day } -> markup; then call deptSuccessPlay() */
+function deptSuccessHtml(o) {
+  return '<div class="ds-ok ds-pop"><svg width="72" height="72" viewBox="0 0 64 64" fill="none" role="img" aria-label="Saved">'
+    + '<circle class="c" cx="32" cy="32" r="27" stroke="var(--green)" stroke-width="3.5"></circle>'
+    + '<path class="p" d="M20 33l8 8 16-17" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
+    + '<div class="sub" style="margin-top:8px">' + esc(o.title || 'Saved') + '</div>'
+    + '<div class="amt" id="ds-amt" data-to="' + (Number(o.amount) || 0) + '" data-dec="' + (o.decimals ? 2 : 0) + '">&#8377;0</div>'
+    + (o.sub ? '<div class="sub">' + o.sub + '</div>' : '')
+    + '<div class="day" id="ds-day">' + (o.day || '') + '</div></div>';
+}
+function deptSuccessPlay() {
+  var el = document.getElementById('ds-amt'); if (!el) return;
+  var to = Number(el.getAttribute('data-to')) || 0, dec = el.getAttribute('data-dec') === '2', t0 = null, ms = 600;
+  var fmt = function (v) { return '\u20B9' + (dec ? v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : Math.round(v).toLocaleString('en-IN')); };
+  var reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  if (reduce) { el.textContent = fmt(to); }
+  else {
+    var step = function (t) { if (t0 === null) t0 = t; var k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(to * e); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
+}
+
 /* ---------- small helpers ---------- */
 function dMoney(n) { return '₹' + (Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function dMoney0(n) { return '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN'); }
