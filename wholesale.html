@@ -336,6 +336,25 @@
       <div class="err" id="ws-err"></div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:22px 0"/>
+      <h3 style="font-size:15px;margin-bottom:4px">WhatsApp messages</h3>
+      <p class="tiny" style="margin-bottom:12px">AuraScale sends these automatically from its WhatsApp number. You don't have to open the app to know how the day went.</p>
+      <div class="grid2" style="max-width:860px">
+        <div><label class="flbl">Your WhatsApp number (owner)</label><input class="finput" id="wa-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile"/><div class="tiny">Leave empty to use the business mobile number.</div></div>
+        <div></div>
+        <div><label class="flbl">&#127769; 9 PM &middot; Today's summary to me</label><select class="finput" id="wa-summary"><option value="on">On</option><option value="off">Off</option></select><div class="tiny">Sales, purchases, money in and out, what customers owe.</div></div>
+        <div><label class="flbl">&#9728;&#65039; 10 AM &middot; Collection list to me</label><select class="finput" id="wa-collect"><option value="on">On</option><option value="off">Off</option></select><div class="tiny">Customers whose bills are past the due date, biggest first.</div></div>
+        <div><label class="flbl">&#9888;&#65039; Monday 10 AM &middot; Expiry alert to me</label><select class="finput" id="wa-expiry"><option value="on">On</option><option value="off">Off</option></select><div class="tiny">Stock expiring in the next 60 days, so you can return it in time.</div></div>
+        <div><label class="flbl">&#128176; 11 AM &middot; Payment reminder to chemists</label><select class="finput" id="wa-remind"><option value="off">Off</option><option value="on">On</option></select><div class="tiny">A polite reminder when a bill is 1, 7, 15 and 30 days late (then monthly). Uses the customer's mobile number.</div></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn btn-g" onclick="waSave()">&#10003; Save WhatsApp settings</button>
+        <button class="btn" onclick="waTest('summary')">&#128242; Send me today's summary now</button>
+        <button class="btn" onclick="waTest('collect')">&#128242; Send me the collection list now</button>
+        <button class="btn" onclick="waTest('expiry')">&#128242; Send me the expiry alert now</button>
+      </div>
+      <div class="err" id="wa-err"></div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0"/>
       <h3 style="font-size:15px;margin-bottom:4px">Staff</h3>
       <p class="tiny" style="margin-bottom:12px"><b>Sales</b>: invoices, customer returns, cash with the invoice. <b>Inventory</b>: purchases, supplier returns, stock. <b>Accounts</b>: payments, ledgers, outstanding. Only you (owner) can cancel anything.</p>
       <div class="grid4" style="max-width:860px">
@@ -357,6 +376,6 @@
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=2"></script>
-<script src="wholesale.js?v=5"></script>
+<script src="wholesale.js?v=6"></script>
 </body>
 </html>
