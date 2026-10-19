@@ -430,9 +430,15 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
   function arm(){
     try { history.pushState({ g: TAG }, '', location.href); } catch(e){}
   }
-  arm();
+  /* Coming back from Google (or an email sign-in link) the address carries the login (#access_token=...).
+     The sign-in library then clears it from the address, which the browser reports like a Back press.
+     That must not send the person to the chooser page, so the guard waits until the address is tidied. */
+  var AUTH_RETURN = /(^|[#&])(access_token|refresh_token|error_description)=/.test(location.hash || '');
+  if (AUTH_RETURN) setTimeout(function(){ if (AUTH_RETURN) { AUTH_RETURN = false; arm(); } }, 8000);
+  else arm();
 
   window.addEventListener('popstate', function(){
+    if (AUTH_RETURN || /(^|[#&])(access_token|refresh_token)=/.test(location.hash || '')) { AUTH_RETURN = false; arm(); return; }
     // If a modal / drawer / overlay is open, Back just closes it and stays.
     var open = document.querySelectorAll('.mod-ov.open, .modal.open, .sheet.open, .drawer.open');
     if (open.length){
@@ -2307,7 +2313,7 @@ async function auraGoogleSignIn(){
   try{ sessionStorage.setItem('aura_oauth','1'); }catch(_e){}
   var b=document.getElementById('google-btn'); if(b){ b.disabled=true; b.style.opacity='.7'; }
   try{
-    var r=await _supa.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname+(f?'?for='+f[1]:''),queryParams:{prompt:'select_account'}}});
+    var r=await _supa.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+'/nh.html'+(f?'?for='+f[1]:''),queryParams:{prompt:'select_account'}}});
     if(r&&r.error) throw r.error;
   }catch(e){
     if(b){ b.disabled=false; b.style.opacity=''; }
