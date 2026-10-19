@@ -77,10 +77,17 @@
       </div>
       <!-- new invoice -->
       <div id="s-new">
+        <div class="card" style="margin-bottom:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">
+          <div style="font-size:28px">&#128221;</div>
+          <div style="flex:1;min-width:220px"><b>Photo of the order</b><div class="tiny">The chemist's handwritten slip, or a screenshot of the WhatsApp order. AI reads the medicines and quantities and fills the bill with the right batches. You check, then save.</div></div>
+          <label class="btn btn-g" style="cursor:pointer">&#128247; Take / choose photo<input type="file" id="s-scan" accept="image/*" onchange="orderPick(this)" style="display:none"/></label>
+          <div class="tiny" id="s-scan-st" style="width:100%"></div>
+        </div>
         <div class="row2" style="margin-bottom:12px">
           <div style="flex:1;min-width:260px;position:relative"><label class="flbl">Customer *</label><div id="pp-sell"></div></div>
           <div style="width:160px"><label class="flbl">Invoice date</label><input class="finput" id="s-date" type="date"/></div>
         </div>
+        <div id="s-repeat" style="margin:-4px 0 12px"></div>
         <div style="position:relative;margin-bottom:10px">
           <label class="flbl">Add item</label>
           <input class="finput" id="s-q" placeholder="Type 2-3 letters of the product or salt&hellip;" autocomplete="off" oninput="sellSearch()" onkeydown="ddKey(event,'s-dd')" style="font-size:15px"/>
@@ -336,6 +343,17 @@
       <div class="err" id="ws-err"></div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:22px 0"/>
+      <h3 style="font-size:15px;margin-bottom:4px">Bring your old data (Marg, Busy, Tally or Excel)</h3>
+      <p class="tiny" style="margin-bottom:10px">Export the list from your old software as <b>Excel or CSV</b> and choose the file here. Nothing is typed again. Names already in AuraScale are not added twice, and the same file can be imported again safely.</p>
+      <div class="seg" id="imp-kind" style="margin-bottom:10px"><button data-k="parties" class="on" onclick="impKind('parties')">&#128101; Customers &amp; suppliers</button><button data-k="items" onclick="impKind('items')">&#128230; Products &amp; stock</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <label class="btn btn-g" style="cursor:pointer">&#128194; Choose Excel / CSV file<input type="file" id="imp-file" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" onchange="impPick(this)" style="display:none"/></label>
+        <button class="btn" onclick="impSample()">&#11015; Sample file</button>
+      </div>
+      <div class="err" id="imp-err"></div>
+      <div id="imp-area"></div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0"/>
       <h3 style="font-size:15px;margin-bottom:4px">WhatsApp messages</h3>
       <p class="tiny" style="margin-bottom:12px">AuraScale sends these automatically from its WhatsApp number. You don't have to open the app to know how the day went.</p>
       <div class="grid2" style="max-width:860px">
@@ -373,9 +391,10 @@
 <div class="modal-bg" id="m-doc"><div class="modal" style="max-width:860px"><div class="modal-h"><span id="doc-title">Invoice</span><button class="btn btn-sm" onclick="dClose('m-doc')">&times;</button></div><div class="modal-b" id="doc-body"></div></div></div>
 <div class="modal-bg" id="m-item"><div class="modal" style="max-width:820px"><div class="modal-h"><span id="item-title">Item</span><button class="btn btn-sm" onclick="dClose('m-item')">&times;</button></div><div class="modal-b" id="item-body"></div></div></div>
 <div class="modal-bg" id="m-party"><div class="modal" style="max-width:720px"><div class="modal-h"><span id="party-title">Party</span><button class="btn btn-sm" onclick="dClose('m-party')">&times;</button></div><div class="modal-b" id="party-body"></div></div></div>
+<div class="modal-bg" id="m-ord"><div class="modal" style="max-width:980px"><div class="modal-h"><span>Check the order read from the photo</span><button class="btn btn-sm" onclick="dClose('m-ord')">&times;</button></div><div class="modal-b" id="ord-body"></div></div></div>
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
-<script src="wholesale-lang.js?v=2"></script>
-<script src="wholesale.js?v=6"></script>
+<script src="wholesale-lang.js?v=3"></script>
+<script src="wholesale.js?v=7"></script>
 </body>
 </html>
