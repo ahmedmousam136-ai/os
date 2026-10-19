@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <script src="aura-loader.js?v=2"></script>
+<script src="aura-biz.js?v=1"></script>
 <script src="aura-beds.js?v=1"></script>
 <!-- AuraScale startup animation: decide before the first paint whether it plays (see aura-splash.js) -->
 <script>(function(){try{var d=document.documentElement,q=location.hash+location.search;
@@ -117,6 +118,26 @@ a{color:inherit;text-decoration:none}
 .auth-input:focus{border-color:var(--blue);background:var(--surface)}
 .auth-btn{width:100%;background:var(--green);border:none;color:#fff;font-weight:700;padding:13px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;min-height:46px;transition:background var(--ease);box-shadow:0 2px 8px rgba(18,151,106,.2)}
 .auth-btn:hover{background:#0f8059}
+.auth-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--surface);border:1px solid var(--border-mid);color:var(--text-primary);font-weight:600;font-size:13.5px;padding:12px;border-radius:var(--r-sm);min-height:46px;cursor:pointer;transition:background var(--ease),border-color var(--ease)}
+.auth-google:hover{background:var(--bg);border-color:var(--text-tertiary)}
+.auth-or{display:flex;align-items:center;gap:10px;font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--text-tertiary)}
+.auth-or:before,.auth-or:after{content:"";flex:1;height:1px;background:var(--border)}
+.auth-link{color:var(--text-secondary);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.auth-link:hover{color:var(--text-primary)}
+.auth-center{text-align:center}
+.otp-input{text-align:center;font-size:24px!important;letter-spacing:.45em;font-weight:700;font-variant-numeric:tabular-nums}
+.auth-btn:disabled{opacity:.6;cursor:default}
+.biz-list{display:flex;flex-direction:column;gap:8px;margin:4px 0 14px}
+.biz-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md,10px);padding:13px 14px;cursor:pointer;color:var(--text-primary);transition:border-color var(--ease),transform var(--ease)}
+.biz-card:hover{border-color:var(--green);transform:translateY(-1px)}
+.biz-ic{font-size:24px;line-height:1;flex:0 0 auto}
+.biz-nm{font-weight:700;font-size:14px}
+.biz-sub{font-size:11.5px;color:var(--text-tertiary);margin-top:2px}
+.biz-pend{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--amber-bg,#FEF3C7);color:var(--amber,#B45309);margin-left:6px;vertical-align:1px}
+.biz-go{margin-left:auto;color:var(--text-tertiary);font-size:18px}
+.sb-biz{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.sb-biz button{font-size:11px;font-weight:600;padding:4px 9px;border-radius:99px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-secondary);cursor:pointer}
+.sb-biz button:hover{color:var(--text-primary);border-color:var(--green)}
 .auth-error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;display:none}
 
 /* ── APP SHELL ── */
@@ -444,11 +465,23 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       </div>
       <!-- LOGIN -->
       <div id="auth-panel-login" class="auth-panel active">
-        <div><label class="auth-label">Email</label><input class="auth-input" id="login-email" type="email" placeholder="admin@yournursinghome.com"/></div>
-        <div><label class="auth-label">Password</label><input class="auth-input" id="login-pass" type="password" placeholder="••••••••"/></div>
-        <div id="login-error" class="auth-error"></div>
-        <button class="auth-btn" onclick="handleLogin()">Sign In →</button>
-        <p class="ss" style="text-align:center;margin-top:10px;cursor:pointer;text-decoration:underline" onclick="openForgotPassword()">Forgot password?</p>
+        <div id="otp-step1" style="display:flex;flex-direction:column;gap:12px">
+          <button type="button" class="auth-google" id="google-btn" onclick="auraGoogleSignIn()"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+          <div class="auth-or">OR</div>
+          <div><label class="auth-label">Email</label><input class="auth-input" id="login-email" type="email" autocomplete="email" placeholder="admin@yournursinghome.com" onkeydown="if(event.key==='Enter'){event.preventDefault();auraLoginMain();}"/></div>
+          <div id="login-pass-wrap" style="display:none"><label class="auth-label">Password</label><input class="auth-input" id="login-pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){event.preventDefault();auraLoginMain();}"/></div>
+          <div id="login-error" class="auth-error"></div>
+          <button class="auth-btn" id="login-main-btn" onclick="auraLoginMain()">Continue with email →</button>
+          <p class="ss auth-center" style="margin-top:2px"><span class="auth-link" id="login-mode-link" onclick="auraLoginMode()">Sign in with password instead</span></p>
+          <p class="ss auth-center" id="login-forgot" style="display:none;margin-top:-4px"><span class="auth-link" onclick="openForgotPassword()">Forgot password?</span></p>
+        </div>
+        <div id="otp-step2" style="display:none;flex-direction:column;gap:12px">
+          <p class="ss" style="line-height:1.6">We have emailed a sign-in code to <b id="otp-email-show"></b>. Enter it below. <span style="opacity:.8">(Not in your inbox? Check Spam or Promotions.)</span></p>
+          <div><label class="auth-label">Code</label><input class="auth-input otp-input" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="••••••" oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length===(window._auraOtpLen||6))auraVerifyOtp();" onkeydown="if(event.key==='Enter'){event.preventDefault();auraVerifyOtp();}"/></div>
+          <div id="otp-error" class="auth-error"></div>
+          <button class="auth-btn" id="otp-verify-btn" onclick="auraVerifyOtp()">Verify &amp; sign in →</button>
+          <p class="ss auth-center"><span class="auth-link" id="otp-resend" onclick="auraSendOtp(true)">Resend code</span> &nbsp;&middot;&nbsp; <span class="auth-link" onclick="auraOtpBack()">Use a different email</span></p>
+        </div>
       </div>
       <!-- FORGOT PASSWORD -->
       <div id="auth-panel-forgot" class="auth-panel">
@@ -468,6 +501,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
 
         <!-- PATH A: new facility → always creates an OWNER -->
         <div id="su-form-new">
+          <p class="ss" style="margin:-4px 0 4px;line-height:1.55;font-size:11.5px">Already use AuraScale? <span class="auth-link" onclick="switchAuthTab('login',document.querySelector('.auth-tab:not(.su-mode-tab)'))">Sign in</span> first, then choose <b>Add another business</b> &mdash; no second email needed.</p>
           <div><label class="auth-label">Type of business</label><select class="auth-input" id="su-btype"><option value="nursing_home">Nursing home / hospital</option><option value="pharmacy">Pharmacy (medicine shop)</option><option value="lab">Diagnostic centre / lab</option></select></div>
           <div><label class="auth-label">Business Name</label><input class="auth-input" id="su-nhname" placeholder="e.g. Diamond Harbour Nursing Home"/></div>
           <div><label class="auth-label">Owner / Administrator Name</label><input class="auth-input" id="su-name" placeholder="Full name"/></div>
@@ -510,6 +544,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
       <div class="sb-facility-inner">
         <div class="sb-fac-name" id="sb-nh-name">Loading...</div>
         <div class="sb-fac-type">🏥 Private Nursing Home</div>
+        <div class="sb-biz" id="sb-biz" style="display:none"></div>
         <div class="sb-online"><span class="dot"></span><span id="sb-occupancy">Loading...</span></div>
         <div id="sb-days-left" style="display:none;font-size:11.5px;font-weight:700;margin-top:6px"></div>
       </div>
@@ -2196,6 +2231,217 @@ async function handleLogin(){
   await _initApp();
 }
 
+/* ══════════ PASSWORDLESS SIGN-IN: Google, or a code sent to the email ══════════
+   The password sign-in above still works ("Sign in with password instead"). */
+var _auraPassMode=false, _auraOtpEmail='', _auraOtpWait=0, _auraOtpTick=null;
+function auraLoginMode(force){
+  _auraPassMode=(typeof force==='boolean')?force:!_auraPassMode;
+  document.getElementById('login-pass-wrap').style.display=_auraPassMode?'':'none';
+  document.getElementById('login-forgot').style.display=_auraPassMode?'':'none';
+  document.getElementById('login-main-btn').textContent=_auraPassMode?'Sign In →':'Continue with email →';
+  document.getElementById('login-mode-link').textContent=_auraPassMode?'Sign in with an email code instead':'Sign in with password instead';
+  document.getElementById('login-error').style.display='none';
+  if(_auraPassMode) setTimeout(function(){ var e=document.getElementById(document.getElementById('login-email').value?'login-pass':'login-email'); if(e)e.focus(); },30);
+}
+async function auraLoginMain(){
+  var btn=document.getElementById('login-main-btn'); if(btn.disabled) return;
+  var label=btn.textContent; btn.disabled=true; btn.textContent=_auraPassMode?'Signing in…':'Sending code…';
+  try{ if(_auraPassMode) await handleLogin(); else await auraSendOtp(false); }
+  finally{ btn.disabled=false; btn.textContent=label; }
+}
+function _auraOtpShow(step){
+  document.getElementById('otp-step1').style.display=step===1?'flex':'none';
+  document.getElementById('otp-step2').style.display=step===2?'flex':'none';
+  var tabs=document.querySelector('#auth-screen .auth-tabs'); if(tabs) tabs.style.display=step===2?'none':'';
+}
+function auraOtpBack(){ _auraOtpShow(1); var e=document.getElementById('login-email'); if(e){ e.focus(); e.select&&e.select(); } }
+function _auraOtpCooldown(sec){
+  _auraOtpWait=sec; clearInterval(_auraOtpTick);
+  var r=document.getElementById('otp-resend');
+  function paint(){ if(!r) return; if(_auraOtpWait>0){ r.textContent='Resend code in '+_auraOtpWait+'s'; r.style.opacity='.55'; r.style.pointerEvents='none'; } else { r.textContent='Resend code'; r.style.opacity=''; r.style.pointerEvents=''; } }
+  paint(); _auraOtpTick=setInterval(function(){ _auraOtpWait--; paint(); if(_auraOtpWait<=0) clearInterval(_auraOtpTick); },1000);
+}
+function _auraAuthMsg(e){
+  var m=(e&&e.message)||String(e||''), l=m.toLowerCase();
+  if(e&&e.status===429||l.indexOf('rate limit')>-1||l.indexOf('only request this after')>-1||l.indexOf('too many')>-1) return 'Too many tries. Please wait a minute and try again.';
+  if(l.indexOf('expired')>-1||l.indexOf('invalid')>-1||l.indexOf('token')>-1) return 'This code is wrong or has expired. Use the code from the LATEST email, or tap "Resend code".';
+  if(l.indexOf('signups not allowed')>-1) return 'No AuraScale account uses this email. Check the email, or register first.';
+  if(l.indexOf('provider is not enabled')>-1||l.indexOf('unsupported provider')>-1) return 'Google sign-in is not switched on yet. Please use "Continue with email" for now.';
+  if(l.indexOf('failed to fetch')>-1||l.indexOf('network')>-1) return 'No internet connection. Please check and try again.';
+  return m||'Something went wrong. Please try again.';
+}
+async function auraSendOtp(resend){
+  var err=document.getElementById(resend?'otp-error':'login-error'); err.style.display='none';
+  var em=resend?_auraOtpEmail:(document.getElementById('login-email').value||'').trim().toLowerCase();
+  var prob=auraEmailProblem(em);
+  if(prob){ err.textContent=prob; err.style.display='block'; return; }
+  if(resend&&_auraOtpWait>0) return;
+  var r;
+  try{ r=await _supa.auth.signInWithOtp({email:em,options:{shouldCreateUser:true,emailRedirectTo:location.origin+location.pathname+location.search}}); }
+  catch(e){ r={error:e}; }
+  if(r.error){ err.textContent=_auraAuthMsg(r.error); err.style.display='block'; return; }
+  _auraOtpEmail=em;
+  document.getElementById('otp-email-show').textContent=em;
+  _auraOtpShow(2);
+  var c=document.getElementById('otp-code'); c.value=''; setTimeout(function(){c.focus();},30);
+  document.getElementById('otp-error').style.display='none';
+  _auraOtpCooldown(60);
+  if(resend) showToast('A new code has been sent.');
+}
+async function auraVerifyOtp(){
+  var btn=document.getElementById('otp-verify-btn'); if(btn.disabled) return;
+  var err=document.getElementById('otp-error'); err.style.display='none';
+  var code=(document.getElementById('otp-code').value||'').replace(/\D/g,'');
+  if(code.length<6){ err.textContent='Enter the code from the email (6 digits).'; err.style.display='block'; return; }
+  var label=btn.textContent; btn.disabled=true; btn.textContent='Checking…';
+  try{
+    var r=await _supa.auth.verifyOtp({email:_auraOtpEmail,token:code,type:'email'});
+    if(r.error){ err.textContent=_auraAuthMsg(r.error); err.style.display='block'; return; }
+    await _initApp();
+  }catch(e){ err.textContent=_auraAuthMsg(e); err.style.display='block'; }
+  finally{ btn.disabled=false; btn.textContent=label; }
+}
+async function auraGoogleSignIn(){
+  var err=document.getElementById('login-error'); err.style.display='none';
+  var f=/[?&]for=(pharmacy|lab|wholesale)\b/.exec(location.search);
+  try{ sessionStorage.setItem('aura_oauth','1'); }catch(_e){}
+  var b=document.getElementById('google-btn'); if(b){ b.disabled=true; b.style.opacity='.7'; }
+  try{
+    var r=await _supa.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname+(f?'?for='+f[1]:''),queryParams:{prompt:'select_account'}}});
+    if(r&&r.error) throw r.error;
+  }catch(e){
+    if(b){ b.disabled=false; b.style.opacity=''; }
+    err.textContent=_auraAuthMsg(e); err.style.display='block';
+  }
+}
+/* coming back from Google with an error (for example Google sign-in not switched on yet) */
+(function(){
+  var s=(location.search||'')+'&'+(location.hash||'').replace(/^#/,'');
+  var m=/[?&]error_description=([^&]+)/.exec(s); if(!m) return;
+  var msg=decodeURIComponent(m[1].replace(/\+/g,' '));
+  function show(){ var e=document.getElementById('login-error'); if(e){ e.textContent=_auraAuthMsg({message:msg}); e.style.display='block'; } }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',show); else show();
+  try{ history.replaceState(null,'',location.pathname+(/[?&]for=(pharmacy|lab|wholesale)\b/.test(location.search)?'?for='+/[?&]for=(pharmacy|lab|wholesale)\b/.exec(location.search)[1]:'')); }catch(_e){}
+})();
+
+/* ══════════ SEVERAL BUSINESSES ON ONE LOGIN ══════════ */
+function _auraCardScreen(html){
+  window._auraHoldScreen=true;
+  if(window.AuraLoader) AuraLoader.hide();
+  document.getElementById('app-shell').classList.remove('authenticated');
+  var a=document.getElementById('auth-screen'); a.classList.remove('hidden');
+  a.innerHTML='<div class="auth-wrap"><div class="auth-card">'
+    +'<div class="auth-logo" style="margin-bottom:14px"><div class="aura-hero" style="margin-bottom:8px"><span class="aura-mark aura-mark-lg" role="img" aria-label="AuraScale" style="width:56px;height:56px;border-radius:16px"></span></div>'
+    +'<div class="sb-mark auth-word" style="justify-content:center"><span class="a">Aura</span><span class="s">Scale</span></div></div>'
+    +html+'</div></div>';
+}
+function _auraBizCards(list){
+  return '<div class="biz-list">'+list.map(function(b){
+    var role=b.role==='owner'?'Owner':({receptionist:'Reception',doctor:'Doctor',pharmacist:'Pharmacist',lab:'Lab staff',sales:'Sales',inventory:'Inventory',accounts:'Accounts'}[b.role]||'Staff');
+    return '<button class="biz-card" onclick="auraOpenBiz(\''+b.id+'\')"><span class="biz-ic">'+auraBizIcon(b.business_type)+'</span>'
+      +'<span style="min-width:0"><div class="biz-nm">'+esc(b.name||'Business')+(b.is_approved?'':'<span class="biz-pend">Pending approval</span>')+'</div>'
+      +'<div class="biz-sub">'+auraBizTypeName(b.business_type)+' &middot; '+role+'</div></span><span class="biz-go">&rsaquo;</span></button>';
+  }).join('')+'</div>';
+}
+function _auraChooseBizScreen(list,user){
+  _auraCardScreen('<h2 style="font-size:18px;font-weight:700;text-align:center;margin-bottom:4px">Choose your business</h2>'
+    +'<p class="ss auth-center" style="margin-bottom:14px">Signed in as <b>'+esc(user.email||'')+'</b></p>'
+    +_auraBizCards(list)
+    +(auraBizIsOwner()?'<button class="auth-google" style="margin-bottom:10px" onclick="location.href=\'nh.html?add=1\'">&#65291; Add another business</button>':'')
+    +'<p class="ss auth-center"><span class="auth-link" onclick="handleLogout()">Sign out</span></p>');
+}
+function _auraSidebarBiz(){
+  var box=document.getElementById('sb-biz'); if(!box||!window.AURA_BIZ_LIST) return;
+  var h='';
+  if(AURA_BIZ_LIST.length>1) h+='<button onclick="location.href=\'nh.html?choose=1\'" title="Open another of your businesses">&#8644; Switch business</button>';
+  if(auraBizIsOwner()) h+='<button onclick="location.href=\'nh.html?add=1\'" title="Register another business on this same login">&#65291; Add business</button>';
+  box.innerHTML=h; box.style.display=h?'flex':'none';
+}
+function _auraWelcomeScreen(user){
+  _auraCardScreen('<h2 style="font-size:18px;font-weight:700;text-align:center;margin-bottom:4px">Welcome to AuraScale</h2>'
+    +'<p class="ss auth-center" style="margin-bottom:16px">Signed in as <b>'+esc(user.email||'')+'</b>.<br>This login is not part of any business yet.</p>'
+    +'<div class="biz-list">'
+    +'<button class="biz-card" onclick="_auraAddBizScreen(_auraWelcomeUser,true)"><span class="biz-ic">&#127970;</span><span><div class="biz-nm">Register my business</div><div class="biz-sub">I am the owner &middot; nursing home, pharmacy or lab</div></span><span class="biz-go">&rsaquo;</span></button>'
+    +'<button class="biz-card" onclick="_auraInviteScreen()"><span class="biz-ic">&#127915;</span><span><div class="biz-nm">I have an invite code</div><div class="biz-sub">I work at a business that uses AuraScale</div></span><span class="biz-go">&rsaquo;</span></button>'
+    +'</div><p class="ss auth-center"><span class="auth-link" onclick="handleLogout()">Sign out</span></p>');
+  window._auraWelcomeUser=user;
+}
+function _auraInviteScreen(){
+  _auraCardScreen('<h2 style="font-size:18px;font-weight:700;text-align:center;margin-bottom:6px">Join with an invite code</h2>'
+    +'<p class="ss auth-center" style="margin-bottom:14px">Ask the owner of your business for the code.</p>'
+    +'<div style="display:flex;flex-direction:column;gap:12px">'
+    +'<div><label class="auth-label">Invite code</label><input class="auth-input" id="w-inv-code" placeholder="e.g. AB12-CD34" autocapitalize="characters"/></div>'
+    +'<div><label class="auth-label">Your full name</label><input class="auth-input" id="w-inv-name" placeholder="Full name" autocomplete="name"/></div>'
+    +'<div id="w-inv-err" class="auth-error"></div>'
+    +'<button class="auth-btn" id="w-inv-btn" onclick="_auraInviteJoin()">Join →</button>'
+    +'<p class="ss auth-center"><span class="auth-link" onclick="_auraWelcomeScreen(_auraWelcomeUser)">&larr; Back</span></p></div>');
+  setTimeout(function(){ var e=document.getElementById('w-inv-code'); if(e) e.focus(); },30);
+}
+async function _auraInviteJoin(){
+  var code=(document.getElementById('w-inv-code').value||'').trim().toUpperCase(), name=(document.getElementById('w-inv-name').value||'').trim();
+  var err=document.getElementById('w-inv-err'), btn=document.getElementById('w-inv-btn'); err.style.display='none';
+  if(!code||!name){ err.textContent='Enter the invite code and your full name.'; err.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Joining…';
+  try{
+    var r=await _supa.rpc('nh_redeem_invite',{p_code:code,p_full_name:name});
+    if(r.error||!r.data||!r.data.ok){ err.textContent=(r.data&&r.data.error)||(r.error&&r.error.message)||'This invite code could not be used. Check it, or ask the owner for a new one.'; err.style.display='block'; return; }
+    try{ auraBizSet(''); }catch(_e){}
+    showToast('Welcome — your '+(r.data.role||'staff')+' account is ready.');
+    location.href=location.pathname;
+  }finally{ btn.disabled=false; btn.textContent='Join →'; }
+}
+function _auraAddBizScreen(user,first){
+  var meta=user.user_metadata||{}, list=window.AURA_BIZ_LIST||[];
+  var myName=(list[0]&&list[0].full_name)||meta.full_name||meta.name||'';
+  var allowWh=!first||/[?&]for=wholesale\b/.test(location.search);
+  var pre=(/[?&]for=(pharmacy|lab|wholesale)\b/.exec(location.search)||[])[1]||'';
+  if(pre==='wholesale') pre='wholesale_pharmacy';
+  var opts=[['nursing_home','Nursing home / hospital'],['pharmacy','Pharmacy (medicine shop)'],['lab','Diagnostic centre / lab']];
+  if(allowWh) opts.push(['wholesale_pharmacy','Wholesale / distributor']);
+  _auraCardScreen('<h2 style="font-size:18px;font-weight:700;text-align:center;margin-bottom:4px">'+(first?'Register your business':'Add another business')+'</h2>'
+    +'<p class="ss auth-center" style="margin-bottom:14px">'+(first?'':'It opens with this same login (<b>'+esc(user.email||'')+'</b>). ')+'AuraScale activates it within 24 hours.</p>'
+    +'<div style="display:flex;flex-direction:column;gap:12px">'
+    +'<div><label class="auth-label">Type of business</label><select class="auth-input" id="ab-type" onchange="_auraAbHint()">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===pre?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>'
+    +'<div><label class="auth-label">Business name</label><input class="auth-input" id="ab-name" placeholder="e.g. Ma Durga Pharma Distributors"/></div>'
+    +'<div><label class="auth-label">Owner name</label><input class="auth-input" id="ab-owner" autocomplete="name" value="'+esc(myName)+'" placeholder="Full name"/></div>'
+    +'<div><label class="auth-label">Mobile (WhatsApp)</label><div style="display:flex;gap:6px"><span class="auth-input" style="flex:0 0 auto;width:auto;display:flex;align-items:center;font-weight:600">+91</span>'
+    +'<input class="auth-input" id="ab-mobile" type="tel" inputmode="numeric" maxlength="16" autocomplete="tel" placeholder="10-digit mobile number" style="flex:1"/></div>'
+    +'<div id="ab-hint" class="ss" style="font-size:11px;margin-top:4px"></div></div>'
+    +'<div id="ab-err" class="auth-error"></div>'
+    +'<button class="auth-btn" id="ab-btn" onclick="_auraAddBizSave()">Register business →</button>'
+    +'<p class="ss auth-center"><span class="auth-link" onclick="'+(first?'_auraWelcomeScreen(_auraWelcomeUser)':'location.href=\'nh.html\'')+'">&larr; '+(first?'Back':'Cancel')+'</span></p></div>');
+  window._auraAbUser=user; _auraAbHint();
+}
+function _auraAbHint(){
+  var t=document.getElementById('ab-type').value, h=document.getElementById('ab-hint');
+  h.textContent=t==='wholesale_pharmacy'?'Your nursing home\'s mobile number can be used again for the wholesale business.':'One nursing home, pharmacy or lab per mobile number. A wholesale business can share it.';
+}
+async function _auraAddBizSave(){
+  var err=document.getElementById('ab-err'), btn=document.getElementById('ab-btn'); err.style.display='none';
+  var t=document.getElementById('ab-type').value, nm=(document.getElementById('ab-name').value||'').trim(), ow=(document.getElementById('ab-owner').value||'').trim();
+  var d=(document.getElementById('ab-mobile').value||'').replace(/\D/g,'');
+  if(d.length===12&&d.slice(0,2)==='91') d=d.slice(2); else if(d.length===11&&d[0]==='0') d=d.slice(1);
+  function fail(m){ err.textContent=m; err.style.display='block'; }
+  if(nm.length<3) return fail('Enter the business name.');
+  if(ow.length<2) return fail('Enter the owner name.');
+  if(!/^[6-9]\d{9}$/.test(d)) return fail('Enter a valid 10-digit Indian mobile number.');
+  btn.disabled=true; btn.textContent='Registering…';
+  try{
+    var av=await _supa.rpc('nh_owner_mobile_available',{p_mobile:d,p_business_type:t});
+    if(av.error&&t!=='wholesale_pharmacy') av=await _supa.rpc('nh_owner_mobile_available',{p_mobile:d});
+    if(!av.error&&av.data===false) return fail('This mobile number is already registered with another '+(t==='wholesale_pharmacy'?'wholesale business':'nursing home, pharmacy or lab')+'. Use a different number.');
+    var made=await _auraCreateFacility(_auraAbUser.id,nm,ow,d,t);
+    if(made.error) return fail(made.error);
+    var first=!(window.AURA_BIZ_LIST&&AURA_BIZ_LIST.length);
+    if(first) auraBizSet(made.id);
+    _auraCardScreen('<div style="text-align:center"><div style="font-size:40px;margin-bottom:10px">&#9203;</div>'
+      +'<h2 style="font-size:18px;font-weight:700;margin-bottom:8px">'+esc(nm)+' is registered</h2>'
+      +'<p class="ss" style="line-height:1.6;margin-bottom:18px">AuraScale activates it within 24 hours.'+(first?'':' It will then appear when you tap <b>Switch business</b>.')+'</p>'
+      +'<a href="https://wa.me/918017465987?text='+encodeURIComponent('Hi, I registered '+nm+' ('+auraBizTypeName(t)+') on AuraScale. Please activate.')+'" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:12px 22px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none;margin-bottom:12px">&#128242; WhatsApp us to activate</a>'
+      +'<p class="ss"><span class="auth-link" onclick="location.href=\'nh.html\'">'+(first?'Continue':'Back to my business')+'</span></p></div>');
+  }finally{ if(document.body.contains(btn)){ btn.disabled=false; btn.textContent='Register business →'; } }
+}
+
 /* ── SIGN-UP CHECKS: real-looking email + one owner per mobile ── */
 var AURA_EMAIL_TYPOS={'gmial.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com','gmail.co':'gmail.com','gmail.con':'gmail.com','gmail.cm':'gmail.com','gmail.om':'gmail.com','gmail.in':'gmail.com','gmai.com':'gmail.com','gamil.com':'gmail.com','gnail.com':'gmail.com','gmil.com':'gmail.com','gmsil.com':'gmail.com','gmali.com':'gmail.com','gmail.comm':'gmail.com','gmail.coom':'gmail.com','gimail.com':'gmail.com','yaho.com':'yahoo.com','yahooo.com':'yahoo.com','yahoo.co':'yahoo.com','yhoo.com':'yahoo.com','yaho.in':'yahoo.in','hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','hotmial.com':'hotmail.com','outlok.com':'outlook.com','outloo.com':'outlook.com','outlook.co':'outlook.com','rediffmail.co':'rediffmail.com','redifmail.com':'rediffmail.com','iclod.com':'icloud.com','icloud.co':'icloud.com'};
 var AURA_EMAIL_KNOWN={'gmail.com':1,'googlemail.com':1,'yahoo.com':1,'yahoo.in':1,'yahoo.co.in':1,'hotmail.com':1,'outlook.com':1,'live.com':1,'icloud.com':1,'rediffmail.com':1,'proton.me':1,'protonmail.com':1,'zoho.com':1,'zohomail.in':1,'aurascale.in':1};
@@ -2249,7 +2495,7 @@ function suMobileInput(el){
   if(d.length>10)d=d.slice(0,10);
   if(el.value!==d)el.value=d;
   var h=document.getElementById('su-mobile-hint'); if(!h)return;
-  if(!d.length){h.textContent=/[?&]for=pharmacy/.test(location.search)?'One pharmacy per mobile number':/[?&]for=lab/.test(location.search)?'One diagnostic centre per mobile number':/[?&]for=wholesale/.test(location.search)?'One distributor per mobile number':'One nursing home per mobile number';h.style.color='';}
+  if(!d.length){h.textContent=/[?&]for=pharmacy/.test(location.search)?'One pharmacy per mobile number':/[?&]for=lab/.test(location.search)?'One diagnostic centre per mobile number':/[?&]for=wholesale/.test(location.search)?'One distributor per mobile number (your nursing home can use the same number)':'One nursing home per mobile number';h.style.color='';}
   else if(d.length<10){h.textContent=d.length+'/10 digits — enter all 10 digits';h.style.color='var(--red)';}
   else if(!/^[6-9]/.test(d)){h.textContent='Indian mobile numbers start with 6, 7, 8 or 9';h.style.color='var(--red)';}
   else{h.textContent='✓ +91 '+d.slice(0,5)+' '+d.slice(5);h.style.color='var(--green)';}
@@ -2285,9 +2531,12 @@ async function handleSignup(){
   try{
     if(!(await auraEmailDomainOk(email))){_suFail('This email address cannot receive emails (the part after @ does not exist). Please check it.');return;}
     /* one owner account per mobile number: ask the database before creating the login */
-    var av=await _supa.rpc('nh_owner_mobile_available',{p_mobile:mob10});
+    /* one business of each KIND per mobile: a healthcare business (nursing home / pharmacy / lab) and a wholesale business can share it */
+    var _bt=_auraSignupType(), _wh=_bt==='wholesale_pharmacy';
+    var av=await _supa.rpc('nh_owner_mobile_available',{p_mobile:mob10,p_business_type:_bt});
+    if(av.error&&!_wh) av=await _supa.rpc('nh_owner_mobile_available',{p_mobile:mob10});   /* database not updated yet: the older check */
     if(!av.error&&av.data===false){
-      _suFail('This mobile number (+91 '+mob10.slice(0,5)+' '+mob10.slice(5)+') is already registered with another nursing home. Please sign in with that account, or use a different number.');
+      _suFail('This mobile number (+91 '+mob10.slice(0,5)+' '+mob10.slice(5)+') is already registered with another '+(_wh?'wholesale business':'nursing home, pharmacy or lab')+'. Please sign in with that account, or use a different number.'+(_wh?'':' (A wholesale business can use the same number.)'));
       document.getElementById('su-mobile').focus();return;
     }
     mobile=mob10;
@@ -2306,10 +2555,15 @@ async function _auraCreateFacility(uid,nhname,name,mobile,btype){
   var ins=await _supa.from('clinics').insert(row).select().single();
   if(ins.error||!ins.data){
     var m=ins.error?ins.error.message:'unknown error';
-    return {error: m.indexOf('MOBILE_TAKEN')>-1 ? 'This mobile number is already registered with another nursing home. Please register again with a different number.' : 'Could not create nursing home record: '+m};
+    return {error: m.indexOf('MOBILE_TAKEN')>-1 ? 'This mobile number is already registered with another '+(btype==='wholesale_pharmacy'?'wholesale business':'nursing home, pharmacy or lab')+'. Please register again with a different number.'
+      : m.indexOf('LOGIN_IS_STAFF')>-1 ? 'This email is a staff login of another business, so it cannot own a business. Register your own business with a DIFFERENT email address. Nothing was changed.'
+      : m.indexOf('LOGIN_HAS_BUSINESS')>-1 ? (m.indexOf('5 businesses')>-1 ? 'This login already has 5 businesses. WhatsApp AuraScale on 8017465987 to add more.' : 'This email already opens your other AuraScale business. Sign in with it and choose "Add another business" from the menu. Your existing business is not changed.')
+      : 'Could not create nursing home record: '+m};
   }
   await _supa.from('facility_members').upsert({user_id:uid,clinic_id:ins.data.id,role:'owner'});
-  await _supa.from('nh_staff').upsert({id:uid,clinic_id:ins.data.id,role:'owner',full_name:name});
+  /* one staff record per login: a second business of the same owner works through clinics.owner_id */
+  var _has=await _supa.from('nh_staff').select('id').eq('id',uid).maybeSingle();
+  if(!(_has.data&&_has.data.id)) await _supa.from('nh_staff').upsert({id:uid,clinic_id:ins.data.id,role:'owner',full_name:name});
   return {id:ins.data.id};
 }
 function _auraCheckEmailScreen(email,isStaff){
@@ -2354,7 +2608,7 @@ async function _handleSignupCreate2(nhname,name,email,mobile,pass,err){
   if(r.data&&r.data.user){
     var made=await _auraCreateFacility(r.data.user.id,nhname,name,mobile);
     if(made.error){
-      if(made.error.indexOf('mobile number')>-1){ try{await _supa.auth.signOut();}catch(_e){} }
+      if(made.error.indexOf('mobile number')>-1||made.error.indexOf('DIFFERENT email')>-1||made.error.indexOf('Add another business')>-1){ try{await _supa.auth.signOut();}catch(_e){} }
       err.textContent=made.error; err.style.display='block';
       return;
     }
@@ -2490,6 +2744,8 @@ async function _initApp(){
      flight is simply ignored — the in-flight one will finish and
      correctly reflect the current session either way. */
   if(_initInProgress)return;
+  if(window._auraSigningUp)return;   /* the sign-up form finishes the job itself */
+  if(window._auraHoldScreen)return;  /* "Choose your business" / "Add business" is on screen: a token refresh must not wipe it */
   _initInProgress=true;
 
   /* ROLE-SAFE START: nothing of the owner portal is shown until we know who signed in.
@@ -2527,10 +2783,24 @@ async function _initApp(){
        invited Receptionist/Doctor logins (not just the original owner)
        find their clinic. Falls back to the legacy owner_id lookup for
        any account that predates nh_staff and hasn't been backfilled. */
-    var staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id',uid).single(),20000,'your staff record');
-
-    var clinicId=null;
-    if(staffRow.data&&staffRow.data.clinic_id){
+    /* One login can own several businesses (file 20 + aura-biz.js). Open the remembered one,
+       or the one this sign-in page is for, or ask which one. */
+    var clinicId=null, _bizList=null, _q=location.search||'';
+    if(typeof auraMyBusinesses==='function') _bizList=await withTimeout(auraMyBusinesses(),20000,'your businesses');
+    var staffRow={data:null};
+    if(_bizList&&_bizList.length){
+      if(/[?&]add=1\b/.test(_q)&&auraBizIsOwner()){ _auraAddBizScreen(userRes.data.user,false); return; }
+      var _kind=(/[?&]for=(pharmacy|lab|wholesale)\b/.exec(_q)||[])[1]||'';
+      var _pick=(/[?&]choose=1\b/.test(_q)&&_bizList.length>1)?'choose':auraBizPick(_bizList,_kind);
+      if(_pick==='choose'){ _auraChooseBizScreen(_bizList,userRes.data.user); return; }
+      auraBizSet(_pick.id); window.AURA_BIZ_CUR=_pick;
+      clinicId=_pick.id; _myRole=_pick.role||'owner';
+    }else{
+      staffRow=await withTimeout(_supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id',uid).maybeSingle(),20000,'your staff record');
+    }
+    if(clinicId){
+      /* chosen from the business list */
+    }else if(staffRow.data&&staffRow.data.clinic_id){
       clinicId=staffRow.data.clinic_id;
       _myRole=staffRow.data.role||'owner';
       if(staffRow.data.is_active===false){
@@ -2539,7 +2809,7 @@ async function _initApp(){
         return;
       }
     }else{
-      var legacy=await withTimeout(_supa.from('clinics').select('id').eq('owner_id',uid).eq('facility_type','nursing_home').single(),20000,'your facility (legacy lookup)');
+      var legacy=await withTimeout(_supa.from('clinics').select('id').eq('owner_id',uid).eq('facility_type','nursing_home').limit(1).maybeSingle(),20000,'your facility (legacy lookup)');
       if(legacy.data){
         clinicId=legacy.data.id;
         _myRole='owner';
@@ -2562,7 +2832,7 @@ async function _initApp(){
         failAndReturnToLogin((_red.data&&_red.data.error)||'This invite code could not be used. Ask the owner for a new invite.');
         return;
       }
-      var _sr=await _supa.from('nh_staff').select('clinic_id,role').eq('id',uid).single();
+      var _sr=await _supa.from('nh_staff').select('clinic_id,role').eq('id',uid).maybeSingle();
       if(_sr.data&&_sr.data.clinic_id){ clinicId=_sr.data.clinic_id; _myRole=_sr.data.role||'receptionist'; }
     }
     if(!clinicId){
@@ -2574,7 +2844,7 @@ async function _initApp(){
         try{ await _supa.auth.updateUser({data:{aura_pending_nh:null}}); }catch(_e){}
       }
     }
-    if(!clinicId){failAndReturnToLogin('No Nursing Home account found for this login.');return;}
+    if(!clinicId){ _auraWelcomeScreen(userRes.data.user); return; }
     document.body.setAttribute('data-role',_myRole);
     /* every non-owner login goes straight to its own portal (they never see the owner portal);
        each of those pages checks approval / subscription itself */
@@ -2591,7 +2861,10 @@ async function _initApp(){
       if(window.AuraLoader) AuraLoader.hide();
       document.getElementById('app-shell').classList.remove('authenticated');
       document.getElementById('auth-screen').classList.remove('hidden');
-      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/918017465987?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a></div></div>';
+      document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">⏳</div><h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Account Pending Activation</h2><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Your AuraScale NH account is being reviewed.<br>We will activate it within 24 hours.</p><a href="https://wa.me/918017465987?text=Hi, please activate my AuraScale NH account." target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:white;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">📲 WhatsApp Us</a>'
+        +((window.AURA_BIZ_LIST&&AURA_BIZ_LIST.length>1)?'<p class="ss" style="margin-top:14px"><span class="auth-link" onclick="location.href=\'nh.html?choose=1\'">&#8644; Open another business</span></p>':'')
+        +'<p class="ss" style="margin-top:10px"><span class="auth-link" onclick="handleLogout()">Sign out</span></p></div></div>';
+      window._auraHoldScreen=true;
       return;
     }
     /* Subscription lock — this is the owner's own portal, so no role exemption applies here
@@ -2610,6 +2883,7 @@ async function _initApp(){
     }
     _clinicId=cl.data.id;
     document.getElementById('sb-nh-name').textContent=cl.data.name||'Nursing Home';
+    _auraSidebarBiz();
     /* nh.html is the Owner portal only. Doctor and Receptionist logins
        are sent to their own genuinely separate pages — not shown an
        inline view within this file. Supabase persists the session in
@@ -4640,13 +4914,13 @@ async function loadInvitesList(){
   }).join('');
 }
 async function toggleStaffActive(staffId,makeActive){
-  await _supa.from('nh_staff').update({is_active:makeActive}).eq('id',staffId);
+  await _supa.from('nh_staff').update({is_active:makeActive}).eq('id',staffId).eq('clinic_id',_clinicId);
   await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:makeActive?'staff_activated':'staff_deactivated',target_table:'nh_staff',target_id:staffId});
   loadStaffList();
 }
 async function removeStaff(staffId,name){
   if(!confirm('Revoke '+name+'\'s access to this facility?\n\nThis only removes their login\'s access here — it does NOT delete any patients, documents, notes, or other data they created or handled. Their personal login itself also stays valid; they simply can\'t reach this facility anymore.'))return;
-  await _supa.from('nh_staff').delete().eq('id',staffId);
+  await _supa.from('nh_staff').delete().eq('id',staffId).eq('clinic_id',_clinicId);
   await _supa.from('nh_audit_log').insert({clinic_id:_clinicId,actor_id:_myUid,action:'staff_access_revoked',target_table:'nh_staff',target_id:staffId,details:{name:name}});
   showToast(name+'\'s access revoked — no data was deleted');
   loadStaffList();
@@ -4707,6 +4981,7 @@ async function deleteFacility(){
     await _supa.from('clinics').delete().eq('id',cid);
     closeModal('mod-delete-facility');
     showToast('Facility deleted');
+    try{ if(typeof auraBizSet==='function') auraBizSet(''); }catch(_e){}
     await handleLogout();
   }finally{
     btn.disabled=false;
@@ -4885,6 +5160,7 @@ _supa.auth.onAuthStateChange(async function(event,session){
   var isReset = (h.includes('type=recovery') && h.includes('access_token'))
              || (s.includes('code=') && !s.includes('error='))
              || s.includes('type=recovery');
+  try{ if(sessionStorage.getItem('aura_oauth')){ sessionStorage.removeItem('aura_oauth'); if(!h.includes('type=recovery')&&!s.includes('type=recovery')) isReset=false; } }catch(_e){}
   if(!isReset) return;
 
   var _rSupa = supabase.createClient(
@@ -6008,7 +6284,7 @@ var OWN_HELP_IMG={"o_pat1": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     if (sel && !sel.querySelector('option[value="wholesale_pharmacy"]')) { var o = document.createElement('option'); o.value = 'wholesale_pharmacy'; o.textContent = 'Wholesale / distributor'; sel.appendChild(o); }
     t = 'wholesale_pharmacy';
   }
-  var W = t === 'wholesale_pharmacy' ? { os: 'Wholesale', sub: 'Distributor Billing, Stock & Accounts', reg: 'Register Distributor', newTab: 'New Distributor', name: 'e.g. Ma Durga Pharma Distributors', mail: 'you@yourfirm.com', hint: 'One distributor per mobile number', title: 'AuraScale Wholesale · Sign in' }
+  var W = t === 'wholesale_pharmacy' ? { os: 'Wholesale', sub: 'Distributor Billing, Stock & Accounts', reg: 'Register Distributor', newTab: 'New Distributor', name: 'e.g. Ma Durga Pharma Distributors', mail: 'you@yourfirm.com', hint: 'One distributor per mobile number (your nursing home can use the same number)', title: 'AuraScale Wholesale · Sign in' }
         : ph ? { os: 'Pharmacy', sub: 'Pharmacy Billing & Stock', reg: 'Register Pharmacy', newTab: 'New Pharmacy', name: 'e.g. Sunrise Medical Store', mail: 'you@yourpharmacy.com', hint: 'One pharmacy per mobile number', title: 'AuraScale Pharmacy · Sign in' }
                : { os: 'Lab', sub: 'Diagnostic Centre Billing & Reports', reg: 'Register Lab', newTab: 'New Diagnostic Centre', name: 'e.g. Sunrise Diagnostic Centre', mail: 'you@yourlab.com', hint: 'One diagnostic centre per mobile number', title: 'AuraScale Lab · Sign in' };
   function set(sel, fn) { var e = document.querySelector(sel); if (e) fn(e); }
