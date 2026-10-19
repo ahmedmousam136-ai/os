@@ -51,7 +51,7 @@ function nhLoadFailedScreen(msg) {
   document.body.appendChild(o);
 }
 
-async function nhAuthGuard(requiredRole) {
+async function nhAuthGuard(requiredRole, pageKind) {
   function withTimeout(p, ms, label) {
     return Promise.race([
       p,
@@ -82,13 +82,33 @@ async function nhAuthGuard(requiredRole) {
     if (!user) { window.location.href = _auraLoginUrl(); return null; }   /* really signed out */
     _myUid = user.id;
 
-    /* 2. which nursing home and role this login belongs to */
-    var staffRow = await readWithRetry(function() {
+    /* 2. which business and role this login works in. One login can own several businesses
+          (aura-biz.js): open the remembered one, or the one this screen is for, or ask on nh.html. */
+    var clinicId = null, bizList = null;
+    if (typeof auraMyBusinesses === 'function') {
+      for (var bt = 1; bt <= 3; bt++) {
+        try { bizList = await withTimeout(auraMyBusinesses(), 15000, 'your businesses'); break; }
+        catch (be) { if (bt === 3) throw be; await new Promise(function(res) { setTimeout(res, bt * 1200); }); }
+      }
+    }
+    var staffRow = { data: null };
+    if (bizList && bizList.length) {
+      var pick = auraBizPick(bizList, pageKind || (typeof auraPageKind === 'function' ? auraPageKind() : ''));
+      if (pick === 'choose') { window.location.href = 'nh.html?choose=1'; return null; }
+      if (pick.id !== auraBizGet()) auraBizSet(pick.id);
+      window.AURA_BIZ_CUR = pick;
+      clinicId = pick.id;
+      _myRole  = pick.role || 'owner';
+      _myName  = pick.full_name || null;
+    } else {
+    staffRow = await readWithRetry(function() {
       return _supa.from('nh_staff').select('clinic_id,role,full_name,is_active').eq('id', user.id).maybeSingle();
     }, 'staff record');
+    }
 
-    var clinicId = null;
-    if (staffRow.data && staffRow.data.clinic_id) {
+    if (clinicId) {
+      /* chosen from the business list above */
+    } else if (staffRow.data && staffRow.data.clinic_id) {
       clinicId = staffRow.data.clinic_id;
       _myRole  = staffRow.data.role || 'owner';
       _myName  = staffRow.data.full_name || null;
@@ -129,7 +149,7 @@ async function nhAuthGuard(requiredRole) {
     if (!cl.data) { nhLoadFailedScreen('Facility details could not be read.'); return null; }
 
     if (!cl.data.is_approved) {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><div style="font-size:40px;margin-bottom:16px">⏳</div><h2>Account Pending Activation</h2><p style="color:#666;margin:12px 0 20px">Your AuraScale NH account is being reviewed. We activate within 24 hours.</p><a href="https://wa.me/918017465987?text=Hi, please activate my AuraScale NH account." target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;text-decoration:none">📲 WhatsApp Us</a></div></div>';
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><div style="font-size:40px;margin-bottom:16px">⏳</div><h2>Account Pending Activation</h2><p style="color:#666;margin:12px 0 20px">Your AuraScale NH account is being reviewed. We activate within 24 hours.</p><a href="https://wa.me/918017465987?text=Hi, please activate my AuraScale NH account." target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;text-decoration:none">📲 WhatsApp Us</a>' + ((window.AURA_BIZ_LIST && AURA_BIZ_LIST.length > 1) ? '<p style="margin-top:18px"><a href="nh.html?choose=1" style="color:#0E9F6E;font-weight:600">&#8644; Open another business</a></p>' : '') + '</div></div>';
       return null;
     }
 
