@@ -951,7 +951,11 @@ function partyEdit(id, backKey, name, gstin) {
   var me = CAN.moneyEdit;
   dEl('party-title').textContent = id ? 'Edit ' + p.name : 'New party';
   var f = function (k, lbl, attrs, val) { return '<div><label class="flbl">' + lbl + '</label><input class="finput" id="pe-' + k + '" ' + (attrs || '') + ' value="' + esc(val !== undefined ? val : (p[k] == null ? '' : p[k])) + '"/></div>'; };
-  dEl('party-body').innerHTML = '<div class="grid2">'
+  dEl('party-body').innerHTML = (id ? '' : '<div class="card" style="margin-bottom:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">'
+      + '<div style="flex:1;min-width:200px"><b>&#128247; Fill from a photo</b><div class="tiny">Visiting card, shop board, their bill, GST or drug-licence certificate. AI fills the name, phone, address, GSTIN and licence number.</div></div>'
+      + '<label class="btn btn-g btn-sm" style="cursor:pointer">Take / choose photo<input type="file" id="pe-photo" accept="image/*" onchange="partyPhoto(this)" style="display:none"/></label>'
+      + '<div class="tiny" id="pe-photo-st" style="width:100%"></div></div>')
+    + '<div class="grid2">'
     + f('name', 'Name *') + '<div><label class="flbl">Type</label><select class="finput" id="pe-party_type">' + ['customer', 'supplier', 'both'].map(function (t) { return '<option' + (p.party_type === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></div>'
     + f('gstin', 'GSTIN (if registered)', 'maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase().replace(/[^0-9A-Z]/g,\'\');peGst()"') + '<div><label class="flbl">State</label><select class="finput" id="pe-state_code"><option value="">-</option>' + Object.keys(GST_STATES).map(function (c) { return '<option value="' + c + '"' + ((p.state_code || (!id ? OWN_STATE : '')) === c ? ' selected' : '') + '>' + esc(GST_STATES[c]) + ' (' + c + ')</option>'; }).join('') + '</select></div>'
     + f('drug_license_no', 'Drug licence no(s).') + f('phone', 'Phone (WhatsApp)', 'type="tel"') + f('contact_person', 'Contact person') + f('email', 'Email', 'type="email"')
@@ -1457,4 +1461,32 @@ function impSample() {
     ? 'Name,Type,Mobile,GSTIN,Address,DL No,Credit Days,Credit Limit,Balance\nSharma Medical Hall,Customer,9830012345,19ABCDE1234F1Z5,"Main Road, Jaynagar",WB/SPG/20B-123,30,50000,12500\nCipla Ltd,Supplier,,19AAACC1450B1ZS,Kolkata,,45,,40000\n'
     : 'Product Name,Company,Salt,Pack,HSN,GST %,Batch,Expiry,Stock,MRP,Purchase Rate,PTR\nDolo 650 Tab,Micro Labs,Paracetamol 650mg,15s,30049099,12,DL2401,03/27,100,33.60,20.50,24.00\nCalpol Syp 60ml,GSK,Paracetamol,60ml,30049099,12,CP99,12/26,40,55.00,32.00,38.00\n';
   var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = IMP.kind === 'parties' ? 'aurascale-parties-sample.csv' : 'aurascale-products-sample.csv'; a.click();
+}
+
+
+/* ---------- a new party from a photo (visiting card, shop board, bill, GST / drug-licence certificate) ---------- */
+function partyFromPhoto() { partyEdit(null, null, ''); setTimeout(function () { var i = dEl('pe-photo'); if (i) i.click(); }, 60); }
+async function partyPhoto(inp) {
+  var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+  var st = dEl('pe-photo-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the photo&hellip; about 10-20 seconds.';
+  try {
+    var img = await scanResize(f);
+    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale', kind: 'party' } });
+    var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok || d.kind !== 'party') {
+      var why = { daily_limit: 'Today\'s limit of photos is used up. Please type the details.', nothing_read: 'Nothing could be read. Take a clearer, straight photo.', ai_key_not_set: 'Photo reading is not set up on the server yet.', not_signed_in: 'Your login has expired. Please log in again.' };
+      st.textContent = '⚠ ' + (why[d && d.reason] || ((d && d.ok) ? 'Please update the bill-scan function on the server.' : 'Could not read the photo. Please type the details.')); return;
+    }
+    var P = d.party, filled = [];
+    ['name', 'contact_person', 'phone', 'email', 'address', 'gstin', 'drug_license_no'].forEach(function (k) {
+      var e = dEl('pe-' + k); if (!e || !P[k]) return;
+      if (e.value.trim() && e.value.trim() !== String(P[k])) return;     /* never overwrite what was already typed */
+      e.value = k === 'gstin' ? String(P[k]).toUpperCase() : P[k]; e.style.background = 'var(--green-bg)'; filled.push(k);
+    });
+    peGst();
+    var dup = P.name && PARTIES.filter(function (x) { return mScore(P.name, x.name) >= 0.9 || (P.gstin && x.gstin === P.gstin); })[0];
+    st.innerHTML = filled.length ? '<span style="color:var(--green);font-weight:700">&#10003; Filled ' + filled.length + ' detail' + (filled.length === 1 ? '' : 's') + ' (green boxes). Please check them, choose customer / supplier, then Save.</span>'
+      + (dup ? '<div class="over">Looks like <b>' + esc(dup.name) + '</b> is already in your list &mdash; check before saving a second one.</div>' : '')
+      : 'Nothing new could be read. Please type the details.';
+  } catch (e) { st.textContent = '⚠ ' + dErr(e); }
 }
