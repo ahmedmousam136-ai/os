@@ -995,7 +995,29 @@ async function onTab_settings() {
   dEl('ws-gstin').value = s.gstin || ''; dEl('ws-dl').value = s.dl_no || ''; dEl('ws-email').value = s.email || ''; dEl('ws-fssai').value = s.fssai || ''; dEl('ws-prefix').value = s.inv_prefix || '';
   dEl('ws-cdays').value = s.credit_days || ''; dEl('ws-bank').value = s.bank_name || ''; dEl('ws-acc').value = s.bank_account || ''; dEl('ws-ifsc').value = s.bank_ifsc || ''; dEl('ws-upi').value = s.upi_id || ''; dEl('ws-terms').value = s.terms || '';
   dEl('ws-bank2').value = s.bank2_name || ''; dEl('ws-acc2').value = s.bank2_account || ''; dEl('ws-ifsc2').value = s.bank2_ifsc || ''; dEl('ws-qr').value = s.upi_qr === 'off' ? 'off' : 'on';
+  dEl('wa-phone').value = s.wa_owner_phone || ''; dEl('wa-summary').value = s.wa_summary === 'off' ? 'off' : 'on'; dEl('wa-collect').value = s.wa_collect === 'off' ? 'off' : 'on';
+  dEl('wa-expiry').value = s.wa_expiry === 'off' ? 'off' : 'on'; dEl('wa-remind').value = s.wa_remind === 'on' ? 'on' : 'off';
   wsCheck(); staffLoad();
+}
+/* automatic WhatsApp messages (file 23 + the wholesale-whatsapp function) */
+async function waSave(quiet) {
+  dShowErr('wa-err', '');
+  var p = { wa_owner_phone: dEl('wa-phone').value.trim(), wa_summary: dEl('wa-summary').value, wa_collect: dEl('wa-collect').value, wa_expiry: dEl('wa-expiry').value, wa_remind: dEl('wa-remind').value };
+  if (p.wa_owner_phone && !dMobile(p.wa_owner_phone)) { dShowErr('wa-err', 'Enter a valid 10-digit WhatsApp number.'); return false; }
+  var r = await _supa.rpc('wh_save_settings', { p_clinic: _clinicId, p: p });
+  if (r.error) { dShowErr('wa-err', dErr(r.error)); return false; }
+  SET = r.data || SET; DEPT.clinic.wh_settings = SET;
+  if (!quiet) showToast('Saved. Messages go out at the times shown.');
+  return true;
+}
+async function waTest(what) {
+  if (!(await waSave(true))) return;
+  dShowErr('wa-err', '');
+  var r; try { r = await _supa.functions.invoke('wholesale-whatsapp', { body: { mode: 'test', clinic_id: _clinicId, what: what } }); } catch (e) { r = { error: e }; }
+  var d = r && r.data;
+  if (d && d.sent) { showToast('Sent. It should reach your WhatsApp in a minute.'); return; }
+  var why = { no_whatsapp_number: 'There is no valid WhatsApp number for you. Type it above and try again.', webhook_not_configured: 'WhatsApp sending is not set up yet. Contact AuraScale.', not_allowed: 'Only the owner can do this.' }[d && d.reason] || 'Could not send right now. Please try again later.';
+  dShowErr('wa-err', why);
 }
 function wsCheck() { var g = dEl('ws-gstin').value, st = dEl('ws-gstin-st'); st.innerHTML = !g ? '' : gstinOk(g) ? 'State: <b>' + esc(stName(g.slice(0, 2))) + '</b>' : '<span class="over">15 characters, e.g. 19ABCDE1234F1Z5</span>'; }
 async function wsSave() {
