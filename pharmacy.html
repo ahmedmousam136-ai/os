@@ -111,6 +111,17 @@
           <button data-f="expired" onclick="stockFilter('expired')">Expired</button>
         </div>
         <button class="btn btn-sm" onclick="medEdit(null)">&#10133; New medicine</button>
+        <button class="btn btn-sm" onclick="gstMode(true)">&#37; Change GST of many</button>
+      </div>
+      <div id="gst-bar" class="card" style="display:none;margin-bottom:10px;padding:10px 12px;background:var(--green-bg);border-color:var(--green-border)">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div><label class="flbl">Show only GST</label><select class="finput" id="gst-only" onchange="stockRender()" style="width:120px"><option value="">All</option><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
+          <button class="btn btn-sm" onclick="gstAll(true)">&#9745; Tick all shown</button><button class="btn btn-sm" onclick="gstAll(false)">&#9744; Untick all</button>
+          <div><label class="flbl">New GST for ticked</label><select class="finput" id="gst-new" style="width:110px"><option value="5">5%</option><option value="0">0%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
+          <button class="btn btn-g btn-sm" id="gst-go" onclick="gstApply()">&#10003; Change GST</button>
+          <button class="btn btn-sm" onclick="gstMode(false)">Close</button>
+        </div>
+        <div class="tiny" id="gst-st" style="margin-top:6px">Tick the medicines (tap a row), choose the new GST and press <b>Change GST</b>. Bills already made keep their old GST.</div>
       </div>
       <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Medicine</th><th class="r">In stock</th><th>Nearest expiry</th><th class="r">MRP</th><th>Status</th><th></th></tr></thead><tbody id="st-b"></tbody></table></div>
     </div>
@@ -522,16 +533,48 @@ function stockRender() {
     + '<div><span class="tiny">Low / out of stock</span><b style="color:var(--amber)">' + low + '</b></div><div><span class="tiny">Expiring in 90 days &middot; expired</span><b style="color:var(--red)">' + e90 + ' &middot; ' + expd + '</b></div>';
   var list = MEDS.filter(function (m) {
     if (q && !matchMed(m, q)) return false;
+    if (GSTSEL && dEl('gst-only').value !== '' && Number(m.gst_rate) !== Number(dEl('gst-only').value)) return false;
     if (STF === 'low') return m.is_active && m.stock <= Number(m.low_level || 0);
     if (STF === 'exp90') return m.nearestExp && dDaysTo(m.nearestExp) <= 90;
     if (STF === 'expired') return m.expiredQty > 0;
     return true;
   });
   dEl('st-b').innerHTML = list.length ? list.map(function (m) {
+    if (GSTSEL) return '<tr style="cursor:pointer" onclick="gstTick(\'' + m.id + '\')"' + (GSTSEL[m.id] ? ' style="background:var(--green-bg)"' : '') + '><td><div style="display:flex;gap:10px;align-items:center"><input type="checkbox" style="width:18px;height:18px;appearance:auto" ' + (GSTSEL[m.id] ? 'checked ' : '') + 'onclick="event.stopPropagation();gstTick(\'' + m.id + '\')"/><span><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + '<b>GST ' + Number(m.gst_rate) + '%</b></div></span></div></td>'
+      + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td><td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td>' + medStatus(m) + '</td><td></td></tr>';
     return '<tr style="cursor:pointer" onclick="medOpen(\'' + m.id + '\')"><td><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + 'GST ' + Number(m.gst_rate) + '%</div></td>'
       + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td>'
       + '<td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td>' + medStatus(m) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
   }).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">' + (MEDS.length ? 'Nothing matches.' : 'No medicines yet. Use <b>Add stock</b> or import your stock list.') + '</td></tr>';
+}
+/* change the GST rate of many medicines at once */
+var GSTSEL = null, GSTSHOWN = [];
+function gstMode(on) { GSTSEL = on ? {} : null; dEl('gst-bar').style.display = on ? 'block' : 'none'; if (on) { dEl('gst-only').value = ''; dEl('gst-st').innerHTML = 'Tick the medicines (tap a row), choose the new GST and press <b>Change GST</b>. Bills already made keep their old GST.'; } stockRender(); }
+function gstTick(id) { if (!GSTSEL) return; if (GSTSEL[id]) delete GSTSEL[id]; else GSTSEL[id] = 1; stockRender(); gstCount(); }
+function gstAll(on) {
+  if (!GSTSEL) return;
+  var q = dEl('st-q').value.trim(), only = dEl('gst-only').value;
+  MEDS.forEach(function (m) {
+    if (q && !matchMed(m, q)) return; if (only !== '' && Number(m.gst_rate) !== Number(only)) return;
+    if (STF === 'low' && !(m.is_active && m.stock <= Number(m.low_level || 0))) return; if (STF === 'exp90' && !(m.nearestExp && dDaysTo(m.nearestExp) <= 90)) return; if (STF === 'expired' && !(m.expiredQty > 0)) return;
+    if (on) GSTSEL[m.id] = 1; else delete GSTSEL[m.id];
+  });
+  stockRender(); gstCount();
+}
+function gstCount() { var n = Object.keys(GSTSEL || {}).length; dEl('gst-st').innerHTML = n ? '<b>' + n + '</b> medicine' + (n === 1 ? '' : 's') + ' ticked.' : 'Nothing ticked yet.'; }
+async function gstApply() {
+  var ids = Object.keys(GSTSEL || {}), g = Number(dEl('gst-new').value);
+  if (!ids.length) { dEl('gst-st').innerHTML = '<span class="over">Tick at least one medicine.</span>'; return; }
+  if (!confirm('Change GST to ' + g + '% for ' + ids.length + ' medicine' + (ids.length === 1 ? '' : 's') + '?\n\nNew bills will use ' + g + '%. Bills already made are not changed.')) return;
+  var btn = dEl('gst-go'); btn.disabled = true; btn.textContent = 'Changing…';
+  try {
+    var r = await _supa.rpc('ph_set_gst', { p_clinic_id: _clinicId, p_ids: ids, p_gst: g });
+    if (r.error) throw r.error;
+    await loadMeds(); GSTSEL = {}; stockRender();
+    dEl('gst-st').innerHTML = '<span style="color:var(--green);font-weight:700">&#10003; GST changed to ' + g + '% for ' + r.data + ' medicine' + (r.data === 1 ? '' : 's') + '.</span>';
+    showToast('GST updated.');
+  } catch (e) { dEl('gst-st').innerHTML = '<span class="over">' + esc(/PGRST202|Could not find the function/.test(dErr(e)) ? 'Run file 27 in Supabase first.' : dErr(e)) + '</span>'; }
+  finally { btn.disabled = false; btn.innerHTML = '&#10003; Change GST'; }
 }
 function medOpen(id) {
   var m = MEDMAP[id]; if (!m) return;
@@ -730,7 +773,7 @@ function scanReview(d) {
   SCAN = d.lines.map(function (l) {
     var c = scanCandidates(l.name);
     var med = c.best;
-    return { pack: l.pack || '', inc: true, read: l.name, match: med ? med.id : '', cands: c.list, batch: l.batch || '', expiry: l.expiry || '', qty: l.qty || 0, free: l.free || 0, upp: l.units_per_pack || 1,
+    return { upd: true, pack: l.pack || '', inc: true, read: l.name, match: med ? med.id : '', cands: c.list, batch: l.batch || '', expiry: l.expiry || '', qty: l.qty || 0, free: l.free || 0, upp: l.units_per_pack || 1,
       mrp: l.mrp || '', rate: l.rate || '', disc: l.disc || 0,
       gst: (l.gst !== null && l.gst !== undefined && [0, 5, 12, 18, 28].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : '',      /* never assume a GST rate */
       per: med ? (/^(tab|cap|pcs)$/.test(med.unit) && (l.units_per_pack || 1) > 1 ? 'unit' : 'pack') : 'pack' };
@@ -739,8 +782,8 @@ function scanReview(d) {
   var rows = SCAN.map(function (x, i) {
     var opts = '<option value="">&#10133; New: ' + esc(x.read) + '</option>' + x.cands.map(function (m) { return '<option value="' + m.id + '"' + (m.id === x.match ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
     return '<tr id="sr-' + i + '"><td><input type="checkbox" checked onchange="SCAN[' + i + '].inc=this.checked;scanTotals()" style="width:18px;height:18px"/></td>'
-      + '<td><div class="tiny">Read: ' + esc(x.read || '(nothing)') + '</div><select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value;this.nextElementSibling.style.display=this.value?\'none\':\'block\'">' + opts + '</select>'
-      + '<input class="finput" style="width:210px;padding:6px;margin-top:4px;display:' + (x.match ? 'none' : 'block') + '" placeholder="Medicine name (type it if not read)" value="' + esc(x.read || '') + '" oninput="SCAN[' + i + '].read=this.value"/></td>'
+      + '<td><div class="tiny">Read: ' + esc(x.read || '(nothing)') + '</div><select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value;this.nextElementSibling.style.display=this.value?\'none\':\'block\';scanTotals()">' + opts + '</select>'
+      + '<input class="finput" style="width:210px;padding:6px;margin-top:4px;display:' + (x.match ? 'none' : 'block') + '" placeholder="Medicine name (type it if not read)" value="' + esc(x.read || '') + '" oninput="SCAN[' + i + '].read=this.value"/><div id="sg-' + i + '"></div></td>'
       + '<td>' + inp(i, 'batch', 90) + '</td><td>' + inp(i, 'expiry', 82) + '</td><td>' + inp(i, 'qty', 64, 1) + '</td><td>' + inp(i, 'free', 54, 1) + '</td><td>' + inp(i, 'upp', 54, 1) + '</td>'
       + '<td>' + inp(i, 'mrp', 76, 1) + '</td><td>' + inp(i, 'rate', 76, 1) + '</td><td>' + inp(i, 'disc', 56, 1) + '</td>'
       + '<td><select class="finput" data-k="gst" style="width:74px;padding:6px" onchange="SCAN[' + i + '].gst=this.value===\'\'?\'\':Number(this.value);scanTotals()"><option value=""' + (x.gst === '' ? ' selected' : '') + '>?</option>' + [0, 5, 12, 18, 28].map(function (g) { return '<option value="' + g + '"' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td>'
@@ -768,6 +811,13 @@ function scanTotals() {
   var ok = !(bt > 0) || Math.abs(lt - bt) <= Math.max(2, bt * 0.002);
   box.innerHTML = 'Lines total (with discount + GST): <b>' + dMoney(lt) + '</b>' + (bt > 0 ? ' &middot; Bill grand total: <b>' + dMoney(bt) + '</b> &middot; ' + (ok ? '<span style="color:var(--green);font-weight:700">&#10003; matches</span>' : '<span class="over">differs by ' + dMoney(Math.abs(lt - bt)) + '</span>') : ' &middot; <span class="tiny">type the bill\'s grand total to check it</span>');
   dEl('scan-why-box').style.display = ok ? 'none' : 'block';
+  /* the supplier's bill shows a different GST than the one saved for this medicine: offer to update it */
+  SCAN.forEach(function (x, i) {
+    var el = dEl('sg-' + i); if (!el) return; var m = x.match ? MEDMAP[x.match] : null;
+    if (x.inc && m && x.gst !== '' && Number(m.gst_rate) !== Number(x.gst)) {
+      el.innerHTML = '<label class="tiny" style="display:flex;gap:6px;align-items:center;margin-top:4px;color:var(--amber);font-weight:700;cursor:pointer"><input type="checkbox" style="width:15px;height:15px;appearance:auto" ' + (x.upd ? 'checked ' : '') + 'onchange="SCAN[' + i + '].upd=this.checked"/> Saved GST ' + Number(m.gst_rate) + '%, bill says ' + Number(x.gst) + '% &mdash; update</label>';
+    } else el.innerHTML = '';
+  });
   /* red boxes: what is still missing on ticked lines */
   SCAN.forEach(function (x, i) {
     var tr = dEl('sr-' + i); if (!tr) return;
@@ -812,7 +862,15 @@ async function scanSave() {
   if (r.error) { dShowErr('scan-err', dErr(r.error).replace(/^BILL_EXISTS:\s*/, '')); return; }
   var e = r.data.errors || [];
   dEl('scan-res').innerHTML = '<div class="card" style="margin-top:10px"><b>' + r.data.stock_lines_added + '</b> lines added to stock' + (r.data.medicines_added ? ', <b>' + r.data.medicines_added + '</b> new medicines' : '') + '.' + (e.length ? '<div style="color:var(--red);margin-top:6px">' + e.map(function (x) { return 'Line ' + x.row + ' ' + esc(x.name || '') + ': ' + esc(x.error); }).join('<br>') + '</div>' : '') + '</div>';
-  if (!e.length) { showToast('Bill added to stock.'); setTimeout(function () { dClose('m-scan'); }, 1200); }
+  /* GST rates the supplier's bill showed differently: update the saved rate (ticked lines only) */
+  var byG = {}; SCAN.forEach(function (x) { var m = x.match ? MEDMAP[x.match] : null; if (x.inc && x.upd && m && x.gst !== '' && Number(m.gst_rate) !== Number(x.gst)) (byG[x.gst] = byG[x.gst] || []).push(m.id); });
+  var gNote = [];
+  for (var g in byG) {
+    var u = await _supa.rpc('ph_set_gst', { p_clinic_id: _clinicId, p_ids: byG[g], p_gst: Number(g) });
+    gNote.push(u.error ? 'GST not updated (' + (/PGRST202|Could not find/.test(dErr(u.error)) ? 'run file 27 in Supabase' : dErr(u.error)) + ')' : 'GST updated to ' + g + '% for ' + u.data + ' medicine' + (u.data === 1 ? '' : 's'));
+  }
+  if (gNote.length) dEl('scan-res').innerHTML += '<div class="card" style="margin-top:6px;color:var(--green);font-weight:700">' + esc(gNote.join(' · ')) + '</div>';
+  if (!e.length) { showToast('Bill added to stock.' + (gNote.length ? ' ' + gNote.join(' · ') : '')); setTimeout(function () { dClose('m-scan'); }, gNote.length ? 2500 : 1200); }
   await loadMeds(); loadRecent();
 }
 
