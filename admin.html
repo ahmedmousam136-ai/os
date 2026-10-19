@@ -660,6 +660,9 @@ header{
       <button class="nb" onclick="nav('taxmaster',this)">
         <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 2h16v20l-4-2-4 2-4-2-4 2z"/><path d="M9 7h6M9 11h6M9 15h3"/></svg></span>Tax Master (GST)
       </button>
+      <button class="nb" onclick="nav('gstcentral',this)">
+        <span class="nb-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span>GST rates (pharmacy &amp; wholesale)<span id="gc-badge" style="display:none;margin-left:6px;background:#E8A317;color:#fff;border-radius:999px;font-size:10px;font-weight:800;padding:1px 6px"></span>
+      </button>
     </nav>
     <div class="sb-foot">
       <div class="sb-out" onclick="doLogout()">
@@ -853,6 +856,12 @@ header{
         <div class="panel"><div style="padding:14px 16px" id="tm-root"></div></div>
       </div>
 
+      <!-- CENTRAL GST LIST (pharmacy & wholesale products) -->
+      <div id="v-gstcentral" class="view">
+        <div class="sh"><div><h1 class="st">GST rates &mdash; pharmacy &amp; wholesale</h1><p class="ss">One list by HSN code for every business. The government watcher brings new rate changes here for your approval.</p></div></div>
+        <div class="panel"><div style="padding:14px 16px" id="gc-root"></div></div>
+      </div>
+
       <!-- SETTINGS -->
       <div id="v-settings" class="view">
         <div class="sh"><div><h1 class="st">Settings</h1><p class="ss">Manage your Super Admin account</p></div></div>
@@ -1043,6 +1052,7 @@ function nav(id,btn){
   if(id==='approvals')loadApprovals();
   if(id==='invoices')loadInvoices();
   if(id==='taxmaster'&&window.AuraTaxMaster)AuraTaxMaster.mount('tm-root',true);
+  if(id==='gstcentral'&&window.AuraGstCentral)AuraGstCentral.mount('gc-root');
   if(id==='settings'){
     var emailEl=document.getElementById('settings-email');
     if(emailEl)emailEl.textContent=_saEmail||'—';
@@ -1555,5 +1565,11 @@ async function recordPayment() {
 }
 </script>
 <script src="aura-tax-master.js?v=1"></script>
+<script src="aura-gst-central.js?v=1"></script>
+<script>
+/* a badge on "GST rates" when the government watcher found changes waiting for approval */
+(function(){ function chk(){ try{ if(typeof _supa==='undefined') return; _supa.from('aura_gst_changes').select('id',{count:'exact',head:true}).eq('status','pending').then(function(r){ var b=document.getElementById('gc-badge'); if(!b||r.error) return; var n=r.count||0; b.textContent=n; b.style.display=n?'inline-block':'none'; }); }catch(e){} }
+  setTimeout(chk,4000); setInterval(chk,10*60*1000); })();
+</script>
 </body>
 </html>
