@@ -220,6 +220,27 @@ en: { title: 'How to use AuraScale Wholesale', sub: 'Short step-by-step guides',
     ['Payment', 'Choose Credit, Cash, UPI, Bank or Cheque. For credit you can also enter money paid now.'],
     ['Save', 'Tap **Save & make invoice**. The GST tax invoice PDF is made at once. Tap **WhatsApp** to send it to the customer.'],
     ['Safety checks', 'AuraScale refuses selling above MRP, selling an expired batch, selling more than in stock, and going over the credit limit (the owner can allow it).']] },
+  { id: 'orderphoto', ic: '📝', n: 'Bill from a photo of the order', d: 'No typing. Owner or Sales staff', steps: [
+    ['Take the photo', 'Tap **Sales** → **New invoice** → **Take / choose photo** in the green **Photo of the order** box. Photograph the chemist\'s handwritten slip, or choose a **screenshot of the WhatsApp order** from the gallery.'],
+    ['AI reads it', 'In 15-30 seconds AI reads every medicine and quantity. If the shop\'s name is on the slip or the chat, the customer is chosen by itself.'],
+    ['Check the lines', 'Left: what was written. Right: the product from your stock. When two products look alike (e.g. Shelcal / Shelcal HD) you choose. A red quantity box means the quantity could not be read: type it, or choose **skip this line**.'],
+    ['Add to the bill', 'Tap **Add to the bill**. The batch that expires first is used (the next batch if it runs short), and the rate is the one this customer got last time.'],
+    ['Save', 'Check the bill and tap **Save & make invoice**. Lines that were skipped are listed, so you can add them by typing.']] },
+  { id: 'repeat', ic: '🔁', n: 'Repeat last order', d: 'For customers who order the same things', steps: [
+    ['Choose the customer', 'In **Sales** → **New invoice**, choose the customer.'],
+    ['Tap the button', 'Under the customer you see **Repeat last order** with the last invoice number, date, items and amount. Tap it.'],
+    ['Change and save', 'All items of that invoice are filled with the same quantity and rate, from the batches in stock now. Change any quantity, then tap **Save & make invoice**.']] },
+  { id: 'import', ic: '📂', n: 'Bring your old data', d: 'From Marg, Busy, Tally or Excel. Owner, once', steps: [
+    ['Export from the old software', 'In your old software, export the **party / ledger list** and the **stock list (batch-wise)** as Excel or CSV.'],
+    ['Choose the file', 'Tap **Settings** → **Bring your old data** → choose **Customers & suppliers** or **Products & stock** → **Choose Excel / CSV file**.'],
+    ['Check the columns', 'AuraScale finds the columns by itself (name, mobile, GSTIN, batch, expiry, stock, MRP …). Check each box points to the right column. The first rows are shown as they will be saved.'],
+    ['Check first, then import', 'Tap **Check first (nothing is saved)** to see what will be added, then **Import now**. Names already in your list are not added twice, and the same file can be imported again safely.'],
+    ['Rows that need attention', 'A stock row without an expiry date, or a batch already in stock, is not added and is listed by row number. Fix it in the file and import again.']] },
+  { id: 'whatsapp', ic: '📲', n: 'Automatic WhatsApp messages', d: 'The owner knows everything without opening the app', steps: [
+    ['9 PM: today\'s summary', 'Sales, purchases, money in and out, what customers owe and how much is overdue, on the owner\'s WhatsApp.'],
+    ['10 AM: collection list', 'Customers whose bills are past the due date, biggest amount first. Monday 10 AM: stock expiring in the next 60 days.'],
+    ['11 AM: reminder to chemists', 'A polite payment reminder to the chemist when a bill is 1, 7, 15 and 30 days late, then monthly. It is **Off** until the owner switches it on.'],
+    ['Switch on / off', 'Tap **Settings** → **WhatsApp messages**. Type your WhatsApp number, choose On / Off for each message and tap **Save WhatsApp settings**. Use **Send me … now** to try one.']] },
   { id: 'returns', ic: '↩️', n: 'Goods returned', d: 'Credit note and debit note', steps: [
     ['Customer sends goods back', 'Open the invoice in **Sales → Invoices** and tap **Goods returned**. Enter the quantity, choose if it goes back into stock, write the reason and save. A **credit note** PDF is made.'],
     ['You return goods to a supplier', 'Tap **Purchase → Return to supplier**. Choose the supplier (and the bill if you know it), search the item, pick the batch, enter quantity and reason. A **debit note** PDF is made.'],
@@ -271,6 +292,27 @@ bn: { title: 'AuraScale হোলসেল কীভাবে ব্যবহা
     ['পেমেন্ট', 'বাকি, নগদ, UPI, ব্যাংক বা চেক বাছুন। বাকিতে চাইলে এখন দেওয়া টাকাও লিখতে পারেন।'],
     ['সেভ করুন', '**সেভ করে ইনভয়েস তৈরি করুন** চাপুন। সঙ্গে সঙ্গে GST ট্যাক্স ইনভয়েস PDF তৈরি হয়। কাস্টমারকে পাঠাতে **WhatsApp** চাপুন।'],
     ['নিরাপত্তা', 'MRP-র বেশি দামে বিক্রি, মেয়াদোত্তীর্ণ ব্যাচ বিক্রি, স্টকের বেশি বিক্রি আর বাকির সীমা পেরোনো AuraScale আটকে দেয় (মালিক অনুমতি দিতে পারেন)।']] },
+  { id: 'orderphoto', ic: '📝', n: 'অর্ডারের ছবি থেকে বিল', d: 'টাইপ ছাড়াই। মালিক বা Sales কর্মী', steps: [
+    ['ছবি তুলুন', '**Sales** → **New invoice** → সবুজ **অর্ডারের ছবি** বক্সে **ছবি তুলুন / বাছুন**। কেমিস্টের হাতে লেখা স্লিপের ছবি তুলুন, অথবা গ্যালারি থেকে **WhatsApp অর্ডারের স্ক্রিনশট** বাছুন।'],
+    ['AI পড়ে নেয়', '১৫–৩০ সেকেন্ডে AI প্রতিটা ওষুধ আর সংখ্যা পড়ে নেয়। স্লিপে বা চ্যাটে দোকানের নাম থাকলে কেমিস্টও নিজে বেছে নেয়।'],
+    ['লাইন মিলিয়ে নিন', 'বাঁদিকে: যা লেখা ছিল। ডানদিকে: আপনার স্টকের ওষুধ। দুটো ওষুধ একরকম দেখতে হলে (যেমন Shelcal / Shelcal HD) আপনি বাছবেন। সংখ্যার ঘর লাল মানে সংখ্যা পড়া যায়নি: লিখে দিন, অথবা **skip this line** বাছুন।'],
+    ['বিলে যোগ করুন', '**বিলে যোগ করুন** চাপুন। যে ব্যাচ আগে এক্সপায়ার হবে সেটা আগে বসে (কম পড়লে পরের ব্যাচ থেকে), আর রেট বসে এই কেমিস্ট শেষবার যে রেট পেয়েছিল।'],
+    ['সেভ', 'বিল দেখে **Save & make invoice** চাপুন। যে লাইন বাদ গেছে তার নাম দেখায়, টাইপ করে যোগ করতে পারেন।']] },
+  { id: 'repeat', ic: '🔁', n: 'আগের অর্ডার আবার', d: 'যে কেমিস্ট একই জিনিস বারবার নেয়', steps: [
+    ['কেমিস্ট বাছুন', '**Sales** → **New invoice**-এ কেমিস্ট বাছুন।'],
+    ['বোতাম চাপুন', 'কেমিস্টের নামের নিচে **আগের অর্ডার আবার** বোতাম আসে, সঙ্গে শেষ বিলের নম্বর, তারিখ, কটা আইটেম আর টাকা। চাপুন।'],
+    ['বদলে সেভ করুন', 'সেই বিলের সব ওষুধ একই সংখ্যা আর রেটে ভরে যায়, এখনকার স্টকের ব্যাচ থেকে। দরকার মতো সংখ্যা বদলে **Save & make invoice** চাপুন।']] },
+  { id: 'import', ic: '📂', n: 'পুরনো তথ্য আনুন', d: 'Marg, Busy, Tally বা Excel থেকে। মালিক, একবারই', steps: [
+    ['পুরনো সফটওয়্যার থেকে বের করুন', 'পুরনো সফটওয়্যার থেকে **পার্টি / লেজারের লিস্ট** আর **স্টকের লিস্ট (ব্যাচ অনুযায়ী)** Excel বা CSV হিসেবে বের করুন।'],
+    ['ফাইল বাছুন', '**Settings** → **পুরনো তথ্য আনুন** → **কেমিস্ট ও সাপ্লায়ার** অথবা **ওষুধ ও স্টক** বাছুন → **Excel / CSV ফাইল বাছুন**।'],
+    ['কলাম মিলিয়ে নিন', 'AuraScale নিজেই কলাম চিনে নেয় (নাম, মোবাইল, GSTIN, ব্যাচ, এক্সপায়ারি, স্টক, MRP …)। প্রতিটা বক্স ঠিক কলামে আছে কিনা দেখুন। প্রথম কয়েকটা সারি যেমন সেভ হবে তেমন দেখায়।'],
+    ['আগে দেখুন, তারপর আনুন', '**Check first** চাপলে কিছু সেভ না করে দেখায় কী যোগ হবে। তারপর **এখনই আনুন**। যে নাম আগে থেকে আছে সেটা ডাবল হয় না। একই ফাইল আবার দিলেও কোনো ক্ষতি নেই।'],
+    ['যে সারি ঠিক করতে হবে', 'এক্সপায়ারি ছাড়া স্টকের সারি, বা যে ব্যাচ আগে থেকেই স্টকে আছে, যোগ হয় না। সারির নম্বর দিয়ে দেখায়। ফাইলে ঠিক করে আবার আনুন।']] },
+  { id: 'whatsapp', ic: '📲', n: 'অটোমেটিক WhatsApp মেসেজ', d: 'অ্যাপ না খুলেই মালিক সব জানবেন', steps: [
+    ['রাত ৯টা: আজকের হিসাব', 'বিক্রি, কেনা, টাকা আসা-যাওয়া, কেমিস্টদের মোট বাকি আর কত টাকা মেয়াদ পেরিয়েছে, মালিকের WhatsApp-এ।'],
+    ['সকাল ১০টা: আদায়ের লিস্ট', 'কোন কেমিস্টের বিলের তারিখ পেরিয়েছে, বেশি টাকা আগে। প্রতি সোমবার সকাল ১০টা: ৬০ দিনের মধ্যে যে মাল এক্সপায়ার হবে।'],
+    ['সকাল ১১টা: কেমিস্টকে রিমাইন্ডার', 'বিল ১, ৭, ১৫ আর ৩০ দিন দেরি হলে (তারপর মাসে একবার) কেমিস্টকে ভদ্র রিমাইন্ডার যায়। মালিক চালু না করা পর্যন্ত এটা **Off** থাকে।'],
+    ['চালু / বন্ধ', '**Settings** → **WhatsApp মেসেজ**। আপনার WhatsApp নম্বর লিখুন, প্রতিটা মেসেজের জন্য On / Off বাছুন, **WhatsApp সেটিং সেভ করুন** চাপুন। **Send me … now** চেপে একটা পরীক্ষা করে দেখতে পারেন।']] },
   { id: 'returns', ic: '↩️', n: 'মাল ফেরত', d: 'ক্রেডিট নোট আর ডেবিট নোট', steps: [
     ['কাস্টমার মাল ফেরত দিলে', '**বিক্রি → ইনভয়েস**-এ ইনভয়েস খুলে **মাল ফেরত এসেছে** চাপুন। পরিমাণ লিখুন, আবার স্টকে যাবে কিনা বাছুন, কারণ লিখে সেভ করুন। **ক্রেডিট নোট** PDF তৈরি হবে।'],
     ['আপনি সাপ্লায়ারকে মাল ফেরত দিলে', '**কেনা → সাপ্লায়ারকে ফেরত** চাপুন। সাপ্লায়ার (আর জানা থাকলে বিল) বাছুন, আইটেম খুঁজে ব্যাচ বাছুন, পরিমাণ আর কারণ লিখুন। **ডেবিট নোট** PDF তৈরি হবে।'],
@@ -322,6 +364,27 @@ hi: { title: 'AuraScale होलसेल कैसे इस्तेमाल
     ['भुगतान', 'उधार, नकद, UPI, बैंक या चेक चुनें। उधार में अभी दिया पैसा भी डाल सकते हैं।'],
     ['सेव करें', '**सेव करें और इनवॉइस बनाएँ** दबाएँ। GST टैक्स इनवॉइस PDF तुरंत बनता है। ग्राहक को भेजने के लिए **WhatsApp** दबाएँ।'],
     ['सुरक्षा जाँच', 'MRP से ज़्यादा पर बेचना, एक्सपायर्ड बैच बेचना, स्टॉक से ज़्यादा बेचना और उधार सीमा पार करना AuraScale रोक देता है (मालिक अनुमति दे सकते हैं)।']] },
+  { id: 'orderphoto', ic: '📝', n: 'ऑर्डर की फोटो से बिल', d: 'बिना टाइप किए। मालिक या Sales स्टाफ', steps: [
+    ['फोटो लें', '**Sales** → **New invoice** → हरे **ऑर्डर की फोटो** बॉक्स में **फोटो लें / चुनें**। केमिस्ट की हाथ से लिखी पर्ची की फोटो लें, या गैलरी से **WhatsApp ऑर्डर का स्क्रीनशॉट** चुनें।'],
+    ['AI पढ़ लेता है', '15–30 सेकंड में AI हर दवा और मात्रा पढ़ लेता है। पर्ची या चैट में दुकान का नाम हो तो ग्राहक भी अपने आप चुन लिया जाता है।'],
+    ['लाइनें जाँचें', 'बाएँ: जो लिखा था। दाएँ: आपके स्टॉक की दवा। दो दवाएँ एक जैसी दिखें (जैसे Shelcal / Shelcal HD) तो आप चुनें। मात्रा का लाल बॉक्स मतलब मात्रा पढ़ी नहीं गई: लिख दें, या **skip this line** चुनें।'],
+    ['बिल में जोड़ें', '**बिल में जोड़ें** दबाएँ। जो बैच पहले एक्सपायर होगा वह पहले लगता है (कम पड़े तो अगला बैच), और रेट वही जो इस ग्राहक को पिछली बार मिला था।'],
+    ['सेव', 'बिल देखकर **Save & make invoice** दबाएँ। जो लाइनें छूट गईं उनके नाम दिखते हैं, उन्हें टाइप करके जोड़ सकते हैं।']] },
+  { id: 'repeat', ic: '🔁', n: 'पिछला ऑर्डर दोबारा', d: 'जो ग्राहक बार-बार वही सामान लेते हैं', steps: [
+    ['ग्राहक चुनें', '**Sales** → **New invoice** में ग्राहक चुनें।'],
+    ['बटन दबाएँ', 'ग्राहक के नीचे **पिछला ऑर्डर दोबारा** बटन दिखता है, साथ में पिछले बिल का नंबर, तारीख, आइटम और रकम। दबाएँ।'],
+    ['बदलें और सेव करें', 'उस बिल की सारी दवाएँ उसी मात्रा और रेट से भर जाती हैं, अभी के स्टॉक के बैच से। जो मात्रा बदलनी हो बदलें, फिर **Save & make invoice** दबाएँ।']] },
+  { id: 'import', ic: '📂', n: 'पुराना डेटा लाएँ', d: 'Marg, Busy, Tally या Excel से। मालिक, एक बार', steps: [
+    ['पुराने सॉफ्टवेयर से निकालें', 'पुराने सॉफ्टवेयर से **पार्टी / लेजर की सूची** और **स्टॉक की सूची (बैच के हिसाब से)** Excel या CSV में निकालें।'],
+    ['फ़ाइल चुनें', '**Settings** → **पुराना डेटा लाएँ** → **ग्राहक और सप्लायर** या **दवाइयाँ और स्टॉक** चुनें → **Excel / CSV फ़ाइल चुनें**।'],
+    ['कॉलम जाँचें', 'AuraScale खुद कॉलम पहचान लेता है (नाम, मोबाइल, GSTIN, बैच, एक्सपायरी, स्टॉक, MRP …)। हर बॉक्स सही कॉलम पर है या नहीं, देख लें। पहली कुछ पंक्तियाँ वैसे ही दिखती हैं जैसे सेव होंगी।'],
+    ['पहले जाँचें, फिर लाएँ', '**Check first** दबाने पर बिना सेव किए दिखता है क्या जुड़ेगा। फिर **अभी लाएँ**। जो नाम पहले से है वह दोबारा नहीं जुड़ता। वही फ़ाइल फिर से देने में भी कोई नुकसान नहीं।'],
+    ['जिन पंक्तियों को ठीक करना है', 'बिना एक्सपायरी वाली स्टॉक पंक्ति, या जो बैच पहले से स्टॉक में है, नहीं जुड़ती। पंक्ति नंबर के साथ दिखती है। फ़ाइल में ठीक करके फिर लाएँ।']] },
+  { id: 'whatsapp', ic: '📲', n: 'अपने आप WhatsApp संदेश', d: 'ऐप खोले बिना मालिक को सब पता', steps: [
+    ['रात 9 बजे: आज का हिसाब', 'बिक्री, खरीद, पैसा आना-जाना, ग्राहकों का कुल बकाया और कितना ओवरड्यू, मालिक के WhatsApp पर।'],
+    ['सुबह 10 बजे: वसूली सूची', 'किन ग्राहकों के बिल की तारीख निकल गई, बड़ी रकम पहले। हर सोमवार सुबह 10 बजे: अगले 60 दिन में एक्सपायर होने वाला माल।'],
+    ['सुबह 11 बजे: केमिस्ट को याद', 'बिल 1, 7, 15 और 30 दिन लेट होने पर (फिर हर महीने) केमिस्ट को विनम्र याद दिलाना। मालिक चालू न करे तब तक यह **Off** रहता है।'],
+    ['चालू / बंद', '**Settings** → **WhatsApp संदेश**। अपना WhatsApp नंबर लिखें, हर संदेश के लिए On / Off चुनें, **WhatsApp सेटिंग सेव करें** दबाएँ। **Send me … now** दबाकर एक आज़मा सकते हैं।']] },
   { id: 'returns', ic: '↩️', n: 'माल वापसी', d: 'क्रेडिट नोट और डेबिट नोट', steps: [
     ['ग्राहक माल लौटाए', '**बिक्री → इनवॉइस** में इनवॉइस खोलें और **माल वापस आया** दबाएँ। मात्रा लिखें, फिर से स्टॉक में जाएगा या नहीं चुनें, कारण लिखकर सेव करें। **क्रेडिट नोट** PDF बनेगा।'],
     ['आप सप्लायर को माल लौटाएँ', '**खरीद → सप्लायर को वापसी** दबाएँ। सप्लायर (और पता हो तो बिल) चुनें, आइटम खोजें, बैच चुनें, मात्रा और कारण लिखें। **डेबिट नोट** PDF बनेगा।'],
