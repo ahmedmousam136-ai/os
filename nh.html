@@ -2567,11 +2567,32 @@ async function _auraCreateFacility(uid,nhname,name,mobile,btype){
   return {id:ins.data.id};
 }
 function _auraCheckEmailScreen(email,isStaff){
+  /* The confirmation email now carries a 6-digit code (Supabase "Confirm signup" template). Older emails had a link; both work. */
+  window._auraConfirmEmail=email;
   document.getElementById('auth-screen').innerHTML='<div class="auth-wrap"><div class="auth-card" style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:16px">&#128231;</div>'
     +'<h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Confirm your email</h2>'
-    +'<p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">We have sent a confirmation link to<br><b>'+esc(email)+'</b></p>'
-    +'<p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px">Open the email and tap <b>Confirm</b>. '+(isStaff?'You join your nursing home as soon as you confirm.':'Your nursing home is registered as soon as you confirm, and AuraScale then activates it within 24 hours.')+'<br><br>Not in your inbox? Check Spam or Promotions. If you already have an AuraScale account with this email, just sign in.</p>'
-    +'<a href="'+location.pathname+'" style="display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;padding:12px 24px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none">Back to Sign In</a></div></div>';
+    +'<p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px">We have sent a code to<br><b>'+esc(email)+'</b><br>Type it below. '+(isStaff?'You join your nursing home as soon as it is confirmed.':'Your business is registered as soon as it is confirmed, and AuraScale then activates it within 24 hours.')+'</p>'
+    +'<div style="display:flex;flex-direction:column;gap:12px;text-align:left">'
+    +'<input class="auth-input otp-input" id="cf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="••••••" oninput="this.value=this.value.replace(/\\D/g,\'\');if(this.value.length===6)_auraConfirmCode();" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_auraConfirmCode();}"/>'
+    +'<div id="cf-err" class="auth-error"></div>'
+    +'<button class="auth-btn" id="cf-btn" onclick="_auraConfirmCode()">Confirm &amp; continue →</button></div>'
+    +'<p style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin:14px 0 0">Not in your inbox? Check Spam or Promotions. If the email has a link instead, just tap the link.</p>'
+    +'<p class="ss" style="margin-top:12px"><a href="'+location.pathname+location.search+'" class="auth-link">Back to Sign In</a></p></div></div>';
+  setTimeout(function(){ var c=document.getElementById('cf-code'); if(c) c.focus(); },30);
+}
+async function _auraConfirmCode(){
+  var btn=document.getElementById('cf-btn'); if(!btn||btn.disabled) return;
+  var err=document.getElementById('cf-err'); err.style.display='none';
+  var code=(document.getElementById('cf-code').value||'').replace(/\D/g,'');
+  if(code.length<6){ err.textContent='Enter the code from the email (6 digits).'; err.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Checking…';
+  try{
+    var r=await _supa.auth.verifyOtp({email:window._auraConfirmEmail,token:code,type:'signup'});
+    if(r.error) r=await _supa.auth.verifyOtp({email:window._auraConfirmEmail,token:code,type:'email'});
+    if(r.error){ err.textContent=_auraAuthMsg(r.error); err.style.display='block'; return; }
+    await _initApp();
+  }catch(e){ err.textContent=_auraAuthMsg(e); err.style.display='block'; }
+  finally{ if(document.body.contains(btn)){ btn.disabled=false; btn.textContent='Confirm & continue →'; } }
 }
 async function _handleSignupCreate(nhname,name,email,mobile,pass,err){
   window._auraSigningUp=true;
