@@ -498,6 +498,12 @@ function buyRender() {
   var g = r2(T.tx + T.c + T.s + T.i), tot = Math.round(g);
   var row = function (l, v, cls) { return '<div class="sum-row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
   var bt = dEl('b-billtot') ? num(dEl('b-billtot').value) : 0;
+  /* the supplier's bill shows a different GST than the one saved for the product: offer to update it */
+  var gd = PLINES.filter(function (l) { var it = l.item_id && ITEMMAP[l.item_id]; return it && Number(it.gst_rate) !== Number(l.gst); });
+  var gn = dEl('b-gstnote');
+  if (gn) gn.innerHTML = gd.length ? '<div class="card" style="margin-top:10px;padding:10px 12px;border-color:var(--amber)"><b style="color:var(--amber)">&#9888; This bill shows a different GST for ' + gd.length + ' product' + (gd.length === 1 ? '' : 's') + '</b>'
+    + gd.map(function (l) { return '<div class="tiny">' + esc(l.name) + ': saved <b>' + Number(ITEMMAP[l.item_id].gst_rate) + '%</b>, bill says <b>' + Number(l.gst) + '%</b></div>'; }).join('')
+    + '<label style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:13px;font-weight:600;cursor:pointer"><input type="checkbox" id="b-gstupd" checked style="width:17px;height:17px;appearance:auto"/> Update the saved GST to the supplier\'s rate when I save (new invoices use it)</label></div>' : '';
   dEl('b-sum').innerHTML = row('Taxable value', dMoney(T.tx)) + (inter ? row('IGST', dMoney(T.i)) : row('CGST', dMoney(T.c)) + row('SGST', dMoney(T.s))) + (tot - g ? row('Round off', (tot - g > 0 ? '+' : '') + (tot - g).toFixed(2)) : '') + row('Bill total', dMoney0(tot), 'big')
     + (bt > 0 ? (Math.abs(bt - tot) <= 2 ? '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; Matches the paper bill (' + dMoney0(bt) + ')</div>' : '<div class="tiny over">&#10007; Paper bill says ' + dMoney0(bt) + ' (difference ' + dMoney0(bt - tot) + '). A line may be missing or wrong.</div>') : '<div class="tiny">Type the grand total from the paper bill to check it.</div>');
 }
@@ -515,7 +521,12 @@ async function buySave() {
   var btn = dEl('b-save'); btn.disabled = true; btn.textContent = 'Saving…';
   try {
     var r = await _supa.rpc('wh_purchase', { p_clinic: _clinicId, p: body }); if (r.error) throw r.error;
-    showToast('Purchase ' + r.data.our_no + ' saved: ' + dMoney0(r.data.total) + '. Stock updated.');
+    var gmsg = '';
+    if (dEl('b-gstupd') && dEl('b-gstupd').checked) {
+      var byG = {}; PLINES.forEach(function (l) { var it = l.item_id && ITEMMAP[l.item_id]; if (it && Number(it.gst_rate) !== Number(l.gst) && (byG[l.gst] = byG[l.gst] || []).indexOf(it.id) < 0) byG[l.gst].push(it.id); });
+      for (var g in byG) { var u = await _supa.rpc('wh_set_gst', { p_clinic: _clinicId, p_ids: byG[g], p_gst: Number(g) }); gmsg += u.error ? ' GST not updated (' + (/PGRST202|Could not find/.test(dErr(u.error)) ? 'run file 28' : dErr(u.error)) + ').' : ' GST updated to ' + g + '% for ' + u.data + ' product' + (u.data === 1 ? '' : 's') + '.'; }
+    }
+    showToast('Purchase ' + r.data.our_no + ' saved: ' + dMoney0(r.data.total) + '. Stock updated.' + gmsg);
     PLINES = []; dEl('b-billno').value = ''; dEl('b-note').value = ''; dEl('b-billtot').value = ''; ppSet('buy', null); buyRender();
     await loadItems(); buySeg('list');
   } catch (e) { dShowErr('b-err', dErr(e)); }
