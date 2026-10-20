@@ -754,7 +754,8 @@ function scanCheck() {
   if (mismatch && why.length < 5) probs.push('the lines add up to ' + dMoney0(lines) + ' but the bill total is ' + dMoney0(billTot) + ' (difference ' + dMoney0(diff) + '): a line may be missing or misread' + (untick ? ' (' + untick + ' line(s) unticked)' : '') + '. Fix it, or write the reason below');
   dEl('sc-sum').innerHTML = '<div class="card" style="' + (probs.length ? 'border-color:var(--red-border);background:var(--red-bg)' : 'border-color:var(--green-border);background:var(--green-bg)') + '">'
     + 'Lines add up to <b>' + dMoney0(lines) + '</b>' + (billTot > 0 ? ' &middot; bill total <b>' + dMoney0(billTot) + '</b> ' + (mismatch ? '<span class="over">&#10007; does not match</span>' : '<span style="color:var(--green);font-weight:700">&#10003; matches</span>') : '')
-    + (probs.length ? '<div class="over" style="margin-top:6px">Cannot go ahead yet. Missing or wrong: ' + esc(probs.join(' · ')) + '</div>' : '<div style="color:var(--green);font-weight:700;margin-top:6px">&#10003; Everything is filled. You can go ahead.</div>') + '</div>';
+    + (probs.length ? '<div class="over" style="margin-top:6px">Cannot go ahead yet. Missing or wrong: ' + esc(probs.join(' · ')) + '</div>'
+      + (!sup ? '<button class="btn btn-sm btn-g" style="margin-top:8px" onclick="partyEdit(null,\'scan\',' + A((SCAN_D || {}).supplier || '') + ',' + A((SCAN_D || {}).supplier_gstin || '') + ')">&#10133; Add ' + esc((SCAN_D || {}).supplier || 'the supplier') + ' as a new supplier</button>' : '') : '<div style="color:var(--green);font-weight:700;margin-top:6px">&#10003; Everything is filled. You can go ahead.</div>') + '</div>';
   var go = dEl('sc-go'); if (go) go.disabled = probs.length > 0;
   return probs;
 }
@@ -770,6 +771,13 @@ function scanUse() {
     if (!it) l.item = { name: l.name, hsn: x.hsn || '3004', gst_rate: l.gst, unit: /ml|syr|syp|susp|bottle|liq/i.test(x.pack + ' ' + l.name) ? 'bottle' : /vial|inj|amp/i.test(x.pack + ' ' + l.name) ? 'vial' : 'strip', pack: String(x.pack || '').trim(), manufacturer: String(x.mfg || '').trim() };
     add.push(l);
   });
+  /* a purchase is ONE supplier bill: scanning again must not add the same lines a second time */
+  if (PLINES.length) {
+    var same = add.filter(function (l) { return PLINES.some(function (o) { return String(o.batch || '').toUpperCase() === l.batch && String(o.name || '').toLowerCase() === String(l.name || '').toLowerCase(); }); }).length;
+    var rep = confirm('This purchase already has ' + PLINES.length + ' line(s)' + (same ? ', and ' + same + ' of the new lines are already in it' : '') + '.\n\nOK = REPLACE them with the lines from this bill photo\nCancel = ADD the new lines below them' + (same ? ' (the ' + same + ' repeated line(s) are skipped)' : ''));
+    if (rep) PLINES = [];
+    else add = add.filter(function (l) { return !PLINES.some(function (o) { return String(o.batch || '').toUpperCase() === l.batch && String(o.name || '').toLowerCase() === String(l.name || '').toLowerCase(); }); });
+  }
   PLINES = PLINES.concat(add); PLINES._doc = SCAN_DOC;
   ppSet('buy', SCAN_SUP);
   dEl('b-billno').value = dEl('sc-no').value.trim(); dEl('b-date').value = dEl('sc-date').value; dEl('b-billtot').value = dEl('sc-tot').value;
@@ -959,6 +967,9 @@ function partyEdit(id, backKey, name, gstin) {
   _partyBack = backKey || null;
   var g0 = String(gstin || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
   var p = id ? PARTYMAP[id] : { name: name || '', gstin: gstinOk(g0) ? g0 : '', state_code: gstinOk(g0) ? g0.slice(0, 2) : null, party_type: backKey === 'buy' || backKey === 'pret' || backKey === 'scan' ? 'supplier' : 'customer', is_active: true, opening_balance: 0 };
+  if (!id && backKey === 'scan' && SCAN_D) {   /* details printed on the supplier's bill header */
+    p.phone = SCAN_D.supplier_phone || ''; p.address = SCAN_D.supplier_address || ''; p.drug_license_no = SCAN_D.supplier_dl || '';
+  }
   var me = CAN.moneyEdit;
   dEl('party-title').textContent = id ? 'Edit ' + p.name : 'New party';
   var f = function (k, lbl, attrs, val) { return '<div><label class="flbl">' + lbl + '</label><input class="finput" id="pe-' + k + '" ' + (attrs || '') + ' value="' + esc(val !== undefined ? val : (p[k] == null ? '' : p[k])) + '"/></div>'; };
