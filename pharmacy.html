@@ -28,6 +28,7 @@
     <button class="d-tab on" data-t="pos" onclick="dTab('pos')"><span class="ti">&#129534;</span><span class="tl">New bill</span></button>
     <button class="d-tab" data-t="stock" onclick="dTab('stock')"><span class="ti">&#128230;</span><span class="tl">Stock</span></button>
     <button class="d-tab" data-t="receive" onclick="dTab('receive')"><span class="ti">&#10133;</span><span class="tl">Add stock</span></button>
+    <button class="d-tab" data-t="order" onclick="dTab('order')"><span class="ti">&#128722;</span><span class="tl">Re-order</span></button>
     <button class="d-tab" data-t="bills" onclick="dTab('bills')"><span class="ti">&#128196;</span><span class="tl">Bills</span></button>
     <button class="d-tab" data-t="settings" onclick="dTab('settings')" data-owner-only><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
   </div>
@@ -36,6 +37,7 @@
     <!-- ============ NEW BILL (POS) ============ -->
     <div class="d-view on" id="v-pos">
       <div id="pos-setup-note" class="note" style="display:none"></div>
+      <div id="refill-due"></div>
       <div class="pos-grid" id="pos-bottom">
         <div class="pos-left">
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
@@ -66,6 +68,7 @@
         <label class="flbl">Add medicine</label>
         <input class="finput" id="m-search" placeholder="Type 2-3 letters of the name or salt, then press Enter&hellip;" autocomplete="off" oninput="posSearch()" onkeydown="posSearchKey(event)" style="font-size:15px"/>
         <div id="m-dd" class="dd" style="display:none"></div>
+        <div id="pp-subs"></div>
       </div>
 
       <div style="overflow-x:auto">
@@ -112,6 +115,7 @@
         </div>
         <button class="btn btn-sm" onclick="medEdit(null)">&#10133; New medicine</button>
         <button class="btn btn-sm" onclick="gstMode(true)">&#37; Change GST of many</button>
+        <button class="btn btn-sm" onclick="retOpen()">&#8617; Return to supplier</button>
       </div>
       <div id="gst-bar" class="card" style="display:none;margin-bottom:10px;padding:10px 12px;background:var(--green-bg);border-color:var(--green-border)">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
@@ -178,6 +182,9 @@
       <div style="overflow-x:auto"><table class="dt"><thead><tr><th>When</th><th>Medicine</th><th>Batch</th><th class="r">Qty</th><th>By</th><th>Note</th></tr></thead><tbody id="rcv-recent"></tbody></table></div>
     </div>
 
+    <!-- ============ RE-ORDER (pharmacy-pro.js) ============ -->
+    <div class="d-view" id="v-order"><div id="ro-root"></div></div>
+
     <!-- ============ BILLS ============ -->
     <div class="d-view" id="v-bills">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
@@ -185,6 +192,7 @@
           <button class="on" data-r="1" onclick="billsRange(1)">Today</button><button data-r="7" onclick="billsRange(7)">7 days</button><button data-r="30" onclick="billsRange(30)">30 days</button>
         </div>
         <input class="finput" id="bl-q" placeholder="Search bill no. or name&hellip;" oninput="billsRender()" style="max-width:260px"/>
+        <button class="btn btn-sm" onclick="h1Open()">&#128210; Schedule H1 register</button>
       </div>
       <div class="stat" id="bl-stats"></div>
       <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Time</th><th>Bill</th><th>Customer / patient</th><th class="r">Amount</th><th>Paid by</th><th></th></tr></thead><tbody id="bl-b"></tbody></table></div>
@@ -298,6 +306,7 @@ function posSearch() {
   _ddSel = 0;
   dd.innerHTML = list.length ? list.map(function (m, i) {
     return '<div class="dd-i' + (i === 0 ? ' hl' : '') + '" data-id="' + m.id + '" onclick="posAdd(\'' + m.id + '\')"><div style="display:flex;justify-content:space-between;gap:8px"><b>' + esc(m.name) + '</b><span>' + (m.next ? dMoney(m.next.mrp) + '/' + esc(m.unit) : '') + '</span></div>'
+      + (m.stock <= 0 && window.subsFor && subsFor(m, 1).length ? '<div class="tiny" style="color:var(--green);font-weight:700">&#8644; Same salt in stock: ' + esc(subsFor(m, 1)[0].name) + '</div>' : '')
       + '<div class="tiny">' + esc(m.composition || '') + ' &middot; ' + (m.stock > 0 ? '<span style="color:var(--green);font-weight:700">' + m.stock + ' ' + esc(m.unit) + ' in stock</span>' + (m.nearestExp ? ' &middot; Exp ' + dExp(m.nearestExp) : '') : '<span style="color:var(--red);font-weight:700">Out of stock</span>') + '</div></div>';
   }).join('') : '<div class="dd-i muted">No medicine found. Add it in <b>Add stock</b>.</div>';
   dd.style.display = 'block';
@@ -310,7 +319,8 @@ function posSearchKey(e) {
 }
 function posAdd(id) {
   var m = MEDMAP[id]; if (!m) return;
-  if (m.stock <= 0) { showToast(m.name + ' is out of stock (expired stock is never sold).'); return; }
+  if (m.stock <= 0) { dEl('m-search').value = ''; dEl('m-dd').style.display = 'none'; if (!(window.ppOutOfStock && ppOutOfStock(m))) showToast(m.name + ' is out of stock (expired stock is never sold).'); return; }
+  if (dEl('pp-subs')) dEl('pp-subs').innerHTML = '';
   var ex = CART.filter(function (c) { return c.medicine_id === id; })[0];
   if (ex) ex.qty = Math.min(ex.qty + 1, m.stock); else CART.push({ medicine_id: id, qty: 1 });
   dEl('m-search').value = ''; dEl('m-dd').style.display = 'none';
@@ -392,6 +402,8 @@ async function posSave() {
     var ph1 = dEl('c-phone').value.trim();
     if (ph1 && !dMobile(ph1)) { dShowErr('pos-err', 'Mobile number must be exactly 10 digits starting with 6-9 (or leave it empty).'); dEl('c-phone').focus(); return; }
     p.patient_name = dEl('c-name').value.trim(); p.patient_phone = dMobile(ph1); p.doctor = dEl('c-doctor').value.trim();
+    var h1 = CART.filter(function (c) { var s = String((MEDMAP[c.medicine_id] || {}).schedule || '').toUpperCase(); return c.qty > 0 && (s === 'H1' || s === 'X'); });
+    if (h1.length && !p.doctor) { dShowErr('pos-err', 'Schedule ' + MEDMAP[h1[0].medicine_id].schedule + ' medicine (' + MEDMAP[h1[0].medicine_id].name + '): write the prescribing doctor\'s name. It goes into the H1 register.'); dEl('c-doctor').focus(); return; }
     p.uhid = dEl('c-uhid').value.trim(); p.patient_id = LINKED ? LINKED.id : null;
     p.discount_pct = Number(dEl('c-disc').value) || 0; p.pay_mode = dEl('c-pay').value;
   }
@@ -407,7 +419,7 @@ async function posSave() {
     if (waOk) { var w = await _supa.rpc('ph_set_whatsapp', { p_sale_id: sale.id, p_ok: true, p_refill_days: refill || null }); if (!w.error && w.data) sale = Object.assign(sale, w.data); }
     if (dEl('c-repeat')) dEl('c-repeat').innerHTML = ''; if (dEl('rx-st')) dEl('rx-st').innerHTML = ''; _repKey = '';
     CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid'].forEach(function (id) { dEl(id).value = ''; }); if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone')); dEl('c-disc').value = 0; dEl('c-refill').value = '0'; dEl('c-wa').checked = true; posPay('cash');
-    posRender(); loadMeds();
+    posRender(); loadMeds(); if (dEl('pp-subs')) dEl('pp-subs').innerHTML = ''; if (window.refillLoad) refillLoad();
     showDone(sale, true);
   } catch (e) { dShowErr('pos-err', dErr(e)); }
   finally { btn.disabled = false; btn.innerHTML = '&#10003; Save &amp; make bill'; }
@@ -488,6 +500,15 @@ async function ensureSalePdf(sale) {
   var r = await _supa.rpc('ph_set_pdf', { p_sale_id: sale.id, p_path: path }); if (r.error) throw r.error;
   sale.pdf_path = path; return path;
 }
+/* under the tick: "Today is now Rs 8,420 from 23 bills" (same as wholesale) */
+async function phTodayLine() {
+  try {
+    var from = new Date(Date.parse(dTodayIST() + 'T00:00:00+05:30')).toISOString();
+    var r = await _supa.from('ph_sales').select('total').eq('clinic_id', _clinicId).eq('kind', 'walkin').eq('cancelled', false).gte('created_at', from);
+    var rows = r.data || [], el = dEl('ds-day'); if (!el || !rows.length) return;
+    el.textContent = 'Today is now ' + dMoney0(rows.reduce(function (t, x) { return t + Number(x.total); }, 0)) + ' from ' + rows.length + ' bill' + (rows.length === 1 ? '' : 's');
+  } catch (e) {}
+}
 async function showDone(sale, fresh) {
   dEl('done-title').textContent = (sale.kind === 'ipd' ? 'Issued ' : 'Bill ') + sale.bill_no;
   var body = dEl('done-body');
@@ -498,7 +519,7 @@ async function showDone(sale, fresh) {
     + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" id="done-open" disabled>&#128196; Open / print</button>'
     + '<button class="btn btn-g" id="done-wa" disabled>&#128242; WhatsApp</button><button class="btn btn-p" onclick="dClose(\'m-done\');dTab(\'pos\');dEl(\'m-search\').focus()">&#10133; New bill</button></div></div>';
   dOpen('m-done');
-  if (fresh) deptSuccessPlay();
+  if (fresh) { deptSuccessPlay(); phTodayLine(); }
   try {
     var path = await ensureSalePdf(sale);
     dEl('done-pdf').textContent = 'PDF saved.';
@@ -572,7 +593,7 @@ async function gstApply() {
     if (r.error) throw r.error;
     await loadMeds(); GSTSEL = {}; stockRender();
     dEl('gst-st').innerHTML = '<span style="color:var(--green);font-weight:700">&#10003; GST changed to ' + g + '% for ' + r.data + ' medicine' + (r.data === 1 ? '' : 's') + '.</span>';
-    showToast('GST updated.');
+    if (window.phOk) phOk('GST updated'); else showToast('GST updated.');
   } catch (e) { dEl('gst-st').innerHTML = '<span class="over">' + esc(/PGRST202|Could not find the function/.test(dErr(e)) ? 'Run file 27 in Supabase first.' : dErr(e)) + '</span>'; }
   finally { btn.disabled = false; btn.innerHTML = '&#10003; Change GST'; }
 }
@@ -617,7 +638,7 @@ async function medSave(id) {
   if (id) p.is_active = dEl('me-act').value === 'true';
   var r = await _supa.rpc('ph_save_medicine', { p_clinic_id: _clinicId, p_id: id, p: p });
   if (r.error) { dShowErr('me-err', dErr(r.error)); return; }
-  showToast('Saved.'); dClose('m-med'); await loadMeds(); stockRender();
+  if (window.phOk) phOk('Medicine saved'); else showToast('Saved.'); dClose('m-med'); await loadMeds(); stockRender();
 }
 
 /* ---------------- ADD STOCK ---------------- */
@@ -662,7 +683,7 @@ async function rcvSave() {
     var r = await _supa.rpc('ph_receive', { p_clinic_id: _clinicId, p_medicine_id: id, p: {
       batch_no: dEl('r-batch').value.trim(), expiry: exp + '-01', mrp: Math.round(mrp / pack * 100) / 100, purchase_rate: Math.round(rate / pack * 100) / 100, qty: q * pack, supplier: dEl('r-sup').value.trim() } });
     if (r.error) throw r.error;
-    showToast('Added ' + (q * pack) + ' to stock.');
+    if (window.phOk) phOk('Added to stock', (q * pack) + ' added'); else showToast('Added ' + (q * pack) + ' to stock.');
     ['r-med', 'r-batch', 'r-exp', 'r-mrp', 'r-qty', 'r-rate'].forEach(function (x) { dEl(x).value = ''; }); dEl('r-pack').value = 1;
     RCV_MED = null; dEl('r-new').style.display = 'none'; dEl('r-picked').textContent = ''; dEl('r-calc').textContent = '';
     await loadMeds(); loadRecent(); dEl('r-med').focus();
@@ -726,7 +747,7 @@ async function impGo() {
     if (r.error) { dEl('imp-res').innerHTML = '<div class="err" style="display:block">' + esc(dErr(r.error)) + '</div>'; btn.disabled = false; return; }
     tot.m += r.data.medicines_added; tot.s += r.data.stock_lines_added; (r.data.errors || []).forEach(function (x) { x.row += i; tot.e.push(x); });
   }
-  btn.textContent = 'Done';
+  btn.textContent = 'Done'; if (window.phOk) phOk('Stock list imported', tot.m + ' new medicines &middot; ' + tot.s + ' stock lines');
   dEl('imp-res').innerHTML = '<div class="card" style="margin-top:10px"><b>' + tot.m + '</b> new medicines, <b>' + tot.s + '</b> stock lines added.' + (tot.e.length ? '<div style="color:var(--red);margin-top:6px">' + tot.e.length + ' rows skipped:<br>' + tot.e.slice(0, 20).map(function (x) { return 'Row ' + x.row + ' ' + esc(x.name || '') + ': ' + esc(x.error); }).join('<br>') + '</div>' : '') + '</div>';
   IMP_ROWS = []; await loadMeds(); loadRecent();
 }
@@ -870,7 +891,7 @@ async function scanSave() {
     gNote.push(u.error ? 'GST not updated (' + (/PGRST202|Could not find/.test(dErr(u.error)) ? 'run file 27 in Supabase' : dErr(u.error)) + ')' : 'GST updated to ' + g + '% for ' + u.data + ' medicine' + (u.data === 1 ? '' : 's'));
   }
   if (gNote.length) dEl('scan-res').innerHTML += '<div class="card" style="margin-top:6px;color:var(--green);font-weight:700">' + esc(gNote.join(' · ')) + '</div>';
-  if (!e.length) { showToast('Bill added to stock.' + (gNote.length ? ' ' + gNote.join(' · ') : '')); setTimeout(function () { dClose('m-scan'); }, gNote.length ? 2500 : 1200); }
+  if (!e.length) { if (window.phOk) phOk('Bill added to stock', gNote.length ? esc(gNote.join(' · ')) : 'Every line is in stock now.', gNote.length ? 2600 : 1700); else showToast('Bill added to stock.' + (gNote.length ? ' ' + gNote.join(' · ') : '')); setTimeout(function () { dClose('m-scan'); }, gNote.length ? 2500 : 1200); }
   await loadMeds(); loadRecent();
 }
 
@@ -948,7 +969,8 @@ function rxReview() {
     var m = x.med ? MEDMAP[x.med] : null;
     return '<tr id="rx-' + i + '"><td><b>' + esc(x.read) + '</b>' + (x.raw && x.raw !== x.read ? '<div class="tiny">written: ' + esc(x.raw) + '</div>' : '') + (rxHow(x) ? '<div class="tiny">' + rxHow(x) + '</div>' : '') + '</td>'
       + '<td><select class="finput" style="min-width:230px" onchange="RX[' + i + '].med=this.value;if(RX[' + i + '].qty===\'\')RX[' + i + '].qty=rxQty(RX[' + i + ']);rxReview()">' + opts + '</select>'
-      + (x.cands.length ? (x.sure || x.med ? '' : '<div class="tiny" style="color:var(--amber)">Not sure &mdash; please choose</div>') : '<div class="tiny over">Not in your stock list</div>') + '</td>'
+      + (x.cands.length ? (x.sure || x.med ? '' : '<div class="tiny" style="color:var(--amber)">Not sure &mdash; please choose</div>') : '<div class="tiny over">Not in your stock list</div>')
+      + (m && m.stock <= 0 && window.subsFor && subsFor(m, 1).length ? '<div class="pp-sub">&#8644; Out of stock. Same salt in stock: <a href="#" style="font-weight:700" onclick="RX[' + i + '].med=\'' + subsFor(m, 1)[0].id + '\';rxReview();return false">' + esc(subsFor(m, 1)[0].name) + '</a> (' + (subsFor(m, 1)[0].next ? dMoney(subsFor(m, 1)[0].next.mrp) : '') + ')</div>' : '') + '</td>'
       + '<td class="r"><input class="finput" type="number" min="0" step="1" value="' + esc(x.qty) + '" style="width:80px;text-align:right" oninput="RX[' + i + '].qty=this.value;rxCheck()"/><div class="tiny">' + esc(m ? m.unit : '') + '</div></td></tr>';
   }).join('');
   dEl('rx-body').innerHTML = '<p class="tiny" style="margin-bottom:8px">Check each line against the prescription: the medicine on the right must be the one the doctor wrote, and the quantity right for the days written. Loose tablets are counted as doses a day &times; days.</p>'
@@ -968,6 +990,8 @@ function rxUse() {
   RX.forEach(function (x) { if (!x.med) return; var r = cartAdd(x.med, Number(x.qty)); if (r.short < Number(x.qty)) n++; if (r.short > 0) notes.push(MEDMAP[x.med].name + ': ' + (r.short === Number(x.qty) ? 'out of stock' : r.short + ' short')); });
   var skipped = RX.filter(function (x) { return !x.med; }).map(function (x) { return x.read; });
   dClose('m-rx'); posRender();
+  var rxDays = Math.max.apply(null, [0].concat(RX.filter(function (x) { return x.med; }).map(function (x) { return Number(x.days) || 0; }))), rfl = window.ppRefillFromRx ? ppRefillFromRx(rxDays) : '';
+  if (n && window.phOk) phOk(n + ' medicine' + (n === 1 ? '' : 's') + ' added', 'From the prescription.' + (rfl ? '<br>' + esc(rfl) : ''));
   dEl('rx-st').innerHTML = '<span style="color:var(--green);font-weight:700">&#10003; ' + n + ' medicine' + (n === 1 ? '' : 's') + ' added from the prescription.</span>'
     + (notes.length ? '<div class="over">' + esc(notes.join(' · ')) + '</div>' : '') + (skipped.length ? '<div>Not added: ' + esc(skipped.join(', ')) + ' &mdash; add them by typing if needed.</div>' : '');
 }
@@ -1036,7 +1060,7 @@ async function saleCancel(id) {
   var r = await _supa.rpc('ph_cancel_sale', { p_sale_id: id, p_reason: reason });
   if (r.error) { showToast(dErr(r.error)); return; }
   var c = r.data; c._regen = true; try { await ensureSalePdf(c); } catch (e) {}
-  showToast('Bill cancelled. Stock is back.'); loadMeds(); loadSales();
+  if (window.phOk) phOk('Bill cancelled', 'The medicines are back in stock.'); else showToast('Bill cancelled. Stock is back.'); loadMeds(); loadSales();
 }
 
 /* ---------------- SETTINGS ---------------- */
@@ -1065,7 +1089,7 @@ async function setSave() {
   var p = { name: dEl('ps-name').value, phone: dEl('ps-phone').value, address: dEl('ps-address').value, gst_mode: dEl('ps-mode').value, gstin: dEl('ps-gstin').value.toUpperCase().trim(), dl_no: dEl('ps-dl').value.toUpperCase().replace(/\s+/g, ' ').trim(), pharmacist: dEl('ps-pharmacist').value, footer: dEl('ps-footer').value };
   var r = await _supa.rpc('ph_save_settings', { p_clinic_id: _clinicId, p: p });
   if (r.error) { dShowErr('ps-err', dErr(r.error)); return; }
-  DEPT.clinic.ph_settings = r.data; setupNote(); posRender(); showToast('Pharmacy details saved.');
+  DEPT.clinic.ph_settings = r.data; setupNote(); posRender(); if (window.phOk) phOk('Pharmacy details saved'); else showToast('Pharmacy details saved.');
 }
 function posPay(v){ var sel=dEl('c-pay'); if(sel) sel.value=v; document.querySelectorAll('.pay-seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-pay')===v); }); }
 window.addEventListener('resize', function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
@@ -1079,5 +1103,6 @@ function unlinkIfRenamed(v) {
 
 init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
+<script src="pharmacy-pro.js?v=1"></script>
 </body>
 </html>
