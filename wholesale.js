@@ -170,7 +170,52 @@ async function onTab_home() {
 }
 
 /* =================================================================== SALES */
-function onTab_sell() { sellSeg(dEl('sell-seg').dataset.cur || (CAN.sell ? 'new' : 'list')); }
+function onTab_sell() { sellSeg(dEl('sell-seg').dataset.cur || (CAN.sell ? 'new' : 'list')); inboxLoad(); }
+/* ---- orders sent by shops (pharmacies on AuraScale) straight to this wholesaler (file 31) ---- */
+var INBOX = [], ORD_SRC = null, PARTY_PREFILL = null, _inboxT = null;
+async function inboxLoad() {
+  var box = dEl('s-inbox'); if (!box || !CAN.sell) return;
+  clearTimeout(_inboxT); _inboxT = setTimeout(inboxLoad, 120000);
+  var r = await _supa.rpc('aura_orders_inbox', { p_to: _clinicId });
+  if (r.error) { box.innerHTML = ''; return; }   /* file 31 not run yet */
+  INBOX = r.data || [];
+  var open = INBOX.filter(function (o) { return o.status === 'sent' || o.status === 'seen'; });
+  box.innerHTML = open.length ? '<div class="card" style="margin-bottom:14px;padding:12px 14px;border-color:var(--green-border)"><b>&#128722; Orders from shops on AuraScale (' + open.length + ')</b><div class="tiny" style="margin-bottom:6px">Sent from the shop\'s AuraScale. Nothing to read or type: tap <b>Make bill</b>.</div>'
+    + open.map(function (o) {
+      return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--border);padding:8px 0"><div style="flex:1;min-width:200px"><b>' + esc(o.from_name) + '</b> ' + (o.status === 'sent' ? '<span class="tag t-a">New</span>' : '')
+        + '<div class="tiny">' + esc(o.order_no) + ' &middot; ' + dDateTime(o.created_at) + ' &middot; ' + o.lines.length + ' medicine' + (o.lines.length === 1 ? '' : 's') + (o.note ? ' &middot; &ldquo;' + esc(o.note) + '&rdquo;' : '') + '</div>'
+        + '<div class="tiny">' + o.lines.slice(0, 6).map(function (l) { return esc(l.name) + ' &times;' + Number(l.qty); }).join(', ') + (o.lines.length > 6 ? '&hellip;' : '') + '</div></div>'
+        + '<button class="btn btn-g btn-sm" onclick="inboxUse(' + A(o.id) + ')">&#129534; Make bill</button><button class="btn btn-sm btn-r" onclick="inboxReject(' + A(o.id) + ')">Cannot supply</button></div>';
+    }).join('') + '</div>' : '';
+}
+function inboxUse(id) {
+  var o = INBOX.filter(function (x) { return x.id === id; })[0]; if (!o) return;
+  _supa.rpc('aura_order_mark', { p_to: _clinicId, p_id: id, p_status: 'seen', p_sale: null, p_reply: null });
+  ORD_SRC = id;
+  var f = o.from_info || {}, g = String(f.gstin || '').toUpperCase(), phn = dMobile(f.phone);
+  var p = PARTIES.filter(function (x) { return x.is_active && x.party_type !== 'supplier' && ((g && x.gstin === g) || (phn && dMobile(x.phone) === phn)); })[0]
+       || PARTIES.filter(function (x) { return x.is_active && x.party_type !== 'supplier' && x.name.toLowerCase() === String(o.from_name).toLowerCase(); })[0];
+  var note = '';
+  if (p) { ppPick('sell', p.id); note = 'Order <b>' + esc(o.order_no) + '</b> from <b>' + esc(p.name) + '</b>.'; }
+  else { note = 'Order <b>' + esc(o.order_no) + '</b> from <b>' + esc(o.from_name) + '</b>: this shop is not in your parties yet. <a href="#" onclick="inboxNewParty(' + A(id) + ');return false" style="font-weight:700">&#10133; Add them as a customer</a> (details come from their AuraScale).'; }
+  var pool = ITEMS.filter(function (it) { return it.is_active; });
+  ORD = o.lines.map(function (l) {
+    var c = mBest(l.name, pool, function (it) { return it.name; }, 8);
+    var auto = c.length && c[0].s >= 0.55 && (!c[1] || c[0].s - c[1].s >= 0.08);
+    return { read: l.name, raw: l.composition || '', qty: Number(l.qty), free: 0, cands: c.map(function (x) { return x.x.id; }), item_id: auto ? c[0].x.id : '', sure: !!auto };
+  });
+  orderReview(note);
+}
+function inboxNewParty(id) {
+  var o = INBOX.filter(function (x) { return x.id === id; })[0]; if (!o) return; var f = o.from_info || {};
+  PARTY_PREFILL = { phone: f.phone || '', address: f.address || '', drug_license_no: f.dl || '' };
+  partyEdit(null, 'sell', o.from_name, f.gstin || '');
+}
+async function inboxReject(id) {
+  var why = prompt('Tell the shop why (e.g. "Out of stock, will send on Monday"):', 'Out of stock right now'); if (why === null) return;
+  var r = await _supa.rpc('aura_order_mark', { p_to: _clinicId, p_id: id, p_status: 'rejected', p_sale: null, p_reply: why });
+  if (r.error) { showToast(dErr(r.error)); return; } showToast('The shop will see your answer.'); inboxLoad();
+}
 function sellSeg(s) {
   if (s === 'new' && !CAN.sell) s = 'list';
   dEl('sell-seg').dataset.cur = s; segOn('sell-seg', 'data-s', s);
@@ -216,7 +261,7 @@ function sugRate(it, b) {
 function sellClearAll() {
   if (!SLINES.length) { showToast('There are no items to clear.'); return; }
   if (!confirm('Remove all ' + SLINES.length + ' item(s) from this invoice? The customer stays selected. Nothing is saved or changed in stock.')) return;
-  SLINES = []; if (dEl('s-scan-st')) dEl('s-scan-st').innerHTML = ''; if (dEl('s-scan')) dEl('s-scan').value = '';
+  SLINES = []; if (dEl('s-scan-st')) dEl('s-scan-st').innerHTML = ''; if (dEl('s-scan')) dEl('s-scan').value = ''; ORD_SRC = null;
   sellRender(); showToast('Cleared. Add items again or take a new photo.');
 }
 function buyClearAll() {
@@ -333,6 +378,7 @@ async function sellSave(override) {
       throw r.error;
     }
     var sale = r.data;
+    if (ORD_SRC) { _supa.rpc('aura_order_mark', { p_to: _clinicId, p_id: ORD_SRC, p_status: 'billed', p_sale: sale.id, p_reply: 'Bill ' + sale.inv_no }).then(function () { inboxLoad(); }); ORD_SRC = null; }
     if (dEl('s-repeat')) dEl('s-repeat').innerHTML = ''; if (dEl('s-scan-st')) dEl('s-scan-st').innerHTML = ''; LASTSALE = null; LASTRATE = {};
     SLINES = []; dEl('s-note').value = ''; dEl('s-paid').value = ''; dEl('s-ref').value = ''; sellPay('credit'); ppSet('sell', null);
     trClear('tr-'); dEl('s-shipon').checked = false; dEl('s-shipbox').style.display = 'none'; ppSet('ship', null); ['sh-name', 'sh-phone', 'sh-address'].forEach(function (k) { dEl(k).value = ''; }); dEl('s-trans').open = false;
@@ -1023,6 +1069,7 @@ function partyEdit(id, backKey, name, gstin) {
   _partyBack = backKey || null;
   var g0 = String(gstin || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
   var p = id ? PARTYMAP[id] : { name: name || '', gstin: gstinOk(g0) ? g0 : '', state_code: gstinOk(g0) ? g0.slice(0, 2) : null, party_type: backKey === 'buy' || backKey === 'pret' || backKey === 'scan' ? 'supplier' : 'customer', is_active: true, opening_balance: 0 };
+  if (!id && PARTY_PREFILL) { Object.assign(p, PARTY_PREFILL); PARTY_PREFILL = null; }
   if (!id && backKey === 'scan' && SCAN_D) {   /* details printed on the supplier's bill header */
     p.phone = SCAN_D.supplier_phone || ''; p.address = SCAN_D.supplier_address || ''; p.drug_license_no = SCAN_D.supplier_dl || '';
   }
