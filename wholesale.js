@@ -194,12 +194,24 @@ function sellAdd(id) {
   var it = ITEMMAP[id]; if (!it) return;
   if (!it.sellable.length) { showToast(it.name + ' is out of stock (expired batches are never sold).'); return; }
   var b = it.sellable[0];
-  SLINES.push({ item_id: id, batch_id: b.id, qty: '', free: 0, rate: b.ptr != null ? Number(b.ptr) : '', disc: 0 });
+  var lr0 = LASTRATE[id], sr = sugRate(it, b);
+  SLINES.push({ item_id: id, batch_id: b.id, qty: '', free: 0, rate: lr0 ? lr0.rate : sr.rate, disc: lr0 ? lr0.disc : 0, sug: !lr0 && sr.sug });
   dEl('s-q').value = ''; dEl('s-dd').style.display = 'none';
   sellRender();
   setTimeout(function () { var x = document.querySelector('#s-lines tr:last-child input[data-f="qty"]'); if (x) x.focus(); }, 30);
 }
-function sellSet(i, f, v) { SLINES[i][f] = v; if (f === 'batch_id') { var b = sellBatch(SLINES[i]); if (b && b.ptr != null && SLINES[i].rate === '') SLINES[i].rate = Number(b.ptr); sellRender(); } else sellRender(true); }
+function sellSet(i, f, v) {
+  SLINES[i][f] = v; if (f === 'rate') { SLINES[i].sug = false; var h = dEl('slr-' + i); if (h) h.textContent = ''; }
+  if (f === 'batch_id') { var l = SLINES[i], b = sellBatch(l); if (b && (l.rate === '' || l.sug)) { var sr = sugRate(ITEMMAP[l.item_id], b); l.rate = sr.rate; l.sug = sr.sug; } sellRender(); } else sellRender(true);
+}
+/* selling rate for a line: the batch's PTR if it has one; otherwise the usual rate to a retailer =
+   MRP without GST, less 20% retailer margin (the customer's last rate is used before both). Marked "from MRP" so it is checked. */
+var RETAIL_MARGIN = 20;
+function sugRate(it, b) {
+  if (b && b.ptr != null && Number(b.ptr) > 0) return { rate: Number(b.ptr), sug: false };
+  var m = Number(b && b.mrp) || 0; if (!m) return { rate: '', sug: false };
+  return { rate: r2(m / (1 + Number(it.gst_rate || 0) / 100) * (1 - RETAIL_MARGIN / 100)), sug: true };
+}
 function sellDel(i) { SLINES.splice(i, 1); sellRender(); }
 function sellBatch(l) { var it = ITEMMAP[l.item_id]; return it && it.batches.filter(function (b) { return b.id === l.batch_id; })[0]; }
 function sellCalc() {
@@ -226,7 +238,7 @@ function sellRender(keep) {
       var inp = function (f, w, st) { return '<input class="finput" data-f="' + f + '" type="number" min="0" step="' + (st || 'any') + '" value="' + esc(l[f]) + '" style="width:' + w + 'px;text-align:right" oninput="sellSet(' + i + ',' + A(f) + ',this.value)"/>'; };
       return '<tr id="sl-' + i + '"><td><b>' + esc(it.name) + '</b><div class="tiny">' + esc(it.pack || '') + ' &middot; GST ' + Number(it.gst_rate) + '%' + (it.hsn ? ' &middot; HSN ' + esc(it.hsn) : '') + '</div><div class="tiny over" id="sle-' + i + '"></div></td>'
         + '<td><select class="finput" style="min-width:170px" onchange="sellSet(' + i + ',\'batch_id\',this.value)">' + opts + '</select></td>'
-        + '<td class="r">' + inp('qty', 72, 1) + '<div class="tiny">' + esc(it.unit) + '</div></td><td class="r">' + inp('free', 60, 1) + '</td><td class="r">' + inp('rate', 84) + '</td><td class="r">' + inp('disc', 62) + '</td>'
+        + '<td class="r">' + inp('qty', 72, 1) + '<div class="tiny">' + esc(it.unit) + '</div></td><td class="r">' + inp('free', 60, 1) + '</td><td class="r">' + inp('rate', 84) + '<div class="tiny" id="slr-' + i + '" style="color:var(--amber)">' + (l.sug ? 'from MRP &minus;' + RETAIL_MARGIN + '%' : '') + '</div></td><td class="r">' + inp('disc', 62) + '</td>'
         + '<td class="r" id="sla-' + i + '"></td><td class="r"><button class="btn btn-sm btn-r" onclick="sellDel(' + i + ')">&times;</button></td></tr>';
     }).join('') : '<tr><td colspan="8" class="lines-empty">No items yet. Search above to add.</td></tr>';
   }
@@ -768,6 +780,7 @@ function scanUse() {
     if (!x.inc) return;
     var it = x.match ? ITEMMAP[x.match] : null;
     var l = { item_id: it ? it.id : null, name: it ? it.name : String(x.read).trim(), batch: x.batch.trim().toUpperCase(), expiry: x.expiry, qty: num(x.qty), free: num(x.free), rate: num(x.rate), disc: num(x.disc), gst: Number(x.gst), mrp: num(x.mrp), ptr: null };
+    if (l.mrp > 0 && l.gst >= 0) { var p0 = r2(l.mrp / (1 + l.gst / 100) * (1 - RETAIL_MARGIN / 100)); if (p0 > l.rate) l.ptr = p0; }   /* usual rate to retailers, so Sales has a rate */
     if (!it) l.item = { name: l.name, hsn: x.hsn || '3004', gst_rate: l.gst, unit: /ml|syr|syp|susp|bottle|liq/i.test(x.pack + ' ' + l.name) ? 'bottle' : /vial|inj|amp/i.test(x.pack + ' ' + l.name) ? 'vial' : 'strip', pack: String(x.pack || '').trim(), manufacturer: String(x.mfg || '').trim() };
     add.push(l);
   });
@@ -1262,10 +1275,10 @@ function sellAddQty(id, qty, free, rate, disc) {
     var b = it.sellable[k], used = SLINES.filter(function (l) { return l.batch_id === b.id; }).reduce(function (a, l) { return a + num(l.qty) + num(l.free); }, 0);
     var avail = b.qty - used; if (avail <= 0) continue;
     var take = Math.min(need, avail), f = fr > 0 && avail - take >= fr ? fr : 0; if (f) fr = 0;
-    var rt = rate != null && rate !== '' ? Number(rate) : lr ? lr.rate : (b.ptr != null ? Number(b.ptr) : '');
+    var sr = sugRate(it, b), rt = rate != null && rate !== '' ? Number(rate) : lr ? lr.rate : sr.rate, sg = !(rate != null && rate !== '') && !lr && sr.sug;
     var same = SLINES.filter(function (l) { return l.batch_id === b.id; })[0];
     if (same) { same.qty = num(same.qty) + take; same.free = num(same.free) + f; }
-    else SLINES.push({ item_id: id, batch_id: b.id, qty: take, free: f, rate: rt, disc: disc != null ? Number(disc) || 0 : lr ? lr.disc : 0 });
+    else SLINES.push({ item_id: id, batch_id: b.id, qty: take, free: f, rate: rt, disc: disc != null ? Number(disc) || 0 : lr ? lr.disc : 0, sug: sg });
     need -= take; added++;
   }
   return { added: added, short: need, why: need > 0 ? 'only part in stock' : '' };
