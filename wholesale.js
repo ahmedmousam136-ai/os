@@ -212,6 +212,20 @@ function sugRate(it, b) {
   var m = Number(b && b.mrp) || 0; if (!m) return { rate: '', sug: false };
   return { rate: r2(m / (1 + Number(it.gst_rate || 0) / 100) * (1 - RETAIL_MARGIN / 100)), sug: true };
 }
+/* start this invoice / purchase again without leaving the page (nothing is saved, nothing in stock changes) */
+function sellClearAll() {
+  if (!SLINES.length) { showToast('There are no items to clear.'); return; }
+  if (!confirm('Remove all ' + SLINES.length + ' item(s) from this invoice? The customer stays selected. Nothing is saved or changed in stock.')) return;
+  SLINES = []; if (dEl('s-scan-st')) dEl('s-scan-st').innerHTML = ''; if (dEl('s-scan')) dEl('s-scan').value = '';
+  sellRender(); showToast('Cleared. Add items again or take a new photo.');
+}
+function buyClearAll() {
+  if (!PLINES.length && !dEl('b-billno').value && !dEl('b-billtot').value) { showToast('There is nothing to clear.'); return; }
+  if (!confirm('Clear this purchase: all ' + PLINES.length + ' line(s), supplier, bill no. and total? Nothing is saved or changed in stock.')) return;
+  PLINES = []; dEl('b-billno').value = ''; dEl('b-note').value = ''; dEl('b-billtot').value = ''; ppSet('buy', null);
+  if (dEl('b-scan-st')) dEl('b-scan-st').innerHTML = ''; if (dEl('b-scan')) dEl('b-scan').value = '';
+  buyRender(); showToast('Cleared. Scan the bill again or add lines.');
+}
 function sellDel(i) { SLINES.splice(i, 1); sellRender(); }
 function sellBatch(l) { var it = ITEMMAP[l.item_id]; return it && it.batches.filter(function (b) { return b.id === l.batch_id; })[0]; }
 function sellCalc() {
