@@ -93,6 +93,7 @@
           <input class="finput" id="s-q" placeholder="Type 2-3 letters of the product or salt&hellip;" autocomplete="off" oninput="sellSearch()" onkeydown="ddKey(event,'s-dd')" style="font-size:15px"/>
           <div id="s-dd" class="dd" style="display:none"></div>
         </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn btn-sm btn-r" type="button" onclick="sellClearAll()">&#128465; Clear all items</button></div>
         <div style="overflow-x:auto"><table class="dt wl"><thead><tr><th>Product</th><th>Batch</th><th class="r">Qty</th><th class="r">Free</th><th class="r">Rate</th><th class="r">Disc %</th><th class="r">Amount</th><th></th></tr></thead><tbody id="s-lines"></tbody></table></div>
         <div class="row2" style="margin-top:14px;justify-content:space-between">
           <div style="flex:1;min-width:260px">
@@ -196,6 +197,7 @@
           </div>
           <div class="err" id="b-line-err"></div>
         </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn btn-sm btn-r" type="button" onclick="buyClearAll()">&#128465; Clear all items</button></div>
         <div style="overflow-x:auto"><table class="dt wl"><thead><tr><th>Item</th><th>Batch / Exp</th><th class="r">Qty + free</th><th class="r">Rate</th><th class="r">Disc</th><th class="r">GST</th><th class="r">MRP</th><th class="r">Amount</th><th></th></tr></thead><tbody id="b-lines"></tbody></table></div>
         <div class="row2" style="margin-top:12px;justify-content:space-between">
           <div style="flex:1;min-width:240px">
@@ -397,6 +399,6 @@
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=5"></script>
-<script src="wholesale.js?v=12"></script>
+<script src="wholesale.js?v=13"></script>
 </body>
 </html>
