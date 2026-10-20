@@ -226,6 +226,31 @@ function buyClearAll() {
   if (dEl('b-scan-st')) dEl('b-scan-st').innerHTML = ''; if (dEl('b-scan')) dEl('b-scan').value = '';
   buyRender(); showToast('Cleared. Scan the bill again or add lines.');
 }
+/* ---- opening / closing stock (owner wants to see: was X, came in / went out Y, now Z) ---- */
+function stockTotal(it) { return it ? it.batches.reduce(function (a, b) { return a + (Number(b.qty) > 0 ? Number(b.qty) : 0); }, 0) : 0; }
+function stkTxt(before, after, unit) { return '<div class="tiny" style="white-space:nowrap">Stock <b>' + before + '</b> &rarr; <b style="color:' + (after < before ? 'var(--amber)' : 'var(--green)') + '">' + after + '</b>' + (unit ? ' ' + esc(unit) : '') + '</div>'; }
+/* for a saved purchase / invoice: stock of each item just before and just after it (from the stock history) */
+async function docStock(kind, ref, elId) {
+  var el = dEl(elId); if (!el) return;
+  try {
+    var m = await _supa.from('wh_moves').select('item_id,name,change,created_at').eq('clinic_id', _clinicId).eq('kind', kind).eq('ref_no', ref);
+    if (m.error || !m.data || !m.data.length) { el.innerHTML = ''; return; }
+    var T = m.data[0].created_at, mine = {}, names = {};
+    m.data.forEach(function (x) { mine[x.item_id] = (mine[x.item_id] || 0) + Number(x.change); names[x.item_id] = x.name; });
+    var ids = Object.keys(mine);
+    var later = await _supa.from('wh_moves').select('item_id,change').eq('clinic_id', _clinicId).in('item_id', ids).gt('created_at', T);
+    if (later.error) { el.innerHTML = ''; return; }
+    var after = {}; (later.data || []).forEach(function (x) { after[x.item_id] = (after[x.item_id] || 0) + Number(x.change); });
+    var nb = await _supa.from('wh_batches').select('item_id,qty').eq('clinic_id', _clinicId).in('item_id', ids);   /* fresh: the page list may not be reloaded yet */
+    var now = {}; (nb.data || []).forEach(function (x) { if (Number(x.qty) > 0) now[x.item_id] = (now[x.item_id] || 0) + Number(x.qty); });
+    var rows = ids.map(function (id) {
+      var it = ITEMMAP[id], today = nb.error ? stockTotal(it) : (now[id] || 0), close = today - (after[id] || 0), ch = mine[id], open = close - ch;
+      return '<tr><td><b>' + esc(it ? it.name : names[id]) + '</b></td><td class="r">' + open + '</td><td class="r" style="color:' + (ch < 0 ? 'var(--amber)' : 'var(--green)') + ';font-weight:700">' + (ch > 0 ? '+' : '') + ch + '</td><td class="r"><b>' + close + '</b></td><td class="r">' + today + '</td></tr>';
+    }).join('');
+    el.innerHTML = '<div class="card" style="margin:10px 0;padding:10px 12px"><b>Stock of these items</b><div class="tiny">Opening = stock just before this ' + (kind === 'sale' ? 'invoice' : 'purchase') + '. Closing = just after it. Units as sold (strips, bottles&hellip;), free goods included.</div>'
+      + '<div style="overflow-x:auto;margin-top:6px"><table class="dt"><thead><tr><th>Item</th><th class="r">Opening</th><th class="r">' + (kind === 'sale' ? 'Went out' : 'Came in') + '</th><th class="r">Closing</th><th class="r">In stock today</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+  } catch (e) { el.innerHTML = ''; }
+}
 function sellDel(i) { SLINES.splice(i, 1); sellRender(); }
 function sellBatch(l) { var it = ITEMMAP[l.item_id]; return it && it.batches.filter(function (b) { return b.id === l.batch_id; })[0]; }
 function sellCalc() {
@@ -252,10 +277,12 @@ function sellRender(keep) {
       var inp = function (f, w, st) { return '<input class="finput" data-f="' + f + '" type="number" min="0" step="' + (st || 'any') + '" value="' + esc(l[f]) + '" style="width:' + w + 'px;text-align:right" oninput="sellSet(' + i + ',' + A(f) + ',this.value)"/>'; };
       return '<tr id="sl-' + i + '"><td><b>' + esc(it.name) + '</b><div class="tiny">' + esc(it.pack || '') + ' &middot; GST ' + Number(it.gst_rate) + '%' + (it.hsn ? ' &middot; HSN ' + esc(it.hsn) : '') + '</div><div class="tiny over" id="sle-' + i + '"></div></td>'
         + '<td><select class="finput" style="min-width:170px" onchange="sellSet(' + i + ',\'batch_id\',this.value)">' + opts + '</select></td>'
-        + '<td class="r">' + inp('qty', 72, 1) + '<div class="tiny">' + esc(it.unit) + '</div></td><td class="r">' + inp('free', 60, 1) + '</td><td class="r">' + inp('rate', 84) + '<div class="tiny" id="slr-' + i + '" style="color:var(--amber)">' + (l.sug ? 'from MRP &minus;' + RETAIL_MARGIN + '%' : '') + '</div></td><td class="r">' + inp('disc', 62) + '</td>'
+        + '<td class="r">' + inp('qty', 72, 1) + '<div class="tiny">' + esc(it.unit) + '</div><div id="sls-' + i + '"></div></td><td class="r">' + inp('free', 60, 1) + '</td><td class="r">' + inp('rate', 84) + '<div class="tiny" id="slr-' + i + '" style="color:var(--amber)">' + (l.sug ? 'from MRP &minus;' + RETAIL_MARGIN + '%' : '') + '</div></td><td class="r">' + inp('disc', 62) + '</td>'
         + '<td class="r" id="sla-' + i + '"></td><td class="r"><button class="btn btn-sm btn-r" onclick="sellDel(' + i + ')">&times;</button></td></tr>';
     }).join('') : '<tr><td colspan="8" class="lines-empty">No items yet. Search above to add.</td></tr>';
   }
+  var used = {};
+  SLINES.forEach(function (l, i) { var it = ITEMMAP[l.item_id], st = dEl('sls-' + i); if (!it || !st) return; var bf = stockTotal(it) - (used[l.item_id] || 0), go = num(l.qty) + num(l.free); used[l.item_id] = (used[l.item_id] || 0) + go; st.innerHTML = stkTxt(bf, bf - go); });
   SLINES.forEach(function (l, i) { var a = dEl('sla-' + i), e = dEl('sle-' + i), tr = dEl('sl-' + i); if (a) a.innerHTML = '<b>' + dMoney(l._amt) + '</b><div class="tiny">taxable ' + dMoney(l._tx) + '</div>'; if (e) e.textContent = l._err; if (tr) tr.classList.toggle('hl-r', !!l._err); });
   var p = PICK.sell && PICK.sell.party, bal = p && BAL[p.id] ? Number(BAL[p.id].balance) : 0, paid = SPAY === 'credit' ? num(dEl('s-paid').value) : T.total;
   var row = function (l, v, cls) { return '<div class="sum-row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
@@ -350,6 +377,7 @@ async function openSale(id, fresh) {
     + s._items.map(function (x) { return '<tr><td><b>' + esc(x.name) + '</b>' + (Number(x.returned) || Number(x.returned_free) ? '<div class="tiny">returned ' + Number(x.returned) + (Number(x.returned_free) ? ' + ' + Number(x.returned_free) + ' free' : '') + '</div>' : '') + '</td><td>' + esc(x.batch_no || '') + ' &middot; ' + dExp(x.expiry) + '</td><td class="r">' + Number(x.qty) + (Number(x.free) ? ' + ' + Number(x.free) : '') + '</td><td class="r">' + dMoney(x.rate) + (Number(x.disc) ? '<div class="tiny">-' + Number(x.disc) + '%</div>' : '') + '</td><td class="r">' + Number(x.gst_rate) + '%</td><td class="r">' + dMoney(x.amount) + '</td></tr>'; }).join('')
     + '</tbody></table></div>'
     + '<div style="text-align:right;margin:10px 0;font-size:13px">Taxable ' + dMoney(s.taxable) + (s.interstate ? ' &middot; IGST ' + dMoney(s.igst) : ' &middot; CGST ' + dMoney(s.cgst) + ' &middot; SGST ' + dMoney(s.sgst)) + ' &middot; <b style="font-size:16px">Total ' + dMoney0(s.total) + '</b></div>'
+    + '<div id="doc-stock"></div>'
     + '<p class="tiny" id="doc-pdf">' + (s.pdf_path ? '' : 'Making the PDF&hellip;') + '</p>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="doc-open" disabled>&#128196; Open / print</button><button class="btn btn-g" id="doc-wa" disabled>&#128242; WhatsApp</button>'
     + '<button class="btn" id="doc-3c" disabled>&#128424; Print 3 copies</button>'
@@ -357,7 +385,7 @@ async function openSale(id, fresh) {
     + (canRet ? '<button class="btn" onclick="saleReturnForm(' + A(s.id) + ')">&#8617; Goods returned</button>' : '')
     + (CAN.owner && s.status === 'posted' ? '<button class="btn btn-r" onclick="saleCancel(' + A(s.id) + ')">Cancel invoice</button>' : '')
     + (fresh ? '<button class="btn btn-p" onclick="dClose(\'m-doc\');dEl(\'s-q\').focus()">&#10133; New invoice</button>' : '') + '</div><div id="doc-extra"></div>';
-  dOpen('m-doc');
+  dOpen('m-doc'); docStock('sale', s.inv_no, 'doc-stock');
   if (fresh) { deptSuccessPlay(); todayLine(); }
   try {
     var path = await ensurePdf('sale', s);
@@ -519,7 +547,7 @@ function buyRender() {
   var p = PICK.buy && PICK.buy.party, inter = isInter(p), T = { tx: 0, c: 0, s: 0, i: 0 };
   dEl('b-lines').innerHTML = PLINES.length ? PLINES.map(function (l, i) {
     var tx = r2(l.qty * l.rate * (1 - l.disc / 100)), t = tax(tx, l.gst, inter); T.tx += tx; T.c += t.c; T.s += t.s; T.i += t.i;
-    return '<tr><td><b>' + esc(l.name) + '</b>' + (l.item_id ? '' : ' <span class="tag t-b">new</span>') + '</td><td>' + esc(l.batch) + '<div class="tiny">' + esc(l.expiry) + '</div></td><td class="r">' + l.qty + (l.free ? ' + ' + l.free : '') + '</td><td class="r">' + dMoney(l.rate) + '</td><td class="r">' + (l.disc ? l.disc + '%' : '-') + '</td><td class="r">' + l.gst + '%</td><td class="r">' + dMoney(l.mrp) + '</td><td class="r"><b>' + dMoney(tx + t.c + t.s + t.i) + '</b></td><td class="r"><button class="btn btn-sm btn-r" onclick="buyDel(' + i + ')">&times;</button></td></tr>';
+    return '<tr><td><b>' + esc(l.name) + '</b>' + (l.item_id ? '' : ' <span class="tag t-b">new</span>') + '</td><td>' + esc(l.batch) + '<div class="tiny">' + esc(l.expiry) + '</div></td><td class="r">' + l.qty + (l.free ? ' + ' + l.free : '') + (function () { var bf = (l.item_id ? stockTotal(ITEMMAP[l.item_id]) : 0) + PLINES.slice(0, i).filter(function (o) { return l.item_id ? o.item_id === l.item_id : !o.item_id && String(o.name).toLowerCase() === String(l.name).toLowerCase(); }).reduce(function (a, o) { return a + num(o.qty) + num(o.free); }, 0); return stkTxt(bf, bf + num(l.qty) + num(l.free)); })() + '</td><td class="r">' + dMoney(l.rate) + '</td><td class="r">' + (l.disc ? l.disc + '%' : '-') + '</td><td class="r">' + l.gst + '%</td><td class="r">' + dMoney(l.mrp) + '</td><td class="r"><b>' + dMoney(tx + t.c + t.s + t.i) + '</b></td><td class="r"><button class="btn btn-sm btn-r" onclick="buyDel(' + i + ')">&times;</button></td></tr>';
   }).join('') : '<tr><td colspan="9" class="lines-empty">No lines yet. Add them above, or scan the bill.</td></tr>';
   var g = r2(T.tx + T.c + T.s + T.i), tot = Math.round(g);
   var row = function (l, v, cls) { return '<div class="sum-row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
@@ -580,10 +608,11 @@ async function openPurchase(id) {
     + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Item</th><th>Batch</th><th class="r">Qty + free</th><th class="r">Rate</th><th class="r">GST</th><th class="r">MRP</th><th class="r">Amount</th></tr></thead><tbody>'
     + (it.data || []).map(function (l) { return '<tr><td><b>' + esc(l.name) + '</b></td><td>' + esc(l.batch_no || '') + ' &middot; ' + dExp(l.expiry) + '</td><td class="r">' + Number(l.qty) + (Number(l.free) ? ' + ' + Number(l.free) : '') + '</td><td class="r">' + dMoney(l.rate) + (Number(l.disc) ? '<div class="tiny">-' + Number(l.disc) + '%</div>' : '') + '</td><td class="r">' + Number(l.gst_rate) + '%</td><td class="r">' + dMoney(l.mrp) + '</td><td class="r">' + dMoney(l.amount) + '</td></tr>'; }).join('')
     + '</tbody></table></div><div style="text-align:right;margin:10px 0">Taxable ' + dMoney(x.taxable) + (x.interstate ? ' &middot; IGST ' + dMoney(x.igst) : ' &middot; CGST ' + dMoney(x.cgst) + ' &middot; SGST ' + dMoney(x.sgst)) + ' &middot; <b style="font-size:16px">Total ' + dMoney0(x.total) + '</b></div>'
+    + '<div id="doc-stock"></div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (x.doc_path ? '<button class="btn" onclick="viewBillPhoto(' + A(x.doc_path) + ')">&#128247; Bill photo</button>' : '')
     + (CAN.buy && x.status === 'posted' ? '<button class="btn" onclick="dClose(\'m-doc\');buySeg(\'ret\');ppSet(\'pret\',' + A(x.supplier_id) + ');setTimeout(function(){dEl(\'br-bill\').value=' + A(x.id) + ';brBill();},300)">&#8618; Return goods to supplier</button>' : '')
     + (CAN.owner && x.status === 'posted' ? '<button class="btn btn-r" onclick="purchaseCancel(' + A(x.id) + ')">Cancel purchase</button>' : '') + '</div>';
-  dOpen('m-doc');
+  dOpen('m-doc'); docStock('purchase', x.our_no, 'doc-stock');
 }
 async function viewBillPhoto(p) { var r = await _supa.storage.from('bills').createSignedUrl(p, 600); if (r.error) { showToast(dErr(r.error)); return; } window.open(r.data.signedUrl, '_blank'); }
 async function purchaseCancel(id) {
