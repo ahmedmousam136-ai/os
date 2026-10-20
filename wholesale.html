@@ -77,6 +77,7 @@
       </div>
       <!-- new invoice -->
       <div id="s-new">
+        <div id="s-inbox"></div>
         <div class="card" style="margin-bottom:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">
           <div style="font-size:28px">&#128221;</div>
           <div style="flex:1;min-width:220px"><b>Photo of the order</b><div class="tiny">The chemist's handwritten slip, or a screenshot of the WhatsApp order. AI reads the medicines and quantities and fills the bill with the right batches. You check, then save.</div></div>
@@ -395,10 +396,10 @@
 <div class="modal-bg" id="m-doc"><div class="modal" style="max-width:860px"><div class="modal-h"><span id="doc-title">Invoice</span><button class="btn btn-sm" onclick="dClose('m-doc')">&times;</button></div><div class="modal-b" id="doc-body"></div></div></div>
 <div class="modal-bg" id="m-item"><div class="modal" style="max-width:820px"><div class="modal-h"><span id="item-title">Item</span><button class="btn btn-sm" onclick="dClose('m-item')">&times;</button></div><div class="modal-b" id="item-body"></div></div></div>
 <div class="modal-bg" id="m-party"><div class="modal" style="max-width:720px"><div class="modal-h"><span id="party-title">Party</span><button class="btn btn-sm" onclick="dClose('m-party')">&times;</button></div><div class="modal-b" id="party-body"></div></div></div>
-<div class="modal-bg" id="m-ord"><div class="modal" style="max-width:980px"><div class="modal-h"><span>Check the order read from the photo</span><button class="btn btn-sm" onclick="dClose('m-ord')">&times;</button></div><div class="modal-b" id="ord-body"></div></div></div>
+<div class="modal-bg" id="m-ord"><div class="modal" style="max-width:980px"><div class="modal-h"><span>Check the order</span><button class="btn btn-sm" onclick="dClose('m-ord')">&times;</button></div><div class="modal-b" id="ord-body"></div></div></div>
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=5"></script>
-<script src="wholesale.js?v=14"></script>
+<script src="wholesale.js?v=15"></script>
 </body>
 </html>
