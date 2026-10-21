@@ -73,8 +73,8 @@
 
       <div style="overflow-x:auto">
         <table class="dt" id="cart-t">
-          <thead><tr><th>Medicine</th><th class="hide-sm">Batch / Exp</th><th class="r" style="width:110px">Qty</th><th class="r hide-sm">MRP</th><th class="r">Amount</th><th></th></tr></thead>
-          <tbody id="cart-b"><tr><td colspan="6" class="muted" style="text-align:center;padding:22px">No medicines yet. Search above to add.</td></tr></tbody>
+          <thead><tr><th>Medicine</th><th class="hide-sm">Batch / Exp</th><th class="r" style="width:120px">Qty</th><th class="r hide-sm">MRP</th><th class="r">GST</th><th class="r">Amount</th><th></th></tr></thead>
+          <tbody id="cart-b"><tr><td colspan="7" class="muted" style="text-align:center;padding:22px">No medicines yet. Search above to add.</td></tr></tbody>
         </table>
       </div>
           </div>
@@ -82,7 +82,12 @@
         <aside class="pos-sum" aria-label="Bill total">
           <div class="sum-row"><span>MRP total</span><span id="s-mrp">₹0.00</span></div>
           <div class="sum-row"><span>Discount</span><span id="s-disc">-₹0.00</span></div>
-          <div class="sum-row" id="s-gst-row" style="display:none"><span>Includes GST</span><span id="s-gst">₹0.00</span></div>
+          <div id="s-gst-row" style="display:none">
+            <div class="sum-row"><span>Taxable value</span><span id="s-tx">₹0.00</span></div>
+            <div class="sum-row"><span>CGST</span><span id="s-cgst">₹0.00</span></div>
+            <div class="sum-row"><span>SGST</span><span id="s-sgst">₹0.00</span></div>
+            <div class="tiny" style="text-align:right;margin-top:-2px">GST is inside the MRP: <b id="s-gst">₹0.00</b></div>
+          </div>
           <div class="sum-row big"><span>To pay</span><span id="s-total">₹0</span></div>
           <div><label class="flbl">Discount %</label><input class="finput" id="c-disc" type="number" min="0" max="100" step="0.5" value="0" oninput="posRender()"/></div>
           <div id="pay-box"><label class="flbl">Paid by</label>
@@ -127,7 +132,7 @@
         </div>
         <div class="tiny" id="gst-st" style="margin-top:6px">Tick the medicines (tap a row), choose the new GST and press <b>Change GST</b>. Bills already made keep their old GST.</div>
       </div>
-      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Medicine</th><th class="r">In stock</th><th>Nearest expiry</th><th class="r">MRP</th><th>Status</th><th></th></tr></thead><tbody id="st-b"></tbody></table></div>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Medicine</th><th class="r">In stock</th><th>Nearest expiry</th><th class="r">MRP</th><th class="r">GST</th><th>Status</th><th></th></tr></thead><tbody id="st-b"></tbody></table></div>
     </div>
 
     <!-- ============ ADD STOCK ============ -->
@@ -163,6 +168,7 @@
         <div><label class="flbl">Packs received</label><input class="finput" id="r-qty" type="number" min="0" step="1" oninput="rcvCalc()"/></div>
         <div><label class="flbl">Purchase rate per pack ₹</label><input class="finput" id="r-rate" type="number" min="0" step="0.01" placeholder="optional, for profit"/></div>
         <div><label class="flbl">Supplier</label><input class="finput" id="r-sup" placeholder="Distributor name"/></div>
+        <div id="r-gst-box"><label class="flbl">GST % (as on the bill)</label><select class="finput" id="r-gst" onchange="rcvCalc()"><option value="">&mdash;</option><option>0</option><option>5</option><option>12</option><option>18</option><option>28</option></select></div>
         <div style="display:flex;align-items:flex-end"><button class="btn btn-g" style="width:100%" onclick="rcvSave()">&#10003; Add to stock</button></div>
       </div>
       <p class="tiny" id="r-calc" style="margin-top:6px"></p>
@@ -179,7 +185,7 @@
 
       <hr style="border:none;border-top:1px solid var(--border);margin:22px 0"/>
       <h3 style="font-size:15px;margin-bottom:8px">Recently received</h3>
-      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>When</th><th>Medicine</th><th>Batch</th><th class="r">Qty</th><th>By</th><th>Note</th></tr></thead><tbody id="rcv-recent"></tbody></table></div>
+      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>When</th><th>Medicine</th><th>Batch</th><th class="r">Before</th><th class="r">Added</th><th class="r">After</th><th>By</th><th>Note</th></tr></thead><tbody id="rcv-recent"></tbody></table></div>
     </div>
 
     <!-- ============ RE-ORDER (pharmacy-pro.js) ============ -->
@@ -363,19 +369,21 @@ function posRender(keepInputs) {
       var m = MEDMAP[c.medicine_id];
       return '<tr><td><b>' + esc(m.name) + '</b><div class="tiny">' + esc(m.composition || '') + (m.schedule ? ' &middot; <span class="tag t-a">Sch ' + esc(m.schedule) + '</span>' : '') + '</div></td>'
         + '<td class="tiny hide-sm" id="cl-' + c.medicine_id + '"></td>'
-        + '<td class="r"><input class="finput" data-id="' + c.medicine_id + '" type="number" min="0" step="1" value="' + c.qty + '" style="width:90px;text-align:right;padding:7px" oninput="posQty(\'' + c.medicine_id + '\',this.value)"/><div class="tiny">' + esc(m.unit) + '</div></td>'
-        + '<td class="r hide-sm" id="cm-' + c.medicine_id + '"></td><td class="r" id="ca-' + c.medicine_id + '"></td>'
+        + '<td class="r"><input class="finput" data-id="' + c.medicine_id + '" type="number" min="0" step="1" value="' + c.qty + '" style="width:90px;text-align:right;padding:7px" oninput="posQty(\'' + c.medicine_id + '\',this.value)"/><div class="tiny">' + esc(m.unit) + '</div><div id="cs-' + c.medicine_id + '"></div></td>'
+        + '<td class="r hide-sm" id="cm-' + c.medicine_id + '"></td><td class="r">' + Number(m.gst_rate) + '%</td><td class="r" id="ca-' + c.medicine_id + '"></td>'
         + '<td class="r"><button class="btn btn-sm btn-r" onclick="posDel(\'' + c.medicine_id + '\')">&times;</button></td></tr>';
-    }).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;padding:22px">No medicines yet. Search above to add.</td></tr>';
+    }).join('') : '<tr><td colspan="7" class="muted" style="text-align:center;padding:22px">No medicines yet. Search above to add.</td></tr>';
   }
   CART.forEach(function (c) {
     var l = dEl('cl-' + c.medicine_id), mm = dEl('cm-' + c.medicine_id), a = dEl('ca-' + c.medicine_id); if (!l) return;
     l.innerHTML = (c._lines || []).map(function (x) { return esc(x.b.batch_no) + ' &middot; ' + dExp(x.b.expiry) + ' &times;' + x.q; }).join('<br>');
     mm.innerHTML = (c._lines || []).map(function (x) { return dMoney(x.b.mrp); }).join('<br>');
     a.innerHTML = '<b>' + dMoney(c._amt) + '</b>';
+    var cs = dEl('cs-' + c.medicine_id), mdx = MEDMAP[c.medicine_id]; if (cs && mdx && window.stkTxt) { var bf = phStockAll(mdx); cs.innerHTML = stkTxt(bf, bf - (Number(c.qty) || 0)); }
   });
   dEl('s-mrp').textContent = dMoney(t.mrp); dEl('s-disc').textContent = '-' + dMoney(t.disc);
-  dEl('s-gst-row').style.display = t.regular ? 'flex' : 'none'; dEl('s-gst').textContent = dMoney(t.gst);
+  dEl('s-gst-row').style.display = t.regular ? 'block' : 'none'; dEl('s-gst').textContent = dMoney(t.gst);
+  var cg = Math.round(t.gst / 2 * 100) / 100; dEl('s-cgst').textContent = dMoney(cg); dEl('s-sgst').textContent = dMoney(Math.round((t.gst - cg) * 100) / 100); dEl('s-tx').textContent = dMoney(t.amt - t.gst);
   dEl('s-total').textContent = KIND === 'walkin' ? dMoney0(t.total) : dMoney(t.total);
 }
 async function posPatientSearch(q) {
@@ -515,11 +523,13 @@ async function showDone(sale, fresh) {
   body.innerHTML = '<div style="text-align:center">' + (fresh ? deptSuccessHtml({ title: (sale.kind === 'ipd' ? 'Issued ' : 'Bill ') + sale.bill_no + ' saved', amount: sale.total, decimals: sale.kind === 'ipd',
       sub: esc(sale.patient_name || '') + (sale.kind === 'ipd' ? ' &middot; added to the nursing-home bill' : ' &middot; ' + esc(String(sale.pay_mode).toUpperCase())) })
       : '<div style="font-size:22px;font-weight:800">' + (sale.kind === 'ipd' ? dMoney(sale.total) : dMoney0(sale.total)) + '</div><div class="muted">' + esc(sale.patient_name || '') + '</div>')
+    + '<div id="done-stock" style="text-align:left"></div>'
     + '<p class="tiny" id="done-pdf" style="margin:10px 0">Making the PDF&hellip;</p>'
     + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" id="done-open" disabled>&#128196; Open / print</button>'
     + '<button class="btn btn-g" id="done-wa" disabled>&#128242; WhatsApp</button><button class="btn btn-p" onclick="dClose(\'m-done\');dTab(\'pos\');dEl(\'m-search\').focus()">&#10133; New bill</button></div></div>';
   dOpen('m-done');
   if (fresh) { deptSuccessPlay(); phTodayLine(); }
+  if (window.phSaleStock) phSaleStock(sale.id, 'done-stock');
   try {
     var path = await ensureSalePdf(sale);
     dEl('done-pdf').textContent = 'PDF saved.';
@@ -562,11 +572,11 @@ function stockRender() {
   });
   dEl('st-b').innerHTML = list.length ? list.map(function (m) {
     if (GSTSEL) return '<tr style="cursor:pointer" onclick="gstTick(\'' + m.id + '\')"' + (GSTSEL[m.id] ? ' style="background:var(--green-bg)"' : '') + '><td><div style="display:flex;gap:10px;align-items:center"><input type="checkbox" style="width:18px;height:18px;appearance:auto" ' + (GSTSEL[m.id] ? 'checked ' : '') + 'onclick="event.stopPropagation();gstTick(\'' + m.id + '\')"/><span><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + '<b>GST ' + Number(m.gst_rate) + '%</b></div></span></div></td>'
-      + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td><td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td>' + medStatus(m) + '</td><td></td></tr>';
+      + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td><td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + Number(m.gst_rate) + '%</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td></td></tr>';
     return '<tr style="cursor:pointer" onclick="medOpen(\'' + m.id + '\')"><td><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + 'GST ' + Number(m.gst_rate) + '%</div></td>'
       + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td>'
-      + '<td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td>' + medStatus(m) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
-  }).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">' + (MEDS.length ? 'Nothing matches.' : 'No medicines yet. Use <b>Add stock</b> or import your stock list.') + '</td></tr>';
+      + '<td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + Number(m.gst_rate) + '%</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="muted" style="text-align:center;padding:20px">' + (MEDS.length ? 'Nothing matches.' : 'No medicines yet. Use <b>Add stock</b> or import your stock list.') + '</td></tr>';
 }
 /* change the GST rate of many medicines at once */
 var GSTSEL = null, GSTSHOWN = [];
@@ -656,13 +666,14 @@ function rcvPick(id) {
   var m = MEDMAP[id]; if (!m) return; RCV_MED = m;
   dEl('r-med').value = m.name; dEl('r-dd').style.display = 'none'; dEl('r-new').style.display = 'none';
   dEl('r-picked').innerHTML = 'Sold per <b>' + esc(m.unit) + '</b> &middot; GST ' + Number(m.gst_rate) + '% &middot; in stock ' + m.stock;
-  dEl('r-pack').value = 1; rcvCalc();
+  dEl('r-pack').value = 1; dEl('r-gst').value = String(Number(m.gst_rate)); dEl('r-gst-box').style.display = 'block'; rcvCalc();
 }
-function rcvNew() { RCV_MED = { _new: true, name: dEl('r-med').value.trim() }; dEl('r-dd').style.display = 'none'; dEl('r-new').style.display = 'block'; dEl('r-new-name').textContent = RCV_MED.name; rcvCalc(); }
+function rcvNew() { RCV_MED = { _new: true, name: dEl('r-med').value.trim() }; dEl('r-gst-box').style.display = 'none'; dEl('r-dd').style.display = 'none'; dEl('r-new').style.display = 'block'; dEl('r-new-name').textContent = RCV_MED.name; rcvCalc(); }
 function rcvUnit() { return RCV_MED && !RCV_MED._new ? RCV_MED.unit : dEl('rn-unit').value; }
 function rcvCalc() {
   var mrp = Number(dEl('r-mrp').value), pack = Math.max(1, Math.round(Number(dEl('r-pack').value) || 1)), q = Number(dEl('r-qty').value) || 0;
-  dEl('r-calc').innerHTML = mrp > 0 ? 'Stock added: <b>' + (q * pack) + ' ' + esc(rcvUnit()) + '</b> at MRP <b>' + dMoney(mrp / pack) + '</b> per ' + esc(rcvUnit()) + (pack > 1 ? ' (pack MRP ' + dMoney(mrp) + ' &divide; ' + pack + ')' : '') : '';
+  var bf0 = RCV_MED && !RCV_MED._new && window.phStockAll ? phStockAll(RCV_MED) : 0;
+  dEl('r-calc').innerHTML = mrp > 0 ? (window.stkTxt ? stkTxt(bf0, bf0 + q * pack, rcvUnit()) : '') + 'Stock added: <b>' + (q * pack) + ' ' + esc(rcvUnit()) + '</b> at MRP <b>' + dMoney(mrp / pack) + '</b> per ' + esc(rcvUnit()) + (pack > 1 ? ' (pack MRP ' + dMoney(mrp) + ' &divide; ' + pack + ')' : '') : '';
 }
 async function rcvSave() {
   dShowErr('r-err', '');
@@ -683,7 +694,13 @@ async function rcvSave() {
     var r = await _supa.rpc('ph_receive', { p_clinic_id: _clinicId, p_medicine_id: id, p: {
       batch_no: dEl('r-batch').value.trim(), expiry: exp + '-01', mrp: Math.round(mrp / pack * 100) / 100, purchase_rate: Math.round(rate / pack * 100) / 100, qty: q * pack, supplier: dEl('r-sup').value.trim() } });
     if (r.error) throw r.error;
-    if (window.phOk) phOk('Added to stock', (q * pack) + ' added'); else showToast('Added ' + (q * pack) + ' to stock.');
+    var gNew = dEl('r-gst').value, gMsg = '';
+    if (!RCV_MED._new && gNew !== '' && Number(gNew) !== Number(RCV_MED.gst_rate)) {
+      var gu = await _supa.rpc('ph_set_gst', { p_clinic_id: _clinicId, p_ids: [id], p_gst: Number(gNew) });
+      gMsg = gu.error ? '<br>GST not changed: ' + esc(dErr(gu.error)) : '<br>GST changed ' + Number(RCV_MED.gst_rate) + '% &rarr; ' + Number(gNew) + '% (new bills use it)';
+    }
+    var bf1 = RCV_MED._new ? 0 : (window.phStockAll ? phStockAll(RCV_MED) : RCV_MED.stock);
+    if (window.phOk) phOk('Added to stock', 'Stock <b>' + bf1 + '</b> &rarr; <b>' + (bf1 + q * pack) + '</b> ' + esc(rcvUnit()) + gMsg, 2400); else showToast('Added ' + (q * pack) + ' to stock.');
     ['r-med', 'r-batch', 'r-exp', 'r-mrp', 'r-qty', 'r-rate'].forEach(function (x) { dEl(x).value = ''; }); dEl('r-pack').value = 1;
     RCV_MED = null; dEl('r-new').style.display = 'none'; dEl('r-picked').textContent = ''; dEl('r-calc').textContent = '';
     await loadMeds(); loadRecent(); dEl('r-med').focus();
@@ -691,9 +708,11 @@ async function rcvSave() {
 }
 async function loadRecent() {
   var r = await _supa.from('ph_moves').select('*').eq('clinic_id', _clinicId).in('kind', ['received', 'corrected']).order('created_at', { ascending: false }).limit(25);
+  var after = window.phClosingAt ? await phClosingAt(r.data || []) : {};
   dEl('rcv-recent').innerHTML = (r.data || []).length ? r.data.map(function (m) {
-    return '<tr><td class="tiny">' + dDateTime(m.created_at) + '</td><td>' + esc(m.name || '') + '</td><td>' + esc(m.batch_no || '') + '</td><td class="r">' + (m.change > 0 ? '+' : '') + Number(m.change) + '</td><td class="tiny">' + esc(m.created_by_name || '') + '</td><td class="tiny">' + esc(m.kind === 'corrected' ? 'Corrected: ' + (m.note || '') : (m.note || '')) + '</td></tr>';
-  }).join('') : '<tr><td colspan="6" class="muted">Nothing yet.</td></tr>';
+    var cl = after[m.id];
+    return '<tr><td class="tiny">' + dDateTime(m.created_at) + '</td><td>' + esc(m.name || '') + '</td><td>' + esc(m.batch_no || '') + '</td><td class="r">' + (cl == null ? '-' : cl - Number(m.change)) + '</td><td class="r" style="color:' + (m.change < 0 ? 'var(--amber)' : 'var(--green)') + ';font-weight:700">' + (m.change > 0 ? '+' : '') + Number(m.change) + '</td><td class="r"><b>' + (cl == null ? '-' : cl) + '</b></td><td class="tiny">' + esc(m.created_by_name || '') + '</td><td class="tiny">' + esc(m.kind === 'corrected' ? 'Corrected: ' + (m.note || '') : (m.note || '')) + '</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="muted">Nothing yet.</td></tr>';
 }
 /* import */
 function impTemplate() {
@@ -804,7 +823,7 @@ function scanReview(d) {
     var opts = '<option value="">&#10133; New: ' + esc(x.read) + '</option>' + x.cands.map(function (m) { return '<option value="' + m.id + '"' + (m.id === x.match ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
     return '<tr id="sr-' + i + '"><td><input type="checkbox" checked onchange="SCAN[' + i + '].inc=this.checked;scanTotals()" style="width:18px;height:18px"/></td>'
       + '<td><div class="tiny">Read: ' + esc(x.read || '(nothing)') + '</div><select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value;this.nextElementSibling.style.display=this.value?\'none\':\'block\';scanTotals()">' + opts + '</select>'
-      + '<input class="finput" style="width:210px;padding:6px;margin-top:4px;display:' + (x.match ? 'none' : 'block') + '" placeholder="Medicine name (type it if not read)" value="' + esc(x.read || '') + '" oninput="SCAN[' + i + '].read=this.value"/><div id="sg-' + i + '"></div></td>'
+      + '<input class="finput" style="width:210px;padding:6px;margin-top:4px;display:' + (x.match ? 'none' : 'block') + '" placeholder="Medicine name (type it if not read)" value="' + esc(x.read || '') + '" oninput="SCAN[' + i + '].read=this.value"/><div id="sg-' + i + '"></div><div id="ss-' + i + '"></div></td>'
       + '<td>' + inp(i, 'batch', 90) + '</td><td>' + inp(i, 'expiry', 82) + '</td><td>' + inp(i, 'qty', 64, 1) + '</td><td>' + inp(i, 'free', 54, 1) + '</td><td>' + inp(i, 'upp', 54, 1) + '</td>'
       + '<td>' + inp(i, 'mrp', 76, 1) + '</td><td>' + inp(i, 'rate', 76, 1) + '</td><td>' + inp(i, 'disc', 56, 1) + '</td>'
       + '<td><select class="finput" data-k="gst" style="width:74px;padding:6px" onchange="SCAN[' + i + '].gst=this.value===\'\'?\'\':Number(this.value);scanTotals()"><option value=""' + (x.gst === '' ? ' selected' : '') + '>?</option>' + [0, 5, 12, 18, 28].map(function (g) { return '<option value="' + g + '"' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td>'
@@ -828,6 +847,10 @@ function scanLinesTotal() {
   return Math.round(t * 100) / 100;
 }
 function scanTotals() {
+  if (window.stkTxt) { var used = {}; SCAN.forEach(function (x, i) { var el = dEl('ss-' + i); if (!el) return; var m = x.match ? MEDMAP[x.match] : null;
+    var add = ((Number(x.qty) || 0) + (Number(x.free) || 0)) * (x.per === 'unit' ? Math.max(1, Number(x.upp) || 1) : 1), key = x.match || ('new:' + String(x.read).toLowerCase());
+    var bf = (m ? phStockAll(m) : 0) + (used[key] || 0); if (x.inc) used[key] = (used[key] || 0) + add;
+    el.innerHTML = x.inc ? stkTxt(bf, bf + add, m ? m.unit : (x.per === 'unit' ? 'tab' : 'pack')) : ''; }); }
   var lt = scanLinesTotal(), bt = Number(dEl('scan-billtot') && dEl('scan-billtot').value), box = dEl('scan-tot'); if (!box) return;
   var ok = !(bt > 0) || Math.abs(lt - bt) <= Math.max(2, bt * 0.002);
   box.innerHTML = 'Lines total (with discount + GST): <b>' + dMoney(lt) + '</b>' + (bt > 0 ? ' &middot; Bill grand total: <b>' + dMoney(bt) + '</b> &middot; ' + (ok ? '<span style="color:var(--green);font-weight:700">&#10003; matches</span>' : '<span class="over">differs by ' + dMoney(Math.abs(lt - bt)) + '</span>') : ' &middot; <span class="tiny">type the bill\'s grand total to check it</span>');
@@ -1046,7 +1069,7 @@ function billsRender() {
     return '<tr' + (s.cancelled ? ' style="opacity:.55"' : '') + '><td class="tiny">' + dDateTime(s.created_at) + '</td><td><b>' + esc(s.bill_no) + '</b><div class="tiny">' + esc(s.title) + '</div></td>'
       + '<td>' + esc(s.patient_name || '') + '<div class="tiny">' + esc(s.patient_phone || '') + '</div></td><td class="r"><b>' + dMoney(s.total) + '</b></td>'
       + '<td>' + (s.cancelled ? '<span class="tag t-r">Cancelled</span>' : s.kind === 'ipd' ? '<span class="tag t-b">Patient bill</span>' : '<span class="tag ' + (s.pay_mode === 'credit' ? 't-a' : 't-g') + '">' + esc(String(s.pay_mode).toUpperCase()) + '</span>') + '</td>'
-      + '<td class="r" style="white-space:nowrap"><button class="btn btn-sm" onclick="saleOpen(\'' + s.id + '\')">&#128196; PDF</button> <button class="btn btn-sm" onclick="saleWa(\'' + s.id + '\')">&#128242;</button>'
+      + '<td class="r" style="white-space:nowrap"><button class="btn btn-sm" onclick="saleOpen(\'' + s.id + '\')">&#128196; PDF</button> <button class="btn btn-sm" onclick="saleWa(\'' + s.id + '\')">&#128242;</button> <button class="btn btn-sm" title="Stock before and after this bill" onclick="phSaleStockModal(\'' + s.id + '\')">&#128230;</button>'
       + (dIsOwner() && !s.cancelled ? ' <button class="btn btn-sm btn-r" onclick="saleCancel(\'' + s.id + '\')">Cancel</button>' : '') + '</td></tr>';
   }).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">No bills in this period.</td></tr>';
 }
@@ -1103,6 +1126,6 @@ function unlinkIfRenamed(v) {
 
 init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
-<script src="pharmacy-pro.js?v=1"></script>
+<script src="pharmacy-pro.js?v=2"></script>
 </body>
 </html>
