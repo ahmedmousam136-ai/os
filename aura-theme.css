@@ -205,7 +205,9 @@ html body .d-side-brand, html body .d-side-foot { display: none; }
   html body .d-side-foot { display: block; margin-top: auto; padding: 18px 6px 0; font-size: 12px; color: var(--sidebar-text-tertiary); }
 }
 @media (max-width: 900px) and (min-width: 701px) {
-  html body .d-tabs { background: transparent; }
+  /* tablets: the tab row stays on screen while the page scrolls (like the top bar of an app) */
+  html body .d-top { position: static; }
+  html body .d-tabs { position: sticky; top: 0; z-index: 45; background: var(--bg); max-width: none; padding: 8px 16px 0; box-shadow: 0 6px 12px -10px rgba(0,0,0,.25); }
   html body .d-tab.on { background: var(--surface); border-color: var(--border); color: var(--green); }
 }
 @media (max-width: 700px) {
