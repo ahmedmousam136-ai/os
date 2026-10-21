@@ -364,3 +364,55 @@ async function h1Pdf() {
   if (typeof _clinicId === 'undefined' || !_clinicId || !window.MEDS) { setTimeout(ppStart, 600); return; }
   refillLoad();
 })();
+
+/* =================================================================== OPENING / CLOSING STOCK (same as wholesale) */
+/* all the stock of a medicine, expired included (that is what is physically on the shelf) */
+function phStockAll(m) { return m ? (m.batches || []).reduce(function (a, b) { return a + (Number(b.qty) > 0 ? Number(b.qty) : 0); }, 0) : 0; }
+function stkTxt(before, after, unit) {
+  before = Math.round(before * 100) / 100; after = Math.round(after * 100) / 100;
+  return '<div class="tiny" style="white-space:nowrap">Stock <b>' + before + '</b> &rarr; <b style="color:' + (after < before ? 'var(--amber)' : 'var(--green)') + '">' + after + '</b>' + (unit ? ' ' + esc(unit) : '') + '</div>';
+}
+/* stock of each medicine RIGHT NOW, fresh from the database */
+async function phNow(ids) {
+  var now = {}; if (!ids.length) return now;
+  var r = await _supa.from('ph_batches').select('medicine_id,qty').eq('clinic_id', _clinicId).in('medicine_id', ids);
+  (r.data || []).forEach(function (x) { if (Number(x.qty) > 0) now[x.medicine_id] = (now[x.medicine_id] || 0) + Number(x.qty); });
+  return now;
+}
+/* for a list of stock moves: the medicine's total stock just AFTER each move (map move id -> closing) */
+async function phClosingAt(moves) {
+  var out = {}; moves = (moves || []).filter(function (m) { return m.medicine_id; }); if (!moves.length) return out;
+  try {
+    var ids = Object.keys(moves.reduce(function (a, m) { a[m.medicine_id] = 1; return a; }, {}));
+    var oldest = moves.reduce(function (a, m) { return m.created_at < a ? m.created_at : a; }, moves[0].created_at);
+    var later = await _supa.from('ph_moves').select('id,medicine_id,change,created_at').eq('clinic_id', _clinicId).in('medicine_id', ids).gt('created_at', oldest).limit(10000);
+    if (later.error) return out;
+    var now = await phNow(ids);
+    moves.forEach(function (m) {
+      var after = (later.data || []).filter(function (x) { return x.medicine_id === m.medicine_id && x.created_at > m.created_at; }).reduce(function (a, x) { return a + Number(x.change); }, 0);
+      out[m.id] = Math.round(((now[m.medicine_id] || 0) - after) * 100) / 100;
+    });
+  } catch (e) {}
+  return out;
+}
+/* a saved bill: Opening / Went out / Closing / In stock today for every medicine on it */
+async function phSaleStock(saleId, elId) {
+  var el = dEl(elId); if (!el) return;
+  try {
+    var m = await _supa.from('ph_moves').select('medicine_id,name,change,created_at').eq('clinic_id', _clinicId).eq('sale_id', saleId).in('kind', ['sold', 'issued']);
+    if (m.error || !m.data || !m.data.length) { el.innerHTML = ''; return; }
+    var T = m.data[0].created_at, mine = {}, names = {};
+    m.data.forEach(function (x) { mine[x.medicine_id] = (mine[x.medicine_id] || 0) + Number(x.change); names[x.medicine_id] = x.name; });
+    var ids = Object.keys(mine);
+    var later = await _supa.from('ph_moves').select('medicine_id,change').eq('clinic_id', _clinicId).in('medicine_id', ids).gt('created_at', T);
+    if (later.error) { el.innerHTML = ''; return; }
+    var aft = {}; (later.data || []).forEach(function (x) { aft[x.medicine_id] = (aft[x.medicine_id] || 0) + Number(x.change); });
+    var now = await phNow(ids), r2 = function (v) { return Math.round(v * 100) / 100; };
+    el.innerHTML = '<div class="card" style="margin:12px 0 4px;padding:10px 12px"><b>Stock of these medicines</b><div class="tiny">Opening = just before this bill &middot; Closing = just after it.</div>'
+      + '<div style="overflow-x:auto;margin-top:6px"><table class="dt"><thead><tr><th>Medicine</th><th class="r">Opening</th><th class="r">Went out</th><th class="r">Closing</th><th class="r">In stock now</th></tr></thead><tbody>'
+      + ids.map(function (id) {
+        var md = MEDMAP[id], today = now[id] || 0, close = r2(today - (aft[id] || 0)), ch = r2(mine[id]), open = r2(close - ch);
+        return '<tr><td><b>' + esc(md ? md.name : names[id]) + '</b></td><td class="r">' + open + '</td><td class="r" style="color:var(--amber);font-weight:700">' + ch + '</td><td class="r"><b>' + close + '</b></td><td class="r">' + r2(today) + ' <span class="tiny">' + esc(md ? md.unit : '') + '</span></td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  } catch (e) { el.innerHTML = ''; }
+}
