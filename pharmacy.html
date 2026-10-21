@@ -12,7 +12,7 @@
 <script src="nh-shared.js?v=20261019z"></script>
 <script src="aura-dept.js?v=20261019z"></script>
 <script src="aura-loader.js?v=2"></script>
-<link rel="stylesheet" href="aura-theme.css?v=20261018a"/>
+<link rel="stylesheet" href="aura-theme.css?v=20261021a"/>
 <script src="aura-themes.js?v=1"></script>
 </head>
 <body>
@@ -121,6 +121,7 @@
         <button class="btn btn-sm" onclick="medEdit(null)">&#10133; New medicine</button>
         <button class="btn btn-sm" onclick="gstMode(true)">&#37; Change GST of many</button>
         <button class="btn btn-sm" onclick="retOpen()">&#8617; Return to supplier</button>
+        <button class="btn btn-sm" onclick="supOpen()">&#127970; Suppliers</button>
       </div>
       <div id="gst-bar" class="card" style="display:none;margin-bottom:10px;padding:10px 12px;background:var(--green-bg);border-color:var(--green-border)">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
@@ -137,6 +138,7 @@
 
     <!-- ============ ADD STOCK ============ -->
     <div class="d-view" id="v-receive">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-sm" onclick="supOpen()">&#127970; Your suppliers</button></div>
       <div class="card" style="margin-bottom:18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">
         <div style="font-size:30px">&#128248;</div>
         <div style="flex:1;min-width:220px"><b>Scan the distributor's bill</b><div class="tiny">Take a clear photo of the whole bill. AI reads every line (name, batch, expiry, MRP, rate, quantity). You check the lines, then add them to stock in one tap.</div></div>
@@ -370,7 +372,7 @@ function posRender(keepInputs) {
       return '<tr><td><b>' + esc(m.name) + '</b><div class="tiny">' + esc(m.composition || '') + (m.schedule ? ' &middot; <span class="tag t-a">Sch ' + esc(m.schedule) + '</span>' : '') + '</div></td>'
         + '<td class="tiny hide-sm" id="cl-' + c.medicine_id + '"></td>'
         + '<td class="r"><input class="finput" data-id="' + c.medicine_id + '" type="number" min="0" step="1" value="' + c.qty + '" style="width:90px;text-align:right;padding:7px" oninput="posQty(\'' + c.medicine_id + '\',this.value)"/><div class="tiny">' + esc(m.unit) + '</div><div id="cs-' + c.medicine_id + '"></div></td>'
-        + '<td class="r hide-sm" id="cm-' + c.medicine_id + '"></td><td class="r">' + Number(m.gst_rate) + '%</td><td class="r" id="ca-' + c.medicine_id + '"></td>'
+        + '<td class="r hide-sm" id="cm-' + c.medicine_id + '"></td><td class="r">' + (Number(m.gst_rate) ? Number(m.gst_rate) + '%' : '<span class="tiny">Exempt</span>') + '</td><td class="r" id="ca-' + c.medicine_id + '"></td>'
         + '<td class="r"><button class="btn btn-sm btn-r" onclick="posDel(\'' + c.medicine_id + '\')">&times;</button></td></tr>';
     }).join('') : '<tr><td colspan="7" class="muted" style="text-align:center;padding:22px">No medicines yet. Search above to add.</td></tr>';
   }
@@ -472,15 +474,17 @@ async function salePdf(sale) {
     var meta = [reg && x.hsn ? 'HSN ' + esc(x.hsn) : '', x.schedule ? 'Schedule ' + esc(x.schedule) : ''].filter(Boolean).join(' &middot; ');
     return '<tr><td class="mut">' + (i + 1) + '</td><td><b>' + esc(x.name) + '</b>' + (meta ? '<div class="sm">' + meta + '</div>' : '') + '</td>'
       + '<td>' + esc(x.batch_no || '') + '</td><td>' + dExp(x.expiry) + '</td><td class="r">' + Number(x.qty) + '</td><td class="r">' + Number(x.mrp).toFixed(2) + '</td>'
-      + (reg ? '<td class="r">' + Number(x.gst_rate) + '%</td>' : '') + '<td class="r">' + (Number(x.discount) ? Number(x.discount).toFixed(2) : '-') + '</td><td class="r"><b>' + Number(x.amount).toFixed(2) + '</b></td></tr>';
+      + (reg ? '<td class="r">' + (Number(x.gst_rate) ? Number(x.gst_rate) + '%' : 'Exempt') + '</td>' : '') + '<td class="r">' + (Number(x.discount) ? Number(x.discount).toFixed(2) : '-') + '</td><td class="r"><b>' + Number(x.amount).toFixed(2) + '</b></td></tr>';
   });
   var left = '';
   if (reg) {
     var by = {}; items.forEach(function (x) { var k = Number(x.gst_rate); by[k] = by[k] || { t: 0, c: 0, s: 0 }; by[k].t += Number(x.taxable); by[k].c += Number(x.cgst); by[k].s += Number(x.sgst); });
     left = '<div style="font-weight:700;color:#0b4f3a;font-size:12px">GST summary</div><table class="dgst"><tr><th>GST rate</th><th>Taxable value</th><th>CGST</th><th>SGST</th><th>Total tax</th></tr>'
-      + Object.keys(by).sort(function (p, q) { return p - q; }).map(function (k) { var v = by[k]; return '<tr><td>' + k + '%</td><td>' + v.t.toFixed(2) + '</td><td>' + v.c.toFixed(2) + '</td><td>' + v.s.toFixed(2) + '</td><td>' + (v.c + v.s).toFixed(2) + '</td></tr>'; }).join('') + '</table>';
+      + Object.keys(by).sort(function (p, q) { return p - q; }).map(function (k) { var v = by[k]; return '<tr><td>' + (Number(k) ? k + '%' : 'Exempt (0%)') + '</td><td>' + v.t.toFixed(2) + '</td><td>' + v.c.toFixed(2) + '</td><td>' + v.s.toFixed(2) + '</td><td>' + (v.c + v.s).toFixed(2) + '</td></tr>'; }).join('') + '</table>';
   } else if (sale.gst_mode === 'composition') {
-    left = '<div class="sm" style="max-width:300px">Composition taxable person, not eligible to collect tax on supplies.</div>';
+    left = '<div class="sm" style="max-width:300px"><b>GST:</b> Composition taxable person, not eligible to collect tax on supplies.</div>';
+  } else if (!ipd) {
+    left = '<div class="sm" style="max-width:300px"><b>GST:</b> Not charged on this bill. The seller is not registered under GST (cash memo). Prices are MRP.</div>';
   }
   var row = function (l, v, cls) { return '<div class="row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
   var tot = '<div class="dtot">' + row('MRP total (' + items.length + ' item' + (items.length === 1 ? '' : 's') + ')', deptMoney(sale.mrp_total))
@@ -572,10 +576,10 @@ function stockRender() {
   });
   dEl('st-b').innerHTML = list.length ? list.map(function (m) {
     if (GSTSEL) return '<tr style="cursor:pointer" onclick="gstTick(\'' + m.id + '\')"' + (GSTSEL[m.id] ? ' style="background:var(--green-bg)"' : '') + '><td><div style="display:flex;gap:10px;align-items:center"><input type="checkbox" style="width:18px;height:18px;appearance:auto" ' + (GSTSEL[m.id] ? 'checked ' : '') + 'onclick="event.stopPropagation();gstTick(\'' + m.id + '\')"/><span><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + '<b>GST ' + Number(m.gst_rate) + '%</b></div></span></div></td>'
-      + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td><td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + Number(m.gst_rate) + '%</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td></td></tr>';
+      + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td><td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + (Number(m.gst_rate) ? Number(m.gst_rate) + '%' : 'Exempt') + '</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td></td></tr>';
     return '<tr style="cursor:pointer" onclick="medOpen(\'' + m.id + '\')"><td><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + 'GST ' + Number(m.gst_rate) + '%</div></td>'
       + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td>'
-      + '<td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + Number(m.gst_rate) + '%</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
+      + '<td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + (Number(m.gst_rate) ? Number(m.gst_rate) + '%' : 'Exempt') + '</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
   }).join('') : '<tr><td colspan="7" class="muted" style="text-align:center;padding:20px">' + (MEDS.length ? 'Nothing matches.' : 'No medicines yet. Use <b>Add stock</b> or import your stock list.') + '</td></tr>';
 }
 /* change the GST rate of many medicines at once */
@@ -1157,6 +1161,6 @@ function unlinkIfRenamed(v) {
 
 init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
-<script src="pharmacy-pro.js?v=2"></script>
+<script src="pharmacy-pro.js?v=3"></script>
 </body>
 </html>
