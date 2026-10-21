@@ -83,10 +83,11 @@
           <div class="sum-row"><span>MRP total</span><span id="s-mrp">₹0.00</span></div>
           <div class="sum-row"><span>Discount</span><span id="s-disc">-₹0.00</span></div>
           <div id="s-gst-row" style="display:none">
-            <div class="sum-row"><span>Taxable value</span><span id="s-tx">₹0.00</span></div>
-            <div class="sum-row"><span>CGST</span><span id="s-cgst">₹0.00</span></div>
-            <div class="sum-row"><span>SGST</span><span id="s-sgst">₹0.00</span></div>
-            <div class="tiny" style="text-align:right;margin-top:-2px">GST is inside the MRP: <b id="s-gst">₹0.00</b></div>
+            <div class="sum-row" id="s-tx-row"><span>Taxable value</span><span id="s-tx">₹0.00</span></div>
+            <div class="sum-row"><span id="s-cgst-l">CGST</span><span id="s-cgst">₹0.00</span></div>
+            <div class="sum-row"><span id="s-sgst-l">SGST</span><span id="s-sgst">₹0.00</span></div>
+            <div class="tiny" id="s-gst-in" style="text-align:right;margin-top:-2px">GST is inside the MRP: <b id="s-gst">₹0.00</b></div>
+            <div class="tiny" id="s-gst-na" style="text-align:right;margin-top:-2px;display:none">GST not charged (see Settings &rarr; GST registration)</div>
           </div>
           <div class="sum-row big"><span>To pay</span><span id="s-total">₹0</span></div>
           <div><label class="flbl">Discount %</label><input class="finput" id="c-disc" type="number" min="0" max="100" step="0.5" value="0" oninput="posRender()"/></div>
@@ -384,7 +385,9 @@ function posRender(keepInputs) {
     var cs = dEl('cs-' + c.medicine_id), mdx = MEDMAP[c.medicine_id]; if (cs && mdx && window.stkTxt) { var bf = phStockAll(mdx); cs.innerHTML = stkTxt(bf, bf - (Number(c.qty) || 0)); }
   });
   dEl('s-mrp').textContent = dMoney(t.mrp); dEl('s-disc').textContent = '-' + dMoney(t.disc);
-  dEl('s-gst-row').style.display = t.regular ? 'block' : 'none'; dEl('s-gst').textContent = dMoney(t.gst);
+  dEl('s-gst-row').style.display = KIND === 'walkin' ? 'block' : 'none'; dEl('s-gst').textContent = dMoney(t.gst);
+  dEl('s-gst-na').style.display = t.regular ? 'none' : 'block'; dEl('s-gst-in').style.display = t.regular ? 'block' : 'none'; dEl('s-tx-row').style.display = t.regular ? 'flex' : 'none';
+  dEl('s-cgst-l').textContent = t.regular ? 'CGST' : 'CGST (not applicable)'; dEl('s-sgst-l').textContent = t.regular ? 'SGST' : 'SGST (not applicable)';
   var cg = Math.round(t.gst / 2 * 100) / 100; dEl('s-cgst').textContent = dMoney(cg); dEl('s-sgst').textContent = dMoney(Math.round((t.gst - cg) * 100) / 100); dEl('s-tx').textContent = dMoney(t.amt - t.gst);
   dEl('s-total').textContent = KIND === 'walkin' ? dMoney0(t.total) : dMoney(t.total);
 }
@@ -489,7 +492,8 @@ async function salePdf(sale) {
   var row = function (l, v, cls) { return '<div class="row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
   var tot = '<div class="dtot">' + row('MRP total (' + items.length + ' item' + (items.length === 1 ? '' : 's') + ')', deptMoney(sale.mrp_total))
     + (Number(sale.discount) ? row('Less: discount (' + Number(sale.discount_pct) + '%)', '-' + deptMoney(sale.discount)) : '')
-    + (reg ? row('Taxable value', deptMoney(sale.taxable), 's') + row('CGST', deptMoney(sale.cgst), 's') + row('SGST', deptMoney(sale.sgst), 's') : '')
+    + (reg ? row('Taxable value', deptMoney(sale.taxable), 's') + row('CGST', deptMoney(sale.cgst), 's') + row('SGST', deptMoney(sale.sgst), 's')
+           : ipd ? '' : row('CGST (not applicable)', deptMoney(0), 's') + row('SGST (not applicable)', deptMoney(0), 's'))
     + (Number(sale.round_off) ? row('Round off', (Number(sale.round_off) > 0 ? '+' : '') + Number(sale.round_off).toFixed(2), 's') : '')
     + row(ipd ? 'Total charged' : 'Net amount', deptMoney(sale.total), 'grand') + '</div>';
   var after = '<div class="dsplit"><div>' + left + '</div>' + tot + '</div><div class="dwords">' + deptWords(sale.total) + '</div>'
