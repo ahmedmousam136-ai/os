@@ -922,6 +922,11 @@ async function scanSave() {
   if (gNote.length) dEl('scan-res').innerHTML += '<div class="card" style="margin-top:6px;color:var(--green);font-weight:700">' + esc(gNote.join(' · ')) + '</div>';
   if (!e.length) { if (window.phOk) phOk('Bill added to stock', gNote.length ? esc(gNote.join(' · ')) : 'Every line is in stock now.', gNote.length ? 2600 : 1700); else showToast('Bill added to stock.' + (gNote.length ? ' ' + gNote.join(' · ') : '')); setTimeout(function () { dClose('m-scan'); }, gNote.length ? 2500 : 1200); }
   await loadMeds(); loadRecent();
+  try {
+    var packs = []; SCAN.forEach(function (x) { if (!x.inc || !(Number(x.upp) > 1)) return; var m = x.match ? MEDMAP[x.match] : MEDS.filter(function (z) { return z.name.toLowerCase() === String(x.read || '').trim().toLowerCase(); })[0];
+      if (m && /strip/i.test(m.unit) && Number(m.pack_size) !== Number(x.upp)) packs.push({ id: m.id, n: Math.round(Number(x.upp)) }); });
+    if (packs.length) { var pr = await _supa.rpc('ph_set_pack', { p_clinic_id: _clinicId, p: packs }); if (!pr.error) packs.forEach(function (q) { if (MEDMAP[q.id]) MEDMAP[q.id].pack_size = q.n; }); }
+  } catch (e) {}
 }
 
 /* ---------------- LESS TYPING AT THE COUNTER ----------------
@@ -980,13 +985,29 @@ async function rxPick(inp) {
   } catch (e) { st.textContent = '⚠ ' + dErr(e); }
 }
 /* how many to give: loose tablets = doses a day x days; otherwise the written quantity */
+/* tablets in one strip: saved for the medicine (file 32), else written in its name ("15's", "1x10"), else 0 = not known */
+function rxPack(m) {
+  if (!m) return 0; if (Number(m.pack_size) > 0) return Number(m.pack_size);
+  var k = String(m.name || '').match(/(\d{1,3})\s*'?\s*s\b|\b1\s*x\s*(\d{1,3})\b/i); return k ? Number(k[1] || k[2]) : 0;
+}
 function rxQty(x) {
   var m = x.med ? MEDMAP[x.med] : null, loose = m ? /^(tab|cap)$/.test(m.unit) : /tab|cap/i.test(x.unit0 + ' ' + x.read);
-  if (x.qty0 > 0 && !(loose && /strip/i.test(x.unit0))) return x.qty0;
-  if (loose && x.per_day > 0 && x.days > 0) return x.per_day * x.days;
+  var strip = m && /strip/i.test(m.unit), doses = x.per_day > 0 && x.days > 0 ? Math.ceil(x.per_day * x.days) : 0;
+  x.doses = 0; x.guess = false;
+  if (x.qty0 > 0 && !(loose && /strip/i.test(x.unit0))) {
+    if (strip && /tab|cap/i.test(x.unit0)) doses = x.qty0; else return x.qty0;   /* "Tab x 30" for a medicine sold by the strip */
+  }
+  if (loose && doses) return doses;
+  if (strip && doses) {   /* 1-0-0 x 30 days = 30 tablets = 2 strips of 15 */
+    var pk = Number(x.pack) > 0 ? Number(x.pack) : rxPack(m);
+    if (!pk) { pk = 10; x.guess = true; }
+    x.pk = pk; x.doses = doses; return Math.ceil(doses / pk);
+  }
+  if (m && !loose && !strip && (doses || x.per_day > 0)) return 1;   /* syrup, cream, drops: one bottle / tube */
   if (!loose && x.qty0 > 0) return x.qty0;
   return '';
 }
+function rxSetPack(i, v) { var x = RX[i]; x.pack = Math.max(1, Math.round(Number(v) || 0)) || ''; x.packEdited = true; x.qty = rxQty(x); rxReview(); }
 function rxHow(x) {
   var p = [];
   if (x.per_day) p.push(x.per_day + ' a day'); if (x.days) p.push(x.days + ' day' + (x.days === 1 ? '' : 's')); if (x.qty0) p.push('written: ' + x.qty0 + (x.unit0 ? ' ' + x.unit0 : ''));
@@ -997,10 +1018,12 @@ function rxReview() {
     var opts = '<option value="">&mdash; skip this line &mdash;</option>' + x.cands.map(function (id) { var m = MEDMAP[id]; return '<option value="' + id + '"' + (id === x.med ? ' selected' : '') + '>' + esc(m.name) + ' &middot; ' + (m.stock > 0 ? m.stock + ' ' + esc(m.unit) + ' in stock' : 'OUT OF STOCK') + '</option>'; }).join('');
     var m = x.med ? MEDMAP[x.med] : null;
     return '<tr id="rx-' + i + '"><td><b>' + esc(x.read) + '</b>' + (x.raw && x.raw !== x.read ? '<div class="tiny">written: ' + esc(x.raw) + '</div>' : '') + (rxHow(x) ? '<div class="tiny">' + rxHow(x) + '</div>' : '') + '</td>'
-      + '<td><select class="finput" style="min-width:230px" onchange="RX[' + i + '].med=this.value;if(RX[' + i + '].qty===\'\')RX[' + i + '].qty=rxQty(RX[' + i + ']);rxReview()">' + opts + '</select>'
+      + '<td><select class="finput" style="min-width:230px" onchange="RX[' + i + '].med=this.value;if(RX[' + i + '].qty===\'\'||RX[' + i + '].doses)RX[' + i + '].qty=rxQty(RX[' + i + ']);rxReview()">' + opts + '</select>'
       + (x.cands.length ? (x.sure || x.med ? '' : '<div class="tiny" style="color:var(--amber)">Not sure &mdash; please choose</div>') : '<div class="tiny over">Not in your stock list</div>')
       + (m && m.stock <= 0 && window.subsFor && subsFor(m, 1).length ? '<div class="pp-sub">&#8644; Out of stock. Same salt in stock: <a href="#" style="font-weight:700" onclick="RX[' + i + '].med=\'' + subsFor(m, 1)[0].id + '\';rxReview();return false">' + esc(subsFor(m, 1)[0].name) + '</a> (' + (subsFor(m, 1)[0].next ? dMoney(subsFor(m, 1)[0].next.mrp) : '') + ')</div>' : '') + '</td>'
-      + '<td class="r"><input class="finput" type="number" min="0" step="1" value="' + esc(x.qty) + '" style="width:80px;text-align:right" oninput="RX[' + i + '].qty=this.value;rxCheck()"/><div class="tiny">' + esc(m ? m.unit : '') + '</div></td></tr>';
+      + '<td class="r"><input class="finput" type="number" min="0" step="1" value="' + esc(x.qty) + '" style="width:80px;text-align:right" oninput="RX[' + i + '].qty=this.value;rxCheck()"/><div class="tiny">' + esc(m ? m.unit : '') + '</div>'
+        + (x.doses ? '<div class="tiny" style="white-space:nowrap;' + (x.guess ? 'color:var(--amber);font-weight:700' : '') + '">= ' + x.doses + ' tablets &middot; <input class="finput" type="number" min="1" step="1" value="' + esc(x.pk) + '" style="width:52px;padding:2px 4px;font-size:12px;text-align:right" onchange="rxSetPack(' + i + ',this.value)" title="Tablets in one strip"/> per strip' + (x.guess ? ' (check)' : '') + '</div>' : '')
+        + '</td></tr>';
   }).join('');
   dEl('rx-body').innerHTML = '<p class="tiny" style="margin-bottom:8px">Check each line against the prescription: the medicine on the right must be the one the doctor wrote, and the quantity right for the days written. Loose tablets are counted as doses a day &times; days.</p>'
     + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Read from the prescription</th><th>Medicine in your stock</th><th class="r">Qty</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
@@ -1019,6 +1042,8 @@ function rxUse() {
   RX.forEach(function (x) { if (!x.med) return; var r = cartAdd(x.med, Number(x.qty)); if (r.short < Number(x.qty)) n++; if (r.short > 0) notes.push(MEDMAP[x.med].name + ': ' + (r.short === Number(x.qty) ? 'out of stock' : r.short + ' short')); });
   var skipped = RX.filter(function (x) { return !x.med; }).map(function (x) { return x.read; });
   dClose('m-rx'); posRender();
+  var packs = RX.filter(function (x) { return x.med && x.packEdited && Number(x.pack) > 0; }).map(function (x) { MEDMAP[x.med].pack_size = Number(x.pack); return { id: x.med, n: Number(x.pack) }; });
+  if (packs.length) _supa.rpc('ph_set_pack', { p_clinic_id: _clinicId, p: packs }).then(function () {}, function () {});
   var rxDays = Math.max.apply(null, [0].concat(RX.filter(function (x) { return x.med; }).map(function (x) { return Number(x.days) || 0; }))), rfl = window.ppRefillFromRx ? ppRefillFromRx(rxDays) : '';
   if (n && window.phOk) phOk(n + ' medicine' + (n === 1 ? '' : 's') + ' added', 'From the prescription.' + (rfl ? '<br>' + esc(rfl) : ''));
   dEl('rx-st').innerHTML = '<span style="color:var(--green);font-weight:700">&#10003; ' + n + ' medicine' + (n === 1 ? '' : 's') + ' added from the prescription.</span>'
