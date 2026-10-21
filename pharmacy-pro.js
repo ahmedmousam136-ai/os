@@ -416,3 +416,42 @@ async function phSaleStock(saleId, elId) {
       }).join('') + '</tbody></table></div></div>';
   } catch (e) { el.innerHTML = ''; }
 }
+
+/* =================================================================== SUPPLIERS (from the distributors' bills and the stock) */
+var SUPS = [];
+async function supOpen() {
+  ppModal('m-sup', 'Your suppliers', 1000);
+  dEl('m-sup-b').innerHTML = '<div class="tiny">Loading&hellip;</div>'; dOpen('m-sup');
+  var pb = await _supa.from('ph_purchase_bills').select('supplier,supplier_gstin,bill_no,bill_date,bill_total,lines_added,created_at').eq('clinic_id', _clinicId).order('created_at', { ascending: false }).limit(2000);
+  var bt = await _supa.from('ph_batches').select('medicine_id,supplier,qty,purchase_rate,created_at').eq('clinic_id', _clinicId).limit(10000);
+  var by = {}, get = function (name) { var k = roSupKey(name); if (!k) return null; return by[k] = by[k] || { k: k, name: String(name).trim(), gstin: '', bills: [], total: 0, meds: {}, value: 0, last: '' }; };
+  (pb.data || []).forEach(function (b) { var s = get(b.supplier); if (!s) return; if (b.supplier_gstin && !s.gstin) s.gstin = b.supplier_gstin; s.bills.push(b); s.total += Number(b.bill_total) || 0; if (b.created_at > s.last) s.last = b.created_at; });
+  (bt.data || []).forEach(function (b) { var s = get(b.supplier); if (!s) return; s.meds[b.medicine_id] = 1; s.value += (Number(b.qty) || 0) * (Number(b.purchase_rate) || 0); if (b.created_at > s.last) s.last = b.created_at; });
+  SUPS = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return a.last < b.last ? 1 : -1; });
+  supRender();
+  /* which of them are on AuraScale (re-order goes straight to them) */
+  SUPS.forEach(function (s) { var ph1 = (ppLS('sup-phones') || {})[s.k] || ''; if (!s.gstin && !ph1) return;
+    _supa.rpc('aura_find_wholesaler', { p_from: _clinicId, p_gstin: s.gstin, p_phone: ph1 }).then(function (r) { if (!r.error && r.data && r.data.length) { s.app = r.data[0].name; supRender(); } }, function () {}); });
+}
+function supRender() {
+  var q = (dEl('sup-q') && dEl('sup-q').value || '').toLowerCase(), phones = ppLS('sup-phones') || {};
+  var list = SUPS.filter(function (s) { return !q || (s.name + ' ' + s.gstin).toLowerCase().indexOf(q) >= 0; });
+  var keep = dEl('sup-q') ? dEl('sup-q').value : '';
+  dEl('m-sup-b').innerHTML = '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><b style="font-size:16px">' + SUPS.length + ' supplier' + (SUPS.length === 1 ? '' : 's') + '</b>'
+    + '<input class="finput" id="sup-q" placeholder="Search name or GSTIN&hellip;" value="' + esc(keep) + '" oninput="supRender()" style="max-width:260px"/></div>'
+    + '<p class="tiny" style="margin-bottom:8px">Made automatically from the distributors\' bills you scanned and the supplier name typed in Add stock. Add a WhatsApp number once to send orders and return notes.</p>'
+    + (list.length ? '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Supplier</th><th>GSTIN</th><th class="r">Bills</th><th class="r">Bought</th><th class="r">Medicines</th><th>Last</th><th>WhatsApp</th></tr></thead><tbody>'
+      + list.map(function (s) { var i = SUPS.indexOf(s);
+        return '<tr><td><b>' + esc(s.name) + '</b>' + (s.app ? '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; On AuraScale (' + esc(s.app) + ')</div>' : '') + '</td><td class="tiny">' + esc(s.gstin || '-') + '</td>'
+          + '<td class="r">' + (s.bills.length ? '<a href="#" onclick="supBills(' + i + ');return false" style="font-weight:700">' + s.bills.length + '</a>' : '0') + '</td><td class="r">' + (s.total ? dMoney0(s.total) : '-') + '</td>'
+          + '<td class="r">' + Object.keys(s.meds).length + '</td><td class="tiny">' + (s.last ? dDate(s.last) : '') + '</td>'
+          + '<td><input class="finput" type="tel" style="width:130px;padding:5px" value="' + esc(phones[s.k] || '') + '" placeholder="Mobile" onchange="supPhone(' + i + ',this.value)"/></td></tr>'
+          + '<tr id="sup-b-' + i + '" style="display:none"><td colspan="7"></td></tr>';
+      }).join('') + '</tbody></table></div>' : '<div class="card" style="text-align:center;padding:20px">' + (SUPS.length ? 'Nothing matches.' : 'No suppliers yet. Scan a distributor\'s bill in <b>Add stock</b>.') + '</div>');
+  var qi = dEl('sup-q'); if (qi && keep) { qi.focus(); qi.setSelectionRange(keep.length, keep.length); }
+}
+function supPhone(i, v) { var m = ppLS('sup-phones') || {}; m[SUPS[i].k] = String(v || '').trim(); ppLS('sup-phones', m); showToast('Saved.'); }
+function supBills(i) {
+  var tr = dEl('sup-b-' + i), s = SUPS[i]; if (!tr) return; tr.style.display = tr.style.display === 'none' ? '' : 'none';
+  tr.firstChild.innerHTML = '<table class="dt"><tbody>' + s.bills.map(function (b) { return '<tr><td class="tiny">' + dDate(b.bill_date || b.created_at) + '</td><td>Bill <b>' + esc(b.bill_no || '-') + '</b></td><td class="r">' + (b.lines_added || 0) + ' lines</td><td class="r"><b>' + (b.bill_total ? dMoney(b.bill_total) : '-') + '</b></td></tr>'; }).join('') + '</tbody></table>';
+}
