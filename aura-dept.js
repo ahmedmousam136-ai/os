@@ -480,3 +480,31 @@ function deptWords(n) {
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addBrand); else addBrand();
 })();
+
+/* ---------- every photo button becomes two: "Take photo" (opens the camera) + "Choose photo" (gallery / files) ----------
+   Some phones open only the gallery for a plain file box, others only the camera when "capture" is set.
+   Two buttons give both, everywhere (bill scan, order photo, prescription, party photo). Computers keep one "Choose photo". */
+(function () {
+  var touch = false; try { touch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window; } catch (e) {}
+  function fix(lbl) {
+    if (lbl.getAttribute('data-cam')) return;
+    var inp = lbl.querySelector('input[type="file"][accept^="image"]'); if (!inp) return;
+    lbl.setAttribute('data-cam', '1');
+    inp.removeAttribute('capture');
+    var txt = [].filter.call(lbl.childNodes, function (n) { return n.nodeType === 3 && /photo/i.test(n.nodeValue); })[0];
+    if (txt) txt.nodeValue = touch ? '🖼️ Choose photo' : '📷 Choose photo';
+    if (!touch) return;
+    var cam = lbl.cloneNode(false); cam.setAttribute('data-cam', '1');
+    var ci = inp.cloneNode(false); ci.id = (inp.id || 'photo') + '-cam'; ci.setAttribute('capture', 'environment'); ci.value = '';
+    cam.appendChild(document.createTextNode('📷 Take photo')); cam.appendChild(ci);
+    lbl.parentNode.insertBefore(cam, lbl);
+    lbl.className = lbl.className.replace(/\bbtn-g\b/, '').trim() + ' btn';   /* "Take photo" is the main (green) button */
+    if (lbl.parentNode && getComputedStyle(lbl.parentNode).display.indexOf('flex') < 0) { cam.style.marginRight = '6px'; }
+  }
+  function scan(root) { [].forEach.call((root || document).querySelectorAll('label'), function (l) { if (l.querySelector('input[type="file"][accept^="image"]')) fix(l); }); }
+  function start() {
+    scan(document);
+    try { new MutationObserver(function (ms) { ms.forEach(function (m) { [].forEach.call(m.addedNodes, function (n) { if (n.nodeType === 1) scan(n.parentNode || n); }); }); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
