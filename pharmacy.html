@@ -624,7 +624,10 @@ function medOpen(id) {
       return '<tr><td>' + esc(b.batch_no) + '</td><td>' + dExp(b.expiry) + (b.expired ? ' <span class="tag t-r">Expired</span>' : (dDaysTo(b.expiry) <= 90 ? ' <span class="tag t-a">Soon</span>' : '')) + '</td><td class="r">' + dMoney(b.mrp) + '</td><td class="r">' + dMoney(b.purchase_rate) + '</td><td class="r"><b>' + Number(b.qty) + '</b></td><td class="tiny">' + esc(b.supplier || '') + '</td>'
         + '<td class="r">' + (dIsOwner() ? '<button class="btn btn-sm" onclick="batchCorrect(\'' + b.id + '\',' + Number(b.qty) + ')">Correct</button>' : '') + '</td></tr>';
     }).join('') : '<tr><td colspan="7" class="muted">No stock.</td></tr>') + '</tbody></table>'
-    + '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="medEdit(\'' + m.id + '\')">&#9998; Edit medicine</button><button class="btn btn-g" onclick="dClose(\'m-med\');rcvPick(\'' + m.id + '\');dTab(\'receive\')">&#10133; Add stock</button></div>';
+    + '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="medEdit(\'' + m.id + '\')">&#9998; Edit medicine</button><button class="btn btn-g" onclick="dClose(\'m-med\');rcvPick(\'' + m.id + '\');dTab(\'receive\')">&#10133; Add stock</button>'
+    + (window.medOrder ? '<button class="btn' + (m.stock <= 0 ? ' btn-g' : '') + '" onclick="medOrder(\'' + m.id + '\')">&#128722; Order from supplier</button>' : '')
+    + (window.retOpen && m.batches.some(function (b) { return Number(b.qty) > 0; }) ? '<button class="btn" onclick="dClose(\'m-med\');retOpen()">&#8617; Return to supplier</button>' : '') + '</div>'
+    + (m.stock <= 0 ? '<div class="note" style="margin-top:10px">&#128722; <b>Out of stock.</b> Tap <b>Order from supplier</b> to put it in the re-order list.</div>' : '');
   dOpen('m-med');
 }
 async function batchCorrect(id, cur) {
@@ -849,6 +852,19 @@ function scanReview(d) {
   dOpen('m-scan'); scanTotals();
 }
 /* the lines' total (rate - discount + GST) against the grand total printed on the bill */
+/* "Update GST now": change the saved GST of the differing medicines right away (same as on save) */
+async function scanGstNow() {
+  var byG = {}, names = [];
+  SCAN.forEach(function (x) { var m = x.match ? MEDMAP[x.match] : null; if (x.inc && m && x.gst !== '' && Number(m.gst_rate) !== Number(x.gst)) { x.upd = true; (byG[x.gst] = byG[x.gst] || []).push(m.id); names.push(m.name + ' ' + Number(m.gst_rate) + '% \u2192 ' + Number(x.gst) + '%'); } });
+  if (!names.length) { showToast('Nothing to update.'); return; }
+  for (var g in byG) {
+    var r = await _supa.rpc('ph_set_gst', { p_clinic_id: _clinicId, p_ids: byG[g], p_gst: Number(g) });
+    if (r.error) { showToast('GST not updated: ' + dErr(r.error)); return; }
+    byG[g].forEach(function (id) { if (MEDMAP[id]) MEDMAP[id].gst_rate = Number(g); });
+  }
+  scanTotals();
+  if (window.phOk) phOk('GST updated', esc(names.join(' · '))); else showToast('GST updated.');
+}
 function scanLinesTotal() {
   var t = 0;
   SCAN.forEach(function (x) { if (!x.inc) return; var q = Number(x.qty) || 0, r = Number(x.rate) || 0, d = Number(x.disc) || 0, g = x.gst === '' ? 0 : Number(x.gst); t += q * r * (1 - d / 100) * (1 + g / 100); });
@@ -874,8 +890,8 @@ function scanTotals() {
   var gd = SCAN.filter(function (x) { var m = x.match ? MEDMAP[x.match] : null; return x.inc && m && x.gst !== '' && Number(m.gst_rate) !== Number(x.gst); }), ga = dEl('scan-gstall');
   if (ga) ga.innerHTML = gd.length ? '<div class="card" style="margin-top:8px;padding:10px 12px;border-color:var(--amber)"><b style="color:var(--amber)">&#9888; ' + gd.length + ' medicine' + (gd.length === 1 ? ' has' : 's have') + ' a different GST on this bill</b>'
     + '<div class="tiny">' + gd.map(function (x) { var m = MEDMAP[x.match]; return esc(m.name) + ': ' + Number(m.gst_rate) + '% &rarr; <b>' + Number(x.gst) + '%</b>'; }).join(' &middot; ') + '</div>'
-    + '<div class="tiny" style="margin-top:4px"><b>' + gd.filter(function (x) { return x.upd; }).length + ' of ' + gd.length + '</b> will be updated to the bill\'s GST when you press <b>Add checked lines to stock</b>. Nothing else to do. '
-    + '<a href="#" onclick="SCAN.forEach(function(x){x.upd=true});scanTotals();return false">Update all</a> &middot; <a href="#" onclick="SCAN.forEach(function(x){x.upd=false});scanTotals();return false">Keep all as saved</a></div></div>' : '';
+    + '<div class="tiny" style="margin-top:4px"><b>' + gd.filter(function (x) { return x.upd; }).length + ' of ' + gd.length + '</b> will be updated to the bill\'s GST when you press <b>Add checked lines to stock</b>, or now: '
+    + '<button class="btn btn-sm btn-g" style="margin-left:4px" onclick="scanGstNow()">&#10003; Update GST now</button> &middot; <a href="#" onclick="SCAN.forEach(function(x){x.upd=false});scanTotals();return false">Keep all as saved</a></div></div>' : '';
   /* red boxes: what is still missing on ticked lines */
   SCAN.forEach(function (x, i) {
     var tr = dEl('sr-' + i); if (!tr) return;
@@ -1165,6 +1181,6 @@ function unlinkIfRenamed(v) {
 
 init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
-<script src="pharmacy-pro.js?v=3"></script>
+<script src="pharmacy-pro.js?v=4"></script>
 </body>
 </html>
