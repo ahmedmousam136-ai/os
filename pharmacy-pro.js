@@ -250,11 +250,17 @@ function retOpen() {
   retRender('exp'); dOpen('m-ret'); retPast();
 }
 var _retF = 'exp';
+function retSeg() {
+  return '<div class="seg" style="margin-bottom:10px;flex-wrap:wrap"><button class="' + (_retF === 'exp' ? 'on' : '') + '" onclick="retRender(\'exp\')">Expired &amp; expiring in 90 days</button><button class="' + (_retF === 'all' ? 'on' : '') + '" onclick="retRender(\'all\')">All stock (damaged / wrong item)</button>'
+    + '<button class="' + (_retF === 'out' ? 'on' : '') + '" onclick="retRender(\'out\')">&#128722; Out of stock items</button></div>';
+}
 function retRender(f) {
   _retF = f || _retF;
+  if (_retF === 'out') { outRender(); return; }
+  dEl('m-ret-t').textContent = 'Return stock to the supplier';
   var list = RET.map(function (x, i) { x.i = i; return x; }).filter(function (x) { return _retF === 'all' || x.d <= 90; });
   var sups = {}; list.forEach(function (x) { var s = (x.b.supplier || '').trim() || 'Supplier not known'; (sups[s] = sups[s] || []).push(x); });
-  dEl('m-ret-b').innerHTML = '<div class="seg" style="margin-bottom:10px"><button class="' + (_retF === 'exp' ? 'on' : '') + '" onclick="retRender(\'exp\')">Expired &amp; expiring in 90 days</button><button class="' + (_retF === 'all' ? 'on' : '') + '" onclick="retRender(\'all\')">All stock (damaged / wrong item)</button></div>'
+  dEl('m-ret-b').innerHTML = retSeg()
     + (Object.keys(sups).length ? Object.keys(sups).sort().map(function (s) {
       return '<div class="card" style="margin-bottom:10px;padding:10px 12px"><b>' + esc(s) + '</b><div style="overflow-x:auto"><table class="dt"><thead><tr><th></th><th>Medicine</th><th>Batch</th><th>Expiry</th><th class="r">Have</th><th class="r">Return</th><th class="r">Value</th></tr></thead><tbody>'
         + sups[s].map(function (x) { return '<tr><td><input type="checkbox" ' + (x.on ? 'checked' : '') + ' onchange="RET[' + x.i + '].on=this.checked;retSum()" style="width:18px;height:18px;appearance:auto"/></td><td><b>' + esc(x.m.name) + '</b></td><td>' + esc(x.b.batch_no) + '</td>'
@@ -454,4 +460,55 @@ function supPhone(i, v) { var m = ppLS('sup-phones') || {}; m[SUPS[i].k] = Strin
 function supBills(i) {
   var tr = dEl('sup-b-' + i), s = SUPS[i]; if (!tr) return; tr.style.display = tr.style.display === 'none' ? '' : 'none';
   tr.firstChild.innerHTML = '<table class="dt"><tbody>' + s.bills.map(function (b) { return '<tr><td class="tiny">' + dDate(b.bill_date || b.created_at) + '</td><td>Bill <b>' + esc(b.bill_no || '-') + '</b></td><td class="r">' + (b.lines_added || 0) + ' lines</td><td class="r"><b>' + (b.bill_total ? dMoney(b.bill_total) : '-') + '</b></td></tr>'; }).join('') + '</tbody></table>';
+}
+
+
+/* =================================================================== OUT OF STOCK -> ORDER FROM THE SUPPLIER
+   (third tab of "Return to supplier": nothing to remove here, these medicines have to be brought in) */
+var OUT = [], _outSup = null;
+async function outRender() {
+  dEl('m-ret-t').textContent = 'Out of stock: order from the supplier';
+  var box = dEl('m-ret-b');
+  box.innerHTML = retSeg() + '<div class="tiny">Loading&hellip;</div>';
+  var meds = MEDS.filter(function (m) { return m.is_active && m.stock <= 0; });
+  if (!_outSup) {   /* who supplied each medicine last (batches that are now empty too) */
+    _outSup = {};
+    var b = await _supa.from('ph_batches').select('medicine_id,supplier,created_at').eq('clinic_id', _clinicId).order('created_at', { ascending: false }).limit(5000);
+    (b.data || []).forEach(function (x) { if (!_outSup[x.medicine_id] && x.supplier) _outSup[x.medicine_id] = String(x.supplier).trim(); });
+  }
+  var keep = ppLS('ro-extra') || {};
+  OUT = meds.map(function (m) { return { m: m, on: true, qty: Math.max(1, Number(m.low_level || 0) * 2 || 1), sup: (keep[m.id] && keep[m.id].sup) || _outSup[m.id] || '', queued: !!keep[m.id] }; });
+  var sups = {}; Object.keys(_outSup).forEach(function (k) { sups[_outSup[k]] = 1; });
+  box.innerHTML = retSeg()
+    + (OUT.length ? '<p class="tiny" style="margin-bottom:8px">These medicines have <b>0</b> left to sell. Tick them, check the quantity and supplier, then <b>Order from supplier</b>: they go to <b>Re-order</b>, where you send the order on AuraScale or WhatsApp in one tap.</p>'
+      + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th></th><th>Medicine</th><th>Last supplier</th><th class="r">Order</th></tr></thead><tbody>'
+      + OUT.map(function (x, i) {
+        return '<tr><td><input type="checkbox" checked onchange="OUT[' + i + '].on=this.checked;outSum()" style="width:18px;height:18px;appearance:auto"/></td>'
+          + '<td><b>' + esc(x.m.name) + '</b> <span class="tag t-r">Out of stock</span>' + (x.queued ? ' <span class="tag t-g">In re-order list</span>' : '') + '<div class="tiny">' + esc(x.m.composition || '') + (x.m.expiredQty > 0 ? ' &middot; ' + x.m.expiredQty + ' expired on the shelf (return them in the first tab)' : '') + '</div></td>'
+          + '<td><input class="finput" list="out-sups" style="width:200px;padding:6px" value="' + esc(x.sup) + '" placeholder="Choose or type" oninput="OUT[' + i + '].sup=this.value.trim()"/></td>'
+          + '<td class="r"><input class="finput" type="number" min="1" step="1" value="' + x.qty + '" style="width:76px;text-align:right;padding:6px" oninput="OUT[' + i + '].qty=Number(this.value)||0;outSum()"/><div class="tiny">' + esc(x.m.unit) + '</div></td></tr>';
+      }).join('') + '</tbody></table></div><datalist id="out-sups">' + Object.keys(sups).sort().map(function (s) { return '<option value="' + esc(s) + '">'; }).join('') + '</datalist>'
+      + '<div id="out-sum" class="tiny" style="margin:8px 0"></div><button class="btn btn-g" onclick="outOrder()">&#128722; Order from supplier</button>'
+      : '<div class="card" style="text-align:center;padding:20px">&#9989; Nothing is out of stock.</div>');
+  outSum();
+}
+function outSum() {
+  var on = OUT.filter(function (x) { return x.on && x.qty > 0; }), el = dEl('out-sum');
+  if (el) el.innerHTML = on.length ? '<b>' + on.length + '</b> medicine' + (on.length === 1 ? '' : 's') + ' ticked' : 'Tick the medicines to order.';
+}
+function outOrder() {
+  var on = OUT.filter(function (x) { return x.on && x.qty > 0; });
+  if (!on.length) { showToast('Tick at least one medicine.'); return; }
+  var ex = ppLS('ro-extra') || {};
+  on.forEach(function (x) { ex[x.m.id] = { qty: x.qty, sup: x.sup || '' }; });
+  ppLS('ro-extra', ex);
+  dClose('m-ret');
+  phOk(on.length + ' medicine' + (on.length === 1 ? '' : 's') + ' added to Re-order', 'Grouped by supplier: send each order in one tap.');
+  setTimeout(function () { dTab('order'); }, 700);
+}
+/* one medicine (Stock -> Open): order it / return it right there */
+function medOrder(id) {
+  var m = MEDMAP[id]; if (!m) return; var ex = ppLS('ro-extra') || {};
+  ex[id] = { qty: Math.max(1, Number(m.low_level || 0) * 2 || 1), sup: (ex[id] && ex[id].sup) || ((m.batches[0] || {}).supplier || '') };
+  ppLS('ro-extra', ex); dClose('m-med'); phOk(m.name + ' added to Re-order'); setTimeout(function () { dTab('order'); }, 700);
 }
