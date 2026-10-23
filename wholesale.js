@@ -1590,7 +1590,7 @@ function impSample() {
 
 
 /* ---------- a new party from a photo (visiting card, shop board, bill, GST / drug-licence certificate) ---------- */
-function partyFromPhoto() { partyEdit(null, null, ''); setTimeout(function () { var i = dEl('pe-photo'); if (i) i.click(); }, 60); }
+function partyFromPhoto() { partyEdit(null, null, ''); setTimeout(function () { var i = dEl('pe-photo-cam') || dEl('pe-photo'); if (i) i.click(); }, 60); }
 async function partyPhoto(inp) {
   var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
   var st = dEl('pe-photo-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the photo&hellip; about 10-20 seconds.';
