@@ -905,16 +905,37 @@ function stockRender() {
     + '<div><span class="tiny">Low / out of stock</span><b style="color:var(--amber)">' + low + '</b></div><div><span class="tiny">Expiring in 90 days &middot; expired</span><b style="color:var(--red)">' + e90 + ' &middot; ' + ex + '</b></div>';
   var list = ITEMS.filter(function (it) {
     if (q && !itemMatch(it, q)) return false;
+    if (WGSEL && dEl('wg-only').value !== '' && Number(it.gst_rate) !== Number(dEl('wg-only').value)) return false;
     if (STF === 'low') return it.is_active && it.stock <= Number(it.low_level || 0);
     if (STF === 'exp90') return it.nearestExp && dDaysTo(it.nearestExp) <= 90;
     if (STF === 'expired') return it.expiredQty > 0;
     return true;
   });
+  WGSHOWN = list.map(function (it) { return it.id; });
   dEl('st-b').innerHTML = list.length ? list.map(function (it) {
     var b = it.sellable[0];
+    if (WGSEL) return '<tr style="cursor:pointer' + (WGSEL[it.id] ? ';background:var(--green-bg)' : '') + '" onclick="wgTick(' + A(it.id) + ')"><td><div style="display:flex;gap:10px;align-items:center"><input type="checkbox" style="width:18px;height:18px;appearance:auto;pointer-events:none" ' + (WGSEL[it.id] ? 'checked' : '') + '/><div><b>' + esc(it.name) + '</b><div class="tiny">' + esc(it.pack || '') + ' &middot; HSN ' + esc(it.hsn || '-') + '</div></div></div></td>'
+      + '<td class="r"><b>' + it.stock + '</b> <span class="tiny">' + esc(it.unit) + '</span></td><td>' + (it.nearestExp ? dExp(it.nearestExp) : '-') + '</td><td class="r">' + (b ? dMoney(b.mrp) : '-') + '</td><td class="r hide-sm"></td><td><b>GST ' + (Number(it.gst_rate) ? Number(it.gst_rate) + '%' : 'Exempt') + '</b></td><td></td></tr>';
     return '<tr style="cursor:pointer" onclick="itemOpen(' + A(it.id) + ')"><td><b>' + esc(it.name) + '</b><div class="tiny">' + (it.composition ? esc(it.composition) + ' &middot; ' : '') + (it.pack ? esc(it.pack) + ' &middot; ' : '') + 'GST ' + Number(it.gst_rate) + '%</div></td>'
       + '<td class="r"><b>' + it.stock + '</b> <span class="tiny">' + esc(it.unit) + '</span></td><td>' + (it.nearestExp ? dExp(it.nearestExp) : '-') + '</td><td class="r">' + (b ? dMoney(b.mrp) : '-') + '</td><td class="r hide-sm">' + (b && b.ptr ? dMoney(b.ptr) : '-') + '</td><td>' + itemStatus(it) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
   }).join('') : '<tr><td colspan="7" class="lines-empty">' + (ITEMS.length ? 'Nothing matches.' : 'No items yet. Enter a purchase to add stock.') + '</td></tr>';
+}
+/* change the GST rate of many products at once (file 28) */
+var WGSEL = null, WGSHOWN = [];
+function wgMode(on) { WGSEL = on ? {} : null; dEl('wg-bar').style.display = on ? 'block' : 'none'; if (!on) dEl('wg-only').value = ''; stockRender(); wgCount(); }
+function wgTick(id) { if (!WGSEL) return; if (WGSEL[id]) delete WGSEL[id]; else WGSEL[id] = 1; stockRender(); wgCount(); }
+function wgAll(on) { if (!WGSEL) return; WGSHOWN.forEach(function (id) { if (on) WGSEL[id] = 1; else delete WGSEL[id]; }); stockRender(); wgCount(); }
+function wgCount() { var n = Object.keys(WGSEL || {}).length; dEl('wg-st').innerHTML = n ? '<b>' + n + '</b> product' + (n === 1 ? '' : 's') + ' ticked. Choose the new GST and press <b>Change GST</b>.' : 'Tick the products (tap a row), choose the new GST and press <b>Change GST</b>. Invoices already made keep their old GST.'; }
+async function wgApply() {
+  var ids = Object.keys(WGSEL || {}), g = Number(dEl('wg-new').value);
+  if (!ids.length) { showToast('Tick at least one product.'); return; }
+  if (!confirm('Change the GST of ' + ids.length + ' product(s) to ' + g + '%?\nNew invoices use it. Invoices already made keep their old GST.')) return;
+  var btn = dEl('wg-go'); btn.disabled = true;
+  var r = await _supa.rpc('wh_set_gst', { p_clinic: _clinicId, p_ids: ids, p_gst: g });
+  btn.disabled = false;
+  if (r.error) { showToast(/PGRST202|Could not find/.test(dErr(r.error)) ? 'Run file 28 in Supabase first.' : dErr(r.error)); return; }
+  await loadItems(); WGSEL = {}; stockRender(); wgCount();
+  if (window.woOk) woOk('GST updated', (r.data || 0) + ' product' + (r.data === 1 ? '' : 's') + ' now at ' + g + '%'); else showToast('GST updated.');
 }
 async function itemOpen(id) {
   var it = ITEMMAP[id]; if (!it) return;
