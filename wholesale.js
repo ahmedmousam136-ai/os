@@ -929,7 +929,9 @@ async function itemOpen(id) {
     }).join('') || '<tr><td colspan="8" class="muted">No stock.</td></tr>') + '</tbody></table></div>'
     + '<h4 style="font-size:13px;margin:16px 0 6px">Last movements</h4><div style="overflow-x:auto"><table class="dt"><tbody>'
     + ((mv.data || []).map(function (m) { return '<tr><td class="tiny">' + dDateTime(m.created_at) + '</td><td>' + esc(({ purchase: 'Purchase', sale: 'Sale', sales_return: 'Customer return', purchase_return: 'Back to supplier', corrected: 'Corrected', sale_cancelled: 'Invoice cancelled', purchase_cancelled: 'Purchase cancelled' })[m.kind] || m.kind) + ' ' + esc(m.ref_no || '') + '<div class="tiny">' + esc(m.batch_no || '') + ' &middot; ' + esc(m.note || '') + '</div></td><td class="r"><b>' + (m.change > 0 ? '+' : '') + Number(m.change) + '</b></td><td class="tiny">' + esc(m.created_by_name || '') + '</td></tr>'; }).join('') || '<tr><td class="muted">None.</td></tr>') + '</tbody></table></div>'
-    + (CAN.buy ? '<div style="margin-top:14px"><button class="btn" onclick="itemEdit(' + A(it.id) + ')">&#9998; Edit item</button></div>' : '');
+    + (it.stock <= 0 ? '<div class="note" style="margin-top:12px">&#128308; <b>Out of stock.</b> Tap <b>Order from supplier</b> to send the supplier an order.</div>' : '')
+    + (CAN.buy ? '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="itemEdit(' + A(it.id) + ')">&#9998; Edit item</button>'
+      + (window.woOpen ? '<button class="btn' + (it.stock <= 0 ? ' btn-g' : '') + '" onclick="dClose(\'m-item\');woOpen(' + A(it.id) + ')">&#128722; Order from supplier</button>' : '') + '</div>' : '');
   dOpen('m-item');
 }
 async function batchCorrect(bid, cur, iid) {
