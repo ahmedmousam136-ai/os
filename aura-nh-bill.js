@@ -173,6 +173,8 @@ async function auraBillData(admissionId) {
   d.billNo = d.admNo;
   d.tax = auraTaxModel(d);
   if (gstRows.length && !gstOk) d.gstProblem = 'This bill has GST on a room, but the nursing home has no valid GSTIN. Add the GSTIN in Settings → Facility details (or ask AuraScale).';
+  /* PM-JAY / Swasthya Sathi / insurance (file 35): shown on the bill; the amounts above are not changed */
+  try { var sc = await _supa.from('nh_scheme_claims').select('*').eq('admission_id', admissionId).maybeSingle(); if (!sc.error && sc.data) d.scheme = sc.data; } catch (e) {}
   d.signImg = await auraSignatureData(d.clinic.signPath);
   return d;
 }
@@ -288,6 +290,8 @@ function auraPatientBlock(d) {
     + cell('Admitted on', esc(auraDateTime(a.admission_date) || auraBDate(a.admission_date) || '-')) + cell('Discharged on', d.discharged ? esc(auraDateTime(a.discharge_date) || '-') : 'Not yet discharged')
     + (d.doctor ? cell('Doctor', esc(d.doctor)) : '') + (p.guardian ? cell('Attendant', esc(p.guardian)) : '')
     + cell('Address', esc(p.address || '-'), true)
+    + (d.scheme ? cell('Payment scheme', esc(auraSchemeName(d.scheme.scheme)) + (d.scheme.card_no ? ' &middot; Card ' + esc(d.scheme.card_no) : '') + (d.scheme.abha_no ? ' &middot; ABHA ' + esc(d.scheme.abha_no) : '')
+        + (d.scheme.preauth_no ? ' &middot; Pre-auth ' + esc(d.scheme.preauth_no) : '') + (d.scheme.package_name ? ' &middot; Package ' + esc(d.scheme.package_name) : ''), true) : '')
     + '</div>';
 }
 function auraTaxableIds(d) { var m = {}; d.gstRows.forEach(function (g) { if (g.gst_for_charge) m[g.gst_for_charge] = true; }); return m; }
@@ -353,6 +357,12 @@ function auraBillItemsTax(d) {
   items.push({ t: 'tot', keep: 0, html: tot });
   return auraBillTail(d, items);
 }
+function auraSchemeName(k) { return ({ pmjay: 'PM-JAY (Ayushman Bharat)', swasthya_sathi: 'Swasthya Sathi', state_scheme: 'State scheme', cghs_echs: 'CGHS / ECHS', private_insurance: 'Insurance (TPA)', other: 'Scheme' })[k] || 'Scheme'; }
+function auraSchemeCovered(s) {
+  if (!s || s.claim_status === 'rejected' || s.preauth_status === 'rejected') return 0;
+  if (s.claim_status === 'paid' && s.paid_amount != null) return Number(s.paid_amount) || 0;
+  return Number(s.approved_amount != null ? s.approved_amount : s.claim_amount != null ? s.claim_amount : s.package_amount) || 0;
+}
 function auraBillTail(d, items) {
   items.push({ t: 'phead', keep: 2, html: '<div class="ab-ph">Payments received</div><div class="ab-prow h"><span style="width:20%">Receipt No</span><span style="width:20%">Date &amp; time</span><span style="width:19%">Mode</span><span style="flex:1">Ref / received by</span><span style="width:15%;text-align:right">Amount</span></div>' });
   d.payments.forEach(function (p) {
@@ -360,11 +370,16 @@ function auraBillTail(d, items) {
     items.push({ t: 'prow', html: '<div class="ab-prow"><span style="width:20%;font-weight:600">' + esc(p.receipt_no || '-') + '</span><span style="width:20%">' + esc(auraDateTime(p.created_at) || auraBDate(p.payment_date)) + '</span><span style="width:19%">' + esc(p.method || '') + '</span><span style="flex:1">' + esc(ref) + '</span><span style="width:15%;text-align:right"><b>' + auraBMoney(p.amount) + '</b></span></div>' });
   });
   if (!d.payments.length) items.push({ t: 'pnone', html: '<div class="ab-none">No payments received yet.</div>' });
-  var settled = d.due <= 0;
-  items.push({ t: 'final', html: '<div class="ab-final"><div>' + (d.kind === 'final' ? (settled ? '<span class="ab-stamp">PAID</span>' : '<span class="ab-stamp red">BALANCE DUE</span>') : '') + '</div><div class="box">'
+  var settled = d.due <= 0, cashless = !settled && d.scheme && auraRound2(d.due - auraSchemeCovered(d.scheme)) <= 0;
+  items.push({ t: 'final', html: '<div class="ab-final"><div>' + (d.kind === 'final' ? (settled ? '<span class="ab-stamp">PAID</span>' : cashless ? '<span class="ab-stamp">CASHLESS</span>' : '<span class="ab-stamp red">BALANCE DUE</span>') : '') + '</div><div class="box">'
     + '<div class="row"><span>' + (d.kind === 'final' ? 'Bill amount' : 'Bill so far') + '</span><span>' + auraMoney2(d.total) + '</span></div>'
     + '<div class="row"><span>Less: payments received (' + d.payments.length + ')</span><span>' + auraMoney2(d.paid) + '</span></div>'
-    + '<div class="due ' + (settled ? 'ab-due-green' : 'ab-due-red') + '"><span>' + (d.due < 0 ? 'Paid in excess (refundable)' : settled ? 'Balance due' : 'Balance due') + '</span><span>' + auraMoney2(Math.abs(d.due)) + '</span></div></div></div>' });
+    + (function () {
+        if (!d.scheme) return '<div class="due ' + (settled ? 'ab-due-green' : 'ab-due-red') + '"><span>' + (d.due < 0 ? 'Paid in excess (refundable)' : 'Balance due') + '</span><span>' + auraMoney2(Math.abs(d.due)) + '</span></div>';
+        var cov = Math.min(auraSchemeCovered(d.scheme), Math.max(d.due, 0)), pt = auraRound2(d.due - cov), paidBy = d.scheme.claim_status === 'paid';
+        return '<div class="row"><span>Less: ' + (paidBy ? 'paid' : 'payable') + ' by ' + esc(auraSchemeName(d.scheme.scheme)) + (paidBy ? '' : ' (cashless)') + '</span><span>' + auraMoney2(cov) + '</span></div>'
+          + '<div class="due ' + (pt <= 0 ? 'ab-due-green' : 'ab-due-red') + '"><span>' + (pt < 0 ? 'Paid in excess (refundable)' : 'Balance payable by the patient') + '</span><span>' + auraMoney2(Math.abs(pt)) + '</span></div>';
+      })() + '</div></div>' });
   items.push({ t: 'end', html: auraEndBlock(d) });
   return items;
 }
