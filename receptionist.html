@@ -599,6 +599,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
           <button class="bl-tab-btn" data-bltab="payments" onclick="blTab('payments',this)">Payments</button>
           <button class="bl-tab-btn" data-bltab="invoices" onclick="blTab('invoices',this)">Invoices</button>
           <button class="bl-tab-btn" data-bltab="outstanding" onclick="blTab('outstanding',this)">Outstanding</button>
+          <button class="bl-tab-btn" onclick="if(window.auraSchemeClaimsOpen)auraSchemeClaimsOpen();else showToast('Upload aura-scheme.js first.')" style="color:#1D4ED8;font-weight:700">&#127973; PM-JAY / Scheme claims</button>
         </div>
 
         <!-- RECENT TRANSACTIONS (default) -->
@@ -4120,7 +4121,7 @@ async function auraPatientQuery(cols, limit, rawQ) {
 </script>
 <!-- FINAL BILL PDF (generate, store privately, download): one shared engine for reception and owner -->
 <script src="aura-nh-bill.js?v=2"></script>
-<script src="aura-scheme.js?v=1"></script>
+<script src="aura-scheme.js?v=2"></script>
 
 <!-- INVOICE + VISIT HISTORY: PDF buttons and "Send WhatsApp" -->
 <script>
