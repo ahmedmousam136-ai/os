@@ -127,7 +127,13 @@ async function auraSchemeClaimsLoad() {
   var notSub = rows.filter(function (s) { return s.claim_status === 'not_submitted' && adm[s.admission_id] && adm[s.admission_id].status === 'Discharged'; }).length;
   var list = rows.filter(function (s) { return _asF === 'all' || (_asF === 'open' ? ['paid', 'rejected'].indexOf(s.claim_status) < 0 : s.claim_status === _asF); });
   var tab = function (k, l) { return '<button class="as-btn' + (_asF === k ? ' g' : '') + '" onclick="_asF=\'' + k + '\';auraSchemeClaimsLoad()">' + l + '</button>'; };
-  el.innerHTML = '<div class="as-g2" style="margin-bottom:12px">'
+  /* admitted patients not on a scheme yet: add one from here */
+  var act = await _supa.from('admissions').select('id,patient_name,uhid').eq('clinic_id', _clinicId).eq('status', 'Active').order('admission_date', { ascending: false }).limit(300);
+  var free = (act.data || []).filter(function (a) { return !rows.some(function (s) { return s.admission_id === a.id; }); });
+  var addBox = '<div class="as-card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="margin-right:4px">&#43; Put an admitted patient on a scheme:</b>'
+    + (free.length ? '<select id="as-addsel" style="border:1px solid var(--border);border-radius:9px;padding:8px;min-width:220px;background:var(--surface);color:var(--text-primary)">' + free.map(function (a) { return '<option value="' + a.id + '">' + asE(a.patient_name || '-') + (a.uhid ? ' (' + asE(a.uhid) + ')' : '') + '</option>'; }).join('') + '</select>'
+      + '<button class="as-btn g" onclick="auraSchemeEdit(document.getElementById(\'as-addsel\').value)">Add scheme</button>' : '<span style="font-size:12px;color:var(--text-tertiary)">every admitted patient already has a scheme record (or nobody is admitted).</span>') + '</div>';
+  el.innerHTML = addBox + '<div class="as-g2" style="margin-bottom:12px">'
     + '<div class="as-card"><div style="font-size:11px;color:var(--text-tertiary)">STILL TO COME FROM SCHEMES</div><div style="font-size:22px;font-weight:800;color:#1D4ED8">' + asM(pend) + '</div><div style="font-size:11.5px">' + open.length + ' admission' + (open.length === 1 ? '' : 's') + '</div></div>'
     + '<div class="as-card"><div style="font-size:11px;color:var(--text-tertiary)">RECEIVED FROM SCHEMES</div><div style="font-size:22px;font-weight:800;color:#0E7A50">' + asM(paid) + '</div></div>'
     + '<div class="as-card"><div style="font-size:11px;color:var(--text-tertiary)">DISCHARGED, CLAIM NOT SUBMITTED</div><div style="font-size:22px;font-weight:800;color:' + (notSub ? '#B54708' : 'inherit') + '">' + notSub + '</div><div style="font-size:11.5px">submit these first</div></div></div>'
