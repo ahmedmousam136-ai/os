@@ -1008,6 +1008,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
             <div style="display:flex;gap:6px">
               <button class="qbtn" id="bills-tab-bills" onclick="billsTab('bills')" style="font-size:12px;padding:8px 14px">Bills</button>
               <button class="qbtn" id="bills-tab-pay" onclick="billsTab('payments')" style="font-size:12px;padding:8px 14px">Payments received</button>
+              <button class="qbtn" onclick="if(window.auraSchemeClaimsOpen)auraSchemeClaimsOpen()" style="font-size:12px;padding:8px 14px">&#127973; Scheme claims (PM-JAY)</button>
             </div>
             <input class="finput" id="bills-search" placeholder="Search by patient name or phone..." oninput="loadBillsPage()" style="max-width:340px"/>
           </div>
@@ -5332,7 +5333,8 @@ async function auraPatientQuery(cols, limit, rawQ) {
 }
 </script>
 <!-- FINAL BILL PDF (generate, store privately, download): one shared engine for reception and owner -->
-<script src="aura-nh-bill.js?v=1"></script>
+<script src="aura-nh-bill.js?v=2"></script>
+<script src="aura-scheme.js?v=1"></script>
 
 
 <!-- LEGAL BILLS: room rate GST warning + signature & stamp (owner) -->
