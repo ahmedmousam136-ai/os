@@ -2762,6 +2762,7 @@ async function loadBilling(id){
     +(pay.data&&pay.data.length?pay.data.map(function(p){return '<div style="display:flex;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.4);font-size:12px"><div style="flex:1"><b>'+p.method+'</b> — ₹'+Number(p.amount).toLocaleString('en-IN')+' · '+new Date(p.payment_date||p.created_at).toLocaleDateString('en-GB')+(p.txn_id?' · TXN:'+esc(p.txn_id):'')+(p.receipt_no?' · <b>'+esc(p.receipt_no)+'</b>':'')+'</div>'+(p.receipt_no?'<button class="qbtn" style="font-size:11px;padding:3px 9px" onclick="auraDownloadReceipt(\''+esc(p.id)+'\',this)">&#11015; '+esc(auraT('bt_receipt','Receipt'))+'</button>':'')+'</div>';}).join(''):'<p style="font-size:12px;color:var(--text-tertiary)">No payments recorded</p>');
 
   if(typeof auraMountBillActions==='function') auraMountBillActions(el);
+  if(typeof auraSchemeMount==='function') auraSchemeMount(el, _admId);
   /* Keep the Charges tab in sync whenever Billing is loaded, since they
      share the same underlying admission/charges data (single source of truth). */
   renderChargesTab(ch.data||[], due);
@@ -4118,7 +4119,8 @@ async function auraPatientQuery(cols, limit, rawQ) {
 }
 </script>
 <!-- FINAL BILL PDF (generate, store privately, download): one shared engine for reception and owner -->
-<script src="aura-nh-bill.js?v=1"></script>
+<script src="aura-nh-bill.js?v=2"></script>
+<script src="aura-scheme.js?v=1"></script>
 
 <!-- INVOICE + VISIT HISTORY: PDF buttons and "Send WhatsApp" -->
 <script>
