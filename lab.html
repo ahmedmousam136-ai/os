@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="aura-biz.js?v=1"></script>
 <script src="nh-shared.js?v=20261019z"></script>
-<script src="aura-dept.js?v=20261024a"></script>
+<script src="aura-dept.js?v=20261027a"></script>
 <script src="aura-loader.js?v=2"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261021a"/>
 <script src="aura-themes.js?v=1"></script>
@@ -267,7 +267,7 @@ async function book() {
 function showDone(o) {
   dEl('done-title').textContent = 'Booked ' + o.order_no;
   var due = Number(o.total) - Number(o.paid);
-  dEl('done-body').innerHTML = '<div style="text-align:center"><div style="font-size:34px">&#9989;</div><div style="font-size:20px;font-weight:800">' + esc(o.patient_name) + '</div>'
+  dEl('done-body').innerHTML = '<div style="text-align:center">' + (typeof deptSuccessHtml === 'function' ? deptSuccessHtml({ title: 'Tests booked', amount: Number(o.total) || 0 }) : '<div style="font-size:34px">&#9989;</div>') + '<div style="font-size:20px;font-weight:800">' + esc(o.patient_name) + '</div>'
     + '<div class="muted">' + (o.items || []).map(function (i) { return esc(i.name); }).join(', ') + '</div>'
     + '<div style="margin:10px 0;font-size:15px">' + (o.kind === 'ipd' ? 'Total ' + dMoney0(o.total) + ' &middot; added to the nursing-home bill' : 'Total ' + dMoney0(o.total) + ' &middot; paid ' + dMoney0(o.paid) + (due > 0 ? ' &middot; <b style="color:var(--amber)">due ' + dMoney0(due) + '</b>' : '')) + '</div>'
     + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
@@ -275,6 +275,7 @@ function showDone(o) {
     + '<button class="btn btn-p" onclick="dClose(\'m-done\');resOpen(\'' + o.id + '\')">&#9998; Enter results now</button>'
     + '<button class="btn btn-g" onclick="dClose(\'m-done\')">&#10133; Next patient</button></div></div>';
   ORDERS.unshift(o); dOpen('m-done');
+  if (typeof deptSuccessPlay === 'function') deptSuccessPlay();
 }
 
 /* ---------------- lists ---------------- */
@@ -331,7 +332,13 @@ async function payDue(id) {
   var mode = (prompt('Paid by? Type cash, upi or card:', 'cash') || 'cash').trim().toLowerCase();
   var r = await _supa.rpc('lab_add_payment', { p_order_id: id, p_amount: Number(amt), p_mode: mode });
   if (r.error) { showToast(dErr(r.error)); return; }
-  Object.assign(o, r.data); o.bill_pdf_path = null; showToast('Payment saved.'); ordersRender();
+  Object.assign(o, r.data); o.bill_pdf_path = null; ordersRender();
+  if (typeof deptSuccessHtml === 'function') {
+    var left = Number(o.total) - Number(o.paid);
+    dEl('done-title').textContent = 'Payment ' + o.order_no;
+    dEl('done-body').innerHTML = '<div style="text-align:center">' + deptSuccessHtml({ title: 'Payment received from ' + o.patient_name, amount: Number(amt) || 0, sub: left > 0 ? 'Still due ' + dMoney0(left) : 'Paid in full' }) + '<button class="btn btn-g" style="margin-top:12px" onclick="dClose(\'m-done\')">Done</button></div>';
+    dOpen('m-done'); deptSuccessPlay();
+  } else showToast('Payment saved.');
 }
 async function orderCancel(id) {
   var o = findOrder(id); if (!o) return;
@@ -483,6 +490,7 @@ async function reportPdf(o) {
     headNext: deptPdfHeadNext('<b>' + esc(labName()) + '</b> &nbsp;&middot;&nbsp; ' + esc(o.patient_name) + (labAgeSex(o) ? ' (' + labAgeSex(o) + ')' : ''), 'Report No: ' + esc(o.order_no) + ' (continued)'),
     foot: esc(labName()) + ' &middot; ' + esc(o.order_no) + ' &middot; ' + esc(o.patient_name) + ' &middot; AuraScale' });
 }
+var LAB_TICK = '<div class="ds-ok ds-pop" style="margin-bottom:4px"><svg width="56" height="56" viewBox="0 0 64 64" fill="none" role="img" aria-label="Done"><circle class="c" cx="32" cy="32" r="27" stroke="var(--green)" stroke-width="3.5"></circle><path class="p" d="M20 33l8 8 16-17" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>';
 async function reportMake() {
   dShowErr('res-err', '');
   var o = CUR, out = dEl('res-out'); out.innerHTML = '<p class="tiny" style="margin-top:8px">Making the report&hellip;</p>';
@@ -494,7 +502,7 @@ async function reportMake() {
     if (o.patient_id && !o.health_doc_id) { hp = _clinicId + '/' + o.patient_id + '/lab_' + o.order_no.replace(/[^A-Za-z0-9]+/g, '-') + '.pdf'; try { await deptUpload('nh-documents', hp, blob); } catch (e) { hp = null; } }
     var r = await _supa.rpc('lab_set_report', { p_order_id: o.id, p_path: path, p_health_path: hp }); if (r.error) throw r.error;
     Object.assign(o, r.data);
-    out.innerHTML = '<div class="card" style="margin-top:10px;text-align:center"><b>&#9989; Report saved' + (o.health_doc_id ? ' and added to the patient\'s health book' : '') + '.</b><div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">'
+    out.innerHTML = '<div class="card" style="margin-top:10px;text-align:center">' + LAB_TICK + '<b>Report saved' + (o.health_doc_id ? ' and added to the patient\'s health book' : '') + '.</b><div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">'
       + '<button class="btn" onclick="deptOpenPdf(\'bills\',\'' + path + '\')">&#128196; Open / print</button><button class="btn btn-g" onclick="reportWa()">&#128242; WhatsApp report</button></div></div>';
     if (dEl('v-pending').classList.contains('on')) loadPending(); if (dEl('v-orders').classList.contains('on')) ordersRender();
     if (o.wa_ok) {
@@ -707,5 +715,6 @@ async function rqStatus(id, st, btn) {
   loadRequests();
 }
 </script>
+<script src="aura-plans.js?v=1"></script>
 </body>
 </html>
