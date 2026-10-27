@@ -228,7 +228,7 @@ async function deptInit(module, title) {
   var brand = document.querySelector('.d-top .d-brand');
   if (brand && !brand.querySelector('.d-top-mark')) { var mk = document.createElement('i'); mk.className = 'd-top-mark'; mk.setAttribute('aria-hidden', 'true'); brand.insertBefore(mk, brand.firstChild); }
   deptMenu(back, g);
-  window.addEventListener('popstate', function () { var t = (location.hash || '').slice(1); if (t) dTab(t, true); });
+  window.addEventListener('popstate', function (e) { if (e && e.state && e.state.aura === 'base' && auraDeptHomeId()) { auraDeptHome(); return; } var t = (location.hash || '').slice(1); if (t) dTab(t, true); });
   dEl('loading').style.display = 'none';
   dEl('app').style.display = 'block';
   var on = module === 'wholesale' ? true : module === 'pharmacy' ? DEPT.clinic.mod_pharmacy : DEPT.clinic.mod_lab;
@@ -255,6 +255,7 @@ function deptMenu(back, g) {
   m.innerHTML = '<div class="who">Signed in: <b>' + esc(g.name || '') + '</b> (' + roleTxt + ')</div>'
     + (typeof auraBizMenuHtml === 'function' ? auraBizMenuHtml(_clinicId) : '')
     + (back ? '<a href="' + back + '">&#8617; ' + (back === 'nh.html' ? 'Owner portal' : 'Reception portal') + '</a>' : '')
+    + (!back && g.role === 'owner' && DEPT.standalone ? '<a href="#" onclick="if(auraDeptHomeId()){auraDeptHome();}return false;" class="d-home-link" style="display:none">&#8617; Nursing home owner portal</a>' : '')
     + (DEPT.module === 'pharmacy' && DEPT.clinic.mod_lab && DEPT.role !== 'pharmacist' ? '<a href="lab.html">&#129514; Lab</a>' : '')
     + (DEPT.module === 'lab' && DEPT.clinic.mod_pharmacy && DEPT.role !== 'lab' ? '<a href="pharmacy.html">&#128138; Pharmacy</a>' : '')
     + (g.role === 'owner' ? '<button onclick="document.getElementById(\'d-menu\').classList.remove(\'open\');if(typeof auraPlansOpen===\'function\')auraPlansOpen()">&#128179; Subscription &amp; plans</button>' : '')
@@ -262,6 +263,7 @@ function deptMenu(back, g) {
     + '<button onclick="handleLogout()" style="color:var(--red)">&#10162; Log out</button>';
   var wrap = document.createElement('div'); wrap.style.marginLeft = 'auto';
   wrap.appendChild(b); top.appendChild(wrap); top.appendChild(m);
+  var hl = m.querySelector('.d-home-link'); if (hl && auraDeptHomeId()) hl.style.display = '';
   var me = dEl('d-me'); if (me) me.remove();
   b.onclick = function (e) { e.stopPropagation(); m.classList.toggle('open'); };
   document.addEventListener('click', function (e) { if (!e.target.closest('#d-menu')) m.classList.remove('open'); });
@@ -272,7 +274,22 @@ function deptStartTab(def) {
   if (!t) { try { t = localStorage.getItem('aura-dept-tab-' + DEPT.module) || def; } catch (e) { t = def; } }
   if (!document.querySelector('.d-tab[data-t="' + t + '"]') || document.querySelector('.d-tab[data-t="' + t + '"]').style.display === 'none') t = def;
   try { history.replaceState({ t: t }, '', '#' + t); } catch (e) {}
+  /* the owner's Back from the first screen goes to the nursing-home owner portal, not out of AuraScale */
+  try { if (auraDeptHomeId()) { history.replaceState({ aura: 'base' }, '', '#' + t); history.pushState({ t: t }, '', '#' + t); } } catch (e) {}
   dTab(t, true);
+}
+/* the owner's nursing home (this page's own nursing home, or the one on the same login), or null */
+function auraDeptHomeId() {
+  if (DEPT.role !== 'owner') return null;
+  if (!DEPT.standalone && DEPT.clinic && DEPT.clinic.business_type !== 'wholesale_pharmacy') return _clinicId;
+  var nh = (window.AURA_BIZ_LIST || []).filter(function (b) { return (b.business_type || 'nursing_home') === 'nursing_home' && b.role === 'owner'; })[0];
+  return nh ? nh.id : null;
+}
+function auraDeptHome() {
+  var id = auraDeptHomeId();
+  if (id && typeof auraBizSet === 'function') auraBizSet(id);
+  window._auraLeaving = true;
+  location.href = 'nh.html';
 }
 
 /* ---------- admitted patients (for "Admitted patient" bills) ---------- */
@@ -512,4 +529,298 @@ function deptWords(n) {
     try { new MutationObserver(function (ms) { ms.forEach(function (m) { [].forEach.call(m.addedNodes, function (n) { if (n.nodeType === 1) scan(n.parentNode || n); }); }); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+
+/* ===== PLANS & PAYMENT (built in, same code as aura-plans.js) ===== */
+/* AuraScale PLANS & PAYMENT (one file for every portal: nursing home, pharmacy, wholesale, lab).
+   auraPlansMount(el, { clinic: <clinics row>, all: true })   all = also list the prices of the other businesses
+   Pay with Cashfree: the Edge Function "aura-pay-order" works out the amount on the server (file 37) and opens
+   the Cashfree checkout. When the person comes back (?aura_order=...), the payment is checked and a green tick shows.
+   Pay by UPI: QR / UPI app to AuraScale's UPI ID; AuraScale records it from the admin page. */
+(function () {
+  if (window.__auraPlansLoaded) return; window.__auraPlansLoaded = true;
+  var UPI_ID = '8017465987-3@ybl', UPI_NAME = 'AuraScale', WA = '918017465987';
+  var QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  var CF_SDK = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+  var OFFER_END = new Date('2026-12-01T00:00:00+05:30').getTime();
+  /* the same list as the database (file 37: aura_plan_prices); the server always decides the real amount */
+  var PLANS = {
+    nh_15:    { kind: 'nursing_home', group: 'nh',    name: 'Nursing Home',   beds: 'Up to 15 beds', m: 2999, h: 16499, y: 29999 },
+    nh_30:    { kind: 'nursing_home', group: 'nh',    name: 'Nursing Home',   beds: '16 to 30 beds', m: 3999, h: 21999, y: 39999 },
+    nh_50:    { kind: 'nursing_home', group: 'nh',    name: 'Nursing Home',   beds: '31 to 50 beds', m: 5499, h: 29999, y: 54999 },
+    combo_15: { kind: 'nursing_home', group: 'combo', name: 'Hospital Combo', beds: 'Up to 15 beds', m: 3499, h: 18999, y: 34999 },
+    combo_30: { kind: 'nursing_home', group: 'combo', name: 'Hospital Combo', beds: '16 to 30 beds', m: 4499, h: 24499, y: 44999 },
+    combo_50: { kind: 'nursing_home', group: 'combo', name: 'Hospital Combo', beds: '31 to 50 beds', m: 5999, h: 32999, y: 59999 },
+    pharmacy: { kind: 'pharmacy', name: 'Pharmacy Retail', m: 459, h: 2499, y: 4599 },
+    wholesale:{ kind: 'wholesale_pharmacy', name: 'Pharmacy Wholesale', m: 999, h: 5499, y: 9999 },
+    lab:      { kind: 'lab', name: 'Diagnostic Lab', m: 1299, h: 6999, y: 12999 },
+    clinic:   { kind: 'clinic', name: 'Clinic', m: 1499, h: 7999, y: 14999 },
+    topup:    { kind: 'topup', name: 'ID-scan top-up (100 scans)', m: 499 }
+  };
+  var FEAT = {
+    nh: ['Admissions, beds, discharge and IPD bills', 'Reception, doctor and nurse logins', 'PM-JAY / Swasthya Sathi claims, cashless bills', 'ID-card scan at registration, monthly owner report'],
+    combo: ['Everything in Nursing Home', 'Pharmacy Retail inside the hospital: ward medicines go to the bill', 'Diagnostic Lab: reports go to the patient’s file', 'One price, ₹1,258 a month less than three separate plans'],
+    pharmacy: ['Bill from a photo of the prescription', 'Bills on WhatsApp with GST', 'Substitutes, refill reminders, H1 register', 'Re-order from your wholesaler in one tap'],
+    wholesale: ['Purchase entry from a photo of the supplier’s bill', 'GST invoices, party ledger and dues', 'Shop orders arrive in the app', 'Monthly report on the owner’s WhatsApp'],
+    lab: ['Patient registration, tests and bills', 'Report PDF straight to the patient’s WhatsApp', 'Doctor referrals and commission', 'Pending dues and payment tracking'],
+    clinic: ['Appointments, tokens and patient records', 'Digital prescriptions on WhatsApp', 'Visit-fee bills and daily accounts', 'Follow-up reminders']
+  };
+  var TERM = { m: { n: 1, t: '1 month', s: 'Monthly' }, h: { n: 6, t: '6 months', s: '6 months' }, y: { n: 12, t: '1 year', s: '1 year' } };
+  var S = { el: null, c: null, beds: '15', all: false, sel: {} };
+
+  function h(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (x) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[x]; }); }
+  function inr(n) { return '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN'); }
+  function toast(m) { if (typeof showToast === 'function') showToast(m); else alert(m); }
+  function offerOn() { return Date.now() < OFFER_END; }
+  function bonus(term) { return offerOn() ? (term === 'h' ? 1 : term === 'y' ? 2 : 0) : 0; }
+  function kindOf(c) { return c && c.facility_type === 'clinic' ? 'clinic' : ((c && c.business_type) || 'nursing_home'); }
+  function curPlan(c) {
+    if (c && c.aura_plan && PLANS[c.aura_plan]) return c.aura_plan;
+    var k = kindOf(c);
+    return k === 'pharmacy' ? 'pharmacy' : k === 'wholesale_pharmacy' ? 'wholesale' : k === 'lab' ? 'lab' : k === 'clinic' ? 'clinic' : (c && c.mod_pharmacy && c.mod_lab ? 'combo_15' : 'nh_15');
+  }
+  function price(code, term) { var p = PLANS[code]; return p ? p[term] : 0; }
+  function loadScript(src, ok) {
+    return new Promise(function (res, rej) {
+      if (ok()) return res();
+      var s = document.createElement('script'); s.src = src; s.onload = function () { ok() ? res() : rej(new Error('load')); }; s.onerror = function () { rej(new Error('Could not load ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  (function css() {
+    if (document.getElementById('ap-css')) return;
+    var st = document.createElement('style'); st.id = 'ap-css';
+    st.textContent = ''
+      + '.ap{display:flex;flex-direction:column;gap:14px}'
+      + '.ap-cur{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:14px;padding:14px 16px;background:var(--surface)}'
+      + '.ap-cur b{font-size:15px}.ap-cur .s{font-size:12.5px;color:var(--text-secondary,#5b6b64)}'
+      + '.ap-seg{display:inline-flex;background:var(--surface2,#eef3f0);border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}'
+      + '.ap-seg button{border:0;background:transparent;border-radius:999px;padding:7px 14px;font-weight:700;font-size:12.5px;color:var(--text-secondary,#5b6b64);cursor:pointer;font-family:inherit}'
+      + '.ap-seg button.on{background:var(--surface,#fff);color:var(--text-primary,#14201b);box-shadow:0 1px 4px rgba(0,0,0,.12)}'
+      + '.ap-seg button .o{color:#A86A12;font-size:10.5px;margin-left:4px}'
+      + '.ap-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}'
+      + '.ap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}'
+      + '.ap-card{border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--surface);min-width:0}'
+      + '.ap-card.cur{border:2px solid var(--green,#12976A)}'
+      + '.ap-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}'
+      + '.ap-nm{font-size:15px;font-weight:800}.ap-sub{font-size:12px;color:var(--text-tertiary,#7a8a83)}'
+      + '.ap-tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--green-bg,#e6f5ef);color:var(--green,#12976A);white-space:nowrap}'
+      + '.ap-tag.g{background:#FBF3E4;color:#A86A12}'
+      + '.ap-amt{font-size:26px;font-weight:800;line-height:1.1}.ap-amt small{font-size:12.5px;font-weight:600;color:var(--text-tertiary,#7a8a83)}'
+      + '.ap-note{font-size:12px;color:var(--text-secondary,#5b6b64)}.ap-note .sv{color:var(--green,#12976A);font-weight:700}.ap-note .of{color:#A86A12;font-weight:700}'
+      + '.ap-f{margin:0;padding-left:18px;font-size:12.5px;line-height:1.7;color:var(--text-secondary,#5b6b64)}'
+      + '.ap-pay{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:12px;padding:12px 14px;min-height:46px;font-weight:800;font-size:14px;cursor:pointer;background:var(--green,#12976A);color:#fff;font-family:inherit;margin-top:auto}'
+      + '.ap-pay:hover{filter:brightness(.95)}.ap-pay[disabled]{opacity:.6;cursor:wait}'
+      + '.ap-upi{border:0;background:none;color:var(--text-secondary,#5b6b64);text-decoration:underline;font-size:12px;cursor:pointer;font-family:inherit;padding:2px}'
+      + '.ap-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.ap-tbl th,.ap-tbl td{padding:8px 6px;border-top:1px solid var(--border);text-align:left}.ap-tbl th{font-size:11px;color:var(--text-tertiary,#7a8a83);text-transform:uppercase;letter-spacing:.04em;border-top:0}.ap-tbl td.n,.ap-tbl th.n{text-align:right;white-space:nowrap}'
+      + '.ap-wrap{overflow-x:auto}'
+      + '.ap-terms{display:grid;gap:6px}'
+      + '.ap-term{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);padding:9px 11px;cursor:pointer;font-family:inherit;color:inherit;min-height:46px}'
+      + '.ap-term:hover{border-color:var(--green,#12976A)}.ap-term.on{border-color:var(--green,#12976A);background:var(--green-bg,#e6f5ef)}'
+      + '.ap-term[disabled]{cursor:default;opacity:.75}.ap-term[disabled]:hover{border-color:var(--border)}'
+      + '.ap-tl,.ap-tr{display:flex;flex-direction:column;gap:1px}.ap-tr{align-items:flex-end;text-align:right}'
+      + '.ap-tl b,.ap-tr b{font-size:13.5px}.ap-tr b{font-variant-numeric:tabular-nums}'
+      + '.ap-term .of{color:#A86A12;font-size:11px;font-weight:700}.ap-term .sv{color:var(--green,#12976A);font-size:11px;font-weight:700}'
+      + '.ap-note .of{color:#A86A12;font-weight:700}'
+      + '.ap-pay.ap-alt{background:var(--surface2,#eef3f0);color:var(--text-primary,#14201b)}'
+      + '.ap-soon{text-align:center;font-weight:700;font-size:13px;color:#A86A12;background:#FBF3E4;border-radius:12px;padding:12px;margin-top:auto}'
+      + '.ap-card.soon{opacity:.85}.ap-beds{align-self:flex-start}'
+      + '.ap-ov{position:fixed;inset:0;z-index:300;background:rgba(15,23,20,.45);display:flex;align-items:center;justify-content:center;padding:16px}'
+      + '.ap-box{background:var(--surface,#fff);color:var(--text-primary,#14201b);border-radius:18px;max-width:380px;width:100%;padding:22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:92vh;overflow-y:auto}'
+      + '.ap-ok .c{stroke-dasharray:170;stroke-dashoffset:170;animation:apC .6s ease-out forwards}.ap-ok .p{stroke-dasharray:40;stroke-dashoffset:40;animation:apC .35s .5s ease-out forwards}'
+      + '@keyframes apC{to{stroke-dashoffset:0}}.ap-pop{animation:apPop .3s cubic-bezier(.2,.9,.3,1.2) both}@keyframes apPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}'
+      + '@media (prefers-reduced-motion:reduce){.ap-ok .c,.ap-ok .p{animation:none;stroke-dashoffset:0}.ap-pop{animation:none}}';
+    document.head.appendChild(st);
+  })();
+
+  var WHO = { pharmacy: 'Medicine shops and chemists', wholesale: 'Distributors and stockists', lab: 'Pathology labs and collection centres',
+    clinic: 'Doctor chambers, polyclinics and OPD', nh: 'Hospitals with admitted patients', combo: 'Nursing home + pharmacy + lab together' };
+  var FOR = { pharmacy: 'pharmacy', wholesale: 'wholesale', lab: 'lab' };              /* nh.html?add=1&for=... */
+  var BTYPE = { pharmacy: 'pharmacy', wholesale: 'wholesale_pharmacy', lab: 'lab' };
+  function myCode(kind) { return { pharmacy: 'pharmacy', wholesale_pharmacy: 'wholesale', lab: 'lab', clinic: 'clinic' }[kind] || null; }
+  function linked(code) {
+    var t = BTYPE[code]; if (!t) return null;
+    return (window.AURA_BIZ_LIST || []).filter(function (b) { return b.business_type === t && b.role === 'owner'; })[0] || null;
+  }
+  function bedSeg() {
+    return '<div class="ap-seg ap-beds" role="group" aria-label="Number of beds">' + [['15', 'Up to 15 beds'], ['30', '16–30'], ['50', '31–50']].map(function (b) {
+      return '<button type="button" class="' + (S.beds === b[0] ? 'on' : '') + '" onclick="auraPlansBeds(\'' + b[0] + '\')">' + b[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  /* one business card: the 3 periods as rows (tap one), then the button */
+  function card(code, o) {
+    o = o || {};
+    var p = PLANS[code], grp = p.group || code, sel = (S.sel[grp] || 'y'), soon = !!o.soon;
+    var rows = ['m', 'h', 'y'].map(function (t) {
+      var amt = p[t], save = p.m * TERM[t].n - amt, b = bonus(t), on = sel === t && !soon;
+      return '<button type="button" class="ap-term' + (on ? ' on' : '') + '"' + (soon ? ' disabled' : ' onclick="auraPlansPick(\'' + grp + '\',\'' + t + '\')"') + ' aria-pressed="' + on + '">'
+        + '<span class="ap-tl"><b>' + TERM[t].t + '</b>' + (b ? '<span class="of">+' + b + ' month' + (b > 1 ? 's' : '') + ' free</span>' : '') + '</span>'
+        + '<span class="ap-tr"><b>' + inr(amt) + '</b>' + (save > 0 ? '<span class="sv">save ' + inr(save) + '</span>' : '<span class="ap-sub">per month</span>') + '</span></button>';
+    }).join('');
+    var amt = p[sel], act;
+    if (soon) act = '<div class="ap-soon">In progress &middot; coming soon</div>';
+    else if (o.mine) act = '<button type="button" class="ap-pay" onclick="auraPlansPay(\'' + code + '\',\'' + sel + '\',this)">&#128179; Pay ' + inr(amt) + ' with Cashfree</button>'
+      + '<button type="button" class="ap-upi" onclick="auraPlansUpi(\'' + code + '\',\'' + sel + '\')">or pay by UPI QR</button>';
+    else if (o.other) {
+      var lk = linked(code);
+      act = lk ? '<button type="button" class="ap-pay ap-alt" onclick="auraOpenBiz && auraOpenBiz(\'' + lk.id + '\')">Open ' + h(lk.name || p.name) + ' &rsaquo;</button>'
+               : '<button type="button" class="ap-pay ap-alt" onclick="location.href=\'nh.html?add=1&for=' + FOR[code] + '\'">&#65291; Add ' + h(p.name) + ' (same login)</button>';
+    } else act = '';
+    var b = bonus(sel), note = soon ? '' : (sel === 'm' ? 'Billed every month. Stop any time.' : inr(Math.round(amt / (TERM[sel].n + b))) + ' a month' + (b ? ' &middot; <span class="of">use it for ' + (TERM[sel].n + b) + ' months</span>' : ''));
+    return '<div class="ap-card' + (o.cur ? ' cur' : '') + (soon ? ' soon' : '') + '">'
+      + '<div class="ap-top"><div><div class="ap-nm">' + h(p.name) + '</div><div class="ap-sub">' + h(WHO[grp] || '') + (p.beds ? ' &middot; ' + h(p.beds) : '') + '</div></div>'
+      + (o.cur ? '<span class="ap-tag">YOUR PLAN</span>' : soon ? '<span class="ap-tag g">IN PROGRESS</span>' : o.tag ? '<span class="ap-tag g">' + o.tag + '</span>' : '') + '</div>'
+      + (o.beds ? bedSeg() : '')
+      + '<div class="ap-terms">' + rows + '</div>'
+      + (note ? '<div class="ap-note">' + note + '</div>' : '')
+      + '<ul class="ap-f">' + (FEAT[grp] || []).slice(0, 3).map(function (f) { return '<li>' + h(f) + '</li>'; }).join('') + '</ul>'
+      + act + '</div>';
+  }
+  function topupCard() {
+    return '<div class="ap-card"><div class="ap-top"><div><div class="ap-nm">ID-scan top-up</div><div class="ap-sub">100 extra ID-card scans, never expire</div></div></div>'
+      + '<div class="ap-amt">' + inr(499) + ' <small>one time &middot; incl. GST</small></div>'
+      + '<div class="ap-note">Only when your monthly scans run out.</div>'
+      + '<button type="button" class="ap-pay ap-alt" onclick="auraPlansPay(\'topup\',\'one\',this)">&#9889; Pay ' + inr(499) + ' with Cashfree</button>'
+      + '<button type="button" class="ap-upi" onclick="auraPlansUpi(\'topup\',\'one\')">or pay by UPI QR</button></div>';
+  }
+  function render() {
+    var c = S.c || {}, kind = kindOf(c), cp = curPlan(c), p = PLANS[cp];
+    var exp = c.subscription_expires_at ? new Date(c.subscription_expires_at) : null;
+    var days = exp ? Math.ceil((exp.getTime() - Date.now()) / 86400000) : null;
+    var fmt = function (d) { return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+    var curTxt = c.billing_exempt ? 'Complimentary from AuraScale: no payment is due.'
+      : exp ? (days >= 0 ? 'Valid till ' + fmt(exp) + ' (' + days + ' day' + (days === 1 ? '' : 's') + ' left)' : 'Renewal was due on ' + fmt(exp))
+      : '7-day free trial. Choose a plan below to continue.';
+    var cards = '';
+    if (kind === 'nursing_home') {
+      /* the owner sees every AuraScale plan, smallest first */
+      cards = card('pharmacy', { other: true }) + card('wholesale', { other: true }) + card('lab', { other: true }) + card('clinic', { soon: true })
+        + card('nh_' + S.beds, { mine: true, beds: true, cur: cp === 'nh_' + S.beds })
+        + card('combo_' + S.beds, { mine: true, beds: true, cur: cp === 'combo_' + S.beds, tag: 'BEST VALUE' })
+        + topupCard();
+    } else {
+      var mc = myCode(kind) || 'pharmacy';
+      cards = card(mc, { mine: kind !== 'clinic', soon: kind === 'clinic', cur: true });
+    }
+    S.el.innerHTML = '<div class="ap">'
+      + '<div class="ap-cur"><div><div class="ap-sub" style="text-transform:uppercase;letter-spacing:.05em;font-weight:700">Your plan</div><b>' + h(p ? p.name + (p.beds ? ' · ' + p.beds : '') : 'AuraScale') + '</b> <span class="s">' + (c.billing_exempt ? 'Free' : inr(Number(c.monthly_price) > 0 ? c.monthly_price : (p ? p.m : 0)) + ' / month incl. GST') + '</span><div class="s">' + curTxt + '</div></div>'
+      + '<a class="ap-upi" style="text-decoration:none;font-weight:700" target="_blank" rel="noopener" href="https://wa.me/' + WA + '?text=' + encodeURIComponent('Hi AuraScale, I have a question about my plan for ' + (c.name || 'my business') + '.') + '">&#128172; Ask AuraScale</a></div>'
+      + '<div class="ap-grid">' + cards + '</div>'
+      + '<p class="ap-note" style="margin:0">All prices include GST. Launch offer: 6 months +1 month free, 1 year +2 months free (first 50 customers, until 30 November 2026). Renew at the same price, no renewal fee. Online payment by UPI, card or net banking is handled by Cashfree Payments; your plan moves forward as soon as the payment succeeds and a GST tax invoice appears under &ldquo;Tax invoices&rdquo;.</p>'
+      + '</div>';
+  }
+
+  window.auraPlansMount = function (el, opts) {
+    if (!el) return;
+    S.el = el; S.c = (opts && opts.clinic) || S.c || {}; S.all = !!(opts && opts.all); S.sel = S.sel || {};
+    var cp = curPlan(S.c), m = /_(15|30|50)$/.exec(cp); if (m) S.beds = m[1];
+    render();
+    /* the list of businesses on this login can arrive a moment later: draw again so "Open ..." shows */
+    if (!window.AURA_BIZ_LIST) setTimeout(function () { if (S.el === el) render(); }, 2500);
+  };
+  window.auraPlansPick = function (grp, t) { S.sel[grp] = t; render(); };
+  window.auraPlansBeds = function (b) { S.beds = b; render(); };
+
+  function overlay(inner) {
+    var o = document.getElementById('ap-ov'); if (o) o.remove();
+    o = document.createElement('div'); o.className = 'ap-ov'; o.id = 'ap-ov';
+    o.innerHTML = '<div class="ap-box ap-pop" role="dialog" aria-modal="true">' + inner + '</div>';
+    o.addEventListener('click', function (e) { if (e.target === o) o.remove(); });
+    document.body.appendChild(o);
+    return o;
+  }
+  window.auraPlansClose = function () { var o = document.getElementById('ap-ov'); if (o) o.remove(); };
+
+  window.auraPlansPay = async function (code, term, btn) {
+    if (typeof _supa === 'undefined' || !_clinicId) { toast('Please sign in again.'); return; }
+    var old = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Opening secure payment…'; }
+    try {
+      var ret = location.origin + location.pathname;
+      var r = await _supa.functions.invoke('aura-pay-order', { body: { action: 'create', clinic_id: _clinicId, plan: code, term: term, return_url: ret } });
+      var d = r.data || {}, st = 0;
+      if (r.error && r.error.context && typeof r.error.context.json === 'function') {
+        st = r.error.context.status || 0;
+        try { d = await r.error.context.json(); } catch (e) { d = {}; }
+      }
+      if (r.error || !d.ok || !d.payment_session_id) {
+        var why = d.reason || (st === 404 ? 'not_configured' : '') || (r.error && r.error.message) || '';
+        if (why === 'not_configured' || /404|Failed to send|not found/i.test(why)) {
+          overlay('<div style="font-size:34px">&#128179;</div><h3 style="margin:6px 0">Online payment is being switched on</h3><p class="ap-note" style="font-size:13px">Cashfree is being activated for AuraScale. Until then, please pay by UPI and we will confirm it within one working day.</p>'
+            + '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap"><button type="button" class="ap-pay" style="width:auto;padding:10px 18px" onclick="auraPlansUpi(\'' + code + '\',\'' + term + '\')">Pay by UPI</button><button type="button" class="ap-upi" onclick="auraPlansClose()">Close</button></div>');
+        } else toast('Could not start the payment: ' + (d.detail || why || 'please try again'));
+        return;
+      }
+      await loadScript(CF_SDK, function () { return typeof window.Cashfree === 'function'; });
+      var cf = window.Cashfree({ mode: d.mode === 'production' ? 'production' : 'sandbox' });
+      cf.checkout({ paymentSessionId: d.payment_session_id, redirectTarget: '_self' });
+    } catch (e) { toast('Could not start the payment: ' + (e && e.message ? e.message : e)); }
+    finally { if (btn) { btn.disabled = false; btn.innerHTML = old; } }
+  };
+
+  window.auraPlansUpi = async function (code, term) {
+    var p = PLANS[code]; if (!p) return;
+    var amt = term === 'one' ? p.m : p[term], nm = (S.c && S.c.name) || '';
+    var label = p.name + (p.beds ? ' (' + p.beds + ')' : '') + (term === 'one' ? '' : ' - ' + TERM[term].t);
+    var url = 'upi://pay?pa=' + encodeURIComponent(UPI_ID) + '&pn=' + encodeURIComponent(UPI_NAME) + '&am=' + Number(amt).toFixed(2) + '&cu=INR&tn=' + encodeURIComponent(('AuraScale ' + label + ' ' + nm).slice(0, 70));
+    var wa = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hi AuraScale, I paid ' + inr(amt) + ' by UPI for ' + label + ' (' + nm + '). UTR: ');
+    overlay('<h3 style="margin:0 0 4px">Pay ' + inr(amt) + ' by UPI</h3><div class="ap-note">' + h(label) + ' &middot; incl. GST</div>'
+      + '<div id="ap-qr" style="width:180px;height:180px;margin:12px auto;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>'
+      + '<div style="font-size:13px;font-weight:700">UPI ID: ' + UPI_ID + '</div>'
+      + '<a class="ap-pay" style="margin-top:12px;text-decoration:none" href="' + url + '">Open my UPI app</a>'
+      + '<a class="ap-pay" style="margin-top:8px;text-decoration:none;background:#25D366" target="_blank" rel="noopener" href="' + wa + '">Send the UTR on WhatsApp</a>'
+      + '<p class="ap-note" style="margin-top:10px">AuraScale confirms UPI payments within one working day. Your plan moves forward and the tax invoice appears here.</p>'
+      + '<button type="button" class="ap-upi" onclick="auraPlansClose()">Close</button>');
+    try {
+      await loadScript(QR_LIB, function () { return typeof window.QRCode === 'function'; });
+      var box = document.getElementById('ap-qr'); if (box) { box.innerHTML = ''; new QRCode(box, { text: url, width: 164, height: 164, correctLevel: QRCode.CorrectLevel.M }); }
+    } catch (e) { var b2 = document.getElementById('ap-qr'); if (b2) b2.innerHTML = '<span class="ap-note">Use the UPI ID below.</span>'; }
+  };
+
+  function successHtml(o) {
+    var until = o && o.result && o.result.until ? new Date(o.result.until) : null, ord = (o && o.order) || {};
+    return '<div class="ap-ok"><svg width="80" height="80" viewBox="0 0 64 64" fill="none" role="img" aria-label="Paid">'
+      + '<circle class="c" cx="32" cy="32" r="27" stroke="var(--green,#12976A)" stroke-width="3.5"></circle>'
+      + '<path class="p" d="M20 33l8 8 16-17" stroke="var(--green,#12976A)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>'
+      + '<h3 style="margin:6px 0 2px">Payment received</h3>'
+      + '<div style="font-size:28px;font-weight:800">' + inr(ord.amount) + '</div>'
+      + '<div class="ap-note" style="font-size:13px;margin-top:4px">' + h(ord.label || '') + '</div>'
+      + (until ? '<div style="margin-top:8px;font-weight:700">Valid till ' + until.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + '</div>' : '')
+      + (ord.invoice_no ? '<div class="ap-note" style="margin-top:4px">Tax invoice ' + h(ord.invoice_no) + '</div>' : '')
+      + '<button type="button" class="ap-pay" style="margin-top:14px" onclick="auraPlansClose();location.reload()">Done</button>';
+  }
+  /* back from Cashfree: check the order and show the result */
+  async function checkReturn() {
+    var m = /[?&]aura_order=([A-Za-z0-9_-]+)/.exec(location.search); if (!m) return;
+    var id = m[1];
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    var tries = 0;
+    while (typeof _supa === 'undefined' || typeof _clinicId === 'undefined' || !_clinicId) { if (++tries > 60) return; await new Promise(function (r) { setTimeout(r, 500); }); }
+    overlay('<div style="font-size:30px">&#9203;</div><h3 style="margin:6px 0">Checking your payment&hellip;</h3><p class="ap-note">This takes a few seconds.</p>');
+    for (var i = 0; i < 6; i++) {
+      var r = await _supa.functions.invoke('aura-pay-order', { body: { action: 'check', order_id: id } });
+      var d = r.data || {};
+      if (d.applied) {
+        overlay(successHtml(d));
+        try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
+        return;
+      }
+      if (d.status && /FAILED|CANCELLED|EXPIRED|TERMINATED/i.test(d.status)) break;
+      await new Promise(function (res) { setTimeout(res, 2500); });
+    }
+    overlay('<div style="font-size:34px">&#9888;&#65039;</div><h3 style="margin:6px 0">Payment not completed</h3><p class="ap-note" style="font-size:13px">If money was taken from your account, it will show here within a few minutes, or Cashfree returns it. You can also WhatsApp AuraScale on 80174 65987 with order ' + h(id) + '.</p><button type="button" class="ap-pay" onclick="auraPlansClose()">OK</button>');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkReturn); else checkReturn();
+
+  /* Pharmacy / Wholesale / Lab screens: "Subscription & plans" in the top-right menu (owner only) */
+  window.auraPlansOpen = async function () {
+    var c = (window.DEPT && DEPT.clinic) || {};
+    try { var r = await _supa.from('clinics').select('*').eq('id', _clinicId).maybeSingle(); if (r.data) c = r.data; } catch (e) {}
+    var o = overlay('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0">Subscription &amp; plans</h3><button type="button" class="ap-upi" style="font-size:20px;text-decoration:none" aria-label="Close" onclick="auraPlansClose()">&times;</button></div><div id="ap-dept-root" style="text-align:left"></div>');
+    o.querySelector('.ap-box').style.maxWidth = '760px';
+    window.auraPlansMount(document.getElementById('ap-dept-root'), { clinic: c, all: true });
+  };
+  window.AURA_PLANS_LIST = PLANS;
 })();
