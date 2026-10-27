@@ -46,6 +46,8 @@ var DEPT = { clinic: null, module: null, role: null, admissions: [] };
   + '#nh-toast{display:none;position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#18170F;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:300;max-width:92vw;box-shadow:var(--sh-lg)}#nh-toast.show{display:block}';
   css += ''
   + '.d-brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}.d-brand .d-title{white-space:nowrap}'
+  + '.d-top-mark{display:block;width:34px;height:34px;border-radius:9px;flex:none;background:var(--aura-mark) center/126% no-repeat}'
+  + '@media (min-width:901px){.d-top-mark{display:none}}'
   + '.d-pow{font-size:10.5px;color:var(--text-tertiary);font-weight:600;letter-spacing:.02em}.d-pow b{color:var(--green)}'
   + '.d-menu-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:20px;line-height:1;color:var(--text-secondary)}'
   + '.d-menu{position:absolute;right:12px;top:58px;background:var(--surface);border:1px solid var(--border-mid);border-radius:12px;box-shadow:var(--sh-lg);min-width:210px;z-index:60;display:none;overflow:hidden}'
@@ -223,6 +225,8 @@ async function deptInit(module, title) {
   if (module === 'wholesale' && DEPT.clinic.business_type !== 'wholesale_pharmacy') { location.replace('nh.html'); return false; }
   var back = DEPT.standalone ? '' : (g.role === 'owner' ? 'nh.html' : g.role === 'receptionist' ? 'receptionist.html' : '');
   dEl('d-fac').innerHTML = esc(DEPT.clinic.name || g.facilityName || '') + ' &middot; <span class="d-pow">Powered by <b>AuraScale OS</b></span>';
+  var brand = document.querySelector('.d-top .d-brand');
+  if (brand && !brand.querySelector('.d-top-mark')) { var mk = document.createElement('i'); mk.className = 'd-top-mark'; mk.setAttribute('aria-hidden', 'true'); brand.insertBefore(mk, brand.firstChild); }
   deptMenu(back, g);
   window.addEventListener('popstate', function () { var t = (location.hash || '').slice(1); if (t) dTab(t, true); });
   dEl('loading').style.display = 'none';
@@ -253,6 +257,7 @@ function deptMenu(back, g) {
     + (back ? '<a href="' + back + '">&#8617; ' + (back === 'nh.html' ? 'Owner portal' : 'Reception portal') + '</a>' : '')
     + (DEPT.module === 'pharmacy' && DEPT.clinic.mod_lab && DEPT.role !== 'pharmacist' ? '<a href="lab.html">&#129514; Lab</a>' : '')
     + (DEPT.module === 'lab' && DEPT.clinic.mod_pharmacy && DEPT.role !== 'lab' ? '<a href="pharmacy.html">&#128138; Pharmacy</a>' : '')
+    + (g.role === 'owner' ? '<button onclick="document.getElementById(\'d-menu\').classList.remove(\'open\');if(typeof auraPlansOpen===\'function\')auraPlansOpen()">&#128179; Subscription &amp; plans</button>' : '')
     + '<button onclick="if(typeof toggleTheme===\'function\')toggleTheme()">&#127912; Theme</button>'
     + '<button onclick="handleLogout()" style="color:var(--red)">&#10162; Log out</button>';
   var wrap = document.createElement('div'); wrap.style.marginLeft = 'auto';
