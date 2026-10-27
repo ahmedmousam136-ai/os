@@ -830,18 +830,19 @@ header{
         <div class="sh"><div><h1 class="st">Invoices &amp; Payments</h1><p class="ss">AuraScale tax invoices to nursing homes. One is created automatically for every payment.</p></div></div>
         <div class="panel">
           <div class="ph"><div class="pt">Record a UPI / cash payment you received</div></div>
-          <div style="padding:16px;display:grid;grid-template-columns:2fr 1.4fr 1fr 2fr auto;gap:10px;align-items:end">
-            <div><label class="ss">Nursing home</label><select class="finput" id="inv-clinic"></select></div>
-            <div><label class="ss">For</label><select class="finput" id="inv-kind"><option value="sub" id="inv-kind-sub">Subscription (this home&rsquo;s price)</option><option value="topup">ID-scan top-up &#8377;499</option></select></div>
+          <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end">
+            <div><label class="ss">Business</label><select class="finput" id="inv-clinic"></select></div>
+            <div><label class="ss">Plan</label><select class="finput" id="inv-plan" onchange="invAmt()"></select></div>
+            <div><label class="ss">Period</label><select class="finput" id="inv-term" onchange="invAmt()"><option value="m">1 month</option><option value="h">6 months (+1 free)</option><option value="y">1 year (+2 free)</option></select></div>
             <div><label class="ss">Method</label><select class="finput" id="inv-method"><option>UPI</option><option>Bank transfer</option><option>Cash</option></select></div>
             <div><label class="ss">UTR / reference</label><input class="finput" id="inv-ref" placeholder="e.g. 4321 8765 1234"/></div>
-            <button class="btn-green" onclick="recordPayment()">Record payment</button>
+            <button class="btn-green" onclick="recordPayment()">Record <span id="inv-amt"></span></button>
           </div>
-          <p class="ss" style="padding:0 16px 14px;margin:0">Subscription: extends by one month and unlocks a locked account. Top-up: adds 100 ID scans. Both issue the tax invoice. Check the money has arrived in your UPI app first.</p>
+          <p class="ss" style="padding:0 16px 14px;margin:0">Plan payment: puts the business on that plan, moves the renewal date forward (1, 7 or 14 months with the launch offer), unlocks a locked account and issues one GST tax invoice for the amount. Top-up: adds 100 ID scans. Check the money has arrived in your UPI app first. Online Cashfree payments are recorded automatically.</p>
         </div>
         <div class="panel">
-          <div class="ph"><div class="pt">Plans &mdash; price for each nursing home</div></div>
-          <p class="ss" style="padding:12px 16px 0;margin:0">Each nursing home has its own monthly price (GST included). Changing one does not change any other. <b>Complimentary</b> = free: never locked and no subscription invoices (for your own test home or a free pilot).</p>
+          <div class="ph"><div class="pt">Plans &mdash; price for each business</div></div>
+          <p class="ss" style="padding:12px 16px 0;margin:0">Choose each business&rsquo;s plan (the price fills in from the price list; you can type a special price). <b>Hospital Combo</b> switches on Pharmacy (retail) and Lab. <b>Complimentary</b> = free: never locked and no subscription invoices. <b>Wholesale</b> is its own business: the owner adds it from &ldquo;Add business&rdquo; on the same login, then it shows here as linked.</p>
           <div id="plan-list" style="padding:12px 16px"></div>
         </div>
         <div class="panel">
@@ -1491,7 +1492,9 @@ setInterval(syncHeaderIdentity, 1500);
 async function loadInvoices() {
   var list = document.getElementById('inv-list'), sel = document.getElementById('inv-clinic');
   list.innerHTML = '<p class="ss">Loading&hellip;</p>';
-  var cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt,mod_pharmacy,mod_lab,business_type').eq('facility_type', 'nursing_home').order('name');
+  var cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt,mod_pharmacy,mod_lab,business_type,aura_plan,owner_id').eq('facility_type', 'nursing_home').order('name');
+  _planReady37 = !cl.error;
+  if (cl.error) cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt,mod_pharmacy,mod_lab,business_type').eq('facility_type', 'nursing_home').order('name');
   if (cl.error) cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt,mod_pharmacy,mod_lab').eq('facility_type', 'nursing_home').order('name');
   _modReady = !cl.error;
   if (cl.error) cl = await _supa.from('clinics').select('id,name,monthly_price,billing_exempt').eq('facility_type', 'nursing_home').order('name');
@@ -1499,6 +1502,7 @@ async function loadInvoices() {
   if (cl.error) cl = await _supa.from('clinics').select('id,name').eq('facility_type', 'nursing_home').order('name');
   _planRows = cl.data || [];
   if (cl.data) sel.innerHTML = cl.data.map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name || c.id) + (c.billing_exempt ? ' (Complimentary)' : ' — ₹' + planPrice(c).toLocaleString('en-IN')) + '</option>'; }).join('');
+  sel.onchange = invPick; invPick();
   renderPlans(planReady);
   var r = await _supa.from('aurascale_invoices').select('*').order('invoice_date', { ascending: false }).limit(500);
   if (r.error) { list.innerHTML = '<p class="ss">Could not load invoices (' + esc(r.error.message) + '). Has aurascale-invoices.sql been run?</p>'; return; }
@@ -1510,60 +1514,109 @@ async function loadInvoices() {
     + rows.map(function (v) {
       var gst = Number(v.cgst) + Number(v.sgst) + Number(v.igst);
       return '<tr style="border-top:1px solid var(--border)"><td style="padding:7px 6px;font-weight:700">' + esc(v.invoice_no) + '</td><td>' + new Date(v.invoice_date).toLocaleDateString('en-GB') + '</td><td>' + esc(v.buyer_name)
-        + '</td><td>' + (v.kind === 'topup' ? 'Top-up' : 'Subscription') + '</td><td style="text-align:right">' + Number(v.taxable).toFixed(2) + '</td><td style="text-align:right">' + gst.toFixed(2)
+        + '</td><td>' + (v.kind === 'topup' ? 'Top-up' : esc(String(v.description || 'Subscription').replace(/^AuraScale OS - /, ''))) + '</td><td style="text-align:right">' + Number(v.taxable).toFixed(2) + '</td><td style="text-align:right">' + gst.toFixed(2)
         + '</td><td style="text-align:right;font-weight:700">' + Number(v.total).toFixed(2) + '</td><td>' + esc(v.payment_method || '') + (v.payment_ref ? ' · ' + esc(v.payment_ref) : '') + '</td></tr>';
     }).join('') + '</tbody></table>';
 }
-var _planRows = [], _modReady = false;
-function modBox(id, on, label) { return '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-right:10px"><input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + (_modReady ? '' : ' disabled') + ' style="appearance:auto;-webkit-appearance:checkbox;width:16px;height:16px"/> ' + label + '</label>'; }
-function planPrice(c) { var p = Number(c && c.monthly_price); return p > 0 ? p : 4999; }
+var _planRows = [], _modReady = false, _planReady37 = false;
+var PLAN_CODES = ['nh_15', 'nh_30', 'nh_50', 'combo_15', 'combo_30', 'combo_50', 'pharmacy', 'wholesale', 'lab', 'clinic'];
+function planList() { return window.AURA_PLANS_LIST || {}; }
+function planLabel(code) { var p = planList()[code]; return p ? p.name + (p.beds ? ' (' + p.beds + ')' : '') : code; }
+function planFor(c) {
+  if (c && c.aura_plan && planList()[c.aura_plan]) return c.aura_plan;
+  var t = (c && c.business_type) || 'nursing_home';
+  return t === 'pharmacy' ? 'pharmacy' : t === 'wholesale_pharmacy' ? 'wholesale' : t === 'lab' ? 'lab' : (c && c.mod_pharmacy && c.mod_lab ? 'combo_15' : 'nh_15');
+}
+function plansFor(c) {
+  var t = (c && c.business_type) || 'nursing_home';
+  if (t === 'pharmacy') return ['pharmacy']; if (t === 'wholesale_pharmacy') return ['wholesale']; if (t === 'lab') return ['lab'];
+  return ['nh_15', 'nh_30', 'nh_50', 'combo_15', 'combo_30', 'combo_50', 'clinic'];
+}
+function modBox(id, on, label) { return '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-right:10px;white-space:nowrap"><input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + (_modReady ? '' : ' disabled') + ' style="appearance:auto;-webkit-appearance:checkbox;width:16px;height:16px"/>' + label + '</label>'; }
+function planPrice(c) { var p = Number(c && c.monthly_price); return p > 0 ? p : ((planList()[planFor(c)] || {}).m || 2999); }
+function whLinked(c) {
+  if (!c || !c.owner_id || (c.business_type && c.business_type !== 'nursing_home')) return null;
+  return _planRows.filter(function (x) { return x.owner_id === c.owner_id && x.business_type === 'wholesale_pharmacy'; })[0] || null;
+}
 function renderPlans(ready) {
   var el = document.getElementById('plan-list'); if (!el) return;
   if (!ready) { el.innerHTML = '<p class="ss" style="margin:0">Run <b>per-clinic-plan.sql</b> in Supabase to turn on separate prices and Complimentary plans.</p>'; return; }
-  if (!_planRows.length) { el.innerHTML = '<p class="ss" style="margin:0">No nursing homes yet.</p>'; return; }
-  el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="text-align:left;color:var(--text-tertiary)"><th style="padding:6px">Nursing home</th><th>Monthly price &#8377; (incl. GST)</th><th>Complimentary</th><th>Extra modules' + (_modReady ? '' : ' <span style="font-weight:400">(run modules-pharmacy-lab.sql)</span>') + '</th><th></th></tr></thead><tbody>'
+  if (!_planRows.length) { el.innerHTML = '<p class="ss" style="margin:0">No businesses yet.</p>'; return; }
+  el.innerHTML = (_planReady37 ? '' : '<p class="ss" style="margin:0 0 8px;color:var(--amber)">Run <b>37-plans-and-online-payment</b> in Supabase to save plans.</p>')
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px"><thead><tr style="text-align:left;color:var(--text-tertiary)"><th style="padding:6px">Business</th><th>Plan</th><th>Monthly price &#8377; (incl. GST)</th><th>Complimentary</th><th>Extra modules' + (_modReady ? '' : ' <span class="ss">(run modules SQL)</span>') + '</th><th></th></tr></thead><tbody>'
     + _planRows.map(function (c, i) {
+      var nh = !c.business_type || c.business_type === 'nursing_home', wh = whLinked(c), cur = planFor(c);
       return '<tr style="border-top:1px solid var(--border)"><td style="padding:8px 6px;font-weight:600">' + esc(c.name || c.id) + btypeTag(c) + '</td>'
-        + '<td><input class="finput" id="plan-price-' + i + '" type="number" min="1" step="1" value="' + planPrice(c) + '" style="max-width:130px"' + (c.billing_exempt ? ' disabled' : '') + '/></td>'
-        + '<td><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="plan-free-' + i + '"' + (c.billing_exempt ? ' checked' : '') + ' style="appearance:auto;-webkit-appearance:checkbox;width:16px;height:16px" onchange="document.getElementById(\'plan-price-' + i + '\').disabled=this.checked"/> Free</label></td>'
-        + '<td>' + modBox('plan-ph-' + i, c.mod_pharmacy, '&#128138; Pharmacy') + modBox('plan-lab-' + i, c.mod_lab, '&#129514; Lab') + '</td>'
+        + '<td><select class="finput" id="plan-code-' + i + '" style="max-width:230px" onchange="planCodeChanged(' + i + ')">' + plansFor(c).map(function (k) { return '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + esc(planLabel(k)) + ' &mdash; &#8377;' + ((planList()[k] || {}).m || '').toLocaleString('en-IN') + '</option>'; }).join('') + '</select></td>'
+        + '<td><input class="finput" id="plan-price-' + i + '" type="number" min="1" step="1" value="' + planPrice(c) + '" style="max-width:120px"' + (c.billing_exempt ? ' disabled' : '') + '/></td>'
+        + '<td><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="plan-free-' + i + '"' + (c.billing_exempt ? ' checked' : '') + ' style="appearance:auto;-webkit-appearance:checkbox;width:16px;height:16px" onchange="document.getElementById(\'plan-price-' + i + '\').disabled=this.checked"/>Free</label></td>'
+        + '<td>' + (nh ? modBox('plan-ph-' + i, c.mod_pharmacy, '&#128138; Pharmacy (retail)') + modBox('plan-lab-' + i, c.mod_lab, '&#129514; Lab / Diagnostic')
+              + '<span style="white-space:nowrap;font-size:12px" title="A wholesale firm is its own business on the same login">&#128666; Wholesale: ' + (wh ? '<b style="color:var(--green)">&#10003; ' + esc(wh.name || 'linked') + '</b>' : '<span class="ss">not added</span>') + '</span>' : '<span class="ss">&mdash;</span>') + '</td>'
         + '<td style="text-align:right"><button class="btn-green" style="font-size:11px;padding:6px 12px;min-height:28px" onclick="savePlan(' + i + ')">Save</button></td></tr>';
-    }).join('') + '</tbody></table>';
+    }).join('') + '</tbody></table></div>';
+}
+function planCodeChanged(i) {
+  var k = document.getElementById('plan-code-' + i).value, p = planList()[k]; if (!p) return;
+  document.getElementById('plan-price-' + i).value = p.m;
+  if (/^combo_/.test(k)) { ['plan-ph-', 'plan-lab-'].forEach(function (x) { var e = document.getElementById(x + i); if (e) e.checked = true; }); }
 }
 async function savePlan(i) {
   var c = _planRows[i]; if (!c) return;
+  var code = document.getElementById('plan-code-' + i).value;
   var price = Number(document.getElementById('plan-price-' + i).value), free = document.getElementById('plan-free-' + i).checked;
   if (!(price >= 1)) { alert('Enter a valid monthly price.'); return; }
-  var ph = _modReady && document.getElementById('plan-ph-' + i).checked, lab = _modReady && document.getElementById('plan-lab-' + i).checked;
-  var modTxt = _modReady ? '\n\nPharmacy: ' + (ph ? 'ON' : 'OFF') + '   Lab: ' + (lab ? 'ON' : 'OFF') : '';
-  var msg = (free ? 'Make ' + (c.name || '') + ' COMPLIMENTARY (free, never locked, no invoices)?' : 'Set ' + (c.name || '') + ' to ₹' + price.toLocaleString('en-IN') + ' per month (GST included)?\n\nOnly this nursing home changes. Future invoices use this price.') + modTxt;
+  var phEl = document.getElementById('plan-ph-' + i), labEl = document.getElementById('plan-lab-' + i);
+  var ph = _modReady && !!(phEl && phEl.checked), lab = _modReady && !!(labEl && labEl.checked);
+  var modTxt = _modReady && phEl ? '\n\nPharmacy (retail): ' + (ph ? 'ON' : 'OFF') + '   Lab / Diagnostic: ' + (lab ? 'ON' : 'OFF') : '';
+  var msg = 'Plan: ' + planLabel(code) + '\n' + (free ? 'COMPLIMENTARY (free, never locked, no invoices)' : '₹' + price.toLocaleString('en-IN') + ' per month (GST included)') + '\n\nOnly ' + (c.name || 'this business') + ' changes.' + modTxt;
   if (!confirm(msg)) return;
   var r = await _supa.rpc('admin_set_plan', { p_clinic_id: c.id, p_monthly_price: price, p_complimentary: free });
   if (r.error) { alert('Not saved: ' + r.error.message); return; }
-  if (_modReady && (!!c.mod_pharmacy !== ph || !!c.mod_lab !== lab)) {
+  if (_planReady37) {
+    var a = await _supa.rpc('admin_set_aura_plan', { p_clinic_id: c.id, p_plan: code, p_price: price });
+    if (a.error) { alert('Price saved, but the plan was not: ' + a.error.message); loadInvoices(); return; }
+  }
+  if (_modReady && phEl && (!!c.mod_pharmacy !== ph || !!c.mod_lab !== lab) && !(/^combo_/.test(code) && ph && lab)) {
     var m = await _supa.rpc('admin_set_modules', { p_clinic_id: c.id, p_pharmacy: ph, p_lab: lab, p_monthly_price: null });
-    if (m.error) { alert('Price saved, but the modules were not changed: ' + m.error.message); loadInvoices(); return; }
+    if (m.error) { alert('Plan saved, but the modules were not changed: ' + m.error.message); loadInvoices(); return; }
   }
   alert('Saved.');
   loadInvoices();
+}
+/* record payment: plan + period, amount from the price list (the server works it out again) */
+function invPick() {
+  var id = document.getElementById('inv-clinic').value, c = _planRows.filter(function (x) { return x.id === id; })[0] || {};
+  var sel = document.getElementById('inv-plan'); if (!sel) return;
+  var opts = plansFor(c).concat((!c.business_type || c.business_type === 'nursing_home') ? ['topup'] : []);
+  sel.innerHTML = opts.map(function (k) { return '<option value="' + k + '"' + (k === planFor(c) ? ' selected' : '') + '>' + esc(k === 'topup' ? 'ID-scan top-up (100 scans) — ₹499' : planLabel(k)) + '</option>'; }).join('');
+  invAmt();
+}
+function invAmt() {
+  var k = (document.getElementById('inv-plan') || {}).value, t = (document.getElementById('inv-term') || {}).value || 'm', p = planList()[k], out = document.getElementById('inv-amt');
+  var termSel = document.getElementById('inv-term'); if (termSel) termSel.disabled = k === 'topup';
+  if (out) out.textContent = p ? '₹' + Number(k === 'topup' ? p.m : p[t]).toLocaleString('en-IN') : '';
 }
 async function recordPayment() {
   var id = document.getElementById('inv-clinic').value, sel = document.getElementById('inv-clinic');
   var name = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
   var method = document.getElementById('inv-method').value, ref = (document.getElementById('inv-ref').value || '').trim();
   if (!id) return;
-  var topup = document.getElementById('inv-kind').value === 'topup';
+  var code = document.getElementById('inv-plan').value, term = code === 'topup' ? 'one' : document.getElementById('inv-term').value;
   var plan = _planRows.filter(function (c) { return c.id === id; })[0];
-  if (!topup && plan && plan.billing_exempt) { alert(name + ' is Complimentary, so there is no subscription to record.'); return; }
-  var amt = topup ? '499' : planPrice(plan).toLocaleString('en-IN');
-  if (!confirm('Record ₹' + amt + (topup ? ' top-up' : ' subscription') + ' received from ' + name + ' by ' + method + (ref ? ' (ref ' + ref + ')' : '') + '?\n\nThis issues a tax invoice and cannot be undone.')) return;
-  var r = await _supa.rpc(topup ? 'admin_record_topup' : 'admin_record_payment', { p_clinic_id: id, p_method: method, p_ref: ref || null });
+  if (code !== 'topup' && plan && plan.billing_exempt) { alert(name + ' is Complimentary, so there is no subscription to record.'); return; }
+  var p = planList()[code] || {}, amt = Number(code === 'topup' ? p.m : p[term]) || 0;
+  var termTxt = { m: '1 month', h: '6 months (+1 month free while the launch offer runs)', y: '1 year (+2 months free while the launch offer runs)', one: '' }[term];
+  if (!confirm('Record ₹' + amt.toLocaleString('en-IN') + ' received from ' + name + ' by ' + method + (ref ? ' (ref ' + ref + ')' : '') + '\nfor ' + (code === 'topup' ? 'ID-scan top-up' : planLabel(code) + ', ' + termTxt) + '?\n\nThis issues a tax invoice and cannot be undone.')) return;
+  var r;
+  if (_planReady37) r = await _supa.rpc('admin_record_plan_payment', { p_clinic_id: id, p_plan: code, p_term: term, p_method: method, p_ref: ref || null });
+  else r = await _supa.rpc(code === 'topup' ? 'admin_record_topup' : 'admin_record_payment', { p_clinic_id: id, p_method: method, p_ref: ref || null });
   if (r.error) { alert('Not recorded: ' + r.error.message); return; }
-  alert('Recorded. Invoice ' + ((r.data && r.data.invoice_no) || '') + ' issued.');
+  alert('Recorded.' + (r.data && r.data.invoice_no ? ' Invoice ' + r.data.invoice_no + ' issued.' : ''));
   document.getElementById('inv-ref').value = '';
   loadInvoices();
 }
 </script>
+<script src="aura-plans.js?v=1"></script>
 <script src="aura-tax-master.js?v=1"></script>
 <script src="aura-gst-central.js?v=1"></script>
 <script>
