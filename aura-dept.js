@@ -46,6 +46,8 @@ var DEPT = { clinic: null, module: null, role: null, admissions: [] };
   + '#nh-toast{display:none;position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#18170F;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:300;max-width:92vw;box-shadow:var(--sh-lg)}#nh-toast.show{display:block}';
   css += ''
   + '.d-brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}.d-brand .d-title{white-space:nowrap}'
+  + '.d-sub-btn{border:1px solid var(--border);background:var(--green-bg,#e6f5ef);color:var(--green,#12976A);font-weight:700;font-size:13px;border-radius:999px;padding:7px 13px;min-height:36px;cursor:pointer;font-family:inherit;white-space:nowrap}.d-sub-btn:hover{filter:brightness(.97)}'
+  + '@media (max-width:480px){.d-sub-btn span{display:none}.d-sub-btn{padding:7px 10px}}'
   + '.d-top-mark{display:block;width:34px;height:34px;border-radius:9px;flex:none;background:var(--aura-mark) center/126% no-repeat}'
   + '@media (min-width:901px){.d-top-mark{display:none}}'
   + '.d-pow{font-size:10.5px;color:var(--text-tertiary);font-weight:600;letter-spacing:.02em}.d-pow b{color:var(--green)}'
@@ -261,7 +263,13 @@ function deptMenu(back, g) {
     + (g.role === 'owner' ? '<button onclick="document.getElementById(\'d-menu\').classList.remove(\'open\');if(typeof auraPlansOpen===\'function\')auraPlansOpen()">&#128179; Subscription &amp; plans</button>' : '')
     + '<button onclick="if(typeof toggleTheme===\'function\')toggleTheme()">&#127912; Theme</button>'
     + '<button onclick="handleLogout()" style="color:var(--red)">&#10162; Log out</button>';
-  var wrap = document.createElement('div'); wrap.style.marginLeft = 'auto';
+  var wrap = document.createElement('div'); wrap.style.marginLeft = 'auto'; wrap.style.display = 'flex'; wrap.style.alignItems = 'center'; wrap.style.gap = '8px';
+  if (g.role === 'owner') {   /* the owner's Subscription button: plans for 1 month / 6 months / 1 year + Cashfree */
+    var sb = document.createElement('button'); sb.className = 'd-sub-btn'; sb.type = 'button';
+    sb.innerHTML = '&#128179;<span> Subscription</span>'; sb.title = 'Subscription & plans';
+    sb.onclick = function () { if (typeof auraPlansOpen === 'function') auraPlansOpen(); };
+    wrap.appendChild(sb);
+  }
   wrap.appendChild(b); top.appendChild(wrap); top.appendChild(m);
   var hl = m.querySelector('.d-home-link'); if (hl && auraDeptHomeId()) hl.style.display = '';
   var me = dEl('d-me'); if (me) me.remove();
