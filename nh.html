@@ -104,6 +104,8 @@ a{color:inherit;text-decoration:none}
 /* ── AUTH ── */
 #auth-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #auth-screen.hidden{display:none}
+.aud-row{cursor:pointer}.aud-row:hover{background:var(--surface2,rgba(0,0,0,.02))}.aud-more{font-size:10.5px;font-weight:600;color:var(--text-tertiary);text-transform:none}.aud-open .aud-more{color:var(--green)}
+.aud-x{margin-top:8px;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--bg);cursor:auto}.aud-x table{width:100%;border-collapse:collapse;font-size:12px}.aud-x td{padding:4px 6px;vertical-align:top;border-top:1px solid var(--border)}.aud-x tr:first-child td{border-top:0}.aud-x td:first-child{color:var(--text-tertiary);white-space:nowrap;width:38%}.aud-x td:last-child{font-weight:600;word-break:break-word}
 .auth-wrap{width:100%;max-width:400px;margin:auto 0;padding-bottom:24px}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px 24px;box-shadow:var(--sh-lg)}
 .auth-logo{text-align:center;margin-bottom:20px}
@@ -1940,6 +1942,7 @@ async function loadSubscriptionStatus(){
   if(r.data&&typeof auraApplyPlan==='function') auraApplyPlan(r.data);
   if(typeof renderAuraPlans==='function') renderAuraPlans();
   if(r.data&&typeof auraPlansMount==='function') auraPlansMount(document.getElementById('aura-plans-root'),{clinic:r.data,all:true});
+  else { var _pr=document.getElementById('aura-plans-root'); if(_pr) _pr.innerHTML='<p class="ss" style="margin:0">Plans could not load (the file <b>aura-plans.js</b> is missing). Please refresh the page; if it stays, WhatsApp AuraScale on 80174 65987.</p>'; }
   var payArea=document.getElementById('aura-pay-area');
   if(payArea) payArea.style.display=window._auraComplimentary?'none':'flex';
   if(window._auraComplimentary){
@@ -2404,10 +2407,17 @@ function _auraAddBizScreen(user,first){
     +'<button class="auth-btn" id="ab-btn" onclick="_auraAddBizSave()">Register business →</button>'
     +'<p class="ss auth-center"><span class="auth-link" onclick="'+(first?'_auraWelcomeScreen(_auraWelcomeUser)':'location.href=\'nh.html\'')+'">&larr; '+(first?'Back':'Cancel')+'</span></p></div>');
   window._auraAbUser=user; _auraAbHint();
+  /* phone / browser Back from this screen goes to the owner portal, not out of AuraScale */
+  if(!first && !window._auraAbBack){
+    window._auraAbBack=true;
+    try{ history.pushState({aura:'add'},'',location.href); }catch(_e){}
+    window.addEventListener('popstate',function(){ location.replace('nh.html'); });
+  }
 }
 function _auraAbHint(){
   var t=document.getElementById('ab-type').value, h=document.getElementById('ab-hint');
-  h.textContent=t==='wholesale_pharmacy'?'Your nursing home\'s mobile number can be used again for the wholesale business.':'One nursing home, pharmacy or lab per mobile number. A wholesale business can share it.';
+  h.textContent='Your own mobile number can be used again for each business on this login.';
+  var nmEl=document.getElementById('ab-name'); if(nmEl) nmEl.placeholder={pharmacy:'e.g. Diamond Harbour Medical Store',lab:'e.g. Diamond Harbour Diagnostic Centre',wholesale_pharmacy:'e.g. Ma Durga Pharma Distributors',nursing_home:'e.g. Diamond Harbour Nursing Home'}[t]||'Business name';
 }
 async function _auraAddBizSave(){
   var err=document.getElementById('ab-err'), btn=document.getElementById('ab-btn'); err.style.display='none';
@@ -2422,7 +2432,7 @@ async function _auraAddBizSave(){
   try{
     var av=await _supa.rpc('nh_owner_mobile_available',{p_mobile:d,p_business_type:t});
     if(av.error&&t!=='wholesale_pharmacy') av=await _supa.rpc('nh_owner_mobile_available',{p_mobile:d});
-    if(!av.error&&av.data===false) return fail('This mobile number is already registered with another '+(t==='wholesale_pharmacy'?'wholesale business':'nursing home, pharmacy or lab')+'. Use a different number.');
+    if(!av.error&&av.data===false) return fail('This mobile number is already registered with another person\'s '+(t==='wholesale_pharmacy'?'wholesale business':'nursing home, pharmacy or lab')+'. Use your own number.');
     var made=await _auraCreateFacility(_auraAbUser.id,nm,ow,d,t);
     if(made.error) return fail(made.error);
     var first=!(window.AURA_BIZ_LIST&&AURA_BIZ_LIST.length);
@@ -3096,20 +3106,22 @@ async function loadAudit(){
 
   var ICONS = {charge_added:'💳',voice_charges_added:'🎙️',bed_edited:'🛏️',bed_added:'➕',prescription_saved:'💊',invite_generated:'👥',bill_uploaded:'📎',bed_deleted:'🗑️'};
   el.innerHTML = rows.map(function(a){
-    var s    = staffMap[a.actor_id] || {full_name:'Unknown',role:'unknown'};
+    var s    = staffMap[a.actor_id] || (/^(plan_changed|modules_changed)$/.test(a.action||'') ? {full_name:'AuraScale',role:'admin'} : {full_name:'Unknown',role:'unknown'});
     var d    = a.details || {};
+    a.action = a.action || 'activity';
     var icon = ICONS[a.action] || '📋';
-    var label= a.action.replace(/_/g,' ').replace(/\w/g,function(c){return c.toUpperCase();});
+    var label= a.action.replace(/_/g,' ').replace(/(^|\s)\w/g,function(c){return c.toUpperCase();});
     var detail = d.desc || d.name || d.num || d.role || d.file_name || '';
     var amt  = d.total ? ' — ₹'+Number(d.total).toLocaleString('en-IN') : '';
     var t    = new Date(a.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
     var roleChip = '<span class="chip '+(s.role==='owner'?'ch-act':s.role==='doctor'?'ch-dis':'ch-wait')+'">'+s.role+'</span>';
-    return '<div class="activity-row">'
+    return '<div class="activity-row aud-row" role="button" tabindex="0" onclick="auraToggleRow(this)" onkeydown="if(event.key===\'Enter\')auraToggleRow(this)">'
       +'<div class="act-dot '+(a.action.includes('charge')||a.action.includes('pay')?'act-dot-green':'act-dot-blue')+'"></div>'
       +'<div style="flex:1;min-width:0">'
-        +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">'+roleChip+'<span style="font-size:12px;font-weight:700">'+esc(s.full_name||'Unknown')+'</span></div>'
+        +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">'+roleChip+'<span style="font-size:12px;font-weight:700">'+esc(s.full_name||'Unknown')+'</span><span class="aud-more" style="margin-left:auto">details &#9662;</span></div>'
         +'<div class="act-main">'+icon+' '+label+(detail?' — '+esc(detail):'')+(amt?'<b>'+amt+'</b>':'')+'</div>'
         +'<div class="act-meta">'+t+'</div>'
+        +auraDetailsHtml(a, s.full_name && s.full_name!=='Unknown' ? s.full_name+' ('+s.role+')' : '')
       +'</div></div>';
   }).join('');
 }
@@ -4490,6 +4502,31 @@ function printReportWindow(title, periodLabel, clinicName, summaryRows, breakdow
    OWNER NOTIFICATIONS — real, rule-based alerts from existing data
    plus recent business activity. No fake/random alerts.
 ══════════════════════════════════════════════════════════════ */
+
+/* ── details of one activity / audit entry (tap a row to open) ── */
+var AURA_DETAIL_LABELS={amount:'Amount',total:'Total',due:'Still due',method:'Paid by',status:'Status',patient_name:'Patient',patient:'Patient',bed:'Bed',ward:'Ward',
+  item:'Item',change:'Change',unit:'Unit',left:'Left in stock',low:'Low stock',version:'Version',name:'Name',full_name:'Name',accepted_by:'Accepted by',signer_name:'Signed by',
+  role:'Role',desc:'Details',file_name:'File',num:'Number',recorded_by_name:'Recorded by',old_price:'Old price',new_price:'New price',monthly_price:'Monthly price',
+  old_complimentary:'Was complimentary',new_complimentary:'Now complimentary',pharmacy:'Pharmacy',lab:'Lab',phone:'Phone',mobile:'Mobile',email:'Email',reason:'Reason',
+  bill_no:'Bill no.',invoice_no:'Invoice no.',daily_rate:'Daily rate',qty:'Quantity',price:'Price',items:'Items'};
+var AURA_MONEY_KEYS={amount:1,total:1,due:1,old_price:1,new_price:1,monthly_price:1,daily_rate:1,price:1};
+function auraDetailsHtml(a, actorName){
+  var d=a&&a.details||{}, rows=[];
+  if(actorName) rows.push(['Done by',actorName]);
+  if(a.created_at) rows.push(['When',new Date(a.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})]);
+  Object.keys(d).forEach(function(k){
+    var v=d[k]; if(v===null||v===undefined||v==='') return;
+    if(/(^id$|_id$)/.test(k)) return;
+    if(typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(v)) return;
+    var lbl=AURA_DETAIL_LABELS[k]||k.replace(/_/g,' ').replace(/^./,function(c){return c.toUpperCase();});
+    if(AURA_MONEY_KEYS[k]&&!isNaN(Number(v))) v='₹'+Number(v).toLocaleString('en-IN',{maximumFractionDigits:2});
+    else if(typeof v==='boolean') v=v?'Yes':'No';
+    else if(typeof v==='object') v=Array.isArray(v)?v.map(function(x){return typeof x==='object'?(x.name||x.desc||JSON.stringify(x)):x;}).join(', '):Object.keys(v).map(function(x){return x.replace(/_/g,' ')+': '+v[x];}).join(', ');
+    rows.push([lbl,String(v)]);
+  });
+  return '<div class="aud-x" hidden><table>'+rows.map(function(r){return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';}).join('')+'</table></div>';
+}
+function auraToggleRow(el){ var x=el.querySelector('.aud-x'); if(!x) return; x.hidden=!x.hidden; el.classList.toggle('aud-open',!x.hidden); }
 async function loadOwnerNotifications(){
   var el = document.getElementById('owner-alerts-list');
   if(!el || !_clinicId) return;
@@ -4552,10 +4589,10 @@ async function loadOwnerNotifications(){
     var d = a.details || {};
     if(a.action==='payment_recorded' && d.amount){      /* a payment: say who paid, how much, how, and what is still due */
       var st = d.status==='Paid' ? 'Paid in full' : ('Partly paid'+(d.due>0 ? ' ('+auraMoney(d.due)+' due)' : ''));
-      return '<div class="adm-row"><div class="adm-av" style="background:var(--green-bg);color:var(--green)">&#8377;</div>'
+      return '<div class="adm-row aud-row" role="button" tabindex="0" onclick="auraToggleRow(this)"><div class="adm-av" style="background:var(--green-bg);color:var(--green)">&#8377;</div>'
         + '<div style="flex:1;min-width:0"><div class="adm-name">'+esc(auraMoney(d.amount)+' received \u00b7 '+(d.method||''))+'</div>'
         + '<div class="adm-meta">'+esc((d.patient_name||'Patient')+' \u00b7 '+st+(d.recorded_by_name ? ' \u00b7 by '+d.recorded_by_name : ''))+'</div>'
-        + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div></div>';
+        + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div>'+auraDetailsHtml(a)+'</div></div>';
     }
     if(/^stock_/.test(a.action||'')){
       var sd=d, sk=a.action.replace('stock_','');
@@ -4567,9 +4604,9 @@ async function loadOwnerNotifications(){
         + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div></div>';
     }
     var label = (a.action||'Activity').replace(/_/g,' ');
-    return '<div class="adm-row"><div class="adm-av">📋</div>'
-      + '<div style="flex:1;min-width:0"><div class="adm-name" style="text-transform:capitalize">'+esc(label)+'</div>'
-      + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div></div></div>';
+    return '<div class="adm-row aud-row" role="button" tabindex="0" onclick="auraToggleRow(this)" onkeydown="if(event.key===\'Enter\')auraToggleRow(this)"><div class="adm-av">📋</div>'
+      + '<div style="flex:1;min-width:0"><div class="adm-name" style="text-transform:capitalize">'+esc(label)+' <span class="aud-more">details &#9662;</span></div>'
+      + '<div class="adm-meta">'+new Date(a.created_at).toLocaleString('en-GB')+'</div>'+auraDetailsHtml(a)+'</div></div>';
   }).join('');
 
   el.innerHTML = '<div style="padding:14px 15px 0;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Alerts</div>'
@@ -6284,9 +6321,17 @@ window.auraGoSubscription = function () {
       return '<a class="nb" href="' + (on && href ? href : '#') + '"' + (onclick ? ' onclick="' + onclick + '"' : '') + ' title="' + (on ? 'Open ' + label : 'Not added yet: see plans') + '">'
         + '<span class="nb-ic">' + ic + '</span>' + label + (on ? '<span class="am-on" aria-hidden="true"></span>' : '<span class="am-add">Add</span>') + '</a>';
     }
+    function biz(t) { return (window.AURA_BIZ_LIST || []).filter(function (b) { return b.business_type === t && b.role === 'owner'; })[0]; }
+    var ph = biz('pharmacy'), lb = biz('lab');
+    function dept(modOn, own, page, forKey) {
+      if (modOn) return { on: true, href: page, click: '' };
+      if (own) return { on: true, href: '', click: "auraOpenBiz('" + own.id + "');return false;" };
+      return { on: false, href: '', click: "location.href='nh.html?add=1&for=" + forKey + "';return false;" };
+    }
+    var dP = dept(!!r.data.mod_pharmacy, ph, 'pharmacy.html', 'pharmacy'), dL = dept(!!r.data.mod_lab, lb, 'lab.html', 'lab');
     var h = '<p class="nav-sec">Departments</p>'
-      + item(!!r.data.mod_pharmacy, '&#128138;', 'Pharmacy (Retail)', 'pharmacy.html', r.data.mod_pharmacy ? '' : sub)
-      + item(!!r.data.mod_lab, '&#129514;', 'Diagnostic Lab', 'lab.html', r.data.mod_lab ? '' : sub)
+      + item(dP.on, '&#128138;', 'Pharmacy (Retail)', dP.href, dP.click)
+      + item(dL.on, '&#129514;', 'Diagnostic Lab', dL.href, dL.click)
       + item(!!wh, '&#128666;', 'Pharmacy Wholesale', '', wh ? "auraOpenBiz('" + wh.id + "');return false;" : "location.href='nh.html?add=1&for=wholesale';return false;");
     var box = document.createElement('div'); box.id = 'aura-mod-links'; box.innerHTML = h;
     var firstBtn = nav.querySelector('.nb');            /* right after "Home" */
