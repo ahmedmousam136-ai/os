@@ -660,7 +660,25 @@ async function openPurchase(id) {
     + (CAN.owner && x.status === 'posted' ? '<button class="btn btn-r" onclick="purchaseCancel(' + A(x.id) + ')">Cancel purchase</button>' : '') + '</div>';
   dOpen('m-doc'); docStock('purchase', x.our_no, 'doc-stock');
 }
-async function viewBillPhoto(p) { var r = await _supa.storage.from('bills').createSignedUrl(p, 600); if (r.error) { showToast(dErr(r.error)); return; } window.open(r.data.signedUrl, '_blank'); }
+/* the bill photo opens on the same screen (a new tab is blocked by iPad / phone browsers) */
+async function viewBillPhoto(p) {
+  var old = document.getElementById('bill-photo-ov'); if (old) old.remove();
+  var ov = document.createElement('div'); ov.id = 'bill-photo-ov';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.88);display:flex;flex-direction:column;align-items:center;padding:12px;overflow:auto;-webkit-overflow-scrolling:touch';
+  ov.innerHTML = '<div style="width:100%;max-width:1000px;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">'
+    + '<b style="color:#fff">&#128247; Bill photo</b><span style="display:flex;gap:8px"><a id="bill-photo-full" class="btn btn-sm" style="display:none;background:#fff" target="_blank" rel="noopener">Open full size</a>'
+    + '<button class="btn btn-sm" style="background:#fff" onclick="document.getElementById(\'bill-photo-ov\').remove()">&#10005; Close</button></span></div>'
+    + '<div id="bill-photo-box" style="color:#fff;margin-top:40px">Loading the photo&hellip;</div>';
+  ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+  var r = await _supa.storage.from('bills').createSignedUrl(p, 600);
+  var box = document.getElementById('bill-photo-box'); if (!box) return;
+  if (r.error || !r.data || !r.data.signedUrl) { box.textContent = '\u26A0 The photo could not be opened: ' + (r.error ? dErr(r.error) : 'not found'); return; }
+  var full = document.getElementById('bill-photo-full'); if (full) { full.href = r.data.signedUrl; full.style.display = ''; }
+  box.style.marginTop = '0';
+  box.innerHTML = '<img alt="bill photo" style="max-width:100%;width:1000px;height:auto;border-radius:8px;background:#fff;display:block" src="' + r.data.signedUrl + '"/>';
+  box.firstChild.onerror = function () { box.textContent = '\u26A0 The photo could not be loaded. Check the internet and try again.'; };
+}
 async function purchaseCancel(id) {
   var why = prompt('Why is this purchase cancelled? (its stock is removed; only possible if nothing from it was sold)'); if (!why) return;
   var r = await _supa.rpc('wh_cancel_purchase', { p_clinic: _clinicId, p_id: id, p_reason: why });
