@@ -749,7 +749,7 @@ async function scanPick(inp) {
     var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale' } });
     var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
     if (!d || !d.ok) {
-      var why = { daily_limit: 'Today\'s limit of bill photos is used up. Please add the lines by hand.', ai_key_not_set: 'Bill reading is not set up on the server yet.', not_allowed: 'Only the owner or inventory staff can scan bills.', nothing_read: 'No product lines could be read. Take a clearer, straight photo of the whole bill in good light.', image_too_large: 'The photo is too large.', not_signed_in: 'Your login has expired. Please log in again.' };
+      var why = { daily_limit: 'Today\'s limit of bill photos is used up. Please add the lines by hand.', ai_key_not_set: 'Bill reading is not set up on the server yet.', not_allowed: 'Only the owner or inventory staff can scan bills.', nothing_read: 'No product lines could be read. Take a clearer, straight photo of the whole bill in good light.', image_too_large: 'The photo is too large.', photo_unclear: 'The bill writing in this photo is too small or blurred to read. Take a photo of ONLY the bill, close up, straight, in good light (not a screenshot of several photos).', not_signed_in: 'Your login has expired. Please log in again.' };
       var msg = why[d && d.reason] || ('Could not read the bill' + (d && d.message ? ': ' + d.message : (r.error ? ': ' + dErr(r.error) : '')) + '.');
       st.textContent = '⚠ ' + msg;
       if (!d || ['not_allowed', 'not_signed_in'].indexOf(d.reason) < 0) {   /* the photo could not be read: type the bill by hand on the same check screen */
@@ -757,7 +757,7 @@ async function scanPick(inp) {
       }
       return;
     }
-    st.textContent = ''; scanReview(d);
+    st.textContent = ''; d._img = img.data; scanReview(d);
   } catch (e) { st.textContent = '⚠ ' + dErr(e); }
 }
 function scanExp(v) {   /* MM/YYYY, MM/YY, MM-YY -> YYYY-MM */
@@ -775,9 +775,11 @@ function scanReview(d) {
     var best = ITEMS.filter(function (it) { return it.name.toLowerCase() === n; })[0] || ITEMS.filter(function (it) { return first.length >= 3 && it.name.toLowerCase().indexOf(first) === 0; })[0];
     var g = (l.gst !== null && l.gst !== undefined && l.gst !== '' && [0, 5, 12, 18, 28, 40].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : '';   /* not read -> must be chosen, never assumed 0 */
     return { inc: true, read: l.name || '', orig: l.name || '', match: best ? best.id : '', batch: (l.batch || '').toUpperCase(), expiry: scanExp(l.expiry), qty: l.qty == null ? '' : l.qty, free: l.free || 0,
-      rate: l.rate == null ? '' : l.rate, disc: l.disc || 0, gst: g, mrp: l.mrp == null ? (best ? lastMrp(best.id) : '') : l.mrp, mrpAuto: l.mrp == null && !!(best && lastMrp(best.id)), hsn: l.hsn || '', mfg: l.mfg || '', pack: l.pack || '' };
+      rate: l.rate == null ? '' : l.rate, disc: l.disc || 0, gst: g, mrp: l.mrp == null ? (best ? lastMrp(best.id) : '') : l.mrp, mrpAuto: l.mrp == null && !!(best && lastMrp(best.id)), hsn: l.hsn || '', mfg: l.mfg || '', pack: l.pack || '', amt: l.amount == null ? null : Number(l.amount) };
   });
   dEl('scan-body').innerHTML = (d._failed ? '<div class="note" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)">' + esc(d._failed) + ' The photo is saved with the purchase. Type the details from the paper bill below.</div>' : '')
+    + (d._img ? '<div style="margin-bottom:8px"><div class="tiny">The photo AI read (tap to enlarge) - check the lines below against it:</div><img src="' + d._img + '" alt="bill photo" style="max-height:150px;max-width:100%;border:1px solid var(--border,#E2E8F0);border-radius:8px;cursor:zoom-in" onclick="this.style.maxHeight=this.style.maxHeight===\'none\'?\'150px\':\'none\'"/></div>' : '')
+    + (d._failed ? '' : '<div class="tiny" id="sc-ver" style="margin-bottom:6px;color:' + (d.diag ? 'var(--muted,#64748B)' : 'var(--red,#B91C1C)') + '">' + (d.diag ? 'Bill reader ' + esc(d.diag.version) + ' (' + esc(d.diag.model) + (d.diag.retried === 'used' ? ', read twice' : '') + ') &middot; MRP read on ' + esc(d.diag.mrp_final) + ' of ' + esc(d.diag.lines) + ' lines' + (d.diag.second && d.diag.second !== 'done' ? ' &middot; 2nd look failed: ' + esc(d.diag.second) : '') + (d.diag.headers ? ' &middot; columns: ' + esc(d.diag.headers.join(' | ')) : '') : 'Bill reader: OLD version on the server (deploy pharmacy-bill-scan again)') + '</div>')
     + '<div class="note"><b>AuraScale only goes ahead when nothing is missing.</b> Anything AI could not read (or that is not on the photo) is left empty and marked red: type it from the paper bill. If a line was missed, tap <b>Add a line</b>.</div>'
     + '<div class="grid4" style="margin-bottom:10px"><div><label class="flbl">Supplier on the bill *</label><div class="muted">' + esc(d.supplier || '(not read)') + (d.supplier_gstin ? '<br>' + esc(d.supplier_gstin) : '') + '</div><div id="sc-sup"></div></div>'
     + '<div><label class="flbl">Bill no. *</label><input class="finput" id="sc-no" value="' + esc(d.invoice_no || '') + '" oninput="scanCheck()"/></div><div><label class="flbl">Bill date *</label><input class="finput" id="sc-date" type="date" value="' + esc(d.invoice_date ? scanDate(d.invoice_date) : '') + '" oninput="scanCheck()"/></div>'
@@ -851,6 +853,11 @@ function scanCheck() {
     if (x.gst === '' || [0, 5, 12, 18, 28, 40].indexOf(Number(x.gst)) < 0) { msg.push('GST %'); bad(i, 'gst'); }
     if (!(num(x.mrp) > 0)) { msg.push('MRP'); bad(i, 'mrp'); }
     if (num(x.mrp) > 0 && num(x.rate) > 0 && x.gst !== '' && r2(num(x.rate) * (1 - num(x.disc) / 100) * (1 + Number(x.gst) / 100)) > num(x.mrp)) { msg.push('rate + GST is above MRP (per box vs per strip?)'); bad(i, 'rate'); bad(i, 'mrp'); }
+    /* the bill prints each line's amount: qty x rate must give it (before or after GST), else a number was misread */
+    if (x.amt > 0 && num(x.qty) > 0 && num(x.rate) > 0) {
+      var base = num(x.qty) * num(x.rate) * (1 - num(x.disc) / 100), gst1 = base * (1 + (Number(x.gst) || 0) / 100);
+      if (Math.abs(base - x.amt) > Math.max(2, x.amt * 0.01) && Math.abs(gst1 - x.amt) > Math.max(2, x.amt * 0.01)) { msg.push('qty x rate = ' + r2(base) + ' but the bill shows amount ' + x.amt + ': check qty / rate'); bad(i, 'qty'); bad(i, 'rate'); }
+    }
     if (e) e.textContent = msg.length ? 'Missing / wrong: ' + msg.join(', ') : '';
     if (msg.length) probs.push('line ' + (i + 1) + ' (' + msg.join(', ') + ')');
     var tx = r2(num(x.qty) * num(x.rate) * (1 - num(x.disc) / 100)), t = tax(tx, Number(x.gst) || 0, inter); tot += tx + t.c + t.s + t.i;
