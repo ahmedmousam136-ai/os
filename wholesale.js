@@ -775,7 +775,7 @@ function scanReview(d) {
     var best = ITEMS.filter(function (it) { return it.name.toLowerCase() === n; })[0] || ITEMS.filter(function (it) { return first.length >= 3 && it.name.toLowerCase().indexOf(first) === 0; })[0];
     var g = (l.gst !== null && l.gst !== undefined && l.gst !== '' && [0, 5, 12, 18, 28, 40].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : '';   /* not read -> must be chosen, never assumed 0 */
     return { inc: true, read: l.name || '', orig: l.name || '', match: best ? best.id : '', batch: (l.batch || '').toUpperCase(), expiry: scanExp(l.expiry), qty: l.qty == null ? '' : l.qty, free: l.free || 0,
-      rate: l.rate == null ? '' : l.rate, disc: l.disc || 0, gst: g, mrp: l.mrp == null ? '' : l.mrp, hsn: l.hsn || '', mfg: l.mfg || '', pack: l.pack || '' };
+      rate: l.rate == null ? '' : l.rate, disc: l.disc || 0, gst: g, mrp: l.mrp == null ? (best ? lastMrp(best.id) : '') : l.mrp, mrpAuto: l.mrp == null && !!(best && lastMrp(best.id)), hsn: l.hsn || '', mfg: l.mfg || '', pack: l.pack || '' };
   });
   dEl('scan-body').innerHTML = (d._failed ? '<div class="note" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)">' + esc(d._failed) + ' The photo is saved with the purchase. Type the details from the paper bill below.</div>' : '')
     + '<div class="note"><b>AuraScale only goes ahead when nothing is missing.</b> Anything AI could not read (or that is not on the photo) is left empty and marked red: type it from the paper bill. If a line was missed, tap <b>Add a line</b>.</div>'
@@ -791,6 +791,17 @@ function scanReview(d) {
   scanRows();
   scanSupBox(); dOpen('m-scan'); scanCheck();
 }
+/* the MRP this item had on its last purchase (used when the bill photo's MRP could not be read) */
+function lastMrp(id) {
+  var it = id ? ITEMMAP[id] : null; if (!it) return '';
+  var b = it.batches.filter(function (x) { return Number(x.mrp) > 0; }).sort(function (x, y) { return String(y.created_at || y.expiry || '').localeCompare(String(x.created_at || x.expiry || '')); })[0];
+  return b ? Number(b.mrp) : '';
+}
+function scanMatch(i, v) {
+  var x = SCAN[i]; x.match = v;
+  if ((x.mrp === '' || x.mrp == null) && v) { var m = lastMrp(v); if (m) { x.mrp = m; x.mrpAuto = true; } }
+  scanRows(); scanCheck();
+}
 function scanRows() {
   var cand = function (x) { var w = String(x.read || '').toLowerCase().split(/\s+/)[0] || ''; return ITEMS.filter(function (it) { return w.length >= 3 && it.name.toLowerCase().indexOf(w) >= 0; }).slice(0, 8); };
   var inp = function (i, k, w, ty, ph) { return '<input class="finput" data-i="' + i + '" data-k="' + k + '" style="width:' + w + 'px;padding:6px" ' + (ty === 'n' ? 'type="number" step="any" min="0"' : ty === 'm' ? 'type="month"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(SCAN[i][k]) + '" oninput="SCAN[' + i + '][\'' + k + '\']=this.value;scanCheck()"/>'; };
@@ -800,11 +811,11 @@ function scanRows() {
       + (x.match && !cs.some(function (it) { return it.id === x.match; }) ? '<option value="' + x.match + '" selected>' + esc(ITEMMAP[x.match].name) + '</option>' : '');
     return '<tr id="sc-r' + i + '"><td><input type="checkbox"' + (x.inc ? ' checked' : '') + ' onchange="SCAN[' + i + '].inc=this.checked;scanCheck()" style="width:18px;height:18px;appearance:auto"/></td>'
       + '<td>' + (x.manual ? '<div class="tiny">Typed by you</div>' : '<div class="tiny">Read: ' + esc(x.orig || '(nothing)') + '</div>')
-      + '<select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value;scanCheck()">' + opts + '</select>'
+      + '<select class="finput" style="width:210px;padding:6px" onchange="scanMatch(' + i + ',this.value)">' + opts + '</select>'
       + '<div class="sc-new" id="sc-n' + i + '" style="margin-top:4px">' + inp(i, 'read', 210, '', 'Item name *') + '<div style="display:flex;gap:4px;margin-top:4px">' + inp(i, 'hsn', 100, '', 'HSN') + inp(i, 'pack', 104, '', 'Pack e.g. 1x10') + '</div></div>'
       + '<div class="tiny over" id="sc-e' + i + '"></div></td>'
       + '<td>' + inp(i, 'mfg', 70) + '</td><td>' + inp(i, 'batch', 92) + '</td><td>' + inp(i, 'expiry', 130, 'm') + '</td><td>' + inp(i, 'qty', 64, 'n') + '</td><td>' + inp(i, 'free', 54, 'n') + '</td><td>' + inp(i, 'rate', 76, 'n') + '</td><td>' + inp(i, 'disc', 56, 'n') + '</td>'
-      + '<td><select class="finput" data-i="' + i + '" data-k="gst" style="width:70px;padding:6px" onchange="SCAN[' + i + '].gst=this.value===\'\'?\'\':Number(this.value);scanCheck()"><option value="">?</option>' + [0, 5, 12, 18, 28, 40].map(function (g) { return '<option' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td><td>' + inp(i, 'mrp', 76, 'n') + '</td></tr>';
+      + '<td><select class="finput" data-i="' + i + '" data-k="gst" style="width:70px;padding:6px" onchange="SCAN[' + i + '].gst=this.value===\'\'?\'\':Number(this.value);scanCheck()"><option value="">?</option>' + [0, 5, 12, 18, 28, 40].map(function (g) { return '<option' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td><td>' + inp(i, 'mrp', 76, 'n') + (x.mrpAuto ? '<div class="tiny" style="color:var(--amber,#B45309)">last MRP, check</div>' : '') + '</td></tr>';
   }).join('');
 }
 function scanAddLine() {
