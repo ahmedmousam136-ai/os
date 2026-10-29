@@ -320,7 +320,7 @@ function sellRender(keep) {
       var it = ITEMMAP[l.item_id];
       var opts = it.batches.filter(function (b) { return b.qty > 0 && !b.expired; }).map(function (b) { return '<option value="' + b.id + '"' + (b.id === l.batch_id ? ' selected' : '') + '>' + esc(b.batch_no) + ' &middot; ' + dExp(b.expiry) + ' &middot; ' + b.qty + ' &middot; MRP ' + Number(b.mrp).toFixed(2) + '</option>'; }).join('');
       var inp = function (f, w, st) { return '<input class="finput" data-f="' + f + '" type="number" min="0" step="' + (st || 'any') + '" value="' + esc(l[f]) + '" style="width:' + w + 'px;text-align:right" oninput="sellSet(' + i + ',' + A(f) + ',this.value)"/>'; };
-      return '<tr id="sl-' + i + '"><td><b>' + esc(it.name) + '</b><div class="tiny">' + esc(it.pack || '') + ' &middot; GST ' + Number(it.gst_rate) + '%' + (it.hsn ? ' &middot; HSN ' + esc(it.hsn) : '') + '</div><div class="tiny over" id="sle-' + i + '"></div></td>'
+      return '<tr id="sl-' + i + '"><td><b>' + esc(it.name) + '</b><div class="tiny">' + esc(it.pack || '') + ' &middot; <span id="slg-' + i + '">GST ' + Number(it.gst_rate) + '%' + (CAN.owner || CAN.buy ? ' <button class="btn btn-sm" style="padding:1px 8px;min-height:0;font-size:11px" onclick="gstEditOpen(' + i + ')">&#9998; Edit</button>' : '') + '</span>' + (it.hsn ? ' &middot; HSN ' + esc(it.hsn) : '') + '</div><div class="tiny over" id="sle-' + i + '"></div></td>'
         + '<td><select class="finput" style="min-width:170px" onchange="sellSet(' + i + ',\'batch_id\',this.value)">' + opts + '</select></td>'
         + '<td class="r">' + inp('qty', 72, 1) + '<div class="tiny">' + esc(it.unit) + '</div><div id="sls-' + i + '"></div></td><td class="r">' + inp('free', 60, 1) + '</td><td class="r">' + inp('rate', 84) + '<div class="tiny" id="slr-' + i + '" style="color:var(--amber)">' + (l.sug ? 'from MRP &minus;' + RETAIL_MARGIN + '%' : '') + '</div></td><td class="r">' + inp('disc', 62) + '</td>'
         + '<td class="r" id="sla-' + i + '"></td><td class="r"><button class="btn btn-sm btn-r" onclick="sellDel(' + i + ')">&times;</button></td></tr>';
@@ -339,7 +339,7 @@ function sellRender(keep) {
     + (p && p.credit_limit && SPAY === 'credit' && bal + T.total - paid > Number(p.credit_limit) ? '<div class="tiny over">Above the credit limit of ' + dMoney0(p.credit_limit) + (CAN.owner ? ' (you can still save)' : '') + '</div>' : '')
     + (T.total > 50000 && !(dEl('tr-eway_no') && dEl('tr-eway_no').value.trim()) ? '<div class="tiny" style="color:var(--amber);margin-top:6px">Above &#8377;50,000: an e-way bill is usually needed to move these goods. Add its number under Delivery &amp; transport (now or later).</div>' : '');
 }
-var TR_KEYS = ['transporter', 'gr_no', 'gr_date', 'cases', 'weight', 'vehicle', 'order_no', 'order_date', 'eway_no', 'eway_date'];
+var TR_KEYS = ['transporter', 'gr_no', 'gr_date', 'cases', 'weight', 'vehicle', 'order_no', 'order_date', 'eway_no', 'eway_date', 'photo'];
 function trRead(pre) { var o = {}; TR_KEYS.forEach(function (k) { var e = dEl(pre + k); if (e && e.value.trim()) o[k] = e.value.trim(); }); if (o.vehicle) o.vehicle = o.vehicle.toUpperCase(); if (o.eway_no) o.eway_no = o.eway_no.replace(/\s/g, ''); return o; }
 function trClear(pre) { TR_KEYS.forEach(function (k) { var e = dEl(pre + k); if (e) e.value = ''; }); }
 function shipRead() {
@@ -428,6 +428,7 @@ async function openSale(id, fresh) {
     + '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="doc-open" disabled>&#128196; Open / print</button><button class="btn btn-g" id="doc-wa" disabled>&#128242; WhatsApp</button>'
     + '<button class="btn" id="doc-3c" disabled>&#128424; Print 3 copies</button>'
     + (CAN.sell && s.status === 'posted' ? '<button class="btn" onclick="transportForm(' + A(s.id) + ')">&#128666; Transport / e-way bill</button>' : '')
+    + (s.transport && s.transport.photo ? '<button class="btn" onclick="viewBillPhoto(' + A(s.transport.photo) + ')">&#128247; L.R. photo</button>' : '')
     + (canRet ? '<button class="btn" onclick="saleReturnForm(' + A(s.id) + ')">&#8617; Goods returned</button>' : '')
     + (CAN.owner && s.status === 'posted' ? '<button class="btn btn-r" onclick="saleCancel(' + A(s.id) + ')">Cancel invoice</button>' : '')
     + (fresh ? '<button class="btn btn-p" onclick="dClose(\'m-doc\');dEl(\'s-q\').focus()">&#10133; New invoice</button>' : '') + '</div><div id="doc-extra"></div>';
@@ -441,7 +442,20 @@ async function openSale(id, fresh) {
     dEl('doc-wa').disabled = false; dEl('doc-wa').onclick = function () {
       deptWhatsApp(s.buyer.phone, (SET.name || DEPT.clinic.name || '') + '\nInvoice ' + s.inv_no + ' dated ' + dDate(s.inv_date) + '\nAmount ' + dMoney0(s.total) + (s.pay_mode === 'credit' && s.due_date ? ' (due ' + dDate(s.due_date) + ')' : '') + '\nInvoice (PDF):', 'bills', path);
     };
+    if (fresh && s.status === 'posted') saleAutoWa(s);
   } catch (e) { dEl('doc-pdf').textContent = 'The invoice is saved, but the PDF could not be made: ' + dErr(e) + '. Open it again later.'; }
+}
+/* a new invoice goes to the customer's WhatsApp by itself (dept-whatsapp function); if that is not possible, say so and keep the button */
+async function saleAutoWa(s) {
+  var box = dEl('doc-extra'); if (!box) return;
+  var ph = dMobile(s.buyer && s.buyer.phone);
+  if (!ph) { box.innerHTML = '<div class="note" style="margin-top:8px">This customer has no mobile number, so the invoice was not sent on WhatsApp. Add their number in Parties.</div>'; return; }
+  box.innerHTML = '<div class="tiny" style="margin-top:8px">Sending the invoice on WhatsApp to ' + esc(ph) + '&hellip;</div>';
+  var r; try { r = await _supa.functions.invoke('dept-whatsapp', { body: { mode: 'wholesale_invoice', sale_id: s.id } }); } catch (e) { r = { error: e }; }
+  var d = r && r.data; if (r && r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+  if (d && d.sent) { box.innerHTML = '<div class="card" style="margin-top:8px;border-color:var(--green-border);background:var(--green-bg);color:var(--green);font-weight:700">&#10003; Invoice sent on WhatsApp to ' + esc(ph) + '</div>'; return; }
+  var why = { not_configured: 'automatic sending is not switched on yet', webhook_error: 'the WhatsApp service did not answer', pdf_not_ready: 'the PDF was not ready', no_phone: 'the mobile number is not valid' }[d && d.reason] || 'it could not be sent automatically';
+  box.innerHTML = '<div class="note" style="margin-top:8px">Not sent automatically (' + esc(why) + '). Tap <b>&#128242; WhatsApp</b> above to send it to ' + esc(ph) + ' yourself.</div>';
 }
 async function saleCancel(id) {
   var why = prompt('Why is this invoice cancelled? (stock goes back, money received with it is cancelled)'); if (!why) return;
@@ -462,13 +476,38 @@ function transportForm(id) {
   _supa.from('wh_sales').select('transport,ship_to').eq('id', id).single().then(function (r) {
     var t = (r.data && r.data.transport) || {}, sh = (r.data && r.data.ship_to) || {};
     var f = function (k, l, ty) { return '<div><label class="flbl">' + l + '</label><input class="finput" id="tf-' + k + '"' + (ty ? ' type="' + ty + '"' : '') + ' value="' + esc(t[k] || '') + '"/></div>'; };
-    dEl('doc-extra').innerHTML = '<div class="card" style="margin-top:14px"><b>Delivery &amp; transport</b><div class="grid3" style="margin-top:8px">'
+    dEl('doc-extra').innerHTML = '<div class="card" style="margin-top:14px"><b>Delivery &amp; transport</b>'
+      + '<div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="btn btn-sm btn-g" style="cursor:pointer;margin:0">&#128247; Photo of L.R. / e-way bill<input type="file" accept="image/*" capture="environment" style="display:none" onchange="trScan(this,\'tf-\',\'tf-sh-\')"/></label><span class="tiny" id="tf-scan-st">Take a photo and the boxes below fill in by themselves.</span></div>'
+      + '<div class="grid3" style="margin-top:8px">'
       + f('transporter', 'Transporter') + f('gr_no', 'G.R. / L.R. no.') + f('gr_date', 'G.R. date', 'date') + f('cases', 'Cases') + f('weight', 'Weight') + f('vehicle', 'Vehicle no.')
       + f('order_no', 'Order no.') + f('order_date', 'Order date', 'date') + f('eway_no', 'E-way bill no. (12 digits)') + f('eway_date', 'E-way bill date', 'date') + '</div>'
+      + '<input type="hidden" id="tf-photo" value="' + esc(t.photo || '') + '"/>' + (t.photo ? '<div style="margin-top:8px"><button class="btn btn-sm" onclick="viewBillPhoto(' + A(t.photo) + ')">&#128247; L.R. / e-way bill photo</button></div>' : '')
       + '<div class="grid3" style="margin-top:8px"><div><label class="flbl">Shipped to (shop name)</label><input class="finput" id="tf-sh-name" value="' + esc(sh.name || '') + '"/></div><div><label class="flbl">Phone</label><input class="finput" id="tf-sh-phone" value="' + esc(sh.phone || '') + '"/></div><div><label class="flbl">Delivery address</label><input class="finput" id="tf-sh-address" value="' + esc(sh.address || '') + '"/></div></div>'
       + '<p class="tiny" style="margin-top:6px">Only these details change. Items and amounts of a saved invoice can never change. The PDF is made again.</p>'
       + '<button class="btn btn-g" style="margin-top:8px" id="tf-go" onclick="transportSave(' + A(id) + ')">&#10003; Save</button><div class="err" id="tf-err"></div></div>';
   });
+}
+/* photo of a lorry receipt (L.R. / G.R.), e-way bill or courier slip -> fills the transport boxes (pre 'tr-' on the sale screen, 'tf-' on a saved invoice) */
+async function trScan(inp, pre, shPre) {
+  var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+  var st = dEl(pre + 'scan-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the paper&hellip; about 15-30 seconds.';
+  try {
+    var img = await scanResize(f);
+    /* keep the photo with the invoice (shown later from the invoice: L.R. / e-way bill photo) */
+    try { var pth = _clinicId + '/wholesale/transport/' + Date.now() + '.jpg', up = await _supa.storage.from('bills').upload(pth, img.blob, { contentType: 'image/jpeg', upsert: true }); if (!up.error && dEl(pre + 'photo')) dEl(pre + 'photo').value = pth; } catch (e) {}
+    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale', kind: 'transport' } });
+    var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok || !d.transport) { st.textContent = '\u26A0 ' + ({ nothing_read: 'Nothing could be read. Take a clearer, straight photo in good light.', daily_limit: 'Today\'s photo limit is used up. Type the details.', not_allowed: 'Only sales staff or the owner can do this.' }[d && d.reason] || 'Could not read the paper. Type the details.'); return; }
+    var t = d.transport, n = 0;
+    var put = function (id, v, date) { var e = dEl(id); if (!e || v == null || v === '') return; var val = date ? scanDate(v) : String(v); if (!val) return; e.value = val; e.style.borderColor = 'var(--green)'; n++; };
+    put(pre + 'transporter', t.transporter); put(pre + 'gr_no', t.gr_no); put(pre + 'gr_date', t.gr_date, true); put(pre + 'cases', t.cases); put(pre + 'weight', t.weight);
+    put(pre + 'vehicle', t.vehicle); put(pre + 'order_no', t.order_no); put(pre + 'order_date', t.order_date, true); put(pre + 'eway_no', t.eway_no); put(pre + 'eway_date', t.eway_date, true);
+    if (t.ship_name || t.ship_address) {
+      if (pre === 'tr-' && dEl('s-shipon') && !dEl('s-shipon').checked) { dEl('s-shipon').checked = true; dEl('s-shipbox').style.display = 'block'; }
+      put(shPre + 'name', t.ship_name); put(shPre + 'phone', t.ship_phone); put(shPre + 'address', t.ship_address);
+    }
+    st.innerHTML = n ? '<b style="color:var(--green)">&#10003; ' + n + ' boxes filled from the photo (green). Check them, then save.</b>' : 'Nothing useful was found on the photo. Type the details.';
+  } catch (e) { st.textContent = '\u26A0 ' + dErr(e); }
 }
 async function transportSave(id) {
   dShowErr('tf-err', '');
@@ -962,6 +1001,20 @@ function wgMode(on) { WGSEL = on ? {} : null; dEl('wg-bar').style.display = on ?
 function wgTick(id) { if (!WGSEL) return; if (WGSEL[id]) delete WGSEL[id]; else WGSEL[id] = 1; stockRender(); wgCount(); }
 function wgAll(on) { if (!WGSEL) return; WGSHOWN.forEach(function (id) { if (on) WGSEL[id] = 1; else delete WGSEL[id]; }); stockRender(); wgCount(); }
 function wgCount() { var n = Object.keys(WGSEL || {}).length; dEl('wg-st').innerHTML = n ? '<b>' + n + '</b> product' + (n === 1 ? '' : 's') + ' ticked. Choose the new GST and press <b>Change GST</b>.' : 'Tick the products (tap a row), choose the new GST and press <b>Change GST</b>. Invoices already made keep their old GST.'; }
+/* change one product's GST right from the sale screen (owner / inventory) */
+function gstEditOpen(i) {
+  var it = ITEMMAP[SLINES[i].item_id], box = dEl('slg-' + i); if (!it || !box) return;
+  box.innerHTML = 'GST <select class="finput" style="width:74px;padding:2px 6px;display:inline-block" onchange="gstEditSave(' + i + ',this.value)">' + [0, 5, 12, 18, 28, 40].map(function (g) { return '<option value="' + g + '"' + (Number(it.gst_rate) === g ? ' selected' : '') + '>' + g + '%</option>'; }).join('') + '</select> <button class="btn btn-sm" style="padding:1px 8px;min-height:0;font-size:11px" onclick="sellRender()">Cancel</button>';
+}
+async function gstEditSave(i, g) {
+  var it = ITEMMAP[SLINES[i].item_id]; if (!it) return; g = Number(g);
+  if (g === Number(it.gst_rate)) { sellRender(); return; }
+  if (!confirm('Change the GST of ' + it.name + ' to ' + g + '%?\nThis bill and new bills use it. Bills already made keep their old GST.')) { sellRender(); return; }
+  var r = await _supa.rpc('wh_set_gst', { p_clinic: _clinicId, p_ids: [it.id], p_gst: g });
+  if (r.error) { showToast(/PGRST202|Could not find/.test(dErr(r.error)) ? 'Run file 28 in Supabase first.' : dErr(r.error)); sellRender(); return; }
+  it.gst_rate = g; sellRender(); showToast('GST of ' + it.name + ' is now ' + g + '%.');
+  loadItems();
+}
 async function wgApply() {
   var ids = Object.keys(WGSEL || {}), g = Number(dEl('wg-new').value);
   if (!ids.length) { showToast('Tick at least one product.'); return; }
@@ -1461,6 +1514,12 @@ async function orderPick(inp) {
     st.textContent = '';
     /* the customer, when the slip shows it */
     var custNote = '';
+    var byPhone = dMobile(d.customer_phone) ? PARTIES.filter(function (p) { return p.is_active && p.party_type !== 'supplier' && dMobile(p.phone) === dMobile(d.customer_phone); })[0] : null;
+    if (!PICK.sell.party && byPhone) { ppPick('sell', byPhone.id); custNote = 'Customer from the photo (mobile ' + esc(dMobile(d.customer_phone)) + '): <b>' + esc(byPhone.name) + '</b> &mdash; change it above if wrong.'; }
+    /* the order number / date of a purchase order form go into Delivery & transport */
+    if (d.order_no && dEl('tr-order_no') && !dEl('tr-order_no').value) dEl('tr-order_no').value = d.order_no;
+    if (d.order_date && dEl('tr-order_date') && !dEl('tr-order_date').value) dEl('tr-order_date').value = scanDate(d.order_date);
+    var ordNote = !d.order_no ? '' : 'Order no. <b>' + esc(d.order_no) + '</b>' + (d.order_date ? ' dated ' + esc(d.order_date) : '') + ' is put on the invoice (Delivery &amp; transport).';
     if (!PICK.sell.party && d.customer) {
       var cands = mBest(d.customer, PARTIES.filter(function (p) { return p.is_active && p.party_type !== 'supplier'; }), function (p) { return p.name; }, 1);
       if (cands.length && cands[0].s >= 0.6) { ppPick('sell', cands[0].x.id); custNote = 'Customer from the photo: <b>' + esc(cands[0].x.name) + '</b> &mdash; change it above if wrong.'; }
@@ -1472,7 +1531,7 @@ async function orderPick(inp) {
       var auto = c.length && c[0].s >= 0.55 && (!c[1] || c[0].s - c[1].s >= 0.08);   /* two look-alikes (Shelcal / Shelcal HD): ask */
       return { read: l.name, raw: l.raw || '', qty: l.qty != null ? l.qty : '', free: l.free || 0, cands: c.map(function (o) { return o.x.id; }), item_id: auto ? c[0].x.id : '', sure: !!auto };
     });
-    orderReview(custNote);
+    orderReview(custNote + (ordNote ? (custNote ? '<br>' : '') + ordNote : ''));
   } catch (e) { st.textContent = '⚠ ' + dErr(e); }
 }
 function orderReview(custNote) {
