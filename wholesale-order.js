@@ -20,7 +20,7 @@ function woOk(title, sub, ms) {
 }
 function woLS(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('aura-wh-' + _clinicId + '-' + k) || 'null'); localStorage.setItem('aura-wh-' + _clinicId + '-' + k, JSON.stringify(v)); } catch (e) { return null; } }
 
-var WO = { rows: [], sold: {}, lastSup: {}, f: 'out', loaded: false };
+var WO = { rows: [], sold: {}, lastSup: {}, f: 'out', loaded: false, only: '', manual: {} };
 function woModal() {
   if (dEl('m-wo')) return;
   var d = document.createElement('div'); d.className = 'modal-bg'; d.id = 'm-wo';
@@ -54,24 +54,29 @@ async function woOpen(onlyId) {
     return { id: it.id, kind: onlyId === it.id && !kind ? 'low' : kind, on: true, qty: Math.max(1, Math.max(Math.ceil(month), low * 2, 1) - Math.max(0, it.stock)),
       sup: h && h.supplier_id && PARTYMAP[h.supplier_id] ? h.supplier_id : '', supName: h ? h.supplier_name : '', sent: sent[it.id] || null };
   }).filter(function (r) { return r.kind; });
-  if (onlyId) { WO.rows.forEach(function (r) { r.on = r.id === onlyId; }); var me = WO.rows.filter(function (r) { return r.id === onlyId; })[0]; if (me) WO.f = me.kind; }
+  WO.only = onlyId || ''; WO.manual = {};
+  if (onlyId) { WO.rows.forEach(function (r) { r.on = r.id === onlyId; r.hid = r.id !== onlyId; }); var me = WO.rows.filter(function (r) { return r.id === onlyId; })[0]; if (me) WO.f = me.kind; }
   else WO.f = WO.rows.some(function (r) { return r.kind === 'out'; }) ? 'out' : 'low';
   woRender();
 }
 function woSupOpts(sel) {
-  return '<option value="">&mdash; choose supplier &mdash;</option>' + PARTIES.filter(function (p) { return p.is_active && p.party_type !== 'customer'; }).sort(function (a, b) { return a.name.localeCompare(b.name); })
+  return '<option value="">&mdash; choose supplier &mdash;</option>' + PARTIES.filter(function (p) { return p.id === sel || (p.is_active && p.party_type !== 'customer'); }).sort(function (a, b) { return a.name.localeCompare(b.name); })
     .map(function (p) { return '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('');
 }
 function woRender() {
   var nOut = WO.rows.filter(function (r) { return r.kind === 'out'; }).length, nLow = WO.rows.filter(function (r) { return r.kind === 'low'; }).length;
-  var list = WO.rows.map(function (r, i) { r.i = i; return r; }).filter(function (r) { return r.kind === WO.f; });
+  var all = WO.rows.map(function (r, i) { r.i = i; return r; }).filter(function (r) { return r.kind === WO.f; });
+  var list = all.filter(function (r) { return !r.hid; }), hidden = all.length - list.length;
   var g = {}; list.forEach(function (r) { var k = r.sup || '_'; (g[k] = g[k] || []).push(r); });
   var keys = Object.keys(g).sort(function (a, b) { if ((a === '_') !== (b === '_')) return a === '_' ? 1 : -1; return String((PARTYMAP[a] || {}).name || '').localeCompare(String((PARTYMAP[b] || {}).name || '')); });
   dEl('wo-b').innerHTML = '<div class="seg" style="margin-bottom:10px;flex-wrap:wrap"><button class="' + (WO.f === 'out' ? 'on' : '') + '" onclick="WO.f=\'out\';woRender()">&#128308; Out of stock (' + nOut + ')</button><button class="' + (WO.f === 'low' ? 'on' : '') + '" onclick="WO.f=\'low\';woRender()">&#128993; Running low (' + nLow + ')</button></div>'
     + '<p class="tiny" style="margin-bottom:8px">' + (WO.f === 'out' ? 'These products have <b>0</b> left to sell.' : 'Below their low-stock level, or will run out in about 2 weeks at the speed they sold in the last 30 days.') + ' The quantity is about one month of sales. Check the supplier and quantity, then send each supplier its order: a purchase order PDF on WhatsApp.</p>'
     + (list.length ? keys.map(function (k, gi) {
       var sp = PARTYMAP[k], rows = g[k];
-      return '<div class="card" style="margin-bottom:12px;padding:12px 14px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><div style="flex:1;min-width:200px"><b>' + (sp ? esc(sp.name) : 'Supplier not known') + '</b> <span class="tiny">' + rows.length + ' product' + (rows.length === 1 ? '' : 's') + (sp && sp.phone ? ' &middot; ' + esc(sp.phone) : (sp ? ' &middot; <span class="over">no phone saved</span>' : '')) + '</span></div></div>'
+      return '<div class="card" style="margin-bottom:12px;padding:12px 14px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">'
+        + '<div style="flex:1;min-width:220px"><label class="flbl">' + (rows.length === 1 ? 'Supplier for this product' : 'Supplier for these ' + rows.length + ' products') + '</label><select class="finput" style="max-width:320px" onchange="woGroupSup(' + A(k) + ',this.value)">' + woSupOpts(sp ? k : '') + '</select>'
+        + '<div class="tiny" style="margin-top:3px">' + (sp ? (sp.phone ? 'WhatsApp: ' + esc(sp.phone) : '<span class="over">No phone saved for this supplier: add it in Parties</span>') : 'Choose who you buy these from') + '</div></div>'
+        + '<button class="btn btn-sm" title="Remove this supplier from the list" aria-label="Remove ' + esc(sp ? sp.name : 'this group') + '" onclick="woHideGroup(' + A(k) + ')">&#10005; Remove</button></div>'
         + '<div style="overflow-x:auto;margin-top:6px"><table class="dt"><thead><tr><th></th><th>Product</th><th class="r">In stock</th><th class="r">Sold 30 days</th><th>Supplier</th><th class="r">Order</th></tr></thead><tbody>'
         + rows.map(function (r) { var it = ITEMMAP[r.id]; if (!it) return '';
           return '<tr><td><input type="checkbox" ' + (r.on ? 'checked' : '') + ' onchange="WO.rows[' + r.i + '].on=this.checked" style="width:18px;height:18px;appearance:auto"/></td>'
@@ -80,12 +85,20 @@ function woRender() {
             + '<td><select class="finput" style="width:180px;padding:5px" onchange="WO.rows[' + r.i + '].sup=this.value;woRender()">' + woSupOpts(r.sup) + '</select></td>'
             + '<td class="r"><input class="finput" type="number" min="1" step="1" value="' + esc(r.qty) + '" style="width:76px;text-align:right;padding:5px" oninput="WO.rows[' + r.i + '].qty=this.value"/><div class="tiny">' + esc(it.unit) + '</div></td></tr>';
         }).join('') + '</tbody></table></div>'
-        + (sp ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-g" onclick="woSend(' + A(k) + ')">&#128242; Send order on WhatsApp (PDF)</button><button class="btn btn-sm" onclick="woCopy(' + A(k) + ')">Copy list</button></div>'
+        + (sp ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="btn btn-g" id="wo-go-' + k + '" onclick="woSend(' + A(k) + ')">&#128242; Send order to supplier on WhatsApp</button><button class="btn btn-sm" onclick="woCopy(' + A(k) + ')">Copy list</button>'
+          + (WO.manual[k] ? '<button class="btn btn-sm" onclick="woManual(' + A(k) + ')">Send it myself on WhatsApp</button>' : '') + '</div><div id="wo-st-' + k + '" class="tiny" style="margin-top:6px">' + (WO.manual[k] ? esc(WO.manual[k].msg) : '') + '</div>'
           : '<div class="tiny over" style="margin-top:8px">Choose the supplier for these products (in the Supplier column) to send the order.</div>') + '</div>';
-    }).join('') : '<div class="card" style="text-align:center;padding:22px"><div style="font-size:28px">&#9989;</div><b>' + (WO.f === 'out' ? 'Nothing is out of stock.' : 'Nothing is running low.') + '</b><div class="tiny">Set a <b>low-stock level</b> on a product (Stock &rarr; Open &rarr; Edit) to be warned earlier.</div></div>');
+    }).join('') + (hidden ? '<div style="text-align:center;margin-top:4px"><button class="btn btn-sm" onclick="woShowAll()">' + (WO.only ? 'Show all ' + (WO.f === 'out' ? 'out-of-stock' : 'running-low') + ' products (' + hidden + ' more)' : 'Show removed (' + hidden + ')') + '</button></div>' : '')
+      : hidden ? '<div class="card" style="text-align:center;padding:18px"><b>All suppliers removed from the list.</b><div style="margin-top:8px"><button class="btn btn-sm" onclick="woShowAll()">Show them again (' + hidden + ')</button></div></div>'
+      : '<div class="card" style="text-align:center;padding:22px"><div style="font-size:28px">&#9989;</div><b>' + (WO.f === 'out' ? 'Nothing is out of stock.' : 'Nothing is running low.') + '</b><div class="tiny">Set a <b>low-stock level</b> on a product (Stock &rarr; Open &rarr; Edit) to be warned earlier.</div></div>');
 }
+/* one supplier card: change its supplier, or take it off the list (only that card) */
+function woGroupSup(oldK, sid) { WO.rows.forEach(function (r) { if (r.kind === WO.f && !r.hid && (r.sup || '_') === oldK) r.sup = sid; }); woRender(); }
+function woHideGroup(k) { WO.rows.forEach(function (r) { if (r.kind === WO.f && (r.sup || '_') === k) { r.hid = true; r.on = false; } }); woRender(); }
+function woShowAll() { WO.rows.forEach(function (r) { if (r.kind === WO.f && r.hid) { r.hid = false; if (!WO.only) r.on = true; } }); WO.only = ''; woRender(); }
+function woManual(sid) { var m = WO.manual[sid]; if (!m) return; deptWhatsApp(m.phone, m.text, 'bills', m.path || null); }
 function woLines(sid) {
-  return WO.rows.filter(function (r) { return r.kind === WO.f && r.sup === sid && r.on && Number(r.qty) > 0 && ITEMMAP[r.id]; })
+  return WO.rows.filter(function (r) { return r.kind === WO.f && r.sup === sid && r.on && !r.hid && Number(r.qty) > 0 && ITEMMAP[r.id]; })
     .map(function (r) { var it = ITEMMAP[r.id]; return { id: r.id, name: it.name, pack: it.pack || '', mfg: it.manufacturer || '', qty: Number(r.qty), unit: it.unit }; });
 }
 function woText(sid, L) {
@@ -113,7 +126,17 @@ async function woSend(sid) {
   woLS('po-no', n);
   var sent = woLS('sent') || {}, now = new Date().toISOString(); L.forEach(function (l) { sent[l.id] = now; }); woLS('sent', sent);
   WO.rows.forEach(function (r) { if (sent[r.id]) r.sent = sent[r.id]; });
-  deptWhatsApp(sp.phone || '', woText(sid, L) + (path ? '\n\nPurchase order (PDF):' : ''), 'bills', path || null);
+  /* send it straight to the supplier's WhatsApp (dept-whatsapp -> Make -> template wh_purchase_order) */
+  var text = woText(sid, L) + (path ? '\n\nPurchase order (PDF):' : ''), d = null;
+  if (path && dMobile(sp.phone)) {
+    try { var r = await _supa.functions.invoke('dept-whatsapp', { body: { mode: 'wholesale_po', clinic_id: _clinicId, supplier_id: sid, po_no: no, path: path, count: L.length } }); d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} } } catch (e) { d = null; }
+  }
+  if (d && d.sent) {
+    delete WO.manual[sid]; woRender();
+    woOk('Order ' + no + ' sent', esc(sp.name) + ' &middot; ' + L.length + ' product' + (L.length === 1 ? '' : 's') + '<br>Sent on WhatsApp to ' + esc(dMobile(sp.phone)), 2600);
+    return;
+  }
+  var why = !dMobile(sp.phone) ? 'this supplier has no valid mobile number in Parties' : !path ? 'the PDF could not be made' : ({ not_configured: 'automatic sending is not switched on yet', webhook_error: 'the WhatsApp service did not answer', not_allowed: 'only the owner or inventory staff can order' }[d && d.reason] || 'it could not be sent automatically');
+  WO.manual[sid] = { phone: sp.phone || '', text: text, path: path, msg: 'Order ' + no + ' was made but not sent automatically (' + why + '). Tap "Send it myself on WhatsApp".' };
   woRender();
-  setTimeout(function () { woOk('Order ' + no + ' ready', esc(sp.name) + ' &middot; ' + L.length + ' product' + (L.length === 1 ? '' : 's') + '<br>Check it and press send in WhatsApp.', 2400); }, 500);
 }
