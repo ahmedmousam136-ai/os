@@ -291,6 +291,7 @@
       </div>
       <div id="m-pay" style="display:none">
         <div class="seg" id="mp-dir" style="margin-bottom:12px"><button data-d="in" class="on" onclick="payDir('in')">&#11015; Money received</button><button data-d="out" onclick="payDir('out')">&#11014; Money paid</button></div>
+        <div style="max-width:760px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label class="btn btn-g" style="cursor:pointer;margin:0">&#128247; Photo of receipt / UPI / cheque<input type="file" accept="image/*" capture="environment" style="display:none" onchange="payScan(this)"/></label><span class="tiny" id="mp-scan-st">Take a photo: the party, amount, date, mode and UTR / cheque no. fill in by themselves.</span><input type="hidden" id="mp-doc"/></div>
         <div class="grid2" style="max-width:760px">
           <div style="grid-column:1/-1;position:relative"><label class="flbl" id="mp-plbl">Received from *</label><div id="pp-pay"></div></div>
           <div><label class="flbl">Amount &#8377; *</label><input class="finput" id="mp-amt" type="number" min="0" step="0.01"/></div>
@@ -415,7 +416,7 @@
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=5"></script>
-<script src="wholesale.js?v=29"></script>
+<script src="wholesale.js?v=30"></script>
 <script src="wholesale-order.js?v=3"></script>
 </body>
 </html>
