@@ -829,6 +829,62 @@ function deptWords(n) {
     var o = overlay('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0">Subscription &amp; plans</h3><button type="button" class="ap-upi" style="font-size:20px;text-decoration:none" aria-label="Close" onclick="auraPlansClose()">&times;</button></div><div id="ap-dept-root" style="text-align:left"></div>');
     o.querySelector('.ap-box').style.maxWidth = '760px';
     window.auraPlansMount(document.getElementById('ap-dept-root'), { clinic: c, all: true });
+    /* the tax invoices AuraScale issued to this business (one for every payment) */
+    var box = document.createElement('div'); box.style.marginTop = '16px';
+    box.innerHTML = '<h4 style="margin:0 0 8px">Tax invoices from AuraScale</h4><div class="ap-note">Loading&hellip;</div>';
+    var root = document.getElementById('ap-dept-root'); if (root && root.parentNode) root.parentNode.appendChild(box);
+    try {
+      var iv = await _supa.from('aurascale_invoices').select('*').eq('clinic_id', _clinicId).order('invoice_date', { ascending: false });
+      var rows = iv.data || []; window._deptAuraInv = rows;
+      box.innerHTML = '<h4 style="margin:0 0 8px">Tax invoices from AuraScale</h4>' + (iv.error ? '<div class="ap-note">Invoices are not available yet.</div>' : !rows.length ? '<div class="ap-note">No invoices yet. A GST tax invoice is made each time you pay.</div>'
+        : rows.map(function (v, i) { return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border,#e5e7eb);border-radius:10px;margin-bottom:6px"><div><b style="font-size:13px">' + h(v.invoice_no) + '</b><div class="ap-note" style="margin:0">' + h(new Date(v.invoice_date).toLocaleDateString('en-GB')) + ' &middot; &#8377;' + Number(v.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }) + '</div></div><button type="button" class="btn btn-sm" onclick="auraInvOpen(window._deptAuraInv[' + i + '])">View / PDF</button></div>'; }).join(''));
+    } catch (e) { box.innerHTML = ''; }
   };
   window.AURA_PLANS_LIST = PLANS;
+})();
+/* AuraScale's own GST tax invoice: view / print / save as PDF (same layout as the nursing-home owner portal) */
+(function () {
+  if (window.auraInvOpen) return;
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var auraMoney = function (n) { return Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var AURA_QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  var AURA_STATES = [['01','Jammu and Kashmir'],['02','Himachal Pradesh'],['03','Punjab'],['04','Chandigarh'],['05','Uttarakhand'],['06','Haryana'],['07','Delhi'],['08','Rajasthan'],['09','Uttar Pradesh'],['10','Bihar'],['11','Sikkim'],['12','Arunachal Pradesh'],['13','Nagaland'],['14','Manipur'],['15','Mizoram'],['16','Tripura'],['17','Meghalaya'],['18','Assam'],['19','West Bengal'],['20','Jharkhand'],['21','Odisha'],['22','Chhattisgarh'],['23','Madhya Pradesh'],['24','Gujarat'],['26','Dadra and Nagar Haveli and Daman and Diu'],['27','Maharashtra'],['29','Karnataka'],['30','Goa'],['31','Lakshadweep'],['32','Kerala'],['33','Tamil Nadu'],['34','Puducherry'],['35','Andaman and Nicobar Islands'],['36','Telangana'],['37','Andhra Pradesh'],['38','Ladakh']];
+  function auraStateName(code) { for (var i = 0; i < AURA_STATES.length; i++) if (AURA_STATES[i][0] === code) return AURA_STATES[i][1]; return ''; }
+  var auraDate = function (d) { if (!d) return ''; var x = new Date(d); return isNaN(x) ? String(d) : x.toLocaleDateString('en-GB'); };
+function auraInvoiceHtml(v) {
+  var line = '<div class="ln"></div>';
+  var row = function (a, b, bold) { return '<div class="row' + (bold ? ' b' : '') + '"><span>' + a + '</span><span>' + b + '</span></div>'; };
+  var period = (v.period_from && v.period_to) ? '<div class="small">Period: ' + esc(auraDate(v.period_from)) + ' to ' + esc(auraDate(v.period_to)) + '</div>' : '';
+  var tax = v.igst > 0 ? row('IGST 18%', auraMoney(v.igst)) : row('CGST 9%', auraMoney(v.cgst)) + row('SGST 9%', auraMoney(v.sgst));
+  var verify = 'AuraScale tax invoice ' + v.invoice_no + ' | GSTIN ' + v.supplier_gstin + ' | ' + auraDate(v.invoice_date) + ' | Rs ' + Number(v.total).toFixed(2) + ' | ' + v.status.toUpperCase();
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + esc(v.invoice_no) + '</title>'
+    + '<style>body{margin:0;background:#eee;font-family:"Courier New",monospace;color:#111}.rc{width:320px;margin:16px auto;background:#fff;padding:18px 16px;box-shadow:0 1px 4px rgba(0,0,0,.15)}'
+    + '.c{text-align:center}.h{font-weight:700;font-size:15px}.small{font-size:11.5px;line-height:1.45}.ln{border-top:1px dashed #555;margin:8px 0}'
+    + '.row{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;line-height:1.6}.b{font-weight:700;font-size:14px}.paid{display:inline-block;border:2px solid #0b7a52;color:#0b7a52;font-weight:700;padding:2px 10px;margin:4px 0}'
+    + '#qr{display:flex;justify-content:center;margin:8px 0}.bar{width:320px;margin:0 auto 16px;display:flex;gap:8px}.bar button{flex:1;padding:10px;font:600 13px sans-serif;border:0;border-radius:8px;background:#0b4f3a;color:#fff;cursor:pointer}'
+    + '@media print{body{background:#fff}.rc{box-shadow:none;margin:0 auto}.bar{display:none}}</style></head><body>'
+    + '<div class="rc"><div class="c h">TAX INVOICE</div>' + line
+    + '<div class="c"><b>' + esc(v.supplier_trade) + '</b></div><div class="c small">' + esc(v.supplier_name) + ' (Proprietor)<br>' + esc(v.supplier_address) + '<br>GSTIN: ' + esc(v.supplier_gstin) + '<br>State: ' + esc(v.supplier_state) + '</div>'
+    + '<div class="c"><span class="paid">' + (v.status === 'paid' ? 'PAID' : esc(v.status.toUpperCase())) + '</span></div>' + line
+    + row('Invoice No:', esc(v.invoice_no)) + row('Date:', esc(auraDate(v.invoice_date))) + line
+    + '<div class="small"><b>Billed to:</b><br>' + esc(v.buyer_name) + (v.buyer_address ? '<br>' + esc(v.buyer_address) : '') + (v.buyer_gstin ? '<br>GSTIN: ' + esc(v.buyer_gstin) : '<br>GSTIN: Unregistered')
+    + '<br>State: ' + esc(auraStateName(v.buyer_state_code)) + ' (' + esc(v.buyer_state_code) + ')<br>Place of supply: ' + esc(auraStateName(v.buyer_state_code)) + '</div>' + line
+    + '<div class="small"><b>' + esc(v.description) + '</b><br>SAC: ' + esc(v.sac) + '</div>' + period
+    + row('Taxable value', auraMoney(v.taxable)) + tax + line
+    + row('TOTAL Rs', auraMoney(v.total), true) + line
+    + row('Paid by', esc(v.payment_method || '-')) + (v.payment_ref ? row('Ref', esc(v.payment_ref)) : '') + row('Paid on', esc(auraDate(v.paid_at)))
+    + '<div class="small">Tax is not payable on reverse charge basis.</div>' + line
+    + '<div id="qr"></div><div class="c small">Scan to verify this invoice</div>' + line
+    + '<div class="c small">Computer-generated invoice. No signature required.<br>Thank you for choosing AuraScale.<br>ceo@aurascale.in &middot; +91 80174 65987</div></div>'
+    + '<div class="bar"><button onclick="window.print()">Download PDF / Print</button><button onclick="window.close()" style="background:#666">Close</button></div>'
+    + '<script src="' + AURA_QR_LIB + '"><\/script><script>try{new QRCode(document.getElementById("qr"),{text:' + JSON.stringify(verify) + ',width:120,height:120});}catch(e){}<\/script>'
+    + '</body></html>';
+}
+
+  window.auraInvOpen = function (v) {
+    if (!v) return;
+    var w = window.open('', '_blank');
+    if (!w) { alert('Please allow pop-ups for this site to view the invoice.'); return; }
+    w.document.open(); w.document.write(auraInvoiceHtml(v)); w.document.close();
+  };
 })();
