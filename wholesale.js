@@ -911,11 +911,14 @@ function scanCheck() {
     if (!(num(x.mrp) > 0)) { msg.push('MRP'); bad(i, 'mrp'); }
     if (num(x.mrp) > 0 && num(x.rate) > 0 && x.gst !== '' && r2(num(x.rate) * (1 - num(x.disc) / 100) * (1 + Number(x.gst) / 100)) > num(x.mrp)) { msg.push('rate + GST is above MRP (per box vs per strip?)'); bad(i, 'rate'); bad(i, 'mrp'); }
     /* the bill prints each line's amount: qty x rate must give it (before or after GST), else a number was misread */
-    if (x.amt > 0 && num(x.qty) > 0 && num(x.rate) > 0) {
+    var amtBad = false;
+    if (x.amt > 0 && num(x.qty) > 0 && num(x.rate) > 0 && !x.amtOk) {
       var base = num(x.qty) * num(x.rate) * (1 - num(x.disc) / 100), gst1 = base * (1 + (Number(x.gst) || 0) / 100);
-      if (Math.abs(base - x.amt) > Math.max(2, x.amt * 0.01) && Math.abs(gst1 - x.amt) > Math.max(2, x.amt * 0.01)) { msg.push('qty x rate = ' + r2(base) + ' but the bill shows amount ' + x.amt + ': check qty / rate'); bad(i, 'qty'); bad(i, 'rate'); }
+      if (Math.abs(base - x.amt) > Math.max(2, x.amt * 0.01) && Math.abs(gst1 - x.amt) > Math.max(2, x.amt * 0.01)) { msg.push('qty x rate = ' + r2(base) + ' but the bill shows amount ' + x.amt + ': check qty / rate'); bad(i, 'qty'); bad(i, 'rate'); amtBad = true; }
     }
     if (e) e.textContent = msg.length ? 'Missing / wrong: ' + msg.join(', ') : '';
+    /* the paper bill itself can print a wrong line amount: once qty and rate are checked, the user can say so */
+    if (e && amtBad) { var ok = document.createElement('button'); ok.type = 'button'; ok.className = 'btn btn-sm'; ok.style.cssText = 'margin-top:4px;display:block'; ok.textContent = '\u2713 Qty & rate are right (amount misprinted on the bill)'; ok.onclick = function () { SCAN[i].amtOk = true; scanCheck(); }; e.appendChild(ok); }
     if (msg.length) probs.push('line ' + (i + 1) + ' (' + msg.join(', ') + ')');
     var tx = r2(num(x.qty) * num(x.rate) * (1 - num(x.disc) / 100)), t = tax(tx, Number(x.gst) || 0, inter); tot += tx + t.c + t.s + t.i;
   });
