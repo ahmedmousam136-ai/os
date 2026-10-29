@@ -1118,7 +1118,7 @@ function payDir(d) { PAYDIR = d; segOn('mp-dir', 'data-d', d); dEl('mp-plbl').te
 async function paySave() {
   dShowErr('mp-err', ''); dEl('mp-done').innerHTML = '';
   var p = PICK.pay.party; if (!p) { dShowErr('mp-err', 'Choose the party.'); return; }
-  var body = { party_id: p.id, direction: PAYDIR, amount: num(dEl('mp-amt').value), mode: dEl('mp-mode').value, ref_no: dEl('mp-ref').value.trim(), pay_date: dEl('mp-date').value || today(), note: dEl('mp-note').value.trim() };
+  var body = { party_id: p.id, direction: PAYDIR, amount: num(dEl('mp-amt').value), mode: dEl('mp-mode').value, ref_no: dEl('mp-ref').value.trim(), pay_date: dEl('mp-date').value || today(), note: dEl('mp-note').value.trim(), doc_path: (dEl('mp-doc') && dEl('mp-doc').value) || null };
   dEl('mp-save').disabled = true;
   var r = await _supa.rpc('wh_payment', { p_clinic: _clinicId, p: body });
   dEl('mp-save').disabled = false;
@@ -1126,7 +1126,34 @@ async function paySave() {
   var x = r.data, bal = Number(x.balance);
   dEl('mp-done').innerHTML = '<div class="card"><b>' + esc(x.no) + '</b> saved: ' + dMoney(x.amount) + (PAYDIR === 'in' ? ' received from ' : ' paid to ') + esc(p.name) + '.<br>Balance now: ' + (bal > 0 ? esc(p.name) + ' owes ' + dMoney0(bal) : bal < 0 ? 'you owe ' + dMoney0(-bal) : 'nothing due')
     + (PAYDIR === 'in' && p.phone ? '<div style="margin-top:8px"><button class="btn btn-sm btn-g" onclick="receiptWa(' + A(p.id) + ',' + A(x.no) + ',' + Number(x.amount) + ',' + bal + ')">&#128242; Send receipt on WhatsApp</button></div>' : '') + '</div>';
-  ['mp-amt', 'mp-ref', 'mp-note'].forEach(function (k) { dEl(k).value = ''; }); ppSet('pay', null); loadBalances();
+  ['mp-amt', 'mp-ref', 'mp-note', 'mp-doc'].forEach(function (k) { if (dEl(k)) dEl(k).value = ''; }); if (dEl('mp-scan-st')) dEl('mp-scan-st').textContent = ''; ppSet('pay', null); loadBalances();
+}
+/* photo of a money receipt / UPI screenshot / bank message / cheque -> fills the Receive / pay form */
+async function payScan(inp) {
+  var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+  var st = dEl('mp-scan-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the photo&hellip; about 15-30 seconds.';
+  try {
+    var img = await scanResize(f);
+    try { var pth = _clinicId + '/wholesale/receipts/' + Date.now() + '.jpg', up = await _supa.storage.from('bills').upload(pth, img.blob, { contentType: 'image/jpeg', upsert: true }); if (!up.error) dEl('mp-doc').value = pth; } catch (e) {}
+    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale', kind: 'receipt' } });
+    var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok || !d.receipt) { st.textContent = '\u26A0 ' + ({ nothing_read: 'The amount could not be read. Take a clearer photo, or type the details.', daily_limit: 'Today\'s photo limit is used up. Type the details.', not_allowed: 'Only the owner or accounts staff can do this.' }[d && d.reason] || ((d && d.ok) ? 'Please update the bill-scan function on the server.' : 'Could not read the photo. Type the details.')) + (dEl('mp-doc').value ? ' The photo is kept with the payment.' : ''); return; }
+    var rc = d.receipt, n = 0, mark = function (id) { var e = dEl(id); if (e) e.style.borderColor = 'var(--green)'; n++; };
+    if (rc.amount > 0) { dEl('mp-amt').value = rc.amount; mark('mp-amt'); }
+    var dt = rc.date ? scanDate(rc.date) : ''; if (dt && dt <= today()) { dEl('mp-date').value = dt; mark('mp-date'); }
+    if (rc.mode) { dEl('mp-mode').value = rc.mode; dEl('mp-mode').onchange && dEl('mp-mode').onchange(); mark('mp-mode'); }
+    if (rc.ref_no) { dEl('mp-ref').value = rc.ref_no; mark('mp-ref'); }
+    if (rc.note || rc.bank) { dEl('mp-note').value = [rc.note, rc.bank].filter(Boolean).join(' \u00b7 ').slice(0, 200); mark('mp-note'); }
+    /* the party: GSTIN first, then mobile, then the name of the other side */
+    var other = PAYDIR === 'in' ? rc.payer : rc.payee, pool = PARTIES.filter(function (p) { return p.is_active; }), pick = null;
+    if (rc.gstin) pick = pool.filter(function (p) { return (p.gstin || '').toUpperCase() === rc.gstin; })[0] || null;
+    if (!pick && rc.phone) pick = pool.filter(function (p) { return dMobile(p.phone) === rc.phone; })[0] || null;
+    if (!pick && other && typeof mBest === 'function') { var c = mBest(other, pool, function (p) { return p.name; }, 1); if (c.length && c[0].s >= 0.6) pick = c[0].x; }
+    var note = '';
+    if (pick && !PICK.pay.party) { ppPick('pay', pick.id); n++; note = ' Party: <b>' + esc(pick.name) + '</b> (check it).'; }
+    else if (!PICK.pay.party && other) note = ' Name on the photo: <b>' + esc(other) + '</b>: choose the party above.';
+    st.innerHTML = '<b style="color:var(--green)">&#10003; ' + n + ' boxes filled from the photo (green).</b>' + note + ' Check, then Save. The photo is kept with the payment.';
+  } catch (e) { st.textContent = '\u26A0 ' + dErr(e); }
 }
 function receiptWa(pid, no, amt, bal) {
   var p = PARTYMAP[pid]; var t = (SET.name || DEPT.clinic.name || '') + '\nReceipt ' + no + '\nReceived with thanks ' + dMoney(amt) + ' from ' + p.name + '.\nBalance due: ' + dMoney0(Math.max(bal, 0));
@@ -1141,7 +1168,7 @@ async function loadPays() {
   dEl('ml-stats').innerHTML = '<div><span class="tiny">Received</span><b>' + dMoney0(s('in')) + '</b><span class="tiny">cash ' + dMoney0(s('in', 'cash')) + '</span></div><div><span class="tiny">Paid</span><b>' + dMoney0(s('out')) + '</b><span class="tiny">cash ' + dMoney0(s('out', 'cash')) + '</span></div>';
   dEl('ml-b').innerHTML = PAYS.length ? PAYS.map(function (x) {
     var p = PARTYMAP[x.party_id] || {};
-    return '<tr' + (x.status === 'cancelled' ? ' style="opacity:.55"' : '') + '><td>' + dDate(x.pay_date) + '</td><td><b>' + esc(x.no) + '</b>' + (x.status === 'cancelled' ? '<div><span class="tag t-r">Cancelled</span></div>' : '') + '</td><td>' + esc(p.name || '') + (x.note ? '<div class="tiny">' + esc(x.note) + '</div>' : '') + '</td><td class="tiny">' + esc(payTxt(x.mode)) + (x.ref_no ? ' &middot; ' + esc(x.ref_no) : '') + '</td>'
+    return '<tr' + (x.status === 'cancelled' ? ' style="opacity:.55"' : '') + '><td>' + dDate(x.pay_date) + '</td><td><b>' + esc(x.no) + '</b>' + (x.status === 'cancelled' ? '<div><span class="tag t-r">Cancelled</span></div>' : '') + '</td><td>' + esc(p.name || '') + (x.note ? '<div class="tiny">' + esc(x.note) + '</div>' : '') + '</td><td class="tiny">' + esc(payTxt(x.mode)) + (x.ref_no ? ' &middot; ' + esc(x.ref_no) : '') + (x.doc_path ? '<div><button class="btn btn-sm" style="margin-top:4px" onclick="viewBillPhoto(' + A(x.doc_path) + ')">&#128247; Receipt photo</button></div>' : '') + '</td>'
       + '<td class="r">' + (x.direction === 'in' ? dMoney(x.amount) : '') + '</td><td class="r">' + (x.direction === 'out' ? dMoney(x.amount) : '') + '</td><td class="r">' + (CAN.owner && x.status === 'posted' ? '<button class="btn btn-sm btn-r" onclick="payCancel(' + A(x.id) + ')">Cancel</button>' : '') + '</td></tr>';
   }).join('') : '<tr><td colspan="7" class="lines-empty">No payments in this period.</td></tr>';
 }
