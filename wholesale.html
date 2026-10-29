@@ -110,6 +110,7 @@
             </div>
             <div style="margin-top:10px"><label class="flbl">Note on invoice (optional)</label><input class="finput" id="s-note" maxlength="200" placeholder="e.g. Order by phone, delivered by Raju"/></div>
             <details class="card" id="s-trans" style="margin-top:12px;padding:10px 12px"><summary style="cursor:pointer;font-weight:700;font-size:13px">&#128666; Delivery &amp; transport (optional)</summary>
+              <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="btn btn-sm btn-g" style="cursor:pointer;margin:0">&#128247; Photo of L.R. / e-way bill<input type="file" accept="image/*" capture="environment" style="display:none" onchange="trScan(this,'tr-','sh-')"/></label><span class="tiny" id="tr-scan-st">Take a photo: transporter, G.R., cases, weight, vehicle, e-way bill and ship-to are filled in by themselves.</span></div>
               <div style="margin-top:10px"><label style="display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600"><input type="checkbox" id="s-shipon" onchange="dEl('s-shipbox').style.display=this.checked?'block':'none'" style="width:17px;height:17px;appearance:auto"/> Deliver to a different shop than the one billed</label></div>
               <div id="s-shipbox" style="display:none;margin-top:8px">
                 <div style="position:relative"><label class="flbl">Shipped to (party from your list)</label><div id="pp-ship"></div></div>
@@ -127,7 +128,7 @@
                 <div><label class="flbl">Order no.</label><input class="finput" id="tr-order_no"/></div>
                 <div><label class="flbl">Order date</label><input class="finput" id="tr-order_date" type="date"/></div>
                 <div><label class="flbl">E-way bill no. (12 digits)</label><input class="finput" id="tr-eway_no" inputmode="numeric" maxlength="14"/></div>
-                <div><label class="flbl">E-way bill date</label><input class="finput" id="tr-eway_date" type="date"/></div>
+                <div><label class="flbl">E-way bill date</label><input class="finput" id="tr-eway_date" type="date"/></div><input type="hidden" id="tr-photo"/>
               </div>
               <p class="tiny" style="margin-top:6px">You can also add these after saving (e.g. when the e-way bill is made later): open the invoice &rarr; Transport / e-way bill.</p>
             </details>
@@ -414,7 +415,7 @@
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=5"></script>
-<script src="wholesale.js?v=23"></script>
+<script src="wholesale.js?v=27"></script>
 <script src="wholesale-order.js?v=1"></script>
 </body>
 </html>
