@@ -614,16 +614,17 @@ function buyAddLine() {
   dShowErr('b-line-err', '');
   if (!BITEM || !BITEM.name) { dShowErr('b-line-err', 'Choose the item (or "New item").'); return; }
   var l = { item_id: BITEM.item_id, name: BITEM.name, batch: dEl('b-batch').value.trim().toUpperCase(), expiry: dEl('b-exp').value, qty: num(dEl('b-qty').value), free: num(dEl('b-free').value),
-    rate: num(dEl('b-rate').value), disc: num(dEl('b-disc').value), gst: Number(dEl('b-gst').value), mrp: num(dEl('b-mrp').value), ptr: dEl('b-ptr').value === '' ? null : num(dEl('b-ptr').value) };
+    rate: num(dEl('b-rate').value), sch: num(dEl('b-sch').value), td: num(dEl('b-td').value), cd: num(dEl('b-cd').value), disc: discAll(dEl('b-sch').value, dEl('b-td').value, dEl('b-cd').value), gst: Number(dEl('b-gst').value), mrp: num(dEl('b-mrp').value), ptr: dEl('b-ptr').value === '' ? null : num(dEl('b-ptr').value) };
   if (!l.item_id) l.item = { name: l.name, composition: dEl('bn-comp').value.trim(), hsn: dEl('bn-hsn').value.trim(), gst_rate: l.gst, unit: dEl('bn-unit').value, pack: dEl('bn-pack').value.trim(), manufacturer: dEl('bn-mfg').value.trim() };
   if (!l.batch) { dShowErr('b-line-err', 'Enter the batch number.'); return; }
   if (!l.expiry) { dShowErr('b-line-err', 'Enter the expiry month.'); return; }
   if (!(l.qty > 0)) { dShowErr('b-line-err', 'Enter the quantity.'); return; }
   if (!(l.rate > 0)) { dShowErr('b-line-err', 'Enter the purchase rate (before GST).'); return; }
+  if ([l.sch, l.td, l.cd].some(function (v) { return v < 0 || v >= 100; })) { dShowErr('b-line-err', 'SCH, TD and CD % must be between 0 and 99.'); return; }
   if (!(l.mrp > 0)) { dShowErr('b-line-err', 'Enter the MRP of one unit.'); return; }
   if (l.ptr !== null && r2(l.ptr * (1 + l.gst / 100)) > l.mrp) { dShowErr('b-line-err', 'Your selling rate + GST is above the MRP.'); return; }
   PLINES.push(l); BITEM = null;
-  ['b-q', 'b-batch', 'b-exp', 'b-qty', 'b-rate', 'b-mrp', 'b-ptr', 'bn-comp', 'bn-pack', 'bn-mfg'].forEach(function (x) { dEl(x).value = ''; }); dEl('b-free').value = 0; dEl('b-disc').value = 0; dEl('bn-hsn').value = '3004';
+  ['b-q', 'b-batch', 'b-exp', 'b-qty', 'b-rate', 'b-mrp', 'b-ptr', 'bn-comp', 'bn-pack', 'bn-mfg'].forEach(function (x) { dEl(x).value = ''; }); dEl('b-free').value = 0; dEl('b-sch').value = 0; dEl('b-td').value = 0; dEl('b-cd').value = 0; dEl('bn-hsn').value = '3004';
   dEl('b-newitem').style.display = 'none'; dEl('b-picked').textContent = '';
   buyRender(); dEl('b-q').focus();
 }
@@ -632,7 +633,7 @@ function buyRender() {
   var p = PICK.buy && PICK.buy.party, inter = isInter(p), T = { tx: 0, c: 0, s: 0, i: 0 };
   dEl('b-lines').innerHTML = PLINES.length ? PLINES.map(function (l, i) {
     var tx = r2(l.qty * l.rate * (1 - l.disc / 100)), t = tax(tx, l.gst, inter); T.tx += tx; T.c += t.c; T.s += t.s; T.i += t.i;
-    return '<tr><td><b>' + esc(l.name) + '</b>' + (l.item_id ? '' : ' <span class="tag t-b">new</span>') + '</td><td>' + esc(l.batch) + '<div class="tiny">' + esc(l.expiry) + '</div></td><td class="r">' + l.qty + (l.free ? ' + ' + l.free : '') + (function () { var bf = (l.item_id ? stockTotal(ITEMMAP[l.item_id]) : 0) + PLINES.slice(0, i).filter(function (o) { return l.item_id ? o.item_id === l.item_id : !o.item_id && String(o.name).toLowerCase() === String(l.name).toLowerCase(); }).reduce(function (a, o) { return a + num(o.qty) + num(o.free); }, 0); return stkTxt(bf, bf + num(l.qty) + num(l.free)); })() + '</td><td class="r">' + dMoney(l.rate) + '</td><td class="r">' + (l.disc ? l.disc + '%' : '-') + '</td><td class="r">' + l.gst + '%</td><td class="r">' + dMoney(l.mrp) + '</td><td class="r"><b>' + dMoney(tx + t.c + t.s + t.i) + '</b></td><td class="r"><button class="btn btn-sm btn-r" onclick="buyDel(' + i + ')">&times;</button></td></tr>';
+    return '<tr><td><b>' + esc(l.name) + '</b>' + (l.item_id ? '' : ' <span class="tag t-b">new</span>') + '</td><td>' + esc(l.batch) + '<div class="tiny">' + esc(l.expiry) + '</div></td><td class="r">' + l.qty + (l.free ? ' + ' + l.free : '') + (function () { var bf = (l.item_id ? stockTotal(ITEMMAP[l.item_id]) : 0) + PLINES.slice(0, i).filter(function (o) { return l.item_id ? o.item_id === l.item_id : !o.item_id && String(o.name).toLowerCase() === String(l.name).toLowerCase(); }).reduce(function (a, o) { return a + num(o.qty) + num(o.free); }, 0); return stkTxt(bf, bf + num(l.qty) + num(l.free)); })() + '</td><td class="r">' + dMoney(l.rate) + '</td><td class="r">' + discTxt(l) + '</td><td class="r">' + l.gst + '%</td><td class="r">' + dMoney(l.mrp) + '</td><td class="r"><b>' + dMoney(tx + t.c + t.s + t.i) + '</b></td><td class="r"><button class="btn btn-sm btn-r" onclick="buyDel(' + i + ')">&times;</button></td></tr>';
   }).join('') : '<tr><td colspan="9" class="lines-empty">No lines yet. Add them above, or scan the bill.</td></tr>';
   var g = r2(T.tx + T.c + T.s + T.i), tot = Math.round(g);
   var row = function (l, v, cls) { return '<div class="sum-row' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><span>' + v + '</span></div>'; };
@@ -823,6 +824,9 @@ function scanExp(v) {   /* MM/YYYY, MM/YY, MM-YY -> YYYY-MM */
   return yy + '-' + ('0' + mm).slice(-2);
 }
 var SCAN_D = null, SCAN_SUP = '';
+/* SCH % (scheme), TD % (trade) and CD % (cash) discounts come one after the other: 50, 8 and 2 -> 54.92 % in all */
+function discAll(sch, td, cd) { var k = (1 - num(sch) / 100) * (1 - num(td) / 100) * (1 - num(cd) / 100); return Math.round((1 - k) * 1000000) / 10000; }
+function discTxt(l) { var a = []; if (num(l.sch)) a.push('SCH ' + num(l.sch)); if (num(l.td)) a.push('TD ' + num(l.td)); if (num(l.cd)) a.push('CD ' + num(l.cd)); return a.length > 1 ? a.join(' + ') + ' = ' + num(l.disc) + '%' : num(l.disc) ? num(l.disc) + '%' : '-'; }
 function scanReview(d) {
   SCAN_D = d;
   var m = PARTIES.filter(function (p) { return (d.supplier_gstin && p.gstin === String(d.supplier_gstin).toUpperCase()) || (d.supplier && p.name.toLowerCase() === String(d.supplier).toLowerCase()); })[0];
@@ -832,7 +836,7 @@ function scanReview(d) {
     var best = ITEMS.filter(function (it) { return it.name.toLowerCase() === n; })[0] || ITEMS.filter(function (it) { return first.length >= 3 && it.name.toLowerCase().indexOf(first) === 0; })[0];
     var g = (l.gst !== null && l.gst !== undefined && l.gst !== '' && [0, 5, 12, 18, 28, 40].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : '';   /* not read -> must be chosen, never assumed 0 */
     return { inc: true, read: l.name || '', orig: l.name || '', match: best ? best.id : '', batch: (l.batch || '').toUpperCase(), expiry: scanExp(l.expiry), qty: l.qty == null ? '' : l.qty, free: l.free || 0,
-      rate: l.rate == null ? '' : l.rate, disc: l.disc || 0, gst: g, mrp: l.mrp == null ? (best ? lastMrp(best.id) : '') : l.mrp, mrpAuto: l.mrp == null && !!(best && lastMrp(best.id)), hsn: l.hsn || '', mfg: l.mfg || '', pack: l.pack || '', amt: l.amount == null ? null : Number(l.amount) };
+      rate: l.rate == null ? '' : l.rate, sch: l.sch || 0, td: (l.sch == null && l.td == null && l.cd == null) ? (l.disc || 0) : (l.td || 0), cd: l.cd || 0, disc: l.disc || 0, gst: g, mrp: l.mrp == null ? (best ? lastMrp(best.id) : '') : l.mrp, mrpAuto: l.mrp == null && !!(best && lastMrp(best.id)), hsn: l.hsn || '', mfg: l.mfg || '', pack: l.pack || '', amt: l.amount == null ? null : Number(l.amount) };
   });
   dEl('scan-body').innerHTML = (d._failed ? '<div class="note" style="background:var(--red-bg);border-color:var(--red-border);color:var(--red)">' + esc(d._failed) + ' The photo is saved with the purchase. Type the details from the paper bill below.</div>' : '')
     + (d._img ? '<div style="margin-bottom:8px"><div class="tiny">The photo AI read (tap to enlarge) - check the lines below against it:</div><img src="' + d._img + '" alt="bill photo" style="max-height:150px;max-width:100%;border:1px solid var(--border,#E2E8F0);border-radius:8px;cursor:zoom-in" onclick="this.style.maxHeight=this.style.maxHeight===\'none\'?\'150px\':\'none\'"/></div>' : '')
@@ -841,7 +845,7 @@ function scanReview(d) {
     + '<div class="grid4" style="margin-bottom:10px"><div><label class="flbl">Supplier on the bill *</label><div class="muted">' + esc(d.supplier || '(not read)') + (d.supplier_gstin ? '<br>' + esc(d.supplier_gstin) : '') + '</div><div id="sc-sup"></div></div>'
     + '<div><label class="flbl">Bill no. *</label><input class="finput" id="sc-no" value="' + esc(d.invoice_no || '') + '" oninput="scanCheck()"/></div><div><label class="flbl">Bill date *</label><input class="finput" id="sc-date" type="date" value="' + esc(d.invoice_date ? scanDate(d.invoice_date) : '') + '" oninput="scanCheck()"/></div>'
     + '<div><label class="flbl">Grand total on the bill &#8377; *</label><input class="finput" id="sc-tot" type="number" step="0.01" min="0" value="' + esc(d.bill_total == null ? '' : d.bill_total) + '" oninput="scanCheck()"/></div></div>'
-    + '<div style="overflow-x:auto"><table class="dt wl" id="sc-t"><thead><tr><th></th><th>Item (match to your list, or type it)</th><th>Mfg.</th><th>Batch *</th><th>Expiry *</th><th>Qty *</th><th>Free</th><th>Rate *</th><th>Disc %</th><th>GST *</th><th>MRP *</th></tr></thead><tbody id="sc-tb"></tbody></table></div>'
+    + '<div style="overflow-x:auto"><table class="dt wl" id="sc-t"><thead><tr><th></th><th>Item (match to your list, or type it)</th><th>Mfg.</th><th>Batch *</th><th>Expiry *</th><th>Qty *</th><th>Free</th><th>Rate *</th><th title="Scheme discount">SCH %</th><th title="Trade discount">TD %</th><th title="Cash discount">CD %</th><th>GST *</th><th>MRP *</th></tr></thead><tbody id="sc-tb"></tbody></table></div>'
     + '<button class="btn btn-sm" style="margin-top:8px" onclick="scanAddLine()">&#10133; Add a line (missed or not on the photo)</button>'
     + '<p class="tiny" style="margin-top:6px">MRP and rate are per unit you sell (e.g. per strip). If the bill shows per box, divide before adding.</p>'
     + '<div id="sc-sum" style="margin-top:10px"></div>'
@@ -873,12 +877,12 @@ function scanRows() {
       + '<select class="finput" style="width:210px;padding:6px" onchange="scanMatch(' + i + ',this.value)">' + opts + '</select>'
       + '<div class="sc-new" id="sc-n' + i + '" style="margin-top:4px">' + inp(i, 'read', 210, '', 'Item name *') + '<div style="display:flex;gap:4px;margin-top:4px">' + inp(i, 'hsn', 100, '', 'HSN') + inp(i, 'pack', 104, '', 'Pack e.g. 1x10') + '</div></div>'
       + '<div class="tiny over" id="sc-e' + i + '"></div></td>'
-      + '<td>' + inp(i, 'mfg', 70) + '</td><td>' + inp(i, 'batch', 92) + '</td><td>' + inp(i, 'expiry', 130, 'm') + '</td><td>' + inp(i, 'qty', 64, 'n') + '</td><td>' + inp(i, 'free', 54, 'n') + '</td><td>' + inp(i, 'rate', 76, 'n') + '</td><td>' + inp(i, 'disc', 56, 'n') + '</td>'
+      + '<td>' + inp(i, 'mfg', 70) + '</td><td>' + inp(i, 'batch', 92) + '</td><td>' + inp(i, 'expiry', 130, 'm') + '</td><td>' + inp(i, 'qty', 64, 'n') + '</td><td>' + inp(i, 'free', 54, 'n') + '</td><td>' + inp(i, 'rate', 76, 'n') + '</td><td>' + inp(i, 'sch', 52, 'n') + '</td><td>' + inp(i, 'td', 52, 'n') + '</td><td>' + inp(i, 'cd', 52, 'n') + '<div class="tiny" id="sc-d' + i + '"></div></td>'
       + '<td><select class="finput" data-i="' + i + '" data-k="gst" style="width:70px;padding:6px" onchange="SCAN[' + i + '].gst=this.value===\'\'?\'\':Number(this.value);scanCheck()"><option value="">?</option>' + [0, 5, 12, 18, 28, 40].map(function (g) { return '<option' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td><td>' + inp(i, 'mrp', 76, 'n') + (x.mrpAuto ? '<div class="tiny" style="color:var(--amber,#B45309)">last MRP, check</div>' : '') + '</td></tr>';
   }).join('');
 }
 function scanAddLine() {
-  SCAN.push({ inc: true, manual: true, read: '', orig: '', match: '', batch: '', expiry: '', qty: '', free: 0, rate: '', disc: 0, gst: '', mrp: '', hsn: '', mfg: '', pack: '' });
+  SCAN.push({ inc: true, manual: true, read: '', orig: '', match: '', batch: '', expiry: '', qty: '', free: 0, rate: '', sch: 0, td: 0, cd: 0, disc: 0, gst: '', mrp: '', hsn: '', mfg: '', pack: '' });
   scanRows(); scanCheck();
   var x = document.querySelector('#sc-r' + (SCAN.length - 1) + ' [data-k="read"]'); if (x) x.focus();
 }
@@ -906,7 +910,9 @@ function scanCheck() {
     if (!(num(x.qty) > 0)) { msg.push('quantity'); bad(i, 'qty'); }
     if (num(x.free) < 0) { msg.push('free'); bad(i, 'free'); }
     if (!(num(x.rate) > 0)) { msg.push('rate'); bad(i, 'rate'); }
-    if (num(x.disc) < 0 || num(x.disc) > 100) { msg.push('discount'); bad(i, 'disc'); }
+    ['sch', 'td', 'cd'].forEach(function (k) { if (num(x[k]) < 0 || num(x[k]) >= 100) { msg.push(k.toUpperCase() + ' %'); bad(i, k); } });
+    x.disc = discAll(x.sch, x.td, x.cd);
+    var dd = dEl('sc-d' + i); if (dd) dd.textContent = (num(x.sch) ? 1 : 0) + (num(x.td) ? 1 : 0) + (num(x.cd) ? 1 : 0) > 1 ? 'all: ' + x.disc + '%' : '';
     if (x.gst === '' || [0, 5, 12, 18, 28, 40].indexOf(Number(x.gst)) < 0) { msg.push('GST %'); bad(i, 'gst'); }
     if (!(num(x.mrp) > 0)) { msg.push('MRP'); bad(i, 'mrp'); }
     if (num(x.mrp) > 0 && num(x.rate) > 0 && x.gst !== '' && r2(num(x.rate) * (1 - num(x.disc) / 100) * (1 + Number(x.gst) / 100)) > num(x.mrp)) { msg.push('rate + GST is above MRP (per box vs per strip?)'); bad(i, 'rate'); bad(i, 'mrp'); }
@@ -946,7 +952,7 @@ function scanUse() {
   SCAN.forEach(function (x) {
     if (!x.inc) return;
     var it = x.match ? ITEMMAP[x.match] : null;
-    var l = { item_id: it ? it.id : null, name: it ? it.name : String(x.read).trim(), batch: x.batch.trim().toUpperCase(), expiry: x.expiry, qty: num(x.qty), free: num(x.free), rate: num(x.rate), disc: num(x.disc), gst: Number(x.gst), mrp: num(x.mrp), ptr: null };
+    var l = { item_id: it ? it.id : null, name: it ? it.name : String(x.read).trim(), batch: x.batch.trim().toUpperCase(), expiry: x.expiry, qty: num(x.qty), free: num(x.free), rate: num(x.rate), sch: num(x.sch), td: num(x.td), cd: num(x.cd), disc: discAll(x.sch, x.td, x.cd), gst: Number(x.gst), mrp: num(x.mrp), ptr: null };
     if (l.mrp > 0 && l.gst >= 0) { var p0 = r2(l.mrp / (1 + l.gst / 100) * (1 - RETAIL_MARGIN / 100)); if (p0 > l.rate) l.ptr = p0; }   /* usual rate to retailers, so Sales has a rate */
     if (!it) l.item = { name: l.name, hsn: x.hsn || '3004', gst_rate: l.gst, unit: /ml|syr|syp|susp|bottle|liq/i.test(x.pack + ' ' + l.name) ? 'bottle' : /vial|inj|amp/i.test(x.pack + ' ' + l.name) ? 'vial' : 'strip', pack: String(x.pack || '').trim(), manufacturer: String(x.mfg || '').trim() };
     add.push(l);
