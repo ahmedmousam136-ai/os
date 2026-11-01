@@ -1190,7 +1190,7 @@ async function ledgerLoad() {
     + '<tr><td>' + dDate(LEDGER.from) + '</td><td><b>Opening balance</b></td><td></td><td></td><td class="r"><b>' + bt(LEDGER.opening) + '</b></td></tr>'
     + LEDGER.rows.map(function (x) { return '<tr><td>' + dDate(x.date) + '</td><td>' + esc(x.type) + ' <b>' + esc(x.no || '') + '</b>' + (x.note ? '<div class="tiny">' + esc(x.note) + '</div>' : '') + '</td><td class="r">' + (Number(x.debit) ? dMoney(x.debit) : '') + '</td><td class="r">' + (Number(x.credit) ? dMoney(x.credit) : '') + '</td><td class="r">' + bt(x.balance) + '</td></tr>'; }).join('')
     + '<tr><td></td><td><b>Closing balance</b></td><td class="r"><b>' + dMoney(LEDGER.debit) + '</b></td><td class="r"><b>' + dMoney(LEDGER.credit) + '</b></td><td class="r"><b>' + bt(LEDGER.closing) + '</b></td></tr></tbody></table></div>'
-    + '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="lg-pdf" onclick="ledgerPdf(false)">&#128196; Statement PDF</button>' + (p.phone ? '<button class="btn btn-g" onclick="ledgerPdf(true)">&#128242; Send statement on WhatsApp</button>' : '') + '</div>';
+    + '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="lg-pdf" onclick="ledgerPdf(false)">&#128196; Statement PDF</button>' + (p.phone ? '<button class="btn btn-g" id="lg-wa" onclick="ledgerPdf(true)">&#128242; Send statement on WhatsApp</button>' : '<span class="tiny" style="align-self:center">Add this party\'s mobile number in Parties to send the statement on WhatsApp.</span>') + '</div><div id="lg-wa-st"></div>';
 }
 
 /* =================================================================== PARTIES */
@@ -1428,10 +1428,29 @@ async function ledgerPdf(wa) {
     var blob = await deptMakePdf({ format: 'a4', head: head, headNext: deptPdfHeadNext('<b>' + esc(sb.name) + '</b> &middot; ' + esc(p.name), 'Statement (continued)'), colgroup: colgroup, thead: thead, rows: rows, after: after, css: PDF_CSS, foot: 'Statement of account &middot; AuraScale' });
     var path = _clinicId + '/wholesale/statements/' + p.id + '-' + LEDGER.to + '.pdf';
     await deptUpload('bills', path, blob);
-    if (wa) deptWhatsApp(p.phone, (SET.name || DEPT.clinic.name || '') + '\nStatement of account for ' + p.name + ' (' + dDate(LEDGER.from) + ' to ' + dDate(LEDGER.to) + ')\nBalance: ' + bt(LEDGER.closing) + '\nPDF:', 'bills', path);
+    LEDGER._path = path;
+    if (wa) await ledgerAutoWa(p, path);
     else deptOpenPdf('bills', path);
   } catch (e) { showToast('Could not make the PDF: ' + dErr(e)); }
   finally { if (btn) { btn.disabled = false; btn.innerHTML = '&#128196; Statement PDF'; } }
+}
+/* "Send statement on WhatsApp": goes straight to the party from the business WhatsApp number (template wh_statement) */
+async function ledgerAutoWa(p, path) {
+  var box = dEl('lg-wa-st'), wb = dEl('lg-wa'), ph = dMobile(p.phone); if (!box) return;
+  if (!ph) { box.innerHTML = '<div class="note" style="margin-top:8px">This party has no valid mobile number. Add it in Parties.</div>'; return; }
+  if (wb) wb.disabled = true;
+  box.innerHTML = '<div class="tiny" style="margin-top:8px">Sending the statement on WhatsApp to ' + esc(ph) + '&hellip;</div>';
+  var r; try { r = await _supa.functions.invoke('dept-whatsapp', { body: { mode: 'wholesale_statement', clinic_id: _clinicId, party_id: p.id, from: LEDGER.from, to: LEDGER.to, path: path } }); } catch (e) { r = { error: e }; }
+  var d = r && r.data; if (r && r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+  if (wb) wb.disabled = false;
+  if (d && d.sent) { box.innerHTML = '<div class="card" style="margin-top:8px;border-color:var(--green-border);background:var(--green-bg);color:var(--green);font-weight:700">&#10003; Statement sent on WhatsApp to ' + esc(p.name) + ' (' + esc(ph) + ')' + (d.balance ? '<div class="tiny" style="font-weight:400;margin-top:2px">Balance: ' + esc(d.balance) + '</div>' : '') + '</div>'; return; }
+  var why = { not_configured: 'automatic sending is not switched on yet', webhook_error: 'the WhatsApp service did not answer', pdf_missing: 'the PDF was not ready', no_phone: 'the mobile number is not valid', not_allowed: 'your login cannot send this statement' }[d && d.reason] || 'it could not be sent automatically';
+  box.innerHTML = '<div class="note" style="margin-top:8px">Not sent automatically (' + esc(why) + '). <button class="btn btn-sm" onclick="ledgerWaManual()">&#128242; Send it myself on WhatsApp</button></div>';
+}
+function ledgerWaManual() {
+  if (!LEDGER || !LEDGER._path) return;
+  var p = LEDGER.party, c = Number(LEDGER.closing), bt = c > 0 ? c.toFixed(2) + ' Dr' : c < 0 ? (-c).toFixed(2) + ' Cr' : '0.00';
+  deptWhatsApp(p.phone, (SET.name || DEPT.clinic.name || '') + '\nStatement of account for ' + p.name + ' (' + dDate(LEDGER.from) + ' to ' + dDate(LEDGER.to) + ')\nBalance: ' + bt + '\nPDF:', 'bills', LEDGER._path);
 }
 
 init();
