@@ -197,7 +197,7 @@ function whLangBox() {
 
 /* ---------- Help & Support guides (English / Bengali / Hindi) ---------- */
 var WH_HELP = {
-en: { title: 'How to use AuraScale Wholesale', sub: 'Short step-by-step guides', pick: 'Choose what you want to learn', wa_t: 'WhatsApp support', wa_s: 'Coming soon. WhatsApp support is in development right now.', wa_n: 'For now, please use these guides, or ask the owner of your business.', dev: 'In development',
+en: { title: 'How to use AuraScale Wholesale', sub: 'Short step-by-step guides', pick: 'Choose what you want to learn', sp_t: 'Need help? Talk to AuraScale support', sp_s: 'Our team will guide you step by step.', sp_call: 'Call support', sp_call_n: 'Normal phone call (WhatsApp calls do not reach this number)', sp_call_b: 'Call now', sp_hours: 'Monday – Friday, 10:00 AM – 6:00 PM', sp_mail: 'Email support', sp_mail_n: 'Write your problem and attach a screenshot', sp_mail_b: 'Send email', sp_tip: 'When you call, keep your business name and registered mobile number ready.',
  guides: [
   { id: 'start', ic: '🚀', n: 'First-time setup', d: 'Do this once, before your first invoice. (Owner)', steps: [
     ['Open Settings', 'Tap **Settings**. Fill your business name, address, **GSTIN** and **drug licence numbers (20B / 21B)**. These print on every invoice.'],
@@ -269,7 +269,7 @@ en: { title: 'How to use AuraScale Wholesale', sub: 'Short step-by-step guides',
     ['Accounts', 'Money received / paid, ledgers and outstanding. Can read invoices and purchases.'],
     ['Remove access', 'In **Settings → Staff**, tap **Remove access**. The person is signed out at once.']] }
  ] },
-bn: { title: 'AuraScale হোলসেল কীভাবে ব্যবহার করবেন', sub: 'ছোট ছোট ধাপে গাইড', pick: 'কী শিখতে চান বাছুন', wa_t: 'WhatsApp সহায়তা', wa_s: 'শীঘ্রই আসছে। WhatsApp সহায়তা এখন তৈরি হচ্ছে।', wa_n: 'আপাতত এই গাইডগুলো দেখুন, বা আপনার ব্যবসার মালিককে জিজ্ঞেস করুন।', dev: 'তৈরি হচ্ছে',
+bn: { title: 'AuraScale হোলসেল কীভাবে ব্যবহার করবেন', sub: 'ছোট ছোট ধাপে গাইড', pick: 'কী শিখতে চান বাছুন', sp_t: 'সাহায্য দরকার? AuraScale সাপোর্টে কথা বলুন', sp_s: 'আমাদের টিম ধাপে ধাপে বুঝিয়ে দেবে।', sp_call: 'সাপোর্টে ফোন করুন', sp_call_n: 'সাধারণ ফোন কল করুন (এই নম্বরে WhatsApp কল যায় না)', sp_call_b: 'এখনই কল করুন', sp_hours: 'সোম – শুক্র, সকাল ১০টা – সন্ধ্যা ৬টা', sp_mail: 'ইমেলে জানান', sp_mail_n: 'সমস্যাটা লিখে একটা স্ক্রিনশট দিন', sp_mail_b: 'ইমেল পাঠান', sp_tip: 'ফোন করার সময় আপনার ব্যবসার নাম আর রেজিস্টার করা মোবাইল নম্বর হাতের কাছে রাখুন।',
  guides: [
   { id: 'start', ic: '🚀', n: 'প্রথমবারের সেটআপ', d: 'প্রথম ইনভয়েসের আগে একবার করুন। (মালিক)', steps: [
     ['সেটিংস খুলুন', '**সেটিংস** চাপুন। ব্যবসার নাম, ঠিকানা, **GSTIN** আর **ড্রাগ লাইসেন্স নং (20B / 21B)** ভরুন। এগুলো প্রতিটি ইনভয়েসে ছাপা হবে।'],
@@ -341,7 +341,7 @@ bn: { title: 'AuraScale হোলসেল কীভাবে ব্যবহা
     ['Accounts', 'টাকা নেওয়া / দেওয়া, লেজার আর বকেয়া। ইনভয়েস আর কেনা পড়তে পারেন।'],
     ['অ্যাক্সেস সরানো', '**সেটিংস → কর্মী**-তে **অ্যাক্সেস সরান** চাপুন। সেই ব্যক্তি সঙ্গে সঙ্গে লগ আউট হয়ে যান।']] }
  ] },
-hi: { title: 'AuraScale होलसेल कैसे इस्तेमाल करें', sub: 'छोटे-छोटे स्टेप वाली गाइड', pick: 'क्या सीखना है चुनें', wa_t: 'WhatsApp सहायता', wa_s: 'जल्द आ रहा है। WhatsApp सहायता अभी बन रही है।', wa_n: 'अभी के लिए ये गाइड देखें, या अपने व्यापार के मालिक से पूछें।', dev: 'बन रहा है',
+hi: { title: 'AuraScale होलसेल कैसे इस्तेमाल करें', sub: 'छोटे-छोटे स्टेप वाली गाइड', pick: 'क्या सीखना है चुनें', sp_t: 'मदद चाहिए? AuraScale सपोर्ट से बात करें', sp_s: 'हमारी टीम स्टेप-बाय-स्टेप समझाएगी।', sp_call: 'सपोर्ट को कॉल करें', sp_call_n: 'सामान्य फ़ोन कॉल करें (इस नंबर पर WhatsApp कॉल नहीं जाती)', sp_call_b: 'अभी कॉल करें', sp_hours: 'सोम – शुक्र, सुबह 10 बजे – शाम 6 बजे', sp_mail: 'ईमेल से बताएँ', sp_mail_n: 'समस्या लिखें और एक स्क्रीनशॉट जोड़ें', sp_mail_b: 'ईमेल भेजें', sp_tip: 'कॉल करते समय अपने व्यापार का नाम और रजिस्टर्ड मोबाइल नंबर पास रखें।',
  guides: [
   { id: 'start', ic: '🚀', n: 'पहली बार सेटअप', d: 'पहले इनवॉइस से पहले एक बार करें। (मालिक)', steps: [
     ['सेटिंग्स खोलें', '**सेटिंग्स** दबाएँ। व्यापार का नाम, पता, **GSTIN** और **ड्रग लाइसेंस नं. (20B / 21B)** भरें। ये हर इनवॉइस पर छपेंगे।'],
@@ -421,13 +421,26 @@ function helpRender() {
   var H = WH_HELP[whLang()] || WH_HELP.en, g = H.guides.filter(function (x) { return x.id === _helpId; })[0] || H.guides[0];
   var f = function (s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); };
   root.setAttribute('data-notr', '1');
-  root.innerHTML = '<h3 style="font-size:16px;margin-bottom:2px">' + esc(H.title) + '</h3><p class="tiny" style="margin-bottom:12px">' + esc(H.sub) + '</p>'
+  root.innerHTML = supportCard(H) + '<h3 style="font-size:16px;margin-bottom:2px">' + esc(H.title) + '</h3><p class="tiny" style="margin-bottom:12px">' + esc(H.sub) + '</p>'
     + '<div class="tiny" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">' + esc(H.pick) + '</div>'
     + '<div class="wh-chips">' + H.guides.map(function (x) { return '<button type="button" class="wh-chip' + (x.id === g.id ? ' on' : '') + '" onclick="helpPick(\'' + x.id + '\')"><span>' + x.ic + '</span>' + esc(x.n) + '</button>'; }).join('') + '</div>'
     + '<div class="card" style="margin-top:12px;background:var(--surface)"><div style="font-size:15px;font-weight:800">' + g.ic + ' ' + esc(g.n) + '</div><div class="tiny" style="margin:2px 0 8px">' + esc(g.d) + '</div>'
     + g.steps.map(function (s, i) { return '<div class="wh-step"><div class="wh-num">' + (i + 1) + '</div><div><div style="font-weight:700;font-size:13.5px">' + esc(s[0]) + '</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.55">' + f(s[1]) + '</div></div></div>'; }).join('') + '</div>'
-    + '<div class="card" style="margin-top:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="width:42px;height:42px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">&#128242;</div>'
-    + '<div style="flex:1;min-width:200px"><div style="font-weight:700">' + esc(H.wa_t) + '</div><div class="tiny" style="color:var(--text-secondary)">' + esc(H.wa_s) + '</div><div class="tiny">' + esc(H.wa_n) + '</div></div>'
-    + '<span class="tag t-a">' + esc(H.dev) + '</span></div>';
+    ;
+}
+/* Help & Support: AuraScale support line (phone call) and email, at the top of the Help page */
+var WH_SUPPORT = { tel: '+916289246076', show: '62892 46076', mail: 'ceo@aurascale.in' };
+function supportCard(H) {
+  var biz = '', ph = '';
+  try { biz = (typeof SET !== 'undefined' && SET && SET.name) || (typeof DEPT !== 'undefined' && DEPT.clinic && DEPT.clinic.name) || ''; } catch (e) {}
+  var subj = 'AuraScale Wholesale help' + (biz ? ' - ' + biz : '');
+  var row = function (ic, bg, t, v, n, href, b, hr) {
+    return '<div class="sp-row"><div class="sp-ic" style="background:' + bg + '">' + ic + '</div><div class="sp-tx"><div class="sp-t">' + esc(t) + '</div><div class="sp-v">' + esc(v) + '</div>' + (hr ? '<div class="sp-hr">&#128339; ' + esc(hr) + '</div>' : '') + '<div class="tiny">' + esc(n) + '</div></div>'
+      + '<a class="btn btn-g sp-b" href="' + href + '">' + esc(b) + '</a></div>';
+  };
+  return '<div class="card sp-card"><div class="sp-h"><div style="font-size:15px;font-weight:800">&#127911; ' + esc(H.sp_t) + '</div><div class="tiny">' + esc(H.sp_s) + '</div></div>'
+    + row('&#128222;', 'var(--green)', H.sp_call, WH_SUPPORT.show, H.sp_call_n, 'tel:' + WH_SUPPORT.tel, H.sp_call_b, H.sp_hours)
+    + row('&#9993;&#65039;', '#2563EB', H.sp_mail, WH_SUPPORT.mail, H.sp_mail_n, 'mailto:' + WH_SUPPORT.mail + '?subject=' + encodeURIComponent(subj), H.sp_mail_b)
+    + '<div class="tiny sp-tip">&#128161; ' + esc(H.sp_tip) + '</div></div>';
 }
 function onTab_help() { helpRender(); }
