@@ -1228,7 +1228,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         </div>
 
         <div class="panel">
-          <div class="ph"><div class="pt">Plans &amp; payment</div><span class="ss">All prices include GST</span></div>
+          <div class="ph"><div class="pt">Plans &amp; payment</div><span class="ss">All prices are exclusive of GST (18% GST extra)</span></div>
           <div id="aura-plans-root" style="padding:16px"><p class="ss" style="margin:0">Loading plans&hellip;</p></div>
         </div>
 
@@ -1240,7 +1240,7 @@ body[data-role="receptionist"] .reception-home-only{display:flex}
         <div class="panel">
           <div class="ph"><div class="pt">ID-Scan Usage</div></div>
           <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
-            <p class="ss" style="margin:0">Your ₹<span class="aura-price">2,999</span>/month plan (inclusive of GST) includes 300 ID-card scans. When your scans run out, you can buy a top-up pack for ₹499 (inclusive of GST) that adds 100 more scans and never expires. Usage resets automatically each billing period.</p>
+            <p class="ss" style="margin:0">Your ₹<span class="aura-price">2,999</span>/month plan (+ GST) includes 300 ID-card scans. When your scans run out, you can buy a top-up pack for ₹499 + GST that adds 100 more scans and never expires. Usage resets automatically each billing period.</p>
             <div>
               <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">
                 <span>ID Card Scans (OCR)</span>
@@ -6216,7 +6216,7 @@ async function stockDownloadReport() {
     <div class="mb" style="display:flex;flex-direction:column;gap:12px">
       <p class="ss" style="margin:0;font-size:13px;line-height:1.6">Before you continue, please read and accept the agreement between <b id="agr-nh">your nursing home</b> and AuraScale. In short:</p>
       <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.7">
-        <li>Your plan: &#8377;<span class="aura-price">2,999</span> per month including GST (or 6 months / 1 year at a lower price), after a 7-day free trial. Pay online (Cashfree) or by UPI; a GST tax invoice for every payment.</li>
+        <li>Your plan: &#8377;<span class="aura-price">2,999</span> per month + GST (or 6 months / 1 year at a lower price), after a 7-day free trial. Pay online (Cashfree) or by UPI; a GST tax invoice for every payment.</li>
         <li>You own your patients&rsquo; data. AuraScale only stores and processes it for you, never sells it, and keeps it secure (DPDP Act, 2023).</li>
         <li>Patients get WhatsApp messages only after they tap &ldquo;Yes&rdquo;.</li>
         <li>If there is a data breach, AuraScale tells you within 24 hours and helps you inform the authorities and patients.</li>
@@ -6295,7 +6295,7 @@ var OWN_HELP_IMG={"o_pat1": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
 </script>
 
 <!-- DEPARTMENTS: Pharmacy (Retail), Diagnostic Lab and Pharmacy Wholesale in the owner's sidebar.
-     Switched on = opens it. Not yet = "Add" (Pharmacy / Lab: see the Combo plan; Wholesale: add the business on this login). -->
+     Switched on = opens it. Not yet = "Add" (Pharmacy / Lab: switched on by AuraScale; Wholesale: add the business on this login). -->
 <style>#aura-mod-links .am-add{margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--amber-bg,#FEF3C7);color:var(--amber,#B45309)}
 #aura-mod-links .am-on{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--green,#12976A)}</style>
 <script>
@@ -6389,18 +6389,14 @@ window.auraGoSubscription = function () {
     nh_15:    { kind: 'nursing_home', group: 'nh',    name: 'Nursing Home',   beds: 'Up to 15 beds', m: 2999, h: 16499, y: 29999 },
     nh_30:    { kind: 'nursing_home', group: 'nh',    name: 'Nursing Home',   beds: '16 to 30 beds', m: 3999, h: 21999, y: 39999 },
     nh_50:    { kind: 'nursing_home', group: 'nh',    name: 'Nursing Home',   beds: '31 to 50 beds', m: 5499, h: 29999, y: 54999 },
-    combo_15: { kind: 'nursing_home', group: 'combo', name: 'Hospital Combo', beds: 'Up to 15 beds', m: 3499, h: 18999, y: 34999 },
-    combo_30: { kind: 'nursing_home', group: 'combo', name: 'Hospital Combo', beds: '16 to 30 beds', m: 4499, h: 24499, y: 44999 },
-    combo_50: { kind: 'nursing_home', group: 'combo', name: 'Hospital Combo', beds: '31 to 50 beds', m: 5999, h: 32999, y: 59999 },
     pharmacy: { kind: 'pharmacy', name: 'Pharmacy Retail', m: 459, h: 2499, y: 4599 },
-    wholesale:{ kind: 'wholesale_pharmacy', name: 'Pharmacy Wholesale', m: 550, h: 2999, y: 5400 },
+    wholesale:{ kind: 'wholesale_pharmacy', name: 'Pharmacy Wholesale', m: 550, h: 2999, y: 5000 },
     lab:      { kind: 'lab', name: 'Diagnostic Lab', m: 1299, h: 6999, y: 12999 },
     clinic:   { kind: 'clinic', name: 'Clinic', m: 1499, h: 7999, y: 14999 },
     topup:    { kind: 'topup', name: 'ID-scan top-up (100 scans)', m: 499 }
   };
   var FEAT = {
     nh: ['Admissions, beds, discharge and IPD bills', 'Reception, doctor and nurse logins', 'PM-JAY / Swasthya Sathi claims, cashless bills', 'ID-card scan at registration, monthly owner report'],
-    combo: ['Everything in Nursing Home', 'Pharmacy Retail inside the hospital: ward medicines go to the bill', 'Diagnostic Lab: reports go to the patient’s file', 'One price, ₹1,258 a month less than three separate plans'],
     pharmacy: ['Bill from a photo of the prescription', 'Bills on WhatsApp with GST', 'Substitutes, refill reminders, H1 register', 'Re-order from your wholesaler in one tap'],
     wholesale: ['Purchase entry from a photo of the supplier’s bill', 'GST invoices, party ledger and dues', 'Shop orders arrive in the app', 'Monthly report on the owner’s WhatsApp'],
     lab: ['Patient registration, tests and bills', 'Report PDF straight to the patient’s WhatsApp', 'Doctor referrals and commission', 'Pending dues and payment tracking'],
@@ -6411,6 +6407,9 @@ window.auraGoSubscription = function () {
 
   function h(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (x) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[x]; }); }
   function inr(n) { return '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN'); }
+  /* prices are BEFORE GST; the customer pays price + 18% GST (the server works out the same amount) */
+  function withGst(n) { return Math.round((Number(n) || 0) * 118) / 100; }
+  function inr2(n) { n = Number(n) || 0; return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }); }
   function toast(m) { if (typeof showToast === 'function') showToast(m); else alert(m); }
   function offerOn() { return Date.now() < OFFER_END; }
   function bonus(term) { return offerOn() ? (term === 'h' ? 1 : term === 'y' ? 2 : 0) : 0; }
@@ -6418,7 +6417,7 @@ window.auraGoSubscription = function () {
   function curPlan(c) {
     if (c && c.aura_plan && PLANS[c.aura_plan]) return c.aura_plan;
     var k = kindOf(c);
-    return k === 'pharmacy' ? 'pharmacy' : k === 'wholesale_pharmacy' ? 'wholesale' : k === 'lab' ? 'lab' : k === 'clinic' ? 'clinic' : (c && c.mod_pharmacy && c.mod_lab ? 'combo_15' : 'nh_15');
+    return k === 'pharmacy' ? 'pharmacy' : k === 'wholesale_pharmacy' ? 'wholesale' : k === 'lab' ? 'lab' : k === 'clinic' ? 'clinic' : 'nh_15';
   }
   function price(code, term) { var p = PLANS[code]; return p ? p[term] : 0; }
   function loadScript(src, ok) {
@@ -6476,7 +6475,7 @@ window.auraGoSubscription = function () {
   })();
 
   var WHO = { pharmacy: 'Medicine shops and chemists', wholesale: 'Distributors and stockists', lab: 'Pathology labs and collection centres',
-    clinic: 'Doctor chambers, polyclinics and OPD', nh: 'Hospitals with admitted patients', combo: 'Nursing home + pharmacy + lab together' };
+    clinic: 'Doctor chambers, polyclinics and OPD', nh: 'Hospitals with admitted patients' };
   var FOR = { pharmacy: 'pharmacy', wholesale: 'wholesale', lab: 'lab' };              /* nh.html?add=1&for=... */
   var BTYPE = { pharmacy: 'pharmacy', wholesale: 'wholesale_pharmacy', lab: 'lab' };
   function myCode(kind) { return { pharmacy: 'pharmacy', wholesale_pharmacy: 'wholesale', lab: 'lab', clinic: 'clinic' }[kind] || null; }
@@ -6497,18 +6496,19 @@ window.auraGoSubscription = function () {
       var amt = p[t], save = p.m * TERM[t].n - amt, b = bonus(t), on = sel === t && !soon;
       return '<button type="button" class="ap-term' + (on ? ' on' : '') + '"' + (soon ? ' disabled' : ' onclick="auraPlansPick(\'' + grp + '\',\'' + t + '\')"') + ' aria-pressed="' + on + '">'
         + '<span class="ap-tl"><b>' + TERM[t].t + '</b>' + (b ? '<span class="of">+' + b + ' month' + (b > 1 ? 's' : '') + ' free</span>' : '') + '</span>'
-        + '<span class="ap-tr"><b>' + inr(amt) + '</b>' + (save > 0 ? '<span class="sv">save ' + inr(save) + '</span>' : '<span class="ap-sub">per month</span>') + '</span></button>';
+        + '<span class="ap-tr"><b>' + inr(amt) + ' <small style="font-weight:600;font-size:11px;color:var(--text-tertiary,#7a8a83)">+ GST</small></b>' + (save > 0 ? '<span class="sv">save ' + inr(save) + '</span>' : '<span class="ap-sub">per month</span>') + '</span></button>';
     }).join('');
     var amt = p[sel], act;
     if (soon) act = '<div class="ap-soon">In progress &middot; coming soon</div>';
-    else if (o.mine) act = '<button type="button" class="ap-pay" onclick="auraPlansPay(\'' + code + '\',\'' + sel + '\',this)">&#128179; Pay ' + inr(amt) + ' with Cashfree</button>'
+    else if (o.mine) act = '<button type="button" class="ap-pay" onclick="auraPlansPay(\'' + code + '\',\'' + sel + '\',this)">&#128179; Pay ' + inr2(withGst(amt)) + ' with Cashfree</button>'
       + '<button type="button" class="ap-upi" onclick="auraPlansUpi(\'' + code + '\',\'' + sel + '\')">or pay by UPI QR</button>';
     else if (o.other) {
       var lk = linked(code);
       act = lk ? '<button type="button" class="ap-pay ap-alt" onclick="auraOpenBiz && auraOpenBiz(\'' + lk.id + '\')">Open ' + h(lk.name || p.name) + ' &rsaquo;</button>'
                : '<button type="button" class="ap-pay ap-alt" onclick="location.href=\'nh.html?add=1&for=' + FOR[code] + '\'">&#65291; Add ' + h(p.name) + ' (same login)</button>';
     } else act = '';
-    var b = bonus(sel), note = soon ? '' : (sel === 'm' ? 'Billed every month. Stop any time.' : inr(Math.round(amt / (TERM[sel].n + b))) + ' a month' + (b ? ' &middot; <span class="of">use it for ' + (TERM[sel].n + b) + ' months</span>' : ''));
+    var b = bonus(sel), note = soon ? '' : (sel === 'm' ? 'Billed every month. Stop any time.' : inr(Math.round(amt / (TERM[sel].n + b))) + ' a month + GST' + (b ? ' &middot; <span class="of">use it for ' + (TERM[sel].n + b) + ' months</span>' : ''))
+      + (soon ? '' : '<div style="margin-top:3px">' + inr(amt) + ' + 18% GST ' + inr2(withGst(amt) - amt) + ' = <b>' + inr2(withGst(amt)) + '</b></div>');
     return '<div class="ap-card' + (o.cur ? ' cur' : '') + (soon ? ' soon' : '') + '">'
       + '<div class="ap-top"><div><div class="ap-nm">' + h(p.name) + '</div><div class="ap-sub">' + h(WHO[grp] || '') + (p.beds ? ' &middot; ' + h(p.beds) : '') + '</div></div>'
       + (o.cur ? '<span class="ap-tag">YOUR PLAN</span>' : soon ? '<span class="ap-tag g">IN PROGRESS</span>' : o.tag ? '<span class="ap-tag g">' + o.tag + '</span>' : '') + '</div>'
@@ -6520,9 +6520,9 @@ window.auraGoSubscription = function () {
   }
   function topupCard() {
     return '<div class="ap-card"><div class="ap-top"><div><div class="ap-nm">ID-scan top-up</div><div class="ap-sub">100 extra ID-card scans, never expire</div></div></div>'
-      + '<div class="ap-amt">' + inr(499) + ' <small>one time &middot; incl. GST</small></div>'
+      + '<div class="ap-amt">' + inr(499) + ' <small>+ GST &middot; one time</small></div>'
       + '<div class="ap-note">Only when your monthly scans run out.</div>'
-      + '<button type="button" class="ap-pay ap-alt" onclick="auraPlansPay(\'topup\',\'one\',this)">&#9889; Pay ' + inr(499) + ' with Cashfree</button>'
+      + '<button type="button" class="ap-pay ap-alt" onclick="auraPlansPay(\'topup\',\'one\',this)">&#9889; Pay ' + inr2(withGst(499)) + ' with Cashfree</button>'
       + '<button type="button" class="ap-upi" onclick="auraPlansUpi(\'topup\',\'one\')">or pay by UPI QR</button></div>';
   }
   function render() {
@@ -6538,17 +6538,16 @@ window.auraGoSubscription = function () {
       /* the owner sees every AuraScale plan, smallest first */
       cards = card('pharmacy', { other: true }) + card('wholesale', { other: true }) + card('lab', { other: true }) + card('clinic', { soon: true })
         + card('nh_' + S.beds, { mine: true, beds: true, cur: cp === 'nh_' + S.beds })
-        + card('combo_' + S.beds, { mine: true, beds: true, cur: cp === 'combo_' + S.beds, tag: 'BEST VALUE' })
         + topupCard();
     } else {
       var mc = myCode(kind) || 'pharmacy';
       cards = card(mc, { mine: kind !== 'clinic', soon: kind === 'clinic', cur: true });
     }
     S.el.innerHTML = '<div class="ap">'
-      + '<div class="ap-cur"><div><div class="ap-sub" style="text-transform:uppercase;letter-spacing:.05em;font-weight:700">Your plan</div><b>' + h(p ? p.name + (p.beds ? ' · ' + p.beds : '') : 'AuraScale') + '</b> <span class="s">' + (c.billing_exempt ? 'Free' : inr(Number(c.monthly_price) > 0 ? c.monthly_price : (p ? p.m : 0)) + ' / month incl. GST') + '</span><div class="s">' + curTxt + '</div></div>'
+      + '<div class="ap-cur"><div><div class="ap-sub" style="text-transform:uppercase;letter-spacing:.05em;font-weight:700">Your plan</div><b>' + h(p ? p.name + (p.beds ? ' · ' + p.beds : '') : 'AuraScale') + '</b> <span class="s">' + (c.billing_exempt ? 'Free' : inr(Number(c.monthly_price) > 0 ? c.monthly_price : (p ? p.m : 0)) + ' / month + GST') + '</span><div class="s">' + curTxt + '</div></div>'
       + '<a class="ap-upi" style="text-decoration:none;font-weight:700" target="_blank" rel="noopener" href="https://wa.me/' + WA + '?text=' + encodeURIComponent('Hi AuraScale, I have a question about my plan for ' + (c.name || 'my business') + '.') + '">&#128172; Ask AuraScale</a></div>'
       + '<div class="ap-grid">' + cards + '</div>'
-      + '<p class="ap-note" style="margin:0">All prices include GST. Launch offer: 6 months +1 month free, 1 year +2 months free (first 50 customers, until 30 November 2026). Renew at the same price, no renewal fee. Online payment by UPI, card or net banking is handled by Cashfree Payments; your plan moves forward as soon as the payment succeeds and a GST tax invoice appears under &ldquo;Tax invoices&rdquo;.</p>'
+      + '<p class="ap-note" style="margin:0">All prices are exclusive of GST: 18% GST is added at payment. Launch offer: 6 months +1 month free, 1 year +2 months free (first 50 customers, until 30 November 2026). Renew at the same price, no renewal fee. Online payment by UPI, card or net banking is handled by Cashfree Payments; your plan moves forward as soon as the payment succeeds and a GST tax invoice appears under &ldquo;Tax invoices&rdquo;.</p>'
       + '</div>';
   }
 
@@ -6602,11 +6601,11 @@ window.auraGoSubscription = function () {
 
   window.auraPlansUpi = async function (code, term) {
     var p = PLANS[code]; if (!p) return;
-    var amt = term === 'one' ? p.m : p[term], nm = (S.c && S.c.name) || '';
+    var amt = withGst(term === 'one' ? p.m : p[term]), nm = (S.c && S.c.name) || '';
     var label = p.name + (p.beds ? ' (' + p.beds + ')' : '') + (term === 'one' ? '' : ' - ' + TERM[term].t);
     var url = 'upi://pay?pa=' + encodeURIComponent(UPI_ID) + '&pn=' + encodeURIComponent(UPI_NAME) + '&am=' + Number(amt).toFixed(2) + '&cu=INR&tn=' + encodeURIComponent(('AuraScale ' + label + ' ' + nm).slice(0, 70));
-    var wa = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hi AuraScale, I paid ' + inr(amt) + ' by UPI for ' + label + ' (' + nm + '). UTR: ');
-    overlay('<h3 style="margin:0 0 4px">Pay ' + inr(amt) + ' by UPI</h3><div class="ap-note">' + h(label) + ' &middot; incl. GST</div>'
+    var wa = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hi AuraScale, I paid ' + inr2(amt) + ' by UPI for ' + label + ' (' + nm + '). UTR: ');
+    overlay('<h3 style="margin:0 0 4px">Pay ' + inr2(amt) + ' by UPI</h3><div class="ap-note">' + h(label) + ' &middot; incl. 18% GST</div>'
       + '<div id="ap-qr" style="width:180px;height:180px;margin:12px auto;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px"></div>'
       + '<div style="font-size:13px;font-weight:700">UPI ID: ' + UPI_ID + '</div>'
       + '<a class="ap-pay" style="margin-top:12px;text-decoration:none" href="' + url + '">Open my UPI app</a>'
