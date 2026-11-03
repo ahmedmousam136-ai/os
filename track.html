@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#0A6B4B"/>
+<meta name="robots" content="noindex"/>
+<title>আপনার টোকেন · AuraScale</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--g:#0A6B4B;--g2:#12976A;--gbg:#E6F4EE;--ink:#14201A;--ink2:#4B5B53;--line:#E3E9E5;--bg:#F4F7F5;--warn:#B45309;--wbg:#FEF3C7}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Hind Siliguri","DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;justify-content:center;padding:18px 16px 40px}
+.w{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px}
+.top{display:flex;align-items:center;gap:10px}
+.mark{width:34px;height:34px;border-radius:9px;background:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNjQwIiB3aWR0aD0iNjQwIiBoZWlnaHQ9IjY0MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzFCQjg4MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwQTZCNEIiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI2NDAiIGhlaWdodD0iNjQwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0gMjI3IDEzMyBBIDExOCAxMTggMCAwIDEgNDEzIDEzMyIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC4zOCIvPgogICAgPHBhdGggZD0iTSAyNjIgMTU0IEEgNzggNzggMCAwIDEgMzc4IDE1NCIgc3Ryb2tlLXdpZHRoPSIxNiIgb3BhY2l0eT0iMC43Ii8+CiAgPC9nPgogIDxwYXRoIGQ9Ik0gMTk2IDQ1MiBMIDMyMCAyMTQgTCA0NDQgNDUyIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iNTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiM3Q0U2QkMiPgogICAgPHJlY3QgeD0iMjg0IiB5PSIzNDgiIHdpZHRoPSI3MiIgaGVpZ2h0PSIyNCIgcng9IjEyIi8+CiAgICA8cmVjdCB4PSIzMDgiIHk9IjMyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjcyIiByeD0iMTIiLz4KICA8L2c+Cjwvc3ZnPgo=") center/126% no-repeat;flex-shrink:0}
+.top b{font-family:"DM Sans",sans-serif;font-size:15px;letter-spacing:-.01em}.top b span{color:var(--g2)}
+.top small{display:block;font-size:11px;color:var(--ink2)}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 6px 24px rgba(10,60,40,.06)}
+.clinic{font-size:18px;font-weight:700}.doc{font-size:13px;color:var(--ink2);margin-top:2px}
+.big{text-align:center;padding:10px 0 6px}
+.big .l{font-size:13px;color:var(--ink2)}
+.big .n{font-family:"DM Sans",sans-serif;font-size:76px;font-weight:700;line-height:1.05;color:var(--g);letter-spacing:-.03em}
+.hi{border-radius:14px;padding:14px 16px;font-size:16px;font-weight:600;text-align:center;line-height:1.45}
+.hi.wait{background:var(--gbg);color:var(--g)}.hi.turn{background:#0A6B4B;color:#fff;animation:p 1.6s ease-in-out infinite}
+.hi.soon{background:var(--wbg);color:var(--warn)}.hi.done{background:#EEF1EF;color:var(--ink2)}
+@keyframes p{50%{box-shadow:0 0 0 8px rgba(18,151,106,.18)}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.st{background:var(--bg);border-radius:12px;padding:12px;text-align:center}
+.st .k{font-size:12px;color:var(--ink2)}.st .v{font-family:"DM Sans",sans-serif;font-size:26px;font-weight:700;margin-top:2px}
+.st .v small{font-size:13px;font-weight:600;color:var(--ink2)}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--g2),var(--g));border-radius:99px;transition:width .6s}
+.foot{font-size:12px;color:var(--ink2);text-align:center;line-height:1.6}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}.live i{width:8px;height:8px;border-radius:50%;background:var(--g2);animation:b 1.4s infinite}
+@keyframes b{50%{opacity:.25}}
+.err{text-align:center;padding:30px 10px;color:var(--ink2);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="top"><div class="mark" aria-hidden="true"></div><div><b>Aura<span>Scale</span></b><small>লাইভ টোকেন · Live token</small></div></div>
+  <div class="card" id="box"><div class="err">লোড হচ্ছে…</div></div>
+  <p class="foot"><span class="live"><i></i> নিজে থেকে আপডেট হয় · updates by itself</span><br/>পালা কাছে এলে WhatsApp-এও জানিয়ে দেওয়া হবে।</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var sb=supabase.createClient('https://qquyqejqrxfhtmidmgkb.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdXlxZWpxcnhmaHRtaWRtZ2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzA1MTIsImV4cCI6MjA5NjM0NjUxMn0.b7TgPU6ZzhC3-ahx-j0BRiRpJ9geyEMkePpV7KFyoZI',{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  var code=(new URLSearchParams(location.search).get('t')||'').toLowerCase();
+  var box=document.getElementById('box');
+  function bn(n){return String(n).replace(/[0-9]/g,function(d){return '০১২৩৪৫৬৭৮৯'[d];});}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function clock(min){var d=new Date(Date.now()+min*60000);return d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit',hour12:true});}
+  var timer=null;
+  async function load(){
+    if(!/^[0-9a-f]{20}$/.test(code)){box.innerHTML='<div class="err">এই লিংকটা ঠিক নেই। WhatsApp-এ পাওয়া লিংকটা আবার খুলুন।</div>';return;}
+    var r;try{r=await sb.rpc('clq_track',{p_code:code});}catch(e){r={error:e};}
+    if(r.error){box.innerHTML='<div class="err">ইন্টারনেট সংযোগ দেখুন। একটু পরে নিজে থেকে আবার চেষ্টা হবে।</div>';return;}
+    var d=r.data;if(!d){box.innerHTML='<div class="err">এই টোকেনটা পাওয়া গেল না।</div>';clearInterval(timer);return;}
+    var st=d.status,ahead=d.ahead||0,hi,cls;
+    if(!d.is_today&&st!=='Completed'&&st!=='Cancelled'){hi='এই টোকেনটা '+esc(d.date)+' তারিখের।';cls='done';}
+    else if(st==='In Consultation'){hi='🔔 এখন আপনার পালা!<br>ডাক্তারের কাছে চলে আসুন।';cls='turn';}
+    else if(st==='Completed'){hi='✅ দেখানো হয়ে গেছে। ভালো থাকুন!';cls='done';}
+    else if(st==='Cancelled'){hi='❌ এই টোকেনটা বাতিল হয়েছে।';cls='done';}
+    else if(ahead===0){hi='⏳ আপনি পরের জন। চেম্বারে চলে আসুন।';cls='soon';}
+    else if(ahead<=2){hi='⏳ আর '+bn(ahead)+' জন পরে আপনার পালা। চেম্বারে চলে আসুন।';cls='soon';}
+    else{hi='আপনার আগে '+bn(ahead)+' জন আছেন।<br>আনুমানিক '+clock(d.est_min)+' নাগাদ পালা আসবে।';cls='wait';}
+    var waiting=(st==='Waiting'||st==='Checked In')&&d.is_today;
+    var pct=d.now_serving?Math.min(100,Math.round(d.now_serving/d.token*100)):4;
+    if(!waiting)pct=100;
+    box.innerHTML='<div class="clinic">'+esc(d.clinic||'')+'</div>'+(d.doctor?'<div class="doc">'+esc(d.doctor)+'</div>':'')
+      +'<div class="big"><div class="l">'+(d.first_name?esc(d.first_name)+', ':'')+'আপনার টোকেন</div><div class="n">'+bn(d.token)+'</div></div>'
+      +'<div class="hi '+cls+'">'+hi+'</div>'
+      +'<div style="height:14px"></div><div class="grid">'
+      +'<div class="st"><div class="k">এখন চলছে</div><div class="v">'+(d.now_serving?bn(d.now_serving):'—')+'</div></div>'
+      +'<div class="st"><div class="k">'+(waiting?'আনুমানিক অপেক্ষা':'আপনার আগে')+'</div><div class="v">'+(waiting?(d.est_min>0?bn(d.est_min)+' <small>মিনিট</small>':'এখনই'):bn(ahead))+'</div></div>'
+      +'</div><div style="height:14px"></div><div class="bar"><i style="width:'+pct+'%"></i></div>';
+    document.title=(cls==='turn'?'🔔 আপনার পালা · ':'টোকেন '+d.token+' · ')+(d.clinic||'AuraScale');
+    if(!waiting&&st!=='In Consultation'){clearInterval(timer);}
+  }
+  load();timer=setInterval(load,20000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+})();
+</script>
+</body>
+</html>
