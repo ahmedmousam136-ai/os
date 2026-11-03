@@ -931,6 +931,12 @@ main.content{
   border-radius:var(--r-sm);padding:9px 12px;display:none;
 }
 .auth-error.show{display:block}
+.auth-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--surface);border:1px solid var(--border-mid);color:var(--text-primary);font-weight:600;font-size:13.5px;padding:12px;border-radius:var(--r-sm);min-height:46px;cursor:pointer;font-family:inherit}
+.auth-google:hover{background:var(--bg);border-color:var(--text-tertiary)}.auth-google:disabled{opacity:.7}
+.auth-or{display:flex;align-items:center;gap:10px;font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--text-tertiary)}
+.auth-or:before,.auth-or:after{content:"";flex:1;height:1px;background:var(--border)}
+.auth-link{color:var(--text-secondary);cursor:pointer;text-decoration:underline;text-underline-offset:2px}.auth-link:hover{color:var(--text-primary)}
+.otp-input{text-align:center;font-size:24px!important;letter-spacing:.45em;font-weight:700}
 
 /* ═══════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
@@ -1262,9 +1268,14 @@ main.content{
   function arm(){
     try { history.pushState({ g: TAG }, '', location.href); } catch(e){}
   }
-  arm();
+  /* Coming back from Google the address carries the login (#access_token=...). The sign-in library then
+     tidies the address, which the browser reports like a Back press: that must not leave the page. */
+  var AUTH_RETURN = /(^|[#&])(access_token|refresh_token|error_description)=/.test(location.hash || '');
+  if (AUTH_RETURN) setTimeout(function(){ if (AUTH_RETURN) { AUTH_RETURN = false; arm(); } }, 8000);
+  else arm();
 
   window.addEventListener('popstate', function(){
+    if (AUTH_RETURN || /(^|[#&])(access_token|refresh_token)=/.test(location.hash || '')) { AUTH_RETURN = false; arm(); return; }
     // If a modal / drawer / overlay is open, Back just closes it and stays.
     var open = document.querySelectorAll('.mod-ov.open, .modal.open, .sheet.open, .drawer.open');
     if (open.length){
@@ -1298,21 +1309,34 @@ main.content{
       <div class="auth-body">
         <!-- LOGIN PANEL -->
         <div class="auth-panel on" id="auth-panel-login">
-          <div id="auth-login-error" class="auth-error">Invalid email or password. Please try again.</div>
-          <div class="auth-field">
-            <label>Email Address</label>
-            <input type="email" class="finput" id="auth-login-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
+          <!-- same sign-in as every AuraScale portal: Google, an email code, or a password -->
+          <div id="cl-otp1" style="display:flex;flex-direction:column;gap:12px">
+            <button type="button" class="auth-google" id="google-btn" onclick="clGoogleSignIn()"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+            <div class="auth-or">OR</div>
+            <div class="auth-field">
+              <label>Email Address</label>
+              <input type="email" class="finput" id="auth-login-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email" onkeydown="if(event.key==='Enter'){event.preventDefault();clLoginMain();}"/>
+            </div>
+            <div class="auth-field" id="cl-pass-wrap" style="display:none">
+              <label>Password</label>
+              <input type="password" class="finput" id="auth-login-pass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();clLoginMain();}"/>
+            </div>
+            <div id="auth-login-error" class="auth-error">Invalid email or password. Please try again.</div>
+            <button class="msub" id="cl-login-btn" onclick="clLoginMain()" style="margin-top:2px">Continue with email &rarr;</button>
+            <p class="auth-footer-note" style="margin-top:0"><span class="auth-link" id="cl-mode-link" onclick="clLoginMode()">Sign in with password instead</span></p>
+            <p class="auth-footer-note" id="cl-forgot" style="display:none;margin-top:-6px"><span class="auth-link" onclick="handleForgotPassword()">Forgot password?</span></p>
+            <p class="auth-footer-note">Don't have an account? <span onclick="switchAuthTab('signup')">Create one free</span></p>
           </div>
-          <div class="auth-field">
-            <label>Password</label>
-            <input type="password" class="finput" id="auth-login-pass" placeholder="Enter your password" autocomplete="current-password"/>
+          <div id="cl-otp2" style="display:none;flex-direction:column;gap:12px">
+            <p class="auth-footer-note" style="text-align:left;font-size:12px;color:var(--text-secondary)">We have emailed a sign-in code to <b id="cl-otp-email"></b>. Enter it below. (Not in your inbox? Check Spam or Promotions.)</p>
+            <div class="auth-field">
+              <label>Code</label>
+              <input class="finput otp-input" id="cl-otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;" oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length===6)clVerifyOtp();" onkeydown="if(event.key==='Enter'){event.preventDefault();clVerifyOtp();}"/>
+            </div>
+            <div id="cl-otp-error" class="auth-error"></div>
+            <button class="msub" id="cl-otp-btn" onclick="clVerifyOtp()">Verify &amp; sign in &rarr;</button>
+            <p class="auth-footer-note"><span class="auth-link" id="cl-otp-resend" onclick="clSendOtp(true)">Resend code</span> &nbsp;&middot;&nbsp; <span class="auth-link" onclick="clOtpShow(1)">Use a different email</span></p>
           </div>
-          <button class="auth-forgot" onclick="handleForgotPassword()">Forgot password?</button>
-          <button class="msub" onclick="handleLogin()" style="margin-top:2px">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-            Sign In
-          </button>
-          <p class="auth-footer-note">Don't have an account? <span onclick="switchAuthTab('signup')">Create one free</span></p>
         </div>
 
         <!-- SIGNUP PANEL -->
@@ -1862,10 +1886,6 @@ main.content{
         <span data-i18n="rx_new">New Prescription</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px">
-        <button class="qbtn" style="padding:5px 10px;font-size:10px;gap:4px" onclick="openVoiceModal('prescription')" title="Dictate this prescription">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
-          Voice Entry
-        </button>
         <span class="pb pb-g">1-Click · Auto WhatsApp</span>
       </div>
     </div>
@@ -2420,7 +2440,7 @@ main.content{
       </div>
       <span>Calls</span>
     </button>
-    <button class="bn-fab" onclick="openAppointmentChoiceModal()" aria-label="New appointment — manual or voice">
+    <button class="bn-fab" onclick="openAppointmentChoiceModal()" aria-label="New appointment">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
     <button class="bn on" onclick="navMob('dashboard',this)" data-t="dashboard">
@@ -2429,7 +2449,7 @@ main.content{
       </div>
       <span data-i18n="bn_home">Home</span>
     </button>
-    <button class="bn-fab bn-fab-green" onclick="openPrescriptionChoiceModal()" aria-label="New prescription — manual or voice">
+    <button class="bn-fab bn-fab-green" onclick="openPrescriptionChoiceModal()" aria-label="New prescription">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     </button>
     <button class="bn" onclick="navMob('settings',this)" data-t="settings">
@@ -2664,77 +2684,13 @@ main.content{
   </div>
 </div>
 
-<!-- MANUAL / VOICE CHOICE MODAL — shown when tapping either bottom-nav FAB -->
-<div class="mod-ov" id="choice-modal">
-  <div class="modal" style="max-width:340px">
-    <div class="mh">
-      <div style="display:flex;align-items:center;gap:9px">
-        <div class="mic" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </div>
-        <p class="mtitle" id="choice-modal-title">New Appointment</p>
-      </div>
-      <button class="mclose" onclick="closeModal('choice-modal')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="mb" style="gap:10px">
-      <button class="qbtn" style="justify-content:center;min-height:52px;font-size:13px;gap:8px" id="choice-manual-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-        Manual Entry
-      </button>
-      <button class="qbtn" style="justify-content:center;min-height:52px;font-size:13px;gap:8px;background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" id="choice-voice-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        Voice Entry
-      </button>
-      <p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Tap Voice → speak naturally → tap Send. Everything else happens automatically.</p>
-    </div>
-  </div>
-</div>
-
-<!-- VOICE INPUT MODAL — shared by Voice Appointment and Voice Prescription -->
-<div class="mod-ov" id="voice-modal">
-  <div class="modal" style="max-width:420px">
-    <div class="mh">
-      <div style="display:flex;align-items:center;gap:9px">
-        <div class="mic" id="voice-modal-icon" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        </div>
-        <p class="mtitle" id="voice-modal-title">Voice Appointment</p>
-      </div>
-      <button class="mclose" onclick="closeVoiceModal()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="mb">
-      <div id="voice-guide-box" style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-sm);padding:11px 13px">
-        <p id="voice-guide-title" style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:5px">Please say:</p>
-        <ol id="voice-guide-list" style="margin:0 0 0 16px;padding:0;font-size:11.5px;color:var(--text-secondary);line-height:1.75"></ol>
-      </div>
-      <div style="text-align:center;padding:6px 0 2px">
-        <div id="voice-pulse" style="width:60px;height:60px;border-radius:50%;background:var(--blue-bg);border:2px solid var(--blue-border);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--blue)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        </div>
-        <p id="voice-status-text" style="font-size:12px;color:var(--text-secondary)">Starting microphone…</p>
-      </div>
-      <div id="voice-transcript" style="min-height:80px;max-height:150px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;font-size:12.5px;color:var(--text-primary);line-height:1.6"></div>
-      <div style="display:flex;gap:8px">
-        <button class="msub" id="voice-finish-btn" style="flex:1;background:var(--red);box-shadow:0 2px 8px rgba(194,56,56,.25)" onclick="voiceManualFinish()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-          <span id="voice-finish-lbl">Stop / Finish</span>
-        </button>
-      </div>
-      <p id="voice-hint-text" style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Listening starts automatically. Everything else happens on its own — no extra clicks needed.</p>
-    </div>
-  </div>
-</div>
 
 <script>
 /* ══ SUPABASE CLIENT ══ */
 const SUPABASE_URL = 'https://qquyqejqrxfhtmidmgkb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdXlxZWpxcnhmaHRtaWRtZ2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzA1MTIsImV4cCI6MjA5NjM0NjUxMn0.b7TgPU6ZzhC3-ahx-j0BRiRpJ9geyEMkePpV7KFyoZI';
 const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+  auth:{persistSession:true,autoRefreshToken:true}  /* reads the login when coming back from Google */
 });
 let _clinicId = null;
 var _setupInProgress = false; /* true while signup is inserting clinic rows */
@@ -3719,7 +3675,7 @@ async function handleLogin(){
   if(btn){btn.textContent='Signing in…';btn.disabled=true;}
   try{
     const {data,error}=await _supa.auth.signInWithPassword({email,password:pass});
-    if(error){err.textContent=error.message||'Invalid email or password.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}return;}
+    if(error){err.textContent=clAuthMsg(error);err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}return;}
     /* onAuthStateChange SIGNED_IN will call _loadClinicAndGo — don't call it here too */
     if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}
   }catch(e){err.textContent='Network error. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}}
@@ -3788,11 +3744,95 @@ async function handleSignup(){
   }catch(e){err.textContent='Network error. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}}
 }
 
-function handleForgotPassword(){
+async function handleForgotPassword(){
   const email=(document.getElementById('auth-login-email').value||'').trim();
-  if(!email){alert('Please enter your email address first, then click Forgot Password.');return;}
+  const err=document.getElementById('auth-login-error');
+  if(!email){err.textContent='Type your email above first, then tap "Forgot password?".';err.classList.add('show');return;}
+  const r=await _supa.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/reset-password.html'});
+  if(r.error){err.textContent=clAuthMsg(r.error);err.classList.add('show');return;}
+  err.classList.remove('show');
   showToast('Password reset link sent to '+email);
 }
+
+/* ══ Sign in like every AuraScale portal: Google, a code sent to the email, or the password ══ */
+var _clPassMode=false,_clOtpEmail='',_clOtpWait=0,_clOtpTick=null;
+function clAuthMsg(e){
+  var m=(e&&e.message)||String(e||''),l=m.toLowerCase();
+  if(e&&e.status===429||l.indexOf('rate limit')>-1||l.indexOf('only request this after')>-1||l.indexOf('too many')>-1)return 'Too many tries. Please wait a minute and try again.';
+  if(l.indexOf('invalid login')>-1)return 'Wrong email or password.';
+  if(l.indexOf('expired')>-1||l.indexOf('invalid')>-1||l.indexOf('token')>-1)return 'This code is wrong or has expired. Use the code from the LATEST email, or tap "Resend code".';
+  if(l.indexOf('provider is not enabled')>-1||l.indexOf('unsupported provider')>-1)return 'Google sign-in is not switched on yet. Please use "Continue with email" for now.';
+  if(l.indexOf('failed to fetch')>-1||l.indexOf('network')>-1)return 'No internet connection. Please check and try again.';
+  return m||'Something went wrong. Please try again.';
+}
+function clLoginMode(force){
+  _clPassMode=(typeof force==='boolean')?force:!_clPassMode;
+  document.getElementById('cl-pass-wrap').style.display=_clPassMode?'':'none';
+  document.getElementById('cl-forgot').style.display=_clPassMode?'':'none';
+  document.getElementById('cl-login-btn').innerHTML=_clPassMode?'Sign In &rarr;':'Continue with email &rarr;';
+  document.getElementById('cl-mode-link').textContent=_clPassMode?'Sign in with an email code instead':'Sign in with password instead';
+  document.getElementById('auth-login-error').classList.remove('show');
+  if(_clPassMode)setTimeout(function(){var e=document.getElementById(document.getElementById('auth-login-email').value?'auth-login-pass':'auth-login-email');if(e)e.focus();},30);
+}
+async function clLoginMain(){
+  var btn=document.getElementById('cl-login-btn');if(btn.disabled)return;
+  var label=btn.innerHTML;btn.disabled=true;btn.textContent=_clPassMode?'Signing in…':'Sending code…';
+  try{ if(_clPassMode){ await handleLogin(); } else { await clSendOtp(false); } }
+  finally{ btn.disabled=false; btn.innerHTML=label; }
+}
+function clOtpShow(step){
+  document.getElementById('cl-otp1').style.display=step===1?'flex':'none';
+  document.getElementById('cl-otp2').style.display=step===2?'flex':'none';
+  var tabs=document.querySelector('#auth-screen .auth-tabs');if(tabs)tabs.style.display=step===2?'none':'';
+  if(step===1){var e=document.getElementById('auth-login-email');if(e)e.focus();}
+}
+function clOtpCooldown(sec){
+  _clOtpWait=sec;clearInterval(_clOtpTick);var r=document.getElementById('cl-otp-resend');
+  function paint(){if(!r)return;if(_clOtpWait>0){r.textContent='Resend code in '+_clOtpWait+'s';r.style.opacity='.55';r.style.pointerEvents='none';}else{r.textContent='Resend code';r.style.opacity='';r.style.pointerEvents='';}}
+  paint();_clOtpTick=setInterval(function(){_clOtpWait--;paint();if(_clOtpWait<=0)clearInterval(_clOtpTick);},1000);
+}
+async function clSendOtp(resend){
+  var err=document.getElementById(resend?'cl-otp-error':'auth-login-error');err.classList.remove('show');
+  var em=resend?_clOtpEmail:(document.getElementById('auth-login-email').value||'').trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){err.textContent='Please enter a valid email address.';err.classList.add('show');return;}
+  if(resend&&_clOtpWait>0)return;
+  var r;try{r=await _supa.auth.signInWithOtp({email:em,options:{shouldCreateUser:true,emailRedirectTo:location.origin+'/clinic.html'}});}catch(e){r={error:e};}
+  if(r.error){err.textContent=clAuthMsg(r.error);err.classList.add('show');return;}
+  _clOtpEmail=em;document.getElementById('cl-otp-email').textContent=em;clOtpShow(2);
+  var c=document.getElementById('cl-otp-code');c.value='';setTimeout(function(){c.focus();},30);
+  document.getElementById('cl-otp-error').classList.remove('show');clOtpCooldown(60);
+  if(resend)showToast('A new code has been sent.');
+}
+async function clVerifyOtp(){
+  var btn=document.getElementById('cl-otp-btn');if(btn.disabled)return;
+  var err=document.getElementById('cl-otp-error');err.classList.remove('show');
+  var code=(document.getElementById('cl-otp-code').value||'').replace(/\D/g,'');
+  if(code.length<6){err.textContent='Enter the code from the email (6 digits).';err.classList.add('show');return;}
+  var label=btn.innerHTML;btn.disabled=true;btn.textContent='Checking…';
+  try{
+    var r=await _supa.auth.verifyOtp({email:_clOtpEmail,token:code,type:'email'});
+    if(r.error){err.textContent=clAuthMsg(r.error);err.classList.add('show');return;}
+    clOtpShow(1); /* onAuthStateChange SIGNED_IN opens the clinic */
+  }catch(e){err.textContent=clAuthMsg(e);err.classList.add('show');}
+  finally{btn.disabled=false;btn.innerHTML=label;}
+}
+async function clGoogleSignIn(){
+  var err=document.getElementById('auth-login-error');err.classList.remove('show');
+  var b=document.getElementById('google-btn');if(b)b.disabled=true;
+  try{
+    var r=await _supa.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+'/clinic.html',queryParams:{prompt:'select_account'}}});
+    if(r&&r.error)throw r.error;
+  }catch(e){if(b)b.disabled=false;err.textContent=clAuthMsg(e);err.classList.add('show');}
+}
+/* back from Google with an error (for example Google sign-in not switched on) */
+(function(){
+  var q=(location.search||'')+'&'+(location.hash||'').replace(/^#/,'');
+  var m=/[?&]error_description=([^&]+)/.exec(q);if(!m)return;
+  var msg=decodeURIComponent(m[1].replace(/\+/g,' '));
+  function show(){var e=document.getElementById('auth-login-error');if(e){e.textContent=clAuthMsg({message:msg});e.classList.add('show');}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',show);else show();
+  try{history.replaceState(null,'',location.pathname);}catch(_e){}
+})();
 
 /* ── Recover _clinicId from live session if null ── */
 async function _ensureClinicId(){
@@ -7376,458 +7416,11 @@ if(AUDIT_FILTER_GROUPS['reminders']){
   AUDIT_FILTER_GROUPS['reminders']=AUDIT_FILTER_GROUPS['reminders'].concat(['Reminder Sent','Reminder Failed','Reminder Delivered','Reminder Resent']);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   VOICE-FIRST WORKFLOW — Appointment & Prescription
-   Tap the FAB → choose Manual or Voice → (if Voice) speak → tap
-   Send once → everything else happens automatically. Manual entry
-   remains fully available and completely unchanged.
-
-   Uses the browser's built-in Web Speech API (SpeechRecognition) for
-   speech-to-text, then a lightweight keyword/pattern parser to pull
-   out the relevant fields. This is a best-effort, on-device parser —
-   it favours clear, explicit phrasing (e.g. "patient name is Ravi
-   Das, phone number is 98765 43210, age 42, gender male, reason
-   fever, symptoms cough and body ache"). It can always be swapped
-   for a stronger NLU/AI backend later without changing anything
-   else in this workflow, since every call funnels through
-   voiceProcessAppointment()/voiceProcessPrescription() below.
-   ══════════════════════════════════════════════════════════════ */
-
-/* ── Manual vs Voice choice sheet, opened from the bottom-nav FABs ── */
-function openAppointmentChoiceModal(){
-  document.getElementById('choice-modal-title').textContent='New Appointment';
-  document.getElementById('choice-manual-btn').onclick=function(){closeModal('choice-modal');openAddAppointmentModal();};
-  document.getElementById('choice-voice-btn').onclick=function(){closeModal('choice-modal');openVoiceModal('appointment');};
-  openModal('choice-modal');
-}
-function openPrescriptionChoiceModal(){
-  document.getElementById('choice-modal-title').textContent='New Prescription';
-  document.getElementById('choice-manual-btn').onclick=function(){
-    closeModal('choice-modal');
-    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
-  };
-  document.getElementById('choice-voice-btn').onclick=function(){closeModal('choice-modal');openVoiceModal('prescription');};
-  openModal('choice-modal');
-}
-
-/* ── Shared voice modal state & controls ─────────────────────────
-   One tap → mic starts automatically → doctor/patient speaks
-   naturally → session ends on its own (or on the Stop/Finish
-   button) → the whole workflow runs with no further clicks. ── */
-var _voiceMode=null;          /* 'appointment' | 'prescription' */
-var _voiceRecognition=null;
-var _voiceListening=false;
-var _voiceTranscript='';
-var _voiceLastSpeechAt=0;
-var _voiceSilenceTimer=null;
-var _voiceFinished=false;     /* guards against double-finish (command + timer + button) */
-var _voiceRecordStartedAt=0;  /* session start time — used only to estimate duration for voice_logs */
-
-var VOICE_GUIDES={
-  appointment:[
-    'Full Name','Mobile Number','Gender','Age or Date of Birth','Reason for Visit'
-  ],
-  prescription:[
-    'Medicine Name, Dose &amp; Duration',
-    'Food Timing — Before / After / With Food, Empty Stomach, Bedtime, or As Needed',
-    'Instructions / Advice',
-    'Next Follow-up Date',
-    'Say "Done" or "Finish Prescription" when you\'re finished'
-  ]
-};
-
-/* Appointment sessions end automatically after a short natural pause
-   once something has been said (patients don't need to know a
-   command). Prescription sessions never auto-end on a pause — a
-   doctor thinking or checking a chart is normal — they only end on
-   the "finish"/"done" voice command or the Stop/Finish button. */
-var VOICE_APPT_SILENCE_MS=3500;
-
-/* ══════════════════════════════════════════════════════════════
-   VOICE SESSION LOGGING (transcript + audio recording)
-
-   Requires the `voice_logs` table and a private `voice-recordings`
-   storage bucket (see supabase/2026_07_18_voice_logs.sql). Columns
-   used: id, clinic_id, patient_id, appointment_id, prescription_id,
-   session_type ('appointment'|'prescription'), transcript,
-   audio_path, duration_seconds, doctor_name, created_at.
-
-   Every read/write is defensively wrapped exactly like the rest of
-   this file's background layers (ABDM foundation, audit trail,
-   follow-up management) — a missing table or bucket never blocks
-   the actual appointment/prescription voice workflow, it only means
-   that particular session doesn't get logged. This module is purely
-   additive.
-   ══════════════════════════════════════════════════════════════ */
-
-function _voiceSupported(){
-  return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
-}
-
-function openVoiceModal(mode){
-  _voiceMode=mode;
-  _voiceTranscript='';
-  _voiceFinished=false;
-  var supported=_voiceSupported();
-  document.getElementById('voice-transcript').textContent='';
-  document.getElementById('voice-modal-title').textContent=mode==='appointment'?'Voice Appointment':'Voice Prescription';
-  document.getElementById('voice-guide-title').textContent=mode==='appointment'?'Please say:':'Please dictate:';
-  var list=document.getElementById('voice-guide-list');
-  if(list)list.innerHTML=(VOICE_GUIDES[mode]||[]).map(function(s){return '<li>'+s+'</li>';}).join('');
-  var hint=document.getElementById('voice-hint-text');
-  if(hint)hint.textContent=mode==='appointment'
-    ?'Listening starts automatically and stops on its own once you finish speaking.'
-    :'Take your time — pauses are fine. Say "Done" or "Finish Prescription", or tap Stop/Finish, when you\'re done.';
-  var finBtn=document.getElementById('voice-finish-btn');
-  if(finBtn)finBtn.style.display=supported?'flex':'none';
-  document.getElementById('voice-status-text').textContent=supported?'Starting microphone…':"Voice input isn't supported in this browser — please use manual entry instead.";
-  if(mode==='prescription' && (!document.getElementById('rx-patient')||!document.getElementById('rx-patient').value) && !window._rxVoicePatientPreset){
-    showToast('Tip: select a patient in Prescriptions first for best results.');
-  }
-  openModal('voice-modal');
-  if(supported){
-    /* mic starts on its own — no separate "Start Speaking" action */
-    setTimeout(voiceStartListening,250);
-  }
-}
-function closeVoiceModal(){
-  voiceStopListening();
-  _voiceRecordStartedAt=0; /* reset — an aborted session is never logged */
-  closeModal('voice-modal');
-}
-function voiceStartListening(){
-  if(!_voiceSupported())return;
-  try{
-    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    _voiceRecognition=new SR();
-    _voiceRecognition.continuous=true;
-    _voiceRecognition.interimResults=true;
-    _voiceRecognition.lang=currentLang==='bn'?'bn-BD':'en-IN';
-    _voiceRecognition.onresult=function(e){
-      var interim='', finalChunk='';
-      for(var i=e.resultIndex;i<e.results.length;i++){
-        if(e.results[i].isFinal)finalChunk+=e.results[i][0].transcript+' ';
-        else interim+=e.results[i][0].transcript;
-      }
-      if(finalChunk)_voiceTranscript+=finalChunk;
-      _voiceLastSpeechAt=Date.now();
-      var box=document.getElementById('voice-transcript');
-      if(box)box.textContent=(_voiceTranscript+' '+interim).trim();
-
-      /* Prescription: a spoken "finish"/"done" command ends the
-         session immediately — checked on every final chunk. */
-      if(_voiceMode==='prescription' && finalChunk && _voiceIsFinishCommand(finalChunk)){
-        _voiceTranscript=_voiceStripFinishCommand(_voiceTranscript);
-        voiceFinish();
-        return;
-      }
-      if(_voiceMode==='appointment')_voiceArmSilenceCheck();
-    };
-    _voiceRecognition.onerror=function(e){
-      if(e.error==='no-speech'||e.error==='aborted')return;
-      showToast('Voice input error: '+e.error);
-    };
-    _voiceRecognition.onend=function(){
-      /* keep listening continuously until the session explicitly ends */
-      if(_voiceListening && !_voiceFinished){ try{_voiceRecognition.start();}catch(e){} }
-    };
-    _voiceRecognition.start();
-    _voiceListening=true;
-    _voiceLastSpeechAt=Date.now();
-    _voiceRecordStartedAt=Date.now(); /* timestamp only — no separate mic stream, so nothing competes with SpeechRecognition */
-    var st=document.getElementById('voice-status-text'); if(st)st.textContent='Listening… speak naturally.';
-    var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.add('blink');
-    if(_voiceMode==='appointment')_voiceArmSilenceCheck();
-  }catch(e){ showToast('Could not start voice input.'); }
-}
-function voiceStopListening(){
-  _voiceListening=false;
-  clearTimeout(_voiceSilenceTimer);
-  if(_voiceRecognition){ try{_voiceRecognition.onend=null;_voiceRecognition.stop();}catch(e){} }
-  var st=document.getElementById('voice-status-text'); if(st)st.textContent='Starting microphone…';
-  var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.remove('blink');
-}
-
-/* ── Parallel mic recording, purely for the Supabase voice log ──
-   SpeechRecognition never exposes the underlying audio, so logging
-   the actual recording (not just the transcript) needs its own,
-   independent getUserMedia + MediaRecorder capture running
-   alongside it. Entirely best-effort: if the browser/device doesn't
-   support it, or the extra mic grant is denied, voice-to-text keeps
-   working exactly as before — only the audio log is skipped. */
-/* NOTE: this used to also open a second, parallel getUserMedia/MediaRecorder
-   stream so the raw audio could be uploaded alongside the transcript. That
-   competed with SpeechRecognition for the microphone and caused transcripts
-   to silently come back empty ("No speech captured"). Removed — we now only
-   log the transcript + duration to voice_logs, not a raw audio file. */
-function _voiceSessionDurationSec(){
-  return _voiceRecordStartedAt?Math.max(1,Math.round((Date.now()-_voiceRecordStartedAt)/1000)):null;
-}
-
-/* Appointment-only: after each chunk of speech, wait
-   VOICE_APPT_SILENCE_MS of true silence before treating the patient
-   as finished — a natural pause-to-end, no button required. */
-function _voiceArmSilenceCheck(){
-  clearTimeout(_voiceSilenceTimer);
-  _voiceSilenceTimer=setTimeout(function(){
-    if(_voiceMode!=='appointment'||_voiceFinished)return;
-    if(!_voiceTranscript.trim())return; /* nothing said yet — keep waiting */
-    if(Date.now()-_voiceLastSpeechAt>=VOICE_APPT_SILENCE_MS-200)voiceFinish();
-  },VOICE_APPT_SILENCE_MS);
-}
-
-var VOICE_FINISH_PATTERN=/\b(finish(?:ed)? prescription|that'?s (?:all|it|done)|i'?m done|i am done|^done$|\bdone\b\.?$)/i;
-function _voiceIsFinishCommand(chunk){
-  return VOICE_FINISH_PATTERN.test(chunk.trim());
-}
-function _voiceStripFinishCommand(text){
-  return text.replace(/\b(finish(?:ed)? prescription|that'?s (?:all|it|done)|i'?m done|i am done|done)\b\.?\s*$/i,'').trim();
-}
-
-/* Manual override — the Stop/Finish button, always available as a
-   fallback for both flows even though neither strictly requires it. */
-function voiceManualFinish(){ voiceFinish(); }
-
-/* ── Ends the session (auto or manual), closes the modal, and runs
-   the whole workflow automatically — no further clicks needed. ── */
-async function voiceFinish(){
-  if(_voiceFinished)return;
-  _voiceFinished=true;
-  clearTimeout(_voiceSilenceTimer);
-  voiceStopListening();
-  var durationSec=_voiceSessionDurationSec();
-  var text=_voiceTranscript.trim();
-  var mode=_voiceMode;
-  closeModal('voice-modal');
-  if(!text){showToast('No speech captured — please try again.');return;}
-  showToast('Processing your voice input…');
-  var linked={};
-  if(mode==='appointment')linked=await voiceProcessAppointment(text,linked);
-  else if(mode==='prescription')linked=await voiceProcessPrescription(text,linked);
-  _voiceSaveLog(mode,text,durationSec,linked||{});
-}
-
-/* ── Persists the transcript + (if captured) the actual audio
-   recording to Supabase, linked to whichever patient/appointment/
-   prescription the session produced. Wrapped defensively like every
-   other background layer in this file: a missing `voice_logs` table
-   or `voice-recordings` storage bucket never blocks the appointment
-   or prescription that was just created — it only skips the log. ── */
-async function _voiceSaveLog(mode,transcript,durationSec,linked){
-  try{
-    var cid=_clinicId||(await _ensureClinicId());
-    if(!cid)return;
-    var ins=await _supa.from('voice_logs').insert({
-      clinic_id:cid,
-      session_type:mode,
-      transcript:transcript,
-      audio_path:null, /* raw audio capture removed — it competed with SpeechRecognition for the mic and broke transcripts */
-      duration_in_seconds:durationSec||null, /* matches the actual voice_logs column name */
-      patient_id:linked.patientId||null,
-      appointment_id:linked.appointmentId||null,
-      prescription_id:linked.prescriptionId||null,
-      doctor_name:(DB[mkt]&&DB[mkt].doc&&DB[mkt].doc.name)||null
-    });
-    if(ins.error){
-      console.warn('[AuraVoiceLogs] Could not save voice log:',ins.error.message);
-    }
-  }catch(e){
-    /* logging is best-effort and must never interrupt the appointment/
-       prescription that voice entry just successfully created */
-  }
-}
-
-/* ── Lightweight pattern-based field extraction ──────────────── */
-function _voiceExtract(text, patterns){
-  for(var i=0;i<patterns.length;i++){
-    var m=text.match(patterns[i]);
-    if(m&&m[1])return m[1].trim().replace(/[.,;]+$/,'');
-  }
-  return '';
-}
-
-/* ── Appointment voice parser: name, phone, DOB/age, gender, reason,
-   symptoms ── */
-function voiceParseAppointment(text){
-  var t=' '+text+' ';
-  var name=_voiceExtract(t,[
-    /patient(?:'s)? name is\s+([a-zA-Z][a-zA-Z\s.]*?)(?:,|\.| phone| number| age| gender| reason| symptom|$)/i,
-    /\bname is\s+([a-zA-Z][a-zA-Z\s.]*?)(?:,|\.| phone| number| age| gender| reason| symptom|$)/i
-  ]);
-  var phone=_voiceExtract(t,[
-    /(?:phone number is|phone is|mobile number is|mobile is|contact number is|number is)\s*([\d][\d\s]{6,14}\d)/i
-  ]);
-  var dob=_voiceExtract(t,[/(?:date of birth is|dob is|born on)\s*([\d]{1,2}[\/\-][\d]{1,2}[\/\-][\d]{2,4})/i]);
-  var age=_voiceExtract(t,[/age(?: is)?\s*(\d{1,3})\s*(?:years?|yrs?)?/i]);
-  var gender=_voiceExtract(t,[/gender(?: is)?\s*(male|female|other)/i]);
-  if(!gender){
-    if(/\bfemale\b/i.test(t))gender='Female';
-    else if(/\bmale\b/i.test(t))gender='Male';
-  }
-  var reason=_voiceExtract(t,[/reason (?:for visit )?is\s+([^,.]+?)(?:,|\.| symptom|$)/i,/visiting for\s+([^,.]+?)(?:,|\.| symptom|$)/i]);
-  var symptoms=_voiceExtract(t,[/symptoms? (?:are|is)\s+([^.]+)$/i,/complaining of\s+([^.]+)$/i]);
-  return {name:name,phone:phone,dob:dob,age:age,gender:gender,reason:reason,symptoms:symptoms};
-}
-
-/* ── Appointment finishes speaking → the appointment is created
-   fully automatically (date = today, time = next available slot —
-   the patient never has to say either) → the doctor's screen jumps
-   straight to Prescriptions with the patient already selected and
-   shown as a compact badge, not editable fields. ── */
-async function voiceProcessAppointment(text, linked){
-  linked=linked||{};
-  var data=voiceParseAppointment(text);
-  if(!data.name){
-    showToast("Couldn't clearly hear the patient's name — opening manual entry so you can finish this appointment.");
-    openAddAppointmentModal();
-    return linked;
-  }
-  if(!data.phone){
-    showToast("Couldn't clearly hear a phone number — opening manual entry so you can finish this appointment.");
-    openAddAppointmentModal();
-    var ne=document.getElementById('add-name'); if(ne)ne.value=data.name;
-    return linked;
-  }
-  add_resetModal();
-  document.getElementById('add-name').value=data.name;
-  document.getElementById('add-phone').value=data.phone.replace(/\D/g,'');
-  document.getElementById('add-gender').value=data.gender||'Other';
-  if(data.dob)document.getElementById('add-dob').value=_voiceIsoDob(data.dob);
-  document.getElementById('add-age').value=data.dob?'':(data.age||'30');
-  add_onDobChange();
-  var reasonCombined=[data.reason,data.symptoms].filter(Boolean).join(' — ');
-  document.getElementById('add-reason').value=reasonCombined||'General Consultation';
-  /* Appointment date/time are always generated by the system — the
-     current date and the next available slot — never spoken. */
-  document.getElementById('add-date').value=new Date().toISOString().split('T')[0];
-  populateAddSlots();
-  var slotSel=document.getElementById('add-slot');
-  if(slotSel&&slotSel.options.length>1)slotSel.selectedIndex=1;
-
-  add_onPhoneInput();
-  await new Promise(function(r){setTimeout(r,600);}); /* let the phone lookup resolve so we don't create a duplicate patient */
-
-  showToast('Creating appointment for '+data.name+' from voice…');
-  var created=await addAppointment();
-  if(created){ linked.patientId=created.patientId; linked.appointmentId=created.appointmentId; }
-
-  setTimeout(function(){
-    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
-    var sel=document.getElementById('rx-patient');
-    var pats=DB[mkt].patients||[];
-    var match=pats.filter(function(p){return p.name.toLowerCase()===data.name.toLowerCase();})[0];
-    if(sel&&match){
-      sel.value=match.id; rxPickPatient();
-      rxShowPatientBadge(match); /* doctor only sees the prescription area, not editable name/phone fields */
-      window._rxVoicePatientPreset=true;
-    }
-    showToast('Ready for prescription — tap Voice Entry to dictate, or fill it in manually.');
-  },900);
-  return linked;
-}
-function _voiceIsoDob(raw){
-  var m=raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
-  if(!m)return '';
-  var d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0'), y=m[3].length===2?('20'+m[3]):m[3];
-  return y+'-'+mo+'-'+d;
-}
-
-/* ── Prescription voice parser: diagnosis, medicines (dose/duration/
-   timing), follow-up, instructions ── */
-function _voiceTimingMap(raw){
-  if(!raw)return'';
-  raw=raw.toLowerCase();
-  if(raw.indexOf('before')>-1)return'Before Food';
-  if(raw.indexOf('after')>-1)return'After Food';
-  if(raw.indexOf('with')>-1)return'With Food';
-  if(raw.indexOf('empty')>-1)return'Empty Stomach';
-  if(raw.indexOf('bed')>-1)return'Bedtime';
-  return'';
-}
-function voiceParsePrescription(text){
-  var t=' '+text+' ';
-  var diagnosis=_voiceExtract(t,[/diagnos(?:is|ed with) is?\s+([^,.]+?)(?:,|\.| medicine| prescribe|$)/i,/diagnosed with\s+([^,.]+?)(?:,|\.| medicine| prescribe|$)/i]);
-  var followupNo=/(no follow[\s-]?up|follow[\s-]?up (?:is )?not required|does not need a? follow[\s-]?up)/i.test(t);
-  var followupDaysRaw=_voiceExtract(t,[/follow[\s-]?up(?: date)?(?: is| in| after)?\s*(\d{1,3})\s*days?/i]);
-  var followupYes=followupDaysRaw||/(follow[\s-]?up (?:is )?required|needs? a? follow[\s-]?up|schedule a? follow[\s-]?up)/i.test(t);
-  var instructions=_voiceExtract(t,[/instructions? (?:are|is)\s+([^.]+)$/i,/advice is\s+([^.]+)$/i]);
-
-  var meds=[];
-  var medRegex=/(?:medicine|prescribe|give)\s+([a-zA-Z][a-zA-Z0-9\s]*?)(?:\s+(\d+\s?mg))?(?:[, ]+(?:dose|dosage)\s+([\d](?:[\-\d])*))?(?:[, ]+(?:for|duration)\s+(\d+)\s*days?)?(?:[, ]+(before food|after food|with food|empty stomach|bedtime))?(?=[,.]|\s+(?:medicine|prescribe|give)|$)/gi;
-  var m;
-  while((m=medRegex.exec(t))!==null){
-    var mname=(m[1]||'').trim();
-    if(!mname||mname.length<2)continue;
-    meds.push({
-      name:(mname+(m[2]?(' '+m[2]):'')).trim(),
-      dose:m[3]||'1-0-1',
-      duration:m[4]||'5',
-      timing:_voiceTimingMap(m[5])||'After Food'
-    });
-  }
-  return {diagnosis:diagnosis,meds:meds,followup:followupYes&&!followupNo,followupDays:followupDaysRaw?parseInt(followupDaysRaw,10):null,noFollowup:followupNo,instructions:instructions};
-}
-function _voiceNearestFollowupOption(days){
-  if(!days)return '14';
-  var best=RX_FOLLOWUP_DAY_OPTIONS[0], bestDiff=Infinity;
-  RX_FOLLOWUP_DAY_OPTIONS.forEach(function(d){
-    var diff=Math.abs(d-days);
-    if(diff<bestDiff){bestDiff=diff;best=d;}
-  });
-  return String(best);
-}
-
-/* ── Doctor finishes speaking (voice command or Stop/Finish) → the
-   whole prescription — medicines, dose, timing, advice, follow-up —
-   is built, the PDF is generated with the consultation summary
-   included in that same PDF, and it is sent to the patient's
-   WhatsApp automatically. No "Generate Prescription" click needed. ── */
-async function voiceProcessPrescription(text, linked){
-  linked=linked||{};
-  var sel=document.getElementById('rx-patient');
-  if(!sel||!sel.value){
-    showToast('Please select a patient on the Prescriptions screen first, then use Voice again.');
-    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
-    return linked;
-  }
-  linked.patientId=sel.value;
-  var data=voiceParsePrescription(text);
-  document.getElementById('rx-meds').innerHTML='';
-  if(data.meds.length){
-    data.meds.forEach(function(m){ addMedRow(m.name,m.dose,m.duration,m.timing); });
-  }else{
-    addMedRow();
-    showToast("Couldn't clearly detect medicines from your voice — please review the prescription before it sends.");
-  }
-  var instrParts=[];
-  if(data.diagnosis)instrParts.push('Diagnosis: '+data.diagnosis);
-  if(data.instructions)instrParts.push(data.instructions);
-  document.getElementById('rx-instr').value=instrParts.join('\n');
-  var fuSel=document.getElementById('rx-followup');
-  if(fuSel)fuSel.value=data.followup?_voiceNearestFollowupOption(data.followupDays):'';
-  rxOnFollowupChange();
-
-  showToast('Generating prescription from voice and sending to WhatsApp…');
-  var created=await generatePrescription();
-  if(created){ linked.prescriptionId=created.prescriptionId; linked.patientId=created.patientId||linked.patientId; }
-  return linked;
-}
+/* Bottom-nav buttons: straight to the manual forms (voice entry removed) */
+function openAppointmentChoiceModal(){ openAddAppointmentModal(); }
+function openPrescriptionChoiceModal(){ nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]')); }
 </script>
 <script src="aura-drop.js?v=1"></script>
-<script src="aura-themes.js?v=1"></script>
-<script>
-/* keep the clinic's own Light / Dark labels in step with the theme picker (Light = black menu, white page) */
-(function(){
-  function sync(){
-    var b=document.documentElement.getAttribute("data-theme")==="dark"?"dark":"light";
-    if(b===currentTheme)return; currentTheme=b;
-    try{localStorage.setItem("aura_theme",b)}catch(e){}
-    try{updateThemeUI()}catch(e){}
-  }
-  new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
-  sync();
-})();
-</script>
 <script src="clinic-photo.js?v=1"></script>
 </body>
 </html>
