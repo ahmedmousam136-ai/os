@@ -35,7 +35,7 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 .wrap{
-  width:100%;max-width:340px;
+  width:100%;max-width:380px;
   display:flex;flex-direction:column;
   align-items:center;
   position:relative;z-index:1;
@@ -53,7 +53,7 @@ body{
   margin-top:10px;font-weight:400;letter-spacing:.01em;
 }
 /* ── CARDS ── */
-.cards{width:100%;display:flex;flex-direction:column;gap:14px;margin-bottom:48px}
+.cards{width:100%;display:flex;flex-direction:column;gap:12px;margin-bottom:40px}
 .card{
   display:flex;align-items:center;gap:15px;
   padding:17px 16px;
@@ -130,30 +130,56 @@ body::before,body::after{background:none!important}
 
   <div class="cards">
     <a class="card" href="clinic.html">
-      <div class="icon icon-c">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B9BF8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
+      <div class="icon icon-n">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1EBD80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       </div>
       <div class="info">
         <div class="card-title">Clinic</div>
-        <div class="card-sub">Clinic Operating System</div>
+        <div class="card-sub">Doctor chambers, polyclinics and OPD</div>
       </div>
       <div class="arr">›</div>
     </a>
 
     <a class="card" href="nh.html">
       <div class="icon icon-n">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1EBD80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1EBD80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/><path d="M12 7v4M10 9h4"/></svg>
       </div>
       <div class="info">
         <div class="card-title">Nursing Home</div>
-        <div class="card-sub">Nursing Home Operating System</div>
+        <div class="card-sub">Hospitals with admitted patients</div>
+      </div>
+      <div class="arr">›</div>
+    </a>
+
+    <a class="card" href="nh.html?for=pharmacy">
+      <div class="icon icon-n">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1EBD80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M8 8V5a4 4 0 0 1 8 0v3"/><path d="M12 11v6M9 14h6"/></svg>
+      </div>
+      <div class="info">
+        <div class="card-title">Pharmacy Retail</div>
+        <div class="card-sub">Medicine shops and chemists</div>
+      </div>
+      <div class="arr">›</div>
+    </a>
+
+    <a class="card" href="nh.html?for=wholesale">
+      <div class="icon icon-n">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1EBD80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h13v11H1z"/><path d="M14 10h4l3 3v4h-7"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></svg>
+      </div>
+      <div class="info">
+        <div class="card-title">Pharmacy Wholesale</div>
+        <div class="card-sub">Distributors and stockists</div>
+      </div>
+      <div class="arr">›</div>
+    </a>
+
+    <a class="card" href="nh.html?for=lab">
+      <div class="icon icon-n">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1EBD80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v6L5 18a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3L14 9V3"/><path d="M7.5 14h9"/></svg>
+      </div>
+      <div class="info">
+        <div class="card-title">Diagnostic Lab</div>
+        <div class="card-sub">Pathology labs and collection centres</div>
       </div>
       <div class="arr">›</div>
     </a>
