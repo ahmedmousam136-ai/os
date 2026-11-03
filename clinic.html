@@ -4214,14 +4214,17 @@ function renderQueue(){
     var s=a.status||'Waiting';
     return{id:a.id||a.appointment_id||i,patientId:a.patient_id||null,name:a.patient_name||'Unknown',
       phone:a.patient_phone||'',time:a.appointment_time||'',date:a.appointment_date||'',
-      reason:a.reason||'',status:s,type:'appointment'};
+      reason:a.reason||'',status:s,type:'appointment',token:a.token||null,source:a.source||''};
   });
   /* Today, Upcoming, and a picked date all read chronologically
      (soonest appointment first). Completed and All read as a live
      activity feed — most recent activity first. */
   var mostRecentFirst=(!_dashQueueDate && (_dashQueueFilter==='completed'||_dashQueueFilter==='all'));
   var list=mostRecentFirst?_sortQueueDesc(raw):_sortQueueAsc(raw);
-  var q=list.map(function(p,i){p.serial=i+1;return p;});
+  /* one day's queue runs by token number (WhatsApp bookings and desk bookings share the same tokens) */
+  var oneDay=list.length&&list.every(function(p){return p.token&&p.date===list[0].date;});
+  if(oneDay&&!mostRecentFirst)list=list.slice().sort(function(a,b){return a.token-b.token;});
+  var q=list.map(function(p,i){p.serial=(oneDay&&p.token)?p.token:i+1;return p;});
   DB[mkt].queue=q;
   var cnt=document.getElementById('q-count');
   if(cnt)cnt.textContent=`${q.length} ${currentLang==="bn"?"রোগী":"patients"}`;
@@ -7422,5 +7425,7 @@ function openPrescriptionChoiceModal(){ nav('prescriptions', document.querySelec
 </script>
 <script src="aura-drop.js?v=1"></script>
 <script src="clinic-photo.js?v=1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="clinic-queue.js?v=1"></script>
 </body>
 </html>
