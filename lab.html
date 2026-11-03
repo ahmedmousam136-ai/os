@@ -51,6 +51,11 @@
         <div class="seg"><button id="k-walkin" class="on" onclick="kind('walkin')">&#128694; Walk-in patient</button><button id="k-ipd" onclick="kind('ipd')">&#128719; Admitted patient</button></div>
         <span class="tiny" id="k-hint">Lab bill for the patient (healthcare service: no GST).</span>
       </div>
+      <div class="card" id="lx-card" style="margin-bottom:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">
+        <div style="flex:1;min-width:220px"><b>&#128221; Photo of the doctor's slip</b><div class="tiny">Prescription or test slip. AI reads the patient and the tests, and ticks them in your test list. You check, then book. You can also drag the picture here or press Ctrl+V.</div></div>
+        <label class="btn btn-g" style="cursor:pointer;margin:0">&#128247; Take / choose photo<input type="file" id="lx-file" accept="image/*" onchange="labRxPick(this)" style="display:none"/></label>
+        <div id="lx-st" style="flex-basis:100%"></div>
+      </div>
       <div id="o-walkin" class="grid4" style="margin-bottom:12px">
         <div><label class="flbl">Patient name *</label><input class="finput" id="o-name" oninput="unlinkIfRenamed(this.value)"/></div>
         <div class="grid2" style="gap:8px"><div><label class="flbl">Age</label><input class="finput" id="o-age" placeholder="e.g. 34"/></div>
@@ -215,6 +220,65 @@ function pickRender() {
     return '<span class="tchip' + (SEL.indexOf(t.id) >= 0 ? ' on' : '') + '" onclick="toggleTest(\'' + t.id + '\')">' + (SEL.indexOf(t.id) >= 0 ? '&#10003; ' : '') + esc(t.name) + ' <span class="p">' + dMoney0(t.price) + '</span></span>';
   }).join('') : '<p class="muted" style="padding:8px">' + (TESTS.length ? 'No test matches.' : 'No tests yet. Load the common tests in Tests &amp; prices.') + '</p>';
 }
+/* ---------- doctor's slip photo -> tests ---------- */
+function labResize(file) {
+  return new Promise(function (res, rej) {
+    var fr = new FileReader();
+    fr.onload = function () { var im = new Image(); im.onload = function () {
+      var max = 2200, k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', 0.85)); };
+      im.onerror = function () { rej(new Error('This file is not a picture.')); }; im.src = fr.result; };
+    fr.onerror = function () { rej(new Error('Could not read the file.')); }; fr.readAsDataURL(file);
+  });
+}
+var LX = [], LX_LIST = [];
+async function labRxPick(inp) {
+  var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+  var st = dEl('lx-st');
+  if (!TESTS.length) { st.innerHTML = '<span class="over">Your test list is empty: load the common tests first (Tests).</span>'; return; }
+  st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the slip&hellip; about 15-30 seconds.';
+  try {
+    var data = await labResize(f);
+    LX_LIST = TESTS.filter(function (t) { return t.is_active; });
+    var names = LX_LIST.map(function (t) { return t.name + (t.category ? ' - ' + t.category : ''); });
+    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: data.split(',')[1], mime_type: 'image/jpeg', kind: 'labrx', tests: names } });
+    var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok || d.kind !== 'labrx') {
+      var why = { daily_limit: 'Today\'s limit of photos is used up. Please tick the tests by hand.', ai_key_not_set: 'Photo reading is not set up on the server yet.', lab_module_off: 'The Lab module is not active.', nothing_read: 'No tests could be read. Take a clearer photo of the whole slip.', not_signed_in: 'Your login has expired. Please log in again.' };
+      st.innerHTML = '<span class="over">&#9888; ' + esc(why[d && d.reason] || ((d && d.ok) ? 'Please update the bill-scan function on the server.' : 'Could not read the slip. Please tick the tests by hand.')) + '</span>';
+      return;
+    }
+    if (KIND === 'walkin') {
+      if (d.patient && !dEl('o-name').value.trim()) dEl('o-name').value = d.patient;
+      if (d.age && !dEl('o-age').value.trim()) dEl('o-age').value = d.age;
+      if (d.sex && !dEl('o-sex').value) dEl('o-sex').value = d.sex;
+      if (d.phone && !dEl('o-phone').value.trim()) { dEl('o-phone').value = d.phone; if (window.deptPhoneInput) deptPhoneInput(dEl('o-phone')); }
+    }
+    if (d.doctor && !dEl('o-ref').value.trim()) { var dm = DOCS.filter(function (x) { return d.doctor.toLowerCase().indexOf(x.name.toLowerCase().replace(/^dr\.?\s*/, '')) >= 0; })[0]; dEl('o-ref').value = dm ? dm.name : d.doctor; }
+    var id = function (n) { return n != null && LX_LIST[n] ? LX_LIST[n].id : ''; };
+    LX = d.tests.map(function (t) {
+      var pick = id(t.pick), alts = (t.alts || []).map(id).filter(Boolean);
+      var lvl = pick ? (t.sure === 'high' ? 'g' : 'y') : (alts.length ? 'y' : 'r');
+      if (pick && lvl === 'g' && SEL.indexOf(pick) < 0) SEL.push(pick);   /* sure ones are ticked straight away */
+      return { name: t.name, raw: t.raw || '', pick: lvl === 'g' ? pick : '', cands: [pick].concat(alts).filter(function (x, k, a) { return x && a.indexOf(x) === k; }), lvl: lvl };
+    });
+    pickRender(); sumRender(); lxRender();
+  } catch (e) { st.innerHTML = '<span class="over">&#9888; ' + esc(dErr(e)) + '</span>'; }
+}
+function lxChoose(i, tid) { var x = LX[i]; if (tid && SEL.indexOf(tid) < 0) SEL.push(tid); x.pick = tid; x.lvl = tid ? 'g' : 's'; pickRender(); sumRender(); lxRender(); }
+function lxRender() {
+  var st = dEl('lx-st'); if (!st) return;
+  var open = LX.filter(function (x) { return x.lvl === 'y' || x.lvl === 'r'; }).length, sure = LX.filter(function (x) { return x.lvl === 'g'; }).length;
+  st.innerHTML = '<div style="margin-top:4px;font-weight:700">' + (open ? '&#128993; ' + sure + ' test' + (sure === 1 ? '' : 's') + ' ticked &middot; ' + open + ' to check below' : '&#128994; ' + sure + ' test' + (sure === 1 ? '' : 's') + ' ticked from the slip. Check the list and book.') + '</div>'
+    + LX.map(function (x, i) {
+      var b = x.lvl === 'g' ? '<span style="color:var(--green);font-weight:800">&#10003;</span>' : x.lvl === 's' ? '<span class="muted">skipped</span>' : x.lvl === 'y' ? '<span style="color:#92400E;font-weight:800">?</span>' : '<span class="over">&#10007;</span>';
+      var line = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:5px 0;border-top:1px dashed var(--green-border)">' + b + ' <b>' + esc(x.name) + '</b>' + (x.raw && x.raw !== x.name ? ' <span class="tiny">(written: ' + esc(x.raw) + ')</span>' : '');
+      if (x.lvl === 'g') line += ' <span class="tiny">&rarr; ' + esc((TMAP[x.pick] || {}).name || '') + '</span>';
+      else if (x.lvl === 'y') line += ' <span class="tiny" style="color:#92400E">which one?</span> ' + x.cands.map(function (c) { return '<button type="button" class="btn btn-sm" onclick="lxChoose(' + i + ',\'' + c + '\')">' + esc((TMAP[c] || {}).name || '') + '</button>'; }).join(' ') + ' <button type="button" class="btn btn-sm" onclick="lxChoose(' + i + ',\'\')">Skip</button>';
+      else if (x.lvl === 'r') line += ' <span class="tiny over">not in your test list: search it below, or add it in Tests</span> <button type="button" class="btn btn-sm" onclick="lxChoose(' + i + ',\'\')">OK</button>';
+      return line + '</div>';
+    }).join('');
+}
 function toggleTest(id) { var i = SEL.indexOf(id); if (i >= 0) SEL.splice(i, 1); else SEL.push(id); pickRender(); sumRender(); }
 function sumRender() {
   var g = SEL.reduce(function (a, id) { return a + Number(TMAP[id] ? TMAP[id].price : 0); }, 0);
@@ -259,7 +323,7 @@ async function book() {
     /* give the patient a health book (find or make their patient record by name + mobile) */
     if (KIND === 'walkin' && p.patient_phone) { try { var lk = await _supa.rpc('nhx_link_walkin', { p_kind: 'lab', p_id: o.id }); if (!lk.error && lk.data && lk.data.linked) { o.patient_id = lk.data.patient_id; o.uhid = o.uhid || lk.data.uhid; } } catch (e) {} }
     if (waOk) { var w = await _supa.rpc('lab_set_whatsapp', { p_order_id: o.id, p_ok: true }); if (!w.error && w.data) o = Object.assign(o, w.data); }
-    dEl('o-wa').checked = true;
+    dEl('o-wa').checked = true; LX = []; if (dEl('lx-st')) dEl('lx-st').innerHTML = '';
     SEL = []; LINKED = null; ['o-name', 'o-age', 'o-phone', 'o-uhid', 'o-ref'].forEach(function (id) { dEl(id).value = ''; }); if (window.deptPhoneInput) deptPhoneInput(dEl('o-phone')); dEl('o-sex').value = ''; dEl('o-disc').value = 0; delete dEl('o-paid').dataset.touched;
     pickRender(); sumRender();
     showDone(o);
@@ -423,6 +487,10 @@ async function resOpen(id) {
   dEl('res-title').textContent = 'Results · ' + o.order_no + ' · ' + o.patient_name;
   var res = o.results || {};
   var html = '<div class="muted" style="margin-bottom:10px">' + esc([o.age ? o.age + ' Y' : '', o.gender, o.referred_by ? 'Ref: ' + o.referred_by : ''].filter(Boolean).join(' · ')) + (female(o) ? '' : (o.gender ? '' : ' <span class="tag t-a">Sex not given: male ranges used</span>')) + '</div>';
+  if (o.status !== 'cancelled') html += '<div class="card" style="margin-bottom:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">'
+    + '<div style="flex:1;min-width:220px"><b>&#128247; Photo of the machine printout</b><div class="tiny">Analyzer printout, analyzer screen or your worksheet. AI fills the result boxes below. Yellow boxes: check them. You can also drag the picture here or press Ctrl+V.</div></div>'
+    + '<label class="btn btn-g" style="cursor:pointer;margin:0">&#128247; Take / choose photo<input type="file" id="res-photo" accept="image/*" onchange="labResPick(this)" style="display:none"/></label>'
+    + '<div id="res-ai" style="flex-basis:100%"></div></div>';
   (o.items || []).forEach(function (it) {
     var tv = res[it.test_id] || {};
     html += '<div class="card" style="margin-bottom:10px;background:var(--surface)"><div style="font-weight:800;margin-bottom:6px">' + esc(it.name) + ' <span class="tiny">' + esc(it.sample || '') + '</span></div><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Parameter</th><th>Result</th><th class="hide-sm">Unit</th><th>Normal range</th><th></th></tr></thead><tbody>'
@@ -440,6 +508,44 @@ async function resOpen(id) {
     + '<p class="tiny" style="margin-top:8px">Values outside the normal range are shown in red on the report. Please check every value before sending.</p><div class="err" id="res-err"></div><div id="res-out"></div>';
   dEl('res-body').innerHTML = html; dOpen('m-res');
   setTimeout(function () { var f = dEl('res-body').querySelector('.res-in'); if (f && !f.value) f.focus(); }, 60);
+}
+/* photo of the analyzer printout -> the result boxes of this order (only empty boxes are filled; unsure ones turn yellow) */
+async function labResPick(inp) {
+  var f = inp.files && inp.files[0]; inp.value = ''; if (!f || !CUR) return;
+  var st = dEl('res-ai'); if (!st) return;
+  var list = [];
+  (CUR.items || []).forEach(function (it) { (it.params || []).forEach(function (p, k) { list.push({ t: it.test_id, k: k, txt: p.name + (p.unit ? ' (' + p.unit + ')' : '') + ' [' + it.name + ']' }); }); });
+  if (!list.length) { st.innerHTML = '<span class="over">These tests have no result boxes (parameters). Add them in Tests.</span>'; return; }
+  st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the printout&hellip; about 15-30 seconds.';
+  try {
+    var data = await labResize(f);
+    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: data.split(',')[1], mime_type: 'image/jpeg', kind: 'labres', params: list.map(function (x) { return x.txt; }) } });
+    var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok || d.kind !== 'labres') {
+      var why = { daily_limit: 'Today\'s limit of photos is used up. Please type the results.', ai_key_not_set: 'Photo reading is not set up on the server yet.', lab_module_off: 'The Lab module is not active.', nothing_read: 'No results could be read. Take a clearer photo of the whole printout.' };
+      st.innerHTML = '<span class="over">&#9888; ' + esc(why[d && d.reason] || ((d && d.ok) ? 'Please update the bill-scan function on the server.' : 'Could not read the printout. Please type the results.')) + '</span>';
+      return;
+    }
+    var filled = 0, check = 0, kept = 0;
+    d.values.forEach(function (v) {
+      var x = list[v.n]; if (!x) return;
+      var el = document.querySelector('#res-body .res-in[data-t="' + x.t + '"][data-k="' + x.k + '"]'); if (!el) return;
+      if (el.value.trim() !== '') { kept++; return; }   /* never overwrite what was typed */
+      el.value = v.value; filled++;
+      var unsure = v.sure !== 'high';
+      el.style.background = unsure ? '#FEF3C7' : 'var(--green-bg)'; el.style.borderColor = unsure ? '#F59E0B' : 'var(--green-border)';
+      el.title = 'From the photo' + (v.unit ? ' · printed unit: ' + v.unit : '') + (unsure ? ' · CHECK THIS' : '');
+      if (unsure) check++;
+      el.addEventListener('input', function () { el.style.background = ''; el.style.borderColor = ''; el.title = ''; }, { once: true });
+      resFlag(el);
+    });
+    var missing = list.length - filled - kept, nm = String(d.patient || '').trim(), pn = String(CUR.patient_name || '').trim().toLowerCase();
+    var nameWarn = nm && pn && nm.toLowerCase().indexOf(pn.split(/\s+/)[0]) < 0 && pn.indexOf(nm.toLowerCase().split(/\s+/)[0]) < 0;
+    st.innerHTML = '<div style="font-weight:700;margin-top:4px">&#10003; ' + filled + ' result' + (filled === 1 ? '' : 's') + ' filled from the photo'
+      + (check ? ' &middot; <span style="color:#92400E">&#128993; ' + check + ' to check (yellow)</span>' : '') + (missing > 0 ? ' &middot; ' + missing + ' not on the paper' : '') + (kept ? ' &middot; ' + kept + ' already typed (kept)' : '') + '</div>'
+      + (nameWarn ? '<div class="over" style="margin-top:4px">&#9888; Name on the printout: <b>' + esc(nm) + '</b>. This order is for <b>' + esc(CUR.patient_name) + '</b>. Make sure it is the same patient!</div>' : '')
+      + '<div class="tiny" style="margin-top:2px">Check every value against the printout, then press Save &amp; mark ready.</div>';
+  } catch (e) { st.innerHTML = '<span class="over">&#9888; ' + esc(dErr(e)) + '</span>'; }
 }
 function resFlag(inp) {
   var it = (CUR.items || []).filter(function (x) { return x.test_id === inp.getAttribute('data-t'); })[0]; if (!it) return;
