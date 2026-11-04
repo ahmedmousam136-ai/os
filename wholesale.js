@@ -74,9 +74,23 @@ function setupNote() {
 }
 
 /* ---------- data ---------- */
+/* Supabase gives at most 1000 rows per request: read big lists page by page (10,000 or 1,00,000 items are fine) */
+async function whAll(build) {
+  var out = [], from = 0, size = 1000;
+  for (;;) {
+    var r = await build().range(from, from + size - 1);
+    if (r.error) return r;
+    out = out.concat(r.data || []);
+    if (!r.data || r.data.length < size) return { data: out, error: null };
+    from += size;
+  }
+}
 async function loadItems() {
-  var r = await _supa.from('wh_items').select('*').eq('clinic_id', _clinicId).order('name');
-  var b = await _supa.from('wh_batches').select('*').eq('clinic_id', _clinicId).order('expiry', { ascending: true, nullsFirst: false });
+  var rb = await Promise.all([
+    whAll(function () { return _supa.from('wh_items').select('*').eq('clinic_id', _clinicId).order('name').order('id'); }),
+    whAll(function () { return _supa.from('wh_batches').select('*').eq('clinic_id', _clinicId).order('expiry', { ascending: true, nullsFirst: false }).order('id'); })
+  ]);
+  var r = rb[0], b = rb[1];
   if (r.error) { showToast('Could not load items: ' + dErr(r.error)); return; }
   ITEMMAP = {};
   ITEMS = (r.data || []).map(function (x) { x.batches = []; x.stock = 0; x.expiredQty = 0; ITEMMAP[x.id] = x; return x; });
@@ -810,6 +824,41 @@ function scanResize(file) {
   });
 }
 var SCAN = [], SCAN_DOC = null;
+var WH_TRAY = null;
+function whTrayInit() {
+  if (WH_TRAY || !window.AuraPages || !dEl('wh-tray')) return;
+  WH_TRAY = AuraPages.tray(dEl('wh-tray'), { module: 'wholesale', onRead: async function (d, pages) {
+    var st = dEl('b-scan-st'); st.innerHTML = '';
+    if (!d || !d.ok) {
+      if (d && ['not_allowed', 'not_signed_in'].indexOf(d.reason) < 0) { scanReview({ _failed: d.message || 'Could not read the bill.', lines: [{}] }); SCAN[0].manual = true; scanRows(); scanCheck(); }
+      return;
+    }
+    if (!d.lines.length) { st.innerHTML = '<span style="color:var(--red)">&#9888; No product lines were found on these pages.</span>'; return; }
+    if (d.name_list_only) {
+      st.innerHTML = '<div class="card" style="margin-top:8px;border-color:var(--red);background:#fff5f5"><b style="color:var(--red)">&#9888; This is not a purchase bill</b>'
+        + '<div class="tiny" style="margin-top:4px">It looks like a plain list of product names. To add stock, every line needs a <b>batch no., expiry, MRP, GST %</b> and <b>quantity</b> &mdash; as printed on the supplier\'s bill. Photograph the supplier\'s tax invoice, or import an Excel / CSV stock list with those columns.</div></div>';
+      return;
+    }
+    /* keep the first page with the purchase */
+    SCAN_DOC = _clinicId + '/wholesale/purchase-bills/' + Date.now() + '.jpg';
+    try { var up = await _supa.storage.from('bills').upload(SCAN_DOC, pages[0].blob, { contentType: 'image/jpeg', upsert: true }); if (up.error) SCAN_DOC = null; } catch (e) { SCAN_DOC = null; }
+    d._img = pages[0].data; scanReview(d);
+  } });
+}
+/* the four tiles at the top of New purchase */
+function asPick(k) {
+  whTrayInit();
+  if (k === 'pick' || k === 'pdf') {
+    dEl('as-scan').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var inp = dEl('wh-tray').querySelector('input[data-ap="' + k + '"]'); if (inp) inp.click();
+    return;
+  }
+  /* Excel / CSV: the import screen (Settings), set to products & stock */
+  dTab('settings'); impKind('items');
+  var f = dEl('imp-file'); f.setAttribute('accept', k === 'csv' ? '.csv,text/csv' : '.xlsx,.xls');
+  setTimeout(function () { dEl('imp-kind').scrollIntoView({ behavior: 'smooth', block: 'center' }); f.click(); setTimeout(function () { f.setAttribute('accept', '.xlsx,.xls,.csv'); }, 1500); }, 80);
+}
+document.addEventListener('DOMContentLoaded', function () { setTimeout(whTrayInit, 0); });
 async function scanPick(inp) {
   var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
   var st = dEl('b-scan-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the bill&hellip; this takes about 20-40 seconds.';
@@ -1010,13 +1059,14 @@ function stockRender() {
     return true;
   });
   WGSHOWN = list.map(function (it) { return it.id; });
+  var ST_MAX = 300, more = list.length - ST_MAX; if (more > 0) list = list.slice(0, ST_MAX);
   dEl('st-b').innerHTML = list.length ? list.map(function (it) {
     var b = it.sellable[0];
     if (WGSEL) return '<tr style="cursor:pointer' + (WGSEL[it.id] ? ';background:var(--green-bg)' : '') + '" onclick="wgTick(' + A(it.id) + ')"><td><div style="display:flex;gap:10px;align-items:center"><input type="checkbox" style="width:18px;height:18px;appearance:auto;pointer-events:none" ' + (WGSEL[it.id] ? 'checked' : '') + '/><div><b>' + esc(it.name) + '</b><div class="tiny">' + esc(it.pack || '') + ' &middot; HSN ' + esc(it.hsn || '-') + '</div></div></div></td>'
       + '<td class="r"><b>' + it.stock + '</b> <span class="tiny">' + esc(it.unit) + '</span></td><td>' + (it.nearestExp ? dExp(it.nearestExp) : '-') + '</td><td class="r">' + (b ? dMoney(b.mrp) : '-') + '</td><td class="r hide-sm"></td><td><b>GST ' + (Number(it.gst_rate) ? Number(it.gst_rate) + '%' : 'Exempt') + '</b></td><td></td></tr>';
     return '<tr style="cursor:pointer" onclick="itemOpen(' + A(it.id) + ')"><td><b>' + esc(it.name) + '</b><div class="tiny">' + (it.composition ? esc(it.composition) + ' &middot; ' : '') + (it.pack ? esc(it.pack) + ' &middot; ' : '') + 'GST ' + Number(it.gst_rate) + '%</div></td>'
       + '<td class="r"><b>' + it.stock + '</b> <span class="tiny">' + esc(it.unit) + '</span></td><td>' + (it.nearestExp ? dExp(it.nearestExp) : '-') + '</td><td class="r">' + (b ? dMoney(b.mrp) : '-') + '</td><td class="r hide-sm">' + (b && b.ptr ? dMoney(b.ptr) : '-') + '</td><td>' + itemStatus(it) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
-  }).join('') : '<tr><td colspan="7" class="lines-empty">' + (ITEMS.length ? 'Nothing matches.' : 'No items yet. Enter a purchase to add stock.') + '</td></tr>';
+  }).join('') + (more > 0 ? '<tr><td colspan="7" class="lines-empty">Showing the first ' + ST_MAX + ' of ' + (more + ST_MAX) + '. <b>Type in the search box</b> to find any product.</td></tr>' : '') : '<tr><td colspan="7" class="lines-empty">' + (ITEMS.length ? 'Nothing matches.' : 'No items yet. Enter a purchase to add stock.') + '</td></tr>';
 }
 /* change the GST rate of many products at once (file 28) */
 var WGSEL = null, WGSHOWN = [];
@@ -1751,6 +1801,24 @@ function impPreview() {
 }
 async function impRun(dry) {
   var rows = impBuild(); if (!rows.length) { dShowErr('imp-err', 'Nothing to import: choose the name column.'); return; }
+  dShowErr('imp-err', ''); var skipHtml = '';
+  if (IMP.kind === 'items') {
+    /* stock needs all of these: a plain list of product names is not accepted */
+    var need = [['batch', 'Batch'], ['expiry', 'Expiry'], ['qty', 'Stock qty'], ['mrp', 'MRP'], ['gst', 'GST %']];
+    var noCol = need.filter(function (n) { return IMP.map[n[0]] == null; }).map(function (n) { return n[1]; });
+    if (noCol.length) { dShowErr('imp-err', 'Choose the column for: ' + noCol.join(', ') + '. Stock needs batch, expiry, quantity, MRP and GST for every product - a plain list of names is not accepted.'); return; }
+    var skipped = [];
+    rows = rows.filter(function (o, i) {
+      var miss = [];
+      if (!String(o.batch || '').trim()) miss.push('batch'); if (!o.expiry) miss.push('expiry');
+      if (!(num(o.qty) > 0)) miss.push('qty'); if (!(num(o.mrp) > 0)) miss.push('MRP');
+      if (String(o.gst || '').trim() === '' || [0, 5, 12, 18, 28, 40].indexOf(num(String(o.gst).replace('%', ''))) < 0) miss.push('GST');
+      if (miss.length) { skipped.push(o.name + ' (' + miss.join(', ') + ')'); return false; }
+      return true;
+    });
+    if (!rows.length) { dShowErr('imp-err', 'No row has all of batch, expiry, quantity, MRP and GST. Nothing can be imported as stock.'); return; }
+    if (skipped.length) skipHtml = '<div class="over tiny" style="margin-bottom:8px">' + skipped.length + ' row' + (skipped.length === 1 ? '' : 's') + ' will be skipped (missing): ' + esc(skipped.slice(0, 8).join(' · ')) + (skipped.length > 8 ? ' …' : '') + '</div>';
+  }
   if (!dry && !confirm('Import ' + rows.length + ' rows into ' + (IMP.kind === 'parties' ? 'customers & suppliers' : 'products & stock') + '?')) return;
   var res = dEl('imp-res'); res.innerHTML = '<div class="tiny">' + (dry ? 'Checking' : 'Importing') + '&hellip;</div>';
   var tot = { rows: 0, added: 0, updated: 0, skipped: 0, stock_added: 0, errors: [] };
@@ -1761,7 +1829,7 @@ async function impRun(dry) {
     (r.data.errors || []).forEach(function (e) { e.row += i; tot.errors.push(e); });
   }
   var what = IMP.kind === 'parties' ? 'customers / suppliers' : 'products';
-  res.innerHTML = '<div class="card" style="padding:12px">' + (dry ? '<b>Check only &mdash; nothing saved yet.</b><br>' : '<b style="color:var(--green)">&#10003; Imported.</b><br>')
+  res.innerHTML = skipHtml + '<div class="card" style="padding:12px">' + (dry ? '<b>Check only &mdash; nothing saved yet.</b><br>' : '<b style="color:var(--green)">&#10003; Imported.</b><br>')
     + tot.added + ' new ' + what + (dry ? ' would be added' : ' added') + ' &middot; ' + tot.updated + ' already in your list' + (dry ? ' (empty details would be filled in)' : ' (empty details filled in)')
     + (IMP.kind === 'items' ? ' &middot; ' + tot.stock_added + ' stock batches' : '') + (tot.skipped ? ' &middot; ' + tot.skipped + ' rows without a name skipped' : '')
     + (tot.errors.length ? '<div class="over" style="margin-top:6px">' + tot.errors.length + ' rows need attention:</div><div style="max-height:220px;overflow:auto"><table class="dt"><tbody>' + tot.errors.slice(0, 200).map(function (e) { return '<tr><td>Row ' + (e.row + 1) + '</td><td>' + esc(e.name || '') + '</td><td class="over">' + esc(e.error) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '')
