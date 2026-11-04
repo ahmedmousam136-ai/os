@@ -299,13 +299,21 @@ function setupNote() {
 /* ---------------- medicines + stock ---------------- */
 /* Supabase gives at most 1000 rows per request: read big lists page by page (10,000 or 1,00,000 medicines are fine) */
 async function phAll(build) {
-  var out = [], from = 0, size = 1000;
-  for (;;) {
-    var r = await build().range(from, from + size - 1);
-    if (r.error) return r;
-    out = out.concat(r.data || []);
-    if (!r.data || r.data.length < size) return { data: out, error: null };
-    from += size;
+  /* first 1,000 rows, then the rest 6 pages at a time (1 lakh items load in seconds, not minutes) */
+  var out = [], size = 1000, W = 6;
+  var r0 = await build().range(0, size - 1);
+  if (r0.error) return r0;
+  Array.prototype.push.apply(out, r0.data || []);
+  if (!r0.data || r0.data.length < size) return { data: out, error: null };
+  for (var from = size; ; from += W * size) {
+    var reqs = [];
+    for (var k = 0; k < W; k++) reqs.push(build().range(from + k * size, from + (k + 1) * size - 1));
+    var rs = await Promise.all(reqs);
+    for (var j = 0; j < W; j++) {
+      if (rs[j].error) return rs[j];
+      Array.prototype.push.apply(out, rs[j].data || []);
+      if (!rs[j].data || rs[j].data.length < size) return { data: out, error: null };
+    }
   }
 }
 /* low-stock level of the shop (packs), set by the owner on the Stock page; 10 until SQL 51 is run */
