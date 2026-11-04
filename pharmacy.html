@@ -41,6 +41,7 @@
     <button class="d-tab" data-t="receive" onclick="dTab('receive')"><span class="ti">&#10133;</span><span class="tl">Add stock</span></button>
     <button class="d-tab" data-t="order" onclick="dTab('order')"><span class="ti">&#128722;</span><span class="tl">Re-order</span></button>
     <button class="d-tab" data-t="bills" onclick="dTab('bills')"><span class="ti">&#128196;</span><span class="tl">Bills</span></button>
+    <button class="d-tab" data-t="photos" onclick="dTab('photos')"><span class="ti">&#128193;</span><span class="tl">Photos</span></button>
     <button class="d-tab" data-t="settings" onclick="dTab('settings')" data-owner-only><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
   </div>
   <div class="d-main" id="d-body">
@@ -214,6 +215,9 @@
         </div>
       </details>
     </div>
+
+    <!-- ============ SAVED PHOTOS (aura-docs.js) ============ -->
+    <div class="d-view" id="v-photos"><div id="docs-root"></div></div>
 
     <!-- ============ RE-ORDER (pharmacy-pro.js) ============ -->
     <div class="d-view" id="v-order"><div id="ro-root"></div></div>
@@ -522,6 +526,7 @@ async function rxSavePhoto(sale, dataUrl) {
     await deptUpload('bills', path, blob);
     var r = await _supa.rpc('ph_set_rx_photo', { p_sale_id: sale.id, p_path: path });
     if (!r.error) sale.rx_photo = path;
+    if (window.AuraDocs) AuraDocs.save({ module: 'pharmacy', kind: 'prescription', ref_no: sale.bill_no, party: sale.patient_name, amount: sale.total, pages: [path] });
   } catch (e) { /* the bill is already saved */ }
 }
 async function rxPhotoOpen(p) {
@@ -758,12 +763,13 @@ async function medSave(id) {
 }
 
 /* ---------------- ADD STOCK ---------------- */
-var PH_TRAY = null;
+var PH_TRAY = null, PH_PAGES = null;
 function onTab_receive() { asInit(); }
+function onTab_photos() { if (window.AuraDocs) AuraDocs.panel(dEl('docs-root'), { module: 'pharmacy' }); }
 function asInit() {
   if (PH_TRAY || !window.AuraPages || !dEl('ph-tray')) return;
-  PH_TRAY = AuraPages.tray(dEl('ph-tray'), { onRead: function (d) {
-    var st = dEl('scan-status'); st.innerHTML = '';
+  PH_TRAY = AuraPages.tray(dEl('ph-tray'), { onRead: function (d, pages) {
+    var st = dEl('scan-status'); st.innerHTML = ''; PH_PAGES = d && d.ok ? pages : null;   /* kept with the bill when its lines are added */
     if (!d || !d.ok) return;
     if (!d.lines.length) { st.innerHTML = '<span style="color:var(--red)">&#9888; No product lines were found on these pages.</span>'; return; }
     if (d.name_list_only) {
@@ -1100,6 +1106,7 @@ async function scanSave() {
   btn.disabled = false; btn.innerHTML = '&#10003; Add checked lines to stock';
   if (r.error) { dShowErr('scan-err', dErr(r.error).replace(/^BILL_EXISTS:\s*/, '')); return; }
   var e = r.data.errors || [];
+  if (PH_PAGES && window.AuraDocs) { AuraDocs.save({ module: 'pharmacy', kind: 'purchase_bill', ref_no: bill.bill_no, party: bill.supplier, doc_date: bill.bill_date, amount: bill.bill_total, pages: PH_PAGES }); PH_PAGES = null; }
   dEl('scan-res').innerHTML = '<div class="card" style="margin-top:10px"><b>' + r.data.stock_lines_added + '</b> lines added to stock' + (r.data.medicines_added ? ', <b>' + r.data.medicines_added + '</b> new medicines' : '') + '.' + (e.length ? '<div style="color:var(--red);margin-top:6px">' + e.map(function (x) { return 'Line ' + x.row + ' ' + esc(x.name || '') + ': ' + esc(x.error); }).join('<br>') + '</div>' : '') + '</div>';
   /* GST rates the supplier's bill showed differently: update the saved rate (ticked lines only) */
   var byG = {}; SCAN.forEach(function (x) { var m = x.match ? MEDMAP[x.match] : null; if (x.inc && x.upd && m && x.gst !== '' && Number(m.gst_rate) !== Number(x.gst)) (byG[x.gst] = byG[x.gst] || []).push(m.id); });
@@ -1396,7 +1403,8 @@ function unlinkIfRenamed(v) {
 init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
 <script src="pharmacy-pro.js?v=4"></script>
-<script src="aura-scan-pages.js?v=1"></script>
+<script src="aura-docs.js?v=1"></script>
+<script src="aura-scan-pages.js?v=2"></script>
 <script src="aura-drop.js?v=1"></script>
 <script src="aura-sticky.js?v=1"></script>
 </body>
