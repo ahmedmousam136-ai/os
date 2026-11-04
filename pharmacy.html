@@ -152,7 +152,7 @@
       <p class="tiny" style="margin-bottom:12px">Enter one line of the distributor's bill. Prices are what is printed on the pack (MRP includes GST).</p>
       <div style="position:relative;margin-bottom:10px;max-width:520px">
         <label class="flbl">Medicine</label>
-        <input class="finput" id="r-med" placeholder="Type the medicine name&hellip;" autocomplete="off" oninput="rcvSearch()" />
+        <input class="finput" id="r-med" placeholder="Type the medicine name&hellip;" autocomplete="off" oninput="rcvSearch()" onkeydown="rcvKey(event)" onblur="setTimeout(rcvAuto,200)" />
         <div id="r-dd" class="dd" style="display:none"></div>
         <div class="tiny" id="r-picked" style="margin-top:4px"></div>
       </div>
@@ -271,7 +271,7 @@ function setupNote() {
 async function loadMeds() {
   var m = await _supa.from('ph_medicines').select('*').eq('clinic_id', _clinicId).order('name');
   var b = await _supa.from('ph_batches').select('*').eq('clinic_id', _clinicId).gt('qty', 0).order('expiry', { ascending: true, nullsFirst: false });
-  if (m.error) { showToast('Could not load medicines: ' + dErr(m.error)); return; }
+  if (m.error) { showToast('Could not load medicines: ' + dErr(m.error)); var sb = dEl('st-b'); if (sb) sb.innerHTML = '<tr><td colspan="7" style="color:var(--red);font-weight:700">&#9888; Your medicine list could not be loaded: ' + esc(dErr(m.error)) + '. Please refresh the page; if it keeps happening, send a screenshot to AuraScale support.</td></tr>'; return; }
   MEDMAP = {};
   MEDS = (m.data || []).map(function (x) { x.batches = []; x.stock = 0; x.expiredQty = 0; MEDMAP[x.id] = x; return x; });
   (b.data || []).forEach(function (bt) {
@@ -691,6 +691,22 @@ function rcvSearch() {
     + (exact ? '' : '<div class="dd-i" style="color:var(--green);font-weight:700" onclick="rcvNew()">&#10133; New medicine: &ldquo;' + esc(q) + '&rdquo;</div>');
   dd.style.display = 'block';
 }
+/* typed a name but did not tap the list: the same name already in stock is picked by itself,
+   anything else becomes a new medicine (its GST / unit boxes open). Enter picks the first suggestion. */
+function rcvNorm(t) { return String(t || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+function rcvAuto() {
+  if (RCV_MED) return true;
+  var q = rcvNorm(dEl('r-med').value); if (!q) return false;
+  var same = MEDS.filter(function (m) { return rcvNorm(m.name) === q; })[0];
+  if (same) { rcvPick(same.id); return true; }
+  return false;
+}
+function rcvKey(e) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  if (rcvAuto()) return;
+  var first = dEl('r-dd').querySelector('.dd-i'); if (first) first.click();
+}
 function rcvPick(id) {
   var m = MEDMAP[id]; if (!m) return; RCV_MED = m;
   dEl('r-med').value = m.name; dEl('r-dd').style.display = 'none'; dEl('r-new').style.display = 'none';
@@ -706,7 +722,12 @@ function rcvCalc() {
 }
 async function rcvSave() {
   dShowErr('r-err', '');
-  if (!RCV_MED) { dShowErr('r-err', 'Pick the medicine from the list (or choose "New medicine").'); return; }
+  if (!RCV_MED && !rcvAuto()) {
+    if (!dEl('r-med').value.trim()) { dShowErr('r-err', 'Type the medicine name.'); dEl('r-med').focus(); return; }
+    rcvNew();   /* not in your list yet: add it as a new medicine */
+    dShowErr('r-err', '"' + dEl('r-med').value.trim() + '" is not in your list yet, so it will be added as a NEW medicine. Check its GST and unit (box above), then press Add to stock again.');
+    return;
+  }
   var mrp = Number(dEl('r-mrp').value), pack = Math.max(1, Math.round(Number(dEl('r-pack').value) || 1)), q = Number(dEl('r-qty').value), rate = Number(dEl('r-rate').value) || 0;
   var exp = dEl('r-exp').value;
   if (!(mrp > 0)) { dShowErr('r-err', 'Enter the MRP printed on the pack.'); return; }
