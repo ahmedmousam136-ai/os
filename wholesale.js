@@ -100,7 +100,44 @@ async function loadItems() {
     it.batches.push(bt);
     if (bt.qty > 0) { if (bt.expired) it.expiredQty += bt.qty; else it.stock += bt.qty; }
   });
-  ITEMS.forEach(function (it) { var s = it.batches.filter(function (x) { return !x.expired && x.qty > 0; }); it.sellable = s; it.nearestExp = s.length ? s[0].expiry : null; });
+  LOW_PACKS = await whLowPacks();
+  ITEMS.forEach(function (it) { var s = it.batches.filter(function (x) { return !x.expired && x.qty > 0; }); it.sellable = s; it.nearestExp = s.length ? s[0].expiry : null;
+    it.lowAt = Number(it.low_level) > 0 ? Number(it.low_level) : LOW_PACKS; });
+  whAlerts();
+}
+/* low-stock level of the business (packs), set by the owner on the Stock page; 10 until SQL 51 is run */
+var LOW_PACKS = 10, LOW_PREV = null;
+async function whLowPacks() {
+  try { var r = await _supa.from('clinics').select('stock_low_packs').eq('id', _clinicId).maybeSingle(); if (!r.error && r.data && r.data.stock_low_packs != null) return Number(r.data.stock_low_packs); } catch (e) {}
+  return LOW_PACKS;
+}
+async function whSetLowPacks() {
+  var v = Math.round(Number(dEl('low-packs-in').value)); if (!(v >= 0)) { showToast('Type a number of packs.'); return; }
+  var r = await _supa.rpc('aura_set_low_packs', { p_clinic: _clinicId, p_packs: v });
+  if (r.error) { showToast(/aura_set_low_packs/.test(r.error.message || '') ? 'Run SQL 51 once on the server first.' : dErr(r.error)); return; }
+  LOW_PACKS = Number(r.data); await loadItems(); stockRender(); showToast('Low-stock alert now at ' + LOW_PACKS + ' packs.');
+}
+/* the red / amber numbers on the filter buttons and the Stock tab, and a pop-up when a product has just become low */
+function whAlerts() {
+  var low = [], e90 = 0, ex = 0;
+  ITEMS.forEach(function (it) { if (it.is_active && it.stock <= it.lowAt && (it.stock > 0 || it.batches.length)) low.push(it); if (it.nearestExp && dDaysTo(it.nearestExp) <= 90) e90++; if (it.expiredQty > 0) ex++; });
+  var set = function (id, n) { var e = dEl(id); if (e) { e.textContent = n; e.classList.toggle('on', n > 0); } };
+  set('cnt-low', low.length); set('cnt-e90', e90); set('cnt-exp', ex);
+  var tab = document.querySelector('.d-tab[data-t="stock"] .tl');
+  if (tab) { var b = tab.querySelector('.cnt-b') || tab.appendChild(Object.assign(document.createElement('span'), { className: 'cnt-b' })); b.textContent = low.length + ex; b.classList.toggle('on', low.length + ex > 0); }
+  var now = {}; low.forEach(function (it) { now[it.id] = 1; });
+  if (LOW_PREV) {
+    var fresh = low.filter(function (it) { return !LOW_PREV[it.id]; });
+    if (fresh.length) {
+      var old = dEl('low-pop'); if (old) old.remove();
+      var d = document.createElement('div'); d.className = 'low-pop'; d.id = 'low-pop';
+      d.innerHTML = '<button type="button" onclick="this.parentNode.remove()">&#10005;</button><b class="t">&#9888; Stock is low</b>'
+        + fresh.slice(0, 6).map(function (it) { return esc(it.name) + ': <b>' + it.stock + ' ' + esc(it.unit) + '</b> left' + (it.stock <= 0 ? ' (out of stock)' : ''); }).join('<br>')
+        + (fresh.length > 6 ? '<br>&hellip; and ' + (fresh.length - 6) + ' more' : '') + '<div class="tiny" style="margin-top:6px"><a href="#" onclick="dTab(\'stock\');stockFilter(\'low\');this.closest(\'.low-pop\').remove();return false">See Low / out &rarr;</a></div>';
+      document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 15000);
+    }
+  }
+  LOW_PREV = now;
 }
 async function loadParties() {
   var r = await _supa.from('org_parties').select('*').eq('clinic_id', _clinicId).order('name');
@@ -171,7 +208,7 @@ async function onTab_home() {
     }).join('') + '</table>' : '<p class="muted">Nobody owes you money.</p>';
   } else dEl('h-due-card').style.display = 'none';
   await loadItems();
-  var low = ITEMS.filter(function (it) { return it.is_active && it.stock <= Number(it.low_level || 0) && (it.stock > 0 || it.batches.length); });
+  var low = ITEMS.filter(function (it) { return it.is_active && it.stock <= it.lowAt && (it.stock > 0 || it.batches.length); });
   var soon = []; ITEMS.forEach(function (it) { it.batches.forEach(function (b) { if (b.qty > 0 && b.expiry && dDaysTo(b.expiry) <= 90) soon.push({ it: it, b: b }); }); });
   soon.sort(function (a, b) { return a.b.expiry < b.b.expiry ? -1 : 1; });
   var val = 0; ITEMS.forEach(function (it) { it.batches.forEach(function (b) { if (b.qty > 0 && !b.expired) val += b.qty * Number(b.purchase_rate); }); });
@@ -819,7 +856,7 @@ async function brSave() {
 function scanResize(file) {
   return new Promise(function (res, rej) {
     var fr = new FileReader();
-    fr.onload = function () { var im = new Image(); im.onload = function () { var max = 2200, k = Math.min(1, max / Math.max(im.width, im.height)); var c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); c.toBlob(function (bl) { res({ data: c.toDataURL('image/jpeg', 0.85), blob: bl }); }, 'image/jpeg', 0.85); }; im.onerror = function () { rej(new Error('This file is not a picture.')); }; im.src = fr.result; };
+    fr.onload = function () { var im = new Image(); im.onload = function () { var max = 1600, k = Math.min(1, max / Math.max(im.width, im.height)); var c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); c.toBlob(function (bl) { res({ data: c.toDataURL('image/jpeg', 0.85), blob: bl }); }, 'image/jpeg', 0.85); }; im.onerror = function () { rej(new Error('This file is not a picture.')); }; im.src = fr.result; };
     fr.onerror = function () { rej(new Error('Could not read the file.')); }; fr.readAsDataURL(file);
   });
 }
@@ -1039,7 +1076,7 @@ function onTab_stock() { loadItems().then(stockRender); }
 function stockFilter(f) { STF = f; segOn('st-f', 'data-f', f); stockRender(); }
 function itemStatus(it) {
   var t = [];
-  if (it.stock <= 0) t.push('<span class="tag t-r">Out of stock</span>'); else if (it.stock <= Number(it.low_level || 0)) t.push('<span class="tag t-a">Low</span>');
+  if (it.stock <= 0) t.push('<span class="tag t-r">Out of stock</span>'); else if (it.stock <= it.lowAt) t.push('<span class="tag t-a">Low</span>');
   if (it.nearestExp && dDaysTo(it.nearestExp) <= 90) t.push('<span class="tag t-a">Exp ' + dExp(it.nearestExp) + '</span>');
   if (it.expiredQty > 0) t.push('<span class="tag t-r">' + it.expiredQty + ' expired</span>');
   if (!it.is_active) t.push('<span class="tag">Hidden</span>');
@@ -1047,13 +1084,13 @@ function itemStatus(it) {
 }
 function stockRender() {
   var q = dEl('st-q').value.trim(), val = 0, valM = 0, low = 0, e90 = 0, ex = 0;
-  ITEMS.forEach(function (it) { it.batches.forEach(function (b) { if (b.qty > 0 && !b.expired) { val += b.qty * Number(b.purchase_rate); valM += b.qty * Number(b.mrp); } }); if (it.is_active && it.stock <= Number(it.low_level || 0)) low++; if (it.nearestExp && dDaysTo(it.nearestExp) <= 90) e90++; if (it.expiredQty > 0) ex++; });
+  ITEMS.forEach(function (it) { it.batches.forEach(function (b) { if (b.qty > 0 && !b.expired) { val += b.qty * Number(b.purchase_rate); valM += b.qty * Number(b.mrp); } }); if (it.is_active && it.stock <= it.lowAt) low++; if (it.nearestExp && dDaysTo(it.nearestExp) <= 90) e90++; if (it.expiredQty > 0) ex++; });
   dEl('st-stats').innerHTML = '<div><span class="tiny">Items</span><b>' + ITEMS.length + '</b></div><div><span class="tiny">Stock value at cost</span><b>' + dMoney0(val) + '</b><span class="tiny">MRP ' + dMoney0(valM) + '</span></div>'
-    + '<div><span class="tiny">Low / out of stock</span><b style="color:var(--amber)">' + low + '</b></div><div><span class="tiny">Expiring in 90 days &middot; expired</span><b style="color:var(--red)">' + e90 + ' &middot; ' + ex + '</b></div>';
+    + '<div><span class="tiny">Low / out of stock</span><b style="color:' + (low ? 'var(--red)' : 'var(--amber)') + '">' + low + '</b><span class="tiny">Alert at <input id="low-packs-in" type="number" min="0" value="' + LOW_PACKS + '" style="width:52px;padding:1px 4px;border:1px solid var(--border);border-radius:6px;font:inherit" onchange="whSetLowPacks()" title="Packs. A product with its own level uses that."/> packs</span></div><div><span class="tiny">Expiring in 90 days &middot; expired</span><b style="color:var(--red)">' + e90 + ' &middot; ' + ex + '</b></div>';
   var list = ITEMS.filter(function (it) {
     if (q && !itemMatch(it, q)) return false;
     if (WGSEL && dEl('wg-only').value !== '' && Number(it.gst_rate) !== Number(dEl('wg-only').value)) return false;
-    if (STF === 'low') return it.is_active && it.stock <= Number(it.low_level || 0);
+    if (STF === 'low') return it.is_active && it.stock <= it.lowAt;
     if (STF === 'exp90') return it.nearestExp && dDaysTo(it.nearestExp) <= 90;
     if (STF === 'expired') return it.expiredQty > 0;
     return true;
@@ -1104,7 +1141,7 @@ async function itemOpen(id) {
   var mv = await _supa.from('wh_moves').select('*').eq('item_id', id).order('created_at', { ascending: false }).limit(30);
   var sup = function (sid) { return sid && PARTYMAP[sid] ? PARTYMAP[sid].name : ''; };
   dEl('item-title').textContent = it.name;
-  dEl('item-body').innerHTML = '<div class="muted" style="margin-bottom:10px">' + esc(it.composition || '') + ' &middot; ' + esc(it.manufacturer || '') + ' &middot; GST ' + Number(it.gst_rate) + '% &middot; HSN ' + esc(it.hsn || '-') + ' &middot; per ' + esc(it.unit) + (it.pack ? ' (' + esc(it.pack) + ')' : '') + ' &middot; warn at ' + Number(it.low_level) + '</div>'
+  dEl('item-body').innerHTML = '<div class="muted" style="margin-bottom:10px">' + esc(it.composition || '') + ' &middot; ' + esc(it.manufacturer || '') + ' &middot; GST ' + Number(it.gst_rate) + '% &middot; HSN ' + esc(it.hsn || '-') + ' &middot; per ' + esc(it.unit) + (it.pack ? ' (' + esc(it.pack) + ')' : '') + ' &middot; low-stock alert at ' + it.lowAt + (Number(it.low_level) > 0 ? '' : ' (shop level)') + '</div>'
     + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Batch</th><th>Expiry</th><th class="r">MRP</th><th class="r">PTR</th><th class="r">Cost</th><th class="r">Qty</th><th>Supplier</th><th></th></tr></thead><tbody>'
     + (it.batches.filter(function (b) { return b.qty > 0; }).map(function (b) {
       return '<tr><td>' + esc(b.batch_no) + '</td><td>' + dExp(b.expiry) + (b.expired ? ' <span class="tag t-r">Expired</span>' : dDaysTo(b.expiry) <= 90 ? ' <span class="tag t-a">Soon</span>' : '') + '</td><td class="r">' + dMoney(b.mrp) + '</td><td class="r">' + (b.ptr ? dMoney(b.ptr) : '-') + '</td><td class="r">' + dMoney(b.purchase_rate) + '</td><td class="r"><b>' + b.qty + '</b></td><td class="tiny">' + esc(sup(b.supplier_id)) + '</td>'
@@ -1137,7 +1174,7 @@ function itemEdit(id) {
     + '<div><label class="flbl">Sold per</label><select class="finput" id="ie-unit">' + units.map(function (u) { return '<option' + (it.unit === u ? ' selected' : '') + '>' + u + '</option>'; }).join('') + (units.indexOf(it.unit) < 0 ? '<option selected>' + esc(it.unit) + '</option>' : '') + '</select></div>'
     + '<div><label class="flbl">Pack (e.g. 1x10)</label><input class="finput" id="ie-pack" value="' + esc(it.pack || '') + '"/></div>'
     + '<div><label class="flbl">Schedule</label><select class="finput" id="ie-sch">' + ['', 'H', 'H1', 'X', 'G'].map(function (x) { return '<option value="' + x + '"' + ((it.schedule || '') === x ? ' selected' : '') + '>' + (x || 'None / OTC') + '</option>'; }).join('') + '</select></div>'
-    + '<div><label class="flbl">Warn when stock falls to</label><input class="finput" id="ie-low" type="number" min="0" value="' + Number(it.low_level || 0) + '"/></div>'
+    + '<div><label class="flbl">Warn when stock falls to</label><input class="finput" id="ie-low" type="number" min="0" value="' + Number(it.low_level || 0) + '"/><div class="tiny">0 = shop level (' + LOW_PACKS + ' packs)</div></div>'
     + (id ? '<div><label class="flbl">Show in billing</label><select class="finput" id="ie-act"><option value="true"' + (it.is_active ? ' selected' : '') + '>Yes</option><option value="false"' + (!it.is_active ? ' selected' : '') + '>No (hidden)</option></select></div>' : '')
     + '</div><button class="btn btn-g" style="margin-top:14px" onclick="itemSave(' + A(id) + ')">&#10003; Save</button><div class="err" id="ie-err"></div>';
   dOpen('m-item');
