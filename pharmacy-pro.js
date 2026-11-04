@@ -332,7 +332,10 @@ function h1Open() {
 async function h1Load() {
   var m = dEl('h1-m').value; if (!m) return;
   var y = Number(m.slice(0, 4)), mo = Number(m.slice(5, 7)), from = new Date(Date.UTC(y, mo - 1, 1) - 5.5 * 3600e3).toISOString(), to = new Date(Date.UTC(y, mo, 1) - 5.5 * 3600e3).toISOString();
-  var s = await _supa.from('ph_sales').select('id,bill_no,created_at,patient_name,patient_phone,uhid,doctor,cancelled').eq('clinic_id', _clinicId).gte('created_at', from).lt('created_at', to).order('created_at').limit(5000);
+  var cols = 'id,bill_no,created_at,patient_name,patient_phone,uhid,doctor,cancelled';
+  var s = await _supa.from('ph_sales').select(cols + ',patient_address,doctor_address,doctor_reg_no').eq('clinic_id', _clinicId).gte('created_at', from).lt('created_at', to).order('created_at').limit(5000);
+  H1_ADDR = !s.error;
+  if (s.error) s = await _supa.from('ph_sales').select(cols).eq('clinic_id', _clinicId).gte('created_at', from).lt('created_at', to).order('created_at').limit(5000);   /* SQL 53 not run yet */
   if (s.error) { dEl('h1-t').textContent = dErr(s.error); return; }
   var by = {}; (s.data || []).forEach(function (x) { by[x.id] = x; });
   var ids = Object.keys(by), rows = [];
@@ -342,14 +345,47 @@ async function h1Load() {
   }
   rows.sort(function (a, b) { return a.s.created_at < b.s.created_at ? -1 : 1; });
   H1 = rows;
-  dEl('h1-t').innerHTML = rows.length ? '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>Date</th><th>Bill</th><th>Patient</th><th>Doctor</th><th>Medicine</th><th>Sch</th><th>Batch</th><th class="r">Qty</th></tr></thead><tbody>'
-    + rows.map(function (r, i) { return '<tr' + (r.s.cancelled ? ' style="opacity:.5;text-decoration:line-through"' : '') + '><td>' + (i + 1) + '</td><td>' + dDate(r.s.created_at) + '</td><td>' + esc(r.s.bill_no) + '</td><td>' + esc(r.s.patient_name || '') + '<div class="tiny">' + esc(r.s.patient_phone || '') + '</div></td><td>' + (r.s.doctor ? esc(r.s.doctor) : '<span class="over">missing</span>') + '</td><td><b>' + esc(r.l.name) + '</b></td><td>' + r.sch + '</td><td>' + esc(r.l.batch_no || '') + '</td><td class="r">' + Number(r.l.qty) + ' ' + esc(r.l.unit || '') + '</td></tr>'; }).join('')
-    + '</tbody></table></div>' : '<div class="card" style="text-align:center;padding:20px">No Schedule H1 or X medicine sold in this month.</div>';
+  var miss = function (t) { return '<span class="over">' + t + ' missing</span>'; };
+  dEl('h1-t').innerHTML = (H1_ADDR ? '' : '<div class="over tiny" style="margin-bottom:8px">Run SQL 53 in Supabase to keep the patient&rsquo;s and doctor&rsquo;s addresses in this register.</div>')
+    + (rows.length ? '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>Date</th><th>Bill</th><th>Patient &amp; address</th><th>Doctor &amp; address</th><th>Medicine</th><th>Sch</th><th>Batch</th><th class="r">Qty</th><th></th></tr></thead><tbody>'
+    + rows.map(function (r, i) {
+        var s = r.s, need = !s.cancelled && (!s.doctor || (H1_ADDR && (!s.patient_address || !s.doctor_address)));
+        return '<tr' + (s.cancelled ? ' style="opacity:.5;text-decoration:line-through"' : '') + '><td>' + (i + 1) + '</td><td>' + dDate(s.created_at) + '</td><td>' + esc(s.bill_no) + '</td>'
+          + '<td>' + esc(s.patient_name || '') + '<div class="tiny">' + esc(s.patient_phone || '') + '</div>' + (H1_ADDR ? '<div class="tiny">' + (s.patient_address ? esc(s.patient_address) : miss('address')) + '</div>' : '') + '</td>'
+          + '<td>' + (s.doctor ? esc(s.doctor) : miss('name')) + (s.doctor_reg_no ? '<div class="tiny">Reg. ' + esc(s.doctor_reg_no) + '</div>' : '') + (H1_ADDR ? '<div class="tiny">' + (s.doctor_address ? esc(s.doctor_address) : miss('address')) + '</div>' : '') + '</td>'
+          + '<td><b>' + esc(r.l.name) + '</b></td><td>' + r.sch + '</td><td>' + esc(r.l.batch_no || '') + '</td><td class="r">' + Number(r.l.qty) + ' ' + esc(r.l.unit || '') + '</td>'
+          + '<td>' + (H1_ADDR && !s.cancelled ? '<button class="btn btn-sm' + (need ? ' btn-g' : '') + '" title="Fill in the H1 details of this bill" onclick="h1Edit(\'' + s.id + '\', ' + i + ')">' + (need ? 'Fill in' : '&#9998;') + '</button>' : '') + '</td></tr>'
+          + '<tr id="h1e-' + i + '" class="h1e-row" style="display:none"></tr>';
+      }).join('')
+    + '</tbody></table></div>' : '<div class="card" style="text-align:center;padding:20px">No Schedule H1 or X medicine sold in this month.</div>');
+}
+var H1_ADDR = false;
+/* fill in / correct the H1 details of one bill (the same details go on every line of that bill) */
+function h1Edit(id, i) {
+  var r = H1.filter(function (x) { return x.s.id === id; })[0]; if (!r) return;
+  [].forEach.call(document.querySelectorAll('.h1e-row'), function (tr) { tr.style.display = 'none'; tr.innerHTML = ''; });
+  var tr = dEl('h1e-' + i); if (!tr) return;
+  var s = r.s, v = function (x) { return esc(x || ''); };
+  tr.innerHTML = '<td colspan="10" style="background:#fffaf0"><div class="grid4" style="align-items:end">'
+    + '<div><label class="flbl">Doctor\'s name *</label><input class="finput" id="h1e-doc" maxlength="160" value="' + v(s.doctor) + '"/></div>'
+    + '<div><label class="flbl">Doctor\'s reg. no.</label><input class="finput" id="h1e-reg" maxlength="60" value="' + v(s.doctor_reg_no) + '"/></div>'
+    + '<div style="grid-column:span 2"><label class="flbl">Doctor\'s address / clinic *</label><input class="finput" id="h1e-daddr" maxlength="300" value="' + v(s.doctor_address) + '"/></div>'
+    + '<div style="grid-column:span 3"><label class="flbl">Patient\'s address (' + v(s.patient_name) + ') *</label><input class="finput" id="h1e-paddr" maxlength="300" value="' + v(s.patient_address) + '"/></div>'
+    + '<div style="display:flex;gap:6px"><button class="btn btn-g btn-sm" onclick="h1EditSave(\'' + id + '\')">Save</button><button class="btn btn-sm" onclick="h1Load()">Cancel</button></div>'
+    + '</div><div class="err" id="h1e-err" style="margin-top:6px"></div></td>';
+  tr.style.display = ''; dEl('h1e-doc').focus();
+}
+async function h1EditSave(id) {
+  var p = { doctor: dEl('h1e-doc').value.trim(), doctor_reg_no: dEl('h1e-reg').value.trim(), doctor_address: dEl('h1e-daddr').value.trim(), patient_address: dEl('h1e-paddr').value.trim() };
+  if (!p.doctor || !p.doctor_address || !p.patient_address) { dShowErr('h1e-err', 'Doctor\'s name, doctor\'s address and patient\'s address are needed.'); return; }
+  var r = await _supa.rpc('ph_set_h1', { p_sale_id: id, p: p });
+  if (r.error) { dShowErr('h1e-err', dErr(r.error)); return; }
+  showToast('Saved in the H1 register.'); h1Load();
 }
 function h1Csv() {
   if (!H1.length) { showToast('Nothing to download for this month.'); return; }
   var q = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
-  var csv = ['Sl,Date,Bill no,Patient,Phone,Doctor,Medicine,Schedule,Batch,Expiry,Qty,Cancelled'].concat(H1.map(function (r, i) { return [i + 1, dDate(r.s.created_at), r.s.bill_no, r.s.patient_name, r.s.patient_phone, r.s.doctor, r.l.name, r.sch, r.l.batch_no, dExp(r.l.expiry), r.l.qty + ' ' + (r.l.unit || ''), r.s.cancelled ? 'yes' : ''].map(q).join(','); })).join('\n');
+  var csv = ['Sl,Date,Bill no,Patient,Phone,Patient address,Doctor,Doctor reg no,Doctor address,Medicine,Schedule,Batch,Expiry,Qty,Cancelled'].concat(H1.map(function (r, i) { return [i + 1, dDate(r.s.created_at), r.s.bill_no, r.s.patient_name, r.s.patient_phone, r.s.patient_address, r.s.doctor, r.s.doctor_reg_no, r.s.doctor_address, r.l.name, r.sch, r.l.batch_no, dExp(r.l.expiry), r.l.qty + ' ' + (r.l.unit || ''), r.s.cancelled ? 'yes' : ''].map(q).join(','); })).join('\n');
   var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); a.download = 'schedule-h1-register-' + dEl('h1-m').value + '.csv'; document.body.appendChild(a); a.click(); a.remove();
 }
 async function h1Pdf() {
@@ -358,8 +394,8 @@ async function h1Pdf() {
     showToast('Making the PDF…');
     var s = ph(), name = s.name || DEPT.clinic.name || '';
     var head = deptPdfHead({ name: name, sub: [esc(s.address || ''), s.dl_no ? 'Drug Licence No: ' + esc(s.dl_no) : '', s.pharmacist ? 'Registered Pharmacist: ' + esc(s.pharmacist) : ''], title: 'SCHEDULE H1 REGISTER', right: ['Month: ' + esc(dEl('h1-m').value)] });
-    var thead = '<thead><tr><th>#</th><th>Date</th><th>Bill</th><th>Patient</th><th>Doctor</th><th>Medicine</th><th>Batch</th><th class="r">Qty</th></tr></thead>';
-    var rows = H1.map(function (r, i) { return '<tr><td class="mut">' + (i + 1) + '</td><td>' + deptPdfDate(r.s.created_at) + '</td><td>' + esc(r.s.bill_no) + (r.s.cancelled ? ' (cancelled)' : '') + '</td><td>' + esc(r.s.patient_name || '') + '<div class="sm">' + esc(r.s.patient_phone || '') + '</div></td><td>' + esc(r.s.doctor || '') + '</td><td><b>' + esc(r.l.name) + '</b><div class="sm">Schedule ' + r.sch + '</div></td><td>' + esc(r.l.batch_no || '') + '</td><td class="r">' + Number(r.l.qty) + '</td></tr>'; });
+    var thead = '<thead><tr><th>#</th><th>Date</th><th>Bill</th><th>Patient &amp; address</th><th>Doctor &amp; address</th><th>Medicine</th><th>Batch</th><th class="r">Qty</th></tr></thead>';
+    var rows = H1.map(function (r, i) { return '<tr><td class="mut">' + (i + 1) + '</td><td>' + deptPdfDate(r.s.created_at) + '</td><td>' + esc(r.s.bill_no) + (r.s.cancelled ? ' (cancelled)' : '') + '</td><td>' + esc(r.s.patient_name || '') + '<div class="sm">' + esc(r.s.patient_phone || '') + '</div>' + (r.s.patient_address ? '<div class="sm">' + esc(r.s.patient_address) + '</div>' : '') + '</td><td>' + esc(r.s.doctor || '') + (r.s.doctor_reg_no ? '<div class="sm">Reg. ' + esc(r.s.doctor_reg_no) + '</div>' : '') + (r.s.doctor_address ? '<div class="sm">' + esc(r.s.doctor_address) + '</div>' : '') + '</td><td><b>' + esc(r.l.name) + '</b><div class="sm">Schedule ' + r.sch + '</div></td><td>' + esc(r.l.batch_no || '') + '</td><td class="r">' + Number(r.l.qty) + '</td></tr>'; });
     var blob = await deptMakePdf({ format: 'a4', head: head, thead: thead, rows: rows, after: '<div class="dend"><div class="ddecl">Made from the pharmacy bills. Prescriptions are kept for inspection.</div><div class="dsign">' + esc(name) + '<div class="sp"></div><div class="ln">Registered Pharmacist</div></div></div>', foot: 'Schedule H1 register &middot; AuraScale' });
     var path = _clinicId + '/pharmacy/h1-' + dEl('h1-m').value + '.pdf'; await deptUpload('bills', path, blob); deptOpenPdf('bills', path);
   } catch (e) { showToast('PDF: ' + dErr(e)); }
