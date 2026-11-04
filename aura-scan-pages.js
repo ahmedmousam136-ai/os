@@ -27,6 +27,8 @@
     + '.ap-th .mv{position:absolute;bottom:4px;left:0;right:0;display:flex;justify-content:space-between;padding:0 4px}'
     + '.ap-th .mv button{position:static;width:24px;height:22px;border-radius:6px}'
     + '.ap-th.st-ok{outline:3px solid var(--green)}.ap-th.st-bad{outline:3px solid var(--red)}.ap-th.st-run{outline:3px dashed var(--amber,#d97706)}'
+    + '.ap-more{width:92px;height:122px;border-radius:10px;border:2px dashed var(--green);background:var(--green-bg);color:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font:700 12px/1.2 inherit;text-align:center;margin:0}'
+    + '.ap-more span{font-size:28px;line-height:1}.ap-more input{display:none}.ap-more:hover{background:var(--surface)}'
     + '.ap-st{font-size:12.5px;margin-top:10px;color:var(--text-secondary);line-height:1.5}';
   document.head.appendChild(css);
 
@@ -159,7 +161,12 @@
       $('-t').innerHTML = P.map(function (p, i) {
         return '<div class="ap-th' + (state && state[i] ? ' st-' + state[i] : '') + '"><img src="' + p.data + '" alt="page ' + (i + 1) + '"/><b>' + (i + 1) + '</b>'
           + (busy ? '' : '<button type="button" data-x="' + i + '" title="Remove">&#10005;</button><div class="mv"><button type="button" data-l="' + i + '" title="Move left">&#8592;</button><button type="button" data-r="' + i + '" title="Move right">&#8594;</button></div>') + '</div>';
-      }).join('');
+      }).join('')
+        /* like WhatsApp: after the first photo, a "+ Add more" box for the next pages */
+        + (P.length && P.length < MAX && !busy
+          ? (touch ? '<label class="ap-more" data-cam="1" title="Take the next page"><span>&#128247;</span>Next page<input type="file" accept="image/*" capture="environment" data-ap="cam"/></label>' : '')
+            + '<label class="ap-more" data-cam="1" title="Add more photos or a PDF"><span>&#65291;</span>Add more<input type="file" accept="image/*,application/pdf,.pdf" multiple data-ap="more"/></label>'
+          : '');
       $('-go').style.display = P.length ? 'block' : 'none';
       $('-read').innerHTML = '&#128269; Read the bill (' + P.length + ' page' + (P.length === 1 ? '' : 's') + ')';
       [].forEach.call(host.querySelectorAll('.ap-btn'), function (b) { if (busy) b.setAttribute('disabled', ''); else b.removeAttribute('disabled'); });
