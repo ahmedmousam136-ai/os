@@ -545,7 +545,7 @@ async function trScan(inp, pre, shPre) {
   try {
     var img = await scanResize(f);
     /* keep the photo with the invoice (shown later from the invoice: L.R. / e-way bill photo) */
-    try { var pth = _clinicId + '/wholesale/transport/' + Date.now() + '.jpg', up = await _supa.storage.from('bills').upload(pth, img.blob, { contentType: 'image/jpeg', upsert: true }); if (!up.error && dEl(pre + 'photo')) dEl(pre + 'photo').value = pth; } catch (e) {}
+    try { var pth = _clinicId + '/wholesale/transport/' + Date.now() + '.jpg', up = await _supa.storage.from('bills').upload(pth, img.blob, { contentType: 'image/jpeg', upsert: true }); if (!up.error) { if (dEl(pre + 'photo')) dEl(pre + 'photo').value = pth; whDoc('transport', [pth]); } } catch (e) {}
     var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale', kind: 'transport' } });
     var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
     if (!d || !d.ok || !d.transport) { st.textContent = '\u26A0 ' + ({ nothing_read: 'Nothing could be read. Take a clearer, straight photo in good light.', daily_limit: 'Today\'s photo limit is used up. Type the details.', not_allowed: 'Only sales staff or the owner can do this.' }[d && d.reason] || 'Could not read the paper. Type the details.'); return; }
@@ -731,6 +731,7 @@ async function buySave() {
       var byG = {}; PLINES.forEach(function (l) { var it = l.item_id && ITEMMAP[l.item_id]; if (it && Number(it.gst_rate) !== Number(l.gst) && (byG[l.gst] = byG[l.gst] || []).indexOf(it.id) < 0) byG[l.gst].push(it.id); });
       for (var g in byG) { var u = await _supa.rpc('wh_set_gst', { p_clinic: _clinicId, p_ids: byG[g], p_gst: Number(g) }); gmsg += u.error ? ' GST not updated (' + (/PGRST202|Could not find/.test(dErr(u.error)) ? 'run file 28' : dErr(u.error)) + ').' : ' GST updated to ' + g + '% for ' + u.data + ' product' + (u.data === 1 ? '' : 's') + '.'; }
     }
+    whDoc('purchase_bill', WH_PAGES || (body.doc_path ? [body.doc_path] : null), body.bill_no, p.name, bt || r.data.total, body.bill_date); WH_PAGES = null;
     showToast('Purchase ' + r.data.our_no + ' saved: ' + dMoney0(r.data.total) + '. Stock updated.' + gmsg);
     PLINES = []; dEl('b-billno').value = ''; dEl('b-note').value = ''; dEl('b-billtot').value = ''; ppSet('buy', null); buyRender();
     await loadItems(); buySeg('list');
@@ -861,7 +862,9 @@ function scanResize(file) {
   });
 }
 var SCAN = [], SCAN_DOC = null;
-var WH_TRAY = null;
+var WH_TRAY = null, WH_PAGES = null;
+function onTab_photos() { if (window.AuraDocs) AuraDocs.panel(dEl('docs-root'), { module: 'wholesale' }); }
+function whDoc(kind, pages, ref, party, amount, date) { if (window.AuraDocs) AuraDocs.save({ module: 'wholesale', kind: kind, ref_no: ref, party: party, amount: amount, doc_date: date, pages: pages }); }
 function whTrayInit() {
   if (WH_TRAY || !window.AuraPages || !dEl('wh-tray')) return;
   WH_TRAY = AuraPages.tray(dEl('wh-tray'), { module: 'wholesale', onRead: async function (d, pages) {
@@ -879,7 +882,7 @@ function whTrayInit() {
     /* keep the first page with the purchase */
     SCAN_DOC = _clinicId + '/wholesale/purchase-bills/' + Date.now() + '.jpg';
     try { var up = await _supa.storage.from('bills').upload(SCAN_DOC, pages[0].blob, { contentType: 'image/jpeg', upsert: true }); if (up.error) SCAN_DOC = null; } catch (e) { SCAN_DOC = null; }
-    d._img = pages[0].data; scanReview(d);
+    WH_PAGES = pages; d._img = pages[0].data; scanReview(d);
   } });
 }
 /* the four tiles at the top of New purchase */
@@ -1241,7 +1244,7 @@ async function payScan(inp) {
   var st = dEl('mp-scan-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the photo&hellip; about 15-30 seconds.';
   try {
     var img = await scanResize(f);
-    try { var pth = _clinicId + '/wholesale/receipts/' + Date.now() + '.jpg', up = await _supa.storage.from('bills').upload(pth, img.blob, { contentType: 'image/jpeg', upsert: true }); if (!up.error) dEl('mp-doc').value = pth; } catch (e) {}
+    try { var pth = _clinicId + '/wholesale/receipts/' + Date.now() + '.jpg', up = await _supa.storage.from('bills').upload(pth, img.blob, { contentType: 'image/jpeg', upsert: true }); if (!up.error) whDoc('receipt', [pth]); if (!up.error) dEl('mp-doc').value = pth; } catch (e) {}
     var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale', kind: 'receipt' } });
     var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
     if (!d || !d.ok || !d.receipt) { st.textContent = '\u26A0 ' + ({ nothing_read: 'The amount could not be read. Take a clearer photo, or type the details.', daily_limit: 'Today\'s photo limit is used up. Type the details.', not_allowed: 'Only the owner or accounts staff can do this.' }[d && d.reason] || ((d && d.ok) ? 'Please update the bill-scan function on the server.' : 'Could not read the photo. Type the details.')) + (dEl('mp-doc').value ? ' The photo is kept with the payment.' : ''); return; }
@@ -1661,6 +1664,7 @@ async function orderPick(inp) {
   try {
     var img = await scanResize(f);
     var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale', kind: 'order' } });
+    if (r.data && r.data.ok) whDoc('order', [img.blob], r.data.order_no || null, r.data.customer || r.data.party || null);
     var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
     if (!d || !d.ok || d.kind !== 'order') {
       var why = { daily_limit: 'Today\'s limit of photos is used up. Please add the items by typing.', ai_key_not_set: 'Photo reading is not set up on the server yet.', not_allowed: 'Only the owner or sales staff can do this.', nothing_read: 'No medicines could be read. Take a clearer photo of the whole order.', not_signed_in: 'Your login has expired. Please log in again.' };
@@ -1889,6 +1893,7 @@ async function partyPhoto(inp) {
   try {
     var img = await scanResize(f);
     var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: img.data.split(',')[1], mime_type: 'image/jpeg', module: 'wholesale', kind: 'party' } });
+    if (r.data && r.data.ok) whDoc('party', [img.blob], null, (r.data.party && r.data.party.name) || null);
     var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
     if (!d || !d.ok || d.kind !== 'party') {
       var why = { daily_limit: 'Today\'s limit of photos is used up. Please type the details.', nothing_read: 'Nothing could be read. Take a clearer, straight photo.', ai_key_not_set: 'Photo reading is not set up on the server yet.', not_signed_in: 'Your login has expired. Please log in again.' };
