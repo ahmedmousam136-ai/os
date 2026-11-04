@@ -1871,11 +1871,21 @@ async function impRun(dry) {
   if (!dry && !confirm('Import ' + rows.length + ' rows into ' + (IMP.kind === 'parties' ? 'customers & suppliers' : 'products & stock') + '?')) return;
   var res = dEl('imp-res'); res.innerHTML = '<div class="tiny">' + (dry ? 'Checking' : 'Importing') + '&hellip;</div>';
   var tot = { rows: 0, added: 0, updated: 0, skipped: 0, stock_added: 0, errors: [] };
-  for (var i = 0; i < rows.length; i += 1000) {
-    var r = await _supa.rpc('wh_import', { p_clinic: _clinicId, p_kind: IMP.kind, p_rows: rows.slice(i, i + 1000), p_dry: dry });
-    if (r.error) { res.innerHTML = ''; dShowErr('imp-err', dErr(r.error)); return; }
+  /* parts of 200 rows; a part that takes too long is split in two and sent again (nothing of it was saved) */
+  var parts = [];
+  for (var i = 0; i < rows.length; i += 200) parts.push({ at: i, rows: rows.slice(i, i + 200) });
+  var sent = 0;
+  while (parts.length) {
+    var p = parts.shift(), r;
+    try { r = await _supa.rpc('wh_import', { p_clinic: _clinicId, p_kind: IMP.kind, p_rows: p.rows, p_dry: dry }); } catch (e) { r = { error: e }; }
+    if (r.error && /statement timeout|57014|canceling statement/i.test(String(r.error.message || r.error.code || '')) && p.rows.length > 10) {
+      var h = Math.ceil(p.rows.length / 2); parts.unshift({ at: p.at, rows: p.rows.slice(0, h) }, { at: p.at + h, rows: p.rows.slice(h) }); continue;
+    }
+    if (r.error) { res.innerHTML = '<div class="over tiny">' + sent + ' of ' + rows.length + ' rows were ' + (dry ? 'checked' : 'imported') + ' before this problem; the rest were not.</div>'; dShowErr('imp-err', dErr(r.error)); if (!dry) { await Promise.all([loadItems(), loadParties()]); } return; }
     ['rows', 'added', 'updated', 'skipped', 'stock_added'].forEach(function (k) { tot[k] += Number(r.data[k]) || 0; });
-    (r.data.errors || []).forEach(function (e) { e.row += i; tot.errors.push(e); });
+    (r.data.errors || []).forEach(function (e) { e.row += p.at; tot.errors.push(e); });
+    sent += p.rows.length;
+    res.innerHTML = '<div class="tiny">' + (dry ? 'Checking' : 'Importing') + ' ' + sent.toLocaleString('en-IN') + ' / ' + rows.length.toLocaleString('en-IN') + '&hellip; keep this page open</div>';
   }
   var what = IMP.kind === 'parties' ? 'customers / suppliers' : 'products';
   res.innerHTML = skipHtml + '<div class="card" style="padding:12px">' + (dry ? '<b>Check only &mdash; nothing saved yet.</b><br>' : '<b style="color:var(--green)">&#10003; Imported.</b><br>')
