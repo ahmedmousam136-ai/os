@@ -19,7 +19,11 @@
 <style>.as-opts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .as-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);cursor:pointer;color:var(--text-primary);font:inherit}
 .as-opt:hover{border-color:var(--green);background:var(--green-bg)}.as-opt span{font-size:22px}.as-opt b{font-size:14px}.as-opt small{font-size:11.5px;color:var(--text-secondary)}
-@media(max-width:700px){.as-opts{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
+@media(max-width:700px){.as-opts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cnt-b{display:none;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font-size:11.5px;font-weight:800;line-height:20px;text-align:center;margin-left:4px;vertical-align:1px}
+.cnt-b.on{display:inline-block}.cnt-b.amb{background:var(--amber)}
+.low-pop{position:fixed;right:16px;bottom:90px;z-index:9500;max-width:360px;background:#fff;border:2px solid var(--red);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.2);padding:12px 14px;font-size:13px;line-height:1.5;color:#14201A}
+.low-pop b.t{color:var(--red);display:block;margin-bottom:4px}.low-pop button{float:right;border:0;background:none;font-size:16px;cursor:pointer;color:#555}</style>
 </head>
 <body>
 <div id="loading" class="aura-loader" data-label="Loading AuraScale"></div><script>AuraLoader.fill('loading')</script>
@@ -278,9 +282,9 @@
         <input class="finput" id="st-q" placeholder="Search product or salt&hellip;" oninput="stockRender()" style="max-width:300px"/>
         <div class="seg" id="st-f">
           <button class="on" data-f="all" onclick="stockFilter('all')">All</button>
-          <button data-f="low" onclick="stockFilter('low')">Low / out</button>
-          <button data-f="exp90" onclick="stockFilter('exp90')">Expiring &le; 90 days</button>
-          <button data-f="expired" onclick="stockFilter('expired')">Expired</button>
+          <button data-f="low" onclick="stockFilter('low')">Low / out <span class="cnt-b" id="cnt-low"></span></button>
+          <button data-f="exp90" onclick="stockFilter('exp90')">Expiring &le; 90 days <span class="cnt-b amb" id="cnt-e90"></span></button>
+          <button data-f="expired" onclick="stockFilter('expired')">Expired <span class="cnt-b" id="cnt-exp"></span></button>
         </div>
         <button class="btn btn-sm" data-can="buy" onclick="itemEdit(null)">&#10133; New item</button>
         <button class="btn btn-sm btn-g" data-can="buy" onclick="woOpen()">&#128722; Order from supplier</button>
@@ -441,7 +445,7 @@
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=7"></script>
-<script src="wholesale.js?v=34"></script>
+<script src="wholesale.js?v=35"></script>
 <script src="wholesale-order.js?v=3"></script>
 <script src="aura-scan-pages.js?v=1"></script>
 <script src="aura-drop.js?v=1"></script>
