@@ -75,6 +75,7 @@
     <button class="d-tab" data-t="stock" onclick="dTab('stock')"><span class="ti">&#128230;</span><span class="tl">Stock</span></button>
     <button class="d-tab" data-t="money" data-can="moneyRead" onclick="dTab('money')"><span class="ti">&#128176;</span><span class="tl">Accounts</span></button>
     <button class="d-tab" data-t="parties" onclick="dTab('parties')"><span class="ti">&#128101;</span><span class="tl">Parties</span></button>
+    <button class="d-tab" data-t="photos" onclick="dTab('photos')"><span class="ti">&#128193;</span><span class="tl">Photos</span></button>
     <button class="d-tab" data-t="settings" data-can="owner" onclick="dTab('settings')"><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
     <button class="d-tab wh-help-tab" data-t="help" onclick="dTab('help')"><span class="ti">&#10067;</span><span class="tl">Help</span></button>
   </div>
@@ -364,6 +365,7 @@
 
     <!-- ============ HELP & SUPPORT ============ -->
     <div class="d-view" id="v-help"><div id="help-root"></div></div>
+    <div class="d-view" id="v-photos"><div id="docs-root"></div></div>
 
     <!-- ============ SETTINGS ============ -->
     <div class="d-view" id="v-settings">
@@ -445,9 +447,10 @@
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=7"></script>
-<script src="wholesale.js?v=35"></script>
+<script src="wholesale.js?v=36"></script>
 <script src="wholesale-order.js?v=3"></script>
-<script src="aura-scan-pages.js?v=1"></script>
+<script src="aura-docs.js?v=1"></script>
+<script src="aura-scan-pages.js?v=2"></script>
 <script src="aura-drop.js?v=1"></script>
 <script src="aura-sticky.js?v=1"></script>
 </body>
