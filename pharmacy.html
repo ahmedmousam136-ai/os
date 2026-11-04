@@ -276,7 +276,7 @@
   <div class="modal-b" id="med-body"></div></div></div>
 
 <script>
-var MEDS = [], MEDMAP = {}, CART = [], KIND = 'walkin', SALES = [], RANGE = 1, STF = 'all', LINKED = null, RCV_MED = null, IMP_ROWS = [];
+var MEDS = [], MEDMAP = {}, CART = [], KIND = 'walkin', SALES = [], RANGE = 1, STF = 'all', LINKED = null, RCV_MED = null, IMP_ROWS = [], IMP_DUP = 0;
 
 function ph() { return DEPT.clinic.ph_settings || {}; }
 
@@ -943,25 +943,72 @@ async function impRead(inp) {
       IMP_ROWS = []; inp.value = ''; return;
     }
     IMP_ROWS = good;
+    if (!MEDS.length) await loadMeds();
+    var HV = impHave(); IMP_DUP = IMP_ROWS.filter(function (o) { return HV[impKey(o.name, o.batch_no, o.expiry, o.mrp)]; }).length;
     box.innerHTML = (badRows ? '<div class="card" style="margin-bottom:8px;border-color:var(--amber);padding:10px 12px"><b style="color:var(--amber)">&#9888; ' + badRows + ' row' + (badRows === 1 ? '' : 's') + ' will be skipped</b> &mdash; batch, expiry, MRP, GST or quantity missing. First ones: '
       + ALL.filter(function (o) { return o._miss.length; }).slice(0, 8).map(function (o) { return esc(o.name) + ' (' + esc(o._miss.join(', ')) + ')'; }).join(' &middot; ') + '</div>' : '')
       + '<p class="muted" style="margin-bottom:6px"><b>' + IMP_ROWS.length + '</b> complete rows. First 15:</p><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Batch</th><th>Expiry</th><th class="r">MRP</th><th class="r">Qty</th><th class="r">GST</th></tr></thead><tbody>'
       + IMP_ROWS.slice(0, 15).map(function (o) { return '<tr><td>' + esc(o.name) + '</td><td>' + esc(o.batch_no || '-') + '</td><td>' + (o.expiry ? dExp(o.expiry) + (dDaysTo(o.expiry.slice(0, 8) + '28') < 0 ? ' <span class="tag t-r">expired</span>' : '') : '<span class="tag t-a">none</span>') + '</td><td class="r">' + esc(o.mrp || '-') + '</td><td class="r">' + esc(o.qty || '0') + '</td><td class="r">' + esc(o.gst_rate) + '%</td></tr>'; }).join('')
-      + '</tbody></table></div><p class="tiny" style="margin:8px 0">MRP and quantity are taken exactly as in your file (per strip, per bottle&hellip;). Medicines already in your list just get the new stock.</p><button class="btn btn-g" id="imp-go" onclick="impGo()">&#11014; Import ' + IMP_ROWS.length + ' rows</button><div id="imp-res"></div>';
+      + '</tbody></table></div><p class="tiny" style="margin:8px 0">MRP and quantity are taken exactly as in your file (per strip, per bottle&hellip;). Medicines already in your list just get the new stock.</p>'
+      + (IMP_DUP ? '<label style="display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;font-size:13px"><input type="checkbox" id="imp-skip" checked style="margin-top:3px" onchange="impSkipChange(this)"/><span><b>' + IMP_DUP.toLocaleString('en-IN') + ' rows are already in your stock</b> (same medicine, batch, expiry and MRP &mdash; this file, or part of it, was imported before). Skip them so the stock is not counted twice.</span></label>' : '')
+      + '<button class="btn btn-g" id="imp-go" onclick="impGo()">&#11014; Import ' + (IMP_ROWS.length - IMP_DUP).toLocaleString('en-IN') + ' rows</button><div id="imp-res"></div>';
   } catch (e) { box.innerHTML = '<div class="err" style="display:block">' + esc(dErr(e)) + '</div>'; }
   inp.value = '';
 }
+/* a stock line that is already in the shop: same medicine + batch + expiry month + MRP */
+function impKey(name, batch, exp, mrp) { return [String(name || '').trim().toLowerCase(), String(batch || '').trim().toLowerCase(), String(exp || '').slice(0, 7), (Number(mrp) || 0).toFixed(2)].join('|'); }
+function impHave() {
+  var have = {};
+  (MEDS || []).forEach(function (md) { (md.batches || []).forEach(function (bt) { have[impKey(md.name, bt.batch_no, bt.expiry, bt.mrp)] = 1; }); });
+  return have;
+}
+function impSkipChange(cb) { var b = dEl('imp-go'); if (b) b.innerHTML = '&#11014; Import ' + (cb.checked ? IMP_ROWS.length - IMP_DUP : IMP_ROWS.length).toLocaleString('en-IN') + ' rows'; }
 async function impGo() {
-  var btn = dEl('imp-go'); btn.disabled = true; var tot = { m: 0, s: 0, e: [] };
-  for (var i = 0; i < IMP_ROWS.length; i += 400) {
-    btn.textContent = 'Importing ' + Math.min(i + 400, IMP_ROWS.length) + ' / ' + IMP_ROWS.length + '…';
-    var r = await _supa.rpc('ph_import', { p_clinic_id: _clinicId, p_rows: IMP_ROWS.slice(i, i + 400).map(function (o) { var c = Object.assign({}, o); delete c._miss; return c; }) });
-    if (r.error) { dEl('imp-res').innerHTML = '<div class="err" style="display:block">' + esc(dErr(r.error)) + '</div>'; btn.disabled = false; return; }
-    tot.m += r.data.medicines_added; tot.s += r.data.stock_lines_added; (r.data.errors || []).forEach(function (x) { x.row += i; tot.e.push(x); });
+  var btn = dEl('imp-go'); btn.disabled = true;
+  var skipBox = dEl('imp-skip'), have = skipBox && skipBox.checked ? impHave() : {}, skipped = 0;
+  var rows = [];
+  IMP_ROWS.forEach(function (o, n) {
+    if (have[impKey(o.name, o.batch_no, o.expiry, o.mrp)]) { skipped++; return; }
+    var c = Object.assign({}, o); delete c._miss; c._n = n + 1; rows.push(c);
+  });
+  var total = IMP_ROWS.length, todo = rows.length, done = 0, added = 0, newMeds = 0, fails = [];
+  /* small parts, 3 at a time; a part that takes too long is split in two and sent again (nothing of it was saved) */
+  var queue = [], SIZE = 150, PAR = 3;
+  for (var i = 0; i < rows.length; i += SIZE) queue.push(rows.slice(i, i + SIZE));
+  var show = function () { btn.textContent = 'Importing ' + done.toLocaleString('en-IN') + ' / ' + todo.toLocaleString('en-IN') + '… keep this page open'; };
+  show();
+  async function worker() {
+    while (queue.length) {
+      var part = queue.shift(), send = part.map(function (c) { var x = Object.assign({}, c); delete x._n; return x; });
+      var r;
+      try { r = await _supa.rpc('ph_import', { p_clinic_id: _clinicId, p_rows: send }); } catch (e) { r = { error: e }; }
+      if (r.error) {
+        if (/statement timeout|57014|canceling statement/i.test(String(r.error.message || r.error.code || '')) && part.length > 10) {
+          var h = Math.ceil(part.length / 2); queue.unshift(part.slice(0, h), part.slice(h)); continue;   /* nothing was saved: send again in smaller parts */
+        }
+        part.forEach(function (c) { fails.push({ row: c._n, name: c.name, error: dErr(r.error) }); });
+        done += part.length; show(); continue;
+      }
+      added += Number(r.data.stock_lines_added) || 0; newMeds += Number(r.data.medicines_added) || 0;
+      (r.data.errors || []).forEach(function (x) { var c = part[x.row - 1] || {}; fails.push({ row: c._n || x.row, name: x.name || c.name, error: x.error }); });
+      done += part.length; show();
+    }
   }
-  btn.textContent = 'Done'; if (window.phOk) phOk('Stock list imported', tot.m + ' new medicines &middot; ' + tot.s + ' stock lines');
-  dEl('imp-res').innerHTML = '<div class="card" style="margin-top:10px"><b>' + tot.m + '</b> new medicines, <b>' + tot.s + '</b> stock lines added.' + (tot.e.length ? '<div style="color:var(--red);margin-top:6px">' + tot.e.length + ' rows skipped:<br>' + tot.e.slice(0, 20).map(function (x) { return 'Row ' + x.row + ' ' + esc(x.name || '') + ': ' + esc(x.error); }).join('<br>') + '</div>' : '') + '</div>';
-  IMP_ROWS = []; await loadMeds(); loadRecent();
+  var ws = []; for (var w = 0; w < PAR; w++) ws.push(worker());
+  await Promise.all(ws);
+  fails.sort(function (a, b) { return a.row - b.row; });
+  var ok = added + skipped >= total && !fails.length;
+  btn.textContent = ok ? 'Done' : 'Finished with problems';
+  var head = '<b style="color:' + (ok ? 'var(--green)' : 'var(--red)') + '">' + (ok ? '&#10004; ' : '&#9888; ') + added.toLocaleString('en-IN') + ' of ' + total.toLocaleString('en-IN') + ' rows added to stock</b>'
+    + ' <span class="tiny">(' + newMeds.toLocaleString('en-IN') + ' new medicines)</span>';
+  var more = (skipped ? '<div class="tiny" style="margin-top:4px">' + skipped.toLocaleString('en-IN') + ' rows were already in your stock (same medicine, batch, expiry and MRP) and were not added again.</div>' : '')
+    + (fails.length ? '<div style="color:var(--red);margin-top:6px"><b>' + fails.length.toLocaleString('en-IN') + ' rows were not added.</b> Give the same file again: rows already added are skipped, only these are tried again.<div class="tiny" style="margin-top:4px">' + fails.slice(0, 20).map(function (x) { return 'Row ' + x.row + ' ' + esc(x.name || '') + ': ' + esc(x.error); }).join('<br>') + (fails.length > 20 ? '<br>&hellip;' : '') + '</div></div>' : '');
+  dEl('imp-res').innerHTML = '<div class="card" style="margin-top:10px">' + head + more + '</div>';
+  if (window.phOk && ok) phOk('Stock list imported', added.toLocaleString('en-IN') + ' of ' + total.toLocaleString('en-IN') + ' rows added');
+  else showToast(added.toLocaleString('en-IN') + ' of ' + total.toLocaleString('en-IN') + ' rows added. ' + fails.length + ' not added — see the list.');
+  IMP_ROWS = [];
+  await loadMeds(); loadRecent();
+  if (dEl('st-b')) stockRender();
 }
 
 /* ---------------- SCAN A DISTRIBUTOR BILL (photo -> lines -> check -> stock) ---------------- */
