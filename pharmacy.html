@@ -21,7 +21,11 @@
 <div id="loading" class="aura-loader" data-label="Loading AuraScale"></div><script>AuraLoader.fill('loading')</script>
 <div id="nh-toast"></div>
 
-<style>@media(max-width:600px){.hide-sm{display:none}}</style>
+<style>@media(max-width:600px){.hide-sm{display:none}}
+.as-opts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.as-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);cursor:pointer;color:var(--text-primary);font:inherit}
+.as-opt:hover{border-color:var(--green);background:var(--green-bg)}.as-opt span{font-size:22px}.as-opt b{font-size:14px}.as-opt small{font-size:11.5px;color:var(--text-secondary)}
+@media(max-width:700px){.as-opts{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
 <div id="app" style="display:none">
   <div class="d-top">
     <div class="d-brand"><div style="min-width:0"><div class="d-title">&#128138; Pharmacy</div><div class="d-sub" id="d-fac"></div></div></div>
@@ -141,15 +145,39 @@
 
     <!-- ============ ADD STOCK ============ -->
     <div class="d-view" id="v-receive">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-sm" onclick="supOpen()">&#127970; Your suppliers</button></div>
-      <div class="card" style="margin-bottom:18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">
-        <div style="font-size:30px">&#128248;</div>
-        <div style="flex:1;min-width:220px"><b>Scan the distributor's bill</b><div class="tiny">Take a clear photo of the whole bill. AI reads every line (name, batch, expiry, MRP, rate, quantity). You check the lines, then add them to stock in one tap.</div></div>
-        <label class="btn btn-g" style="cursor:pointer">&#128247; Take / choose photo<input type="file" id="scan-file" accept="image/*" capture="environment" onchange="scanPick(this)" style="display:none"/></label>
-        <div class="tiny" id="scan-status" style="width:100%"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div><h3 style="font-size:16px;margin-bottom:2px">Add stock</h3>
+          <div class="tiny">Every line needs: <b>medicine name, batch no., expiry, MRP, GST % and quantity</b>. A plain list of medicine names is not accepted as stock.</div></div>
+        <button class="btn btn-sm" onclick="supOpen()">&#127970; Your suppliers</button>
       </div>
-      <h3 style="font-size:15px;margin-bottom:4px">Stock received from the distributor</h3>
-      <p class="tiny" style="margin-bottom:12px">Enter one line of the distributor's bill. Prices are what is printed on the pack (MRP includes GST).</p>
+      <div class="as-opts">
+        <button type="button" class="as-opt" onclick="asPick('pick')"><span>&#128247;</span><b>Bill photos</b><small>1&ndash;10 photos of one bill</small></button>
+        <button type="button" class="as-opt" onclick="asPick('pdf')"><span>&#128196;</span><b>PDF bill</b><small>Distributor's bill as PDF</small></button>
+        <button type="button" class="as-opt" onclick="asPick('xlsx')"><span>&#128202;</span><b>Excel</b><small>Stock list .xlsx / .xls</small></button>
+        <button type="button" class="as-opt" onclick="asPick('csv')"><span>&#128209;</span><b>CSV</b><small>Stock list .csv</small></button>
+      </div>
+
+      <div class="card" id="as-scan" style="margin-bottom:14px;background:var(--green-bg);border-color:var(--green-border)">
+        <b>&#128248; Distributor's bill &mdash; photos or PDF</b>
+        <div class="tiny">AI reads every line (name, batch, expiry, MRP, rate, quantity, GST). You check the lines, then add them to stock in one tap.</div>
+        <div id="ph-tray"></div>
+        <div class="tiny" id="scan-status" style="margin-top:6px"></div>
+      </div>
+
+      <div class="card" id="as-imp" style="margin-bottom:14px">
+        <b>&#128202; Excel / CSV stock list</b>
+        <p class="tiny" style="margin:4px 0 10px">Export the stock list from your old software, or fill our template. <b>Needed columns: name, batch, expiry, mrp, gst, qty</b> (also understood: "Item", "Batch No", "Exp", "M.R.P", "GST %", "Stock"). Optional: composition, unit, rate, supplier. Rows without batch, expiry, MRP, GST or quantity are not imported.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input type="file" id="imp-file" accept=".csv,.xlsx,.xls" onchange="impRead(this)" style="font-size:13px"/>
+          <button class="btn btn-sm" onclick="impTemplate()">&#11015; Download template</button>
+        </div>
+        <div id="imp-prev" style="margin-top:12px"></div>
+      </div>
+
+      <details class="card" id="as-hand">
+        <summary style="cursor:pointer;font-weight:700">&#9997; Type one line by hand</summary>
+        <div style="margin-top:12px">
+            <p class="tiny" style="margin-bottom:12px">Enter one line of the distributor's bill. Prices are what is printed on the pack (MRP includes GST).</p>
       <div style="position:relative;margin-bottom:10px;max-width:520px">
         <label class="flbl">Medicine</label>
         <input class="finput" id="r-med" placeholder="Type the medicine name&hellip;" autocomplete="off" oninput="rcvSearch()" onkeydown="rcvKey(event)" onblur="setTimeout(rcvAuto,200)" />
@@ -178,19 +206,8 @@
       </div>
       <p class="tiny" id="r-calc" style="margin-top:6px"></p>
       <div class="err" id="r-err"></div>
-
-      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0"/>
-      <h3 style="font-size:15px;margin-bottom:4px">Import your whole stock list (Excel or CSV)</h3>
-      <p class="tiny" style="margin-bottom:10px">Export the stock list from your old software, or fill our template. Columns: <b>name, composition, gst, unit, batch, expiry, mrp, rate, qty, supplier</b> (other column names like "Item", "Batch No", "Exp", "Stock" are also understood).</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <input type="file" id="imp-file" accept=".csv,.xlsx,.xls" onchange="impRead(this)" style="font-size:13px"/>
-        <button class="btn btn-sm" onclick="impTemplate()">&#11015; Download template</button>
-      </div>
-      <div id="imp-prev" style="margin-top:12px"></div>
-
-      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0"/>
-      <h3 style="font-size:15px;margin-bottom:8px">Recently received</h3>
-      <div style="overflow-x:auto"><table class="dt"><thead><tr><th>When</th><th>Medicine</th><th>Batch</th><th class="r">Before</th><th class="r">Added</th><th class="r">After</th><th>By</th><th>Note</th></tr></thead><tbody id="rcv-recent"></tbody></table></div>
+        </div>
+      </details>
     </div>
 
     <!-- ============ RE-ORDER (pharmacy-pro.js) ============ -->
@@ -268,9 +285,23 @@ function setupNote() {
 }
 
 /* ---------------- medicines + stock ---------------- */
+/* Supabase gives at most 1000 rows per request: read big lists page by page (10,000 or 1,00,000 medicines are fine) */
+async function phAll(build) {
+  var out = [], from = 0, size = 1000;
+  for (;;) {
+    var r = await build().range(from, from + size - 1);
+    if (r.error) return r;
+    out = out.concat(r.data || []);
+    if (!r.data || r.data.length < size) return { data: out, error: null };
+    from += size;
+  }
+}
 async function loadMeds() {
-  var m = await _supa.from('ph_medicines').select('*').eq('clinic_id', _clinicId).order('name');
-  var b = await _supa.from('ph_batches').select('*').eq('clinic_id', _clinicId).gt('qty', 0).order('expiry', { ascending: true, nullsFirst: false });
+  var mb = await Promise.all([
+    phAll(function () { return _supa.from('ph_medicines').select('*').eq('clinic_id', _clinicId).order('name').order('id'); }),
+    phAll(function () { return _supa.from('ph_batches').select('*').eq('clinic_id', _clinicId).gt('qty', 0).order('expiry', { ascending: true, nullsFirst: false }).order('id'); })
+  ]);
+  var m = mb[0], b = mb[1];
   if (m.error) { showToast('Could not load medicines: ' + dErr(m.error)); var sb = dEl('st-b'); if (sb) sb.innerHTML = '<tr><td colspan="7" style="color:var(--red);font-weight:700">&#9888; Your medicine list could not be loaded: ' + esc(dErr(m.error)) + '. Please refresh the page; if it keeps happening, send a screenshot to AuraScale support.</td></tr>'; return; }
   MEDMAP = {};
   MEDS = (m.data || []).map(function (x) { x.batches = []; x.stock = 0; x.expiredQty = 0; MEDMAP[x.id] = x; return x; });
@@ -596,13 +627,16 @@ function stockRender() {
     if (STF === 'expired') return m.expiredQty > 0;
     return true;
   });
-  dEl('st-b').innerHTML = list.length ? list.map(function (m) {
+  var ST_MAX = 300, more = list.length - ST_MAX;
+  if (more > 0) list = list.slice(0, ST_MAX);
+  dEl('st-b').innerHTML = (list.length ? list.map(function (m) {
     if (GSTSEL) return '<tr style="cursor:pointer" onclick="gstTick(\'' + m.id + '\')"' + (GSTSEL[m.id] ? ' style="background:var(--green-bg)"' : '') + '><td><div style="display:flex;gap:10px;align-items:center"><input type="checkbox" style="width:18px;height:18px;appearance:auto" ' + (GSTSEL[m.id] ? 'checked ' : '') + 'onclick="event.stopPropagation();gstTick(\'' + m.id + '\')"/><span><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + '<b>GST ' + Number(m.gst_rate) + '%</b></div></span></div></td>'
       + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td><td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + (Number(m.gst_rate) ? Number(m.gst_rate) + '%' : 'Exempt') + '</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td></td></tr>';
     return '<tr style="cursor:pointer" onclick="medOpen(\'' + m.id + '\')"><td><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + 'GST ' + Number(m.gst_rate) + '%</div></td>'
       + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td>'
       + '<td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + (Number(m.gst_rate) ? Number(m.gst_rate) + '%' : 'Exempt') + '</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
-  }).join('') : '<tr><td colspan="7" class="muted" style="text-align:center;padding:20px">' + (MEDS.length ? 'Nothing matches.' : 'No medicines yet. Use <b>Add stock</b> or import your stock list.') + '</td></tr>';
+  }).join('') : '<tr><td colspan="7" class="muted" style="text-align:center;padding:20px">' + (MEDS.length ? 'Nothing matches.' : 'No medicines yet. Use <b>Add stock</b> or import your stock list.') + '</td></tr>')
+    + (more > 0 ? '<tr><td colspan="7" class="muted" style="text-align:center;padding:14px">Showing the first ' + ST_MAX + ' of ' + (more + ST_MAX) + '. <b>Type in the search box</b> to find any medicine.</td></tr>' : '');
 }
 /* change the GST rate of many medicines at once */
 var GSTSEL = null, GSTSHOWN = [];
@@ -681,7 +715,35 @@ async function medSave(id) {
 }
 
 /* ---------------- ADD STOCK ---------------- */
-function onTab_receive() { loadRecent(); }
+var PH_TRAY = null;
+function onTab_receive() { asInit(); }
+function asInit() {
+  if (PH_TRAY || !window.AuraPages || !dEl('ph-tray')) return;
+  PH_TRAY = AuraPages.tray(dEl('ph-tray'), { onRead: function (d) {
+    var st = dEl('scan-status'); st.innerHTML = '';
+    if (!d || !d.ok) return;
+    if (!d.lines.length) { st.innerHTML = '<span style="color:var(--red)">&#9888; No product lines were found on these pages.</span>'; return; }
+    if (d.name_list_only) {
+      st.innerHTML = '<div class="card" style="margin-top:8px;border-color:var(--red);background:#fff5f5"><b style="color:var(--red)">&#9888; This is not a stock bill</b>'
+        + '<div class="tiny" style="margin-top:4px">It looks like a plain list of medicine names. To add stock, every line needs a <b>batch no., expiry, MRP, GST %</b> and <b>quantity</b> &mdash; as printed on the distributor\'s bill. Photograph the distributor\'s tax invoice, or use an Excel / CSV stock list with those columns.</div></div>';
+      return;
+    }
+    scanReview(d);
+  } });
+}
+/* the four option tiles at the top of Add stock */
+function asPick(k) {
+  asInit();
+  if (k === 'pick' || k === 'pdf') {
+    dEl('as-scan').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var inp = dEl('ph-tray').querySelector('input[data-ap="' + k + '"]'); if (inp) inp.click();
+    return;
+  }
+  var f = dEl('imp-file'); f.setAttribute('accept', k === 'csv' ? '.csv,text/csv' : '.xlsx,.xls');
+  dEl('as-imp').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  f.click(); setTimeout(function () { f.setAttribute('accept', '.csv,.xlsx,.xls'); }, 1500);
+}
+document.addEventListener('DOMContentLoaded', function () { setTimeout(asInit, 0); });
 function rcvSearch() {
   var q = dEl('r-med').value.trim(), dd = dEl('r-dd'); RCV_MED = null; dEl('r-new').style.display = 'none'; dEl('r-picked').textContent = '';
   if (q.length < 2) { dd.style.display = 'none'; return; }
@@ -757,6 +819,7 @@ async function rcvSave() {
   } catch (e) { dShowErr('r-err', dErr(e)); }
 }
 async function loadRecent() {
+  if (!dEl('rcv-recent')) return;   /* the list was removed from Add stock */
   var r = await _supa.from('ph_moves').select('*').eq('clinic_id', _clinicId).in('kind', ['received', 'corrected']).order('created_at', { ascending: false }).limit(25);
   var after = window.phClosingAt ? await phClosingAt(r.data || []) : {};
   dEl('rcv-recent').innerHTML = (r.data || []).length ? r.data.map(function (m) {
@@ -798,11 +861,31 @@ async function impRead(inp) {
       Object.keys(alias).forEach(function (k) { var hit = keys.filter(function (c) { return alias[k].indexOf(String(c).trim().toLowerCase()) >= 0; })[0]; if (hit !== undefined) o[k] = row[hit]; });
       o.name = String(o.name || '').trim(); o.expiry = impExpiry(o.expiry);
       ['gst_rate', 'mrp', 'purchase_rate', 'qty'].forEach(function (k) { if (o[k] !== undefined && o[k] !== '') o[k] = String(Number(String(o[k]).replace(/[^\d.]/g, '')) || 0); });
-      if (o.gst_rate === undefined || o.gst_rate === '') o.gst_rate = '5';
+      /* a stock line must have all of these: never assume a GST rate, batch or expiry */
+      var miss = [];
+      if (!String(o.batch_no || '').trim()) miss.push('batch');
+      if (!o.expiry) miss.push('expiry');
+      if (!(Number(o.mrp) > 0)) miss.push('MRP');
+      if (o.gst_rate === undefined || o.gst_rate === '' || [0, 5, 12, 18, 28].indexOf(Number(o.gst_rate)) < 0) miss.push('GST');
+      if (!(Number(o.qty) > 0)) miss.push('qty');
+      o._miss = miss;
       return o;
     }).filter(function (o) { return o.name; });
-    if (!IMP_ROWS.length) { box.innerHTML = '<div class="err" style="display:block">No rows found. Check that the first row has column names like name, mrp, qty.</div>'; return; }
-    box.innerHTML = '<p class="muted" style="margin-bottom:6px"><b>' + IMP_ROWS.length + '</b> rows found. First 15:</p><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Batch</th><th>Expiry</th><th class="r">MRP</th><th class="r">Qty</th><th class="r">GST</th></tr></thead><tbody>'
+    if (!IMP_ROWS.length) { box.innerHTML = '<div class="err" style="display:block">No rows found. Check that the first row has column names like name, batch, expiry, mrp, gst, qty.</div>'; return; }
+    /* which needed columns are not in the file at all */
+    var cols = Object.keys(raw[0] || {}).map(function (c) { return String(c).trim().toLowerCase(); }), noCol = [];
+    [['batch_no', 'batch'], ['expiry', 'expiry'], ['mrp', 'MRP'], ['gst_rate', 'GST'], ['qty', 'qty']].forEach(function (k) { if (!alias[k[0]].some(function (a) { return cols.indexOf(a) >= 0; })) noCol.push(k[1]); });
+    var ALL = IMP_ROWS, good = ALL.filter(function (o) { return !o._miss.length; }), badRows = ALL.length - good.length;
+    if (noCol.length || !good.length) {
+      box.innerHTML = '<div class="card" style="border-color:var(--red);background:#fff5f5"><b style="color:var(--red)">&#9888; This file cannot be imported as stock</b><div class="tiny" style="margin-top:4px">'
+        + (noCol.length ? 'These columns are missing: <b>' + esc(noCol.join(', ')) + '</b>. ' : 'No row has all of batch, expiry, MRP, GST and quantity. ')
+        + 'A stock list needs <b>name, batch, expiry, MRP, GST and quantity</b> for every medicine &mdash; a plain list of names is not accepted. Use the template, or export the full stock list from your old software.</div></div>';
+      IMP_ROWS = []; inp.value = ''; return;
+    }
+    IMP_ROWS = good;
+    box.innerHTML = (badRows ? '<div class="card" style="margin-bottom:8px;border-color:var(--amber);padding:10px 12px"><b style="color:var(--amber)">&#9888; ' + badRows + ' row' + (badRows === 1 ? '' : 's') + ' will be skipped</b> &mdash; batch, expiry, MRP, GST or quantity missing. First ones: '
+      + ALL.filter(function (o) { return o._miss.length; }).slice(0, 8).map(function (o) { return esc(o.name) + ' (' + esc(o._miss.join(', ')) + ')'; }).join(' &middot; ') + '</div>' : '')
+      + '<p class="muted" style="margin-bottom:6px"><b>' + IMP_ROWS.length + '</b> complete rows. First 15:</p><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Batch</th><th>Expiry</th><th class="r">MRP</th><th class="r">Qty</th><th class="r">GST</th></tr></thead><tbody>'
       + IMP_ROWS.slice(0, 15).map(function (o) { return '<tr><td>' + esc(o.name) + '</td><td>' + esc(o.batch_no || '-') + '</td><td>' + (o.expiry ? dExp(o.expiry) + (dDaysTo(o.expiry.slice(0, 8) + '28') < 0 ? ' <span class="tag t-r">expired</span>' : '') : '<span class="tag t-a">none</span>') + '</td><td class="r">' + esc(o.mrp || '-') + '</td><td class="r">' + esc(o.qty || '0') + '</td><td class="r">' + esc(o.gst_rate) + '%</td></tr>'; }).join('')
       + '</tbody></table></div><p class="tiny" style="margin:8px 0">MRP and quantity are taken exactly as in your file (per strip, per bottle&hellip;). Medicines already in your list just get the new stock.</p><button class="btn btn-g" id="imp-go" onclick="impGo()">&#11014; Import ' + IMP_ROWS.length + ' rows</button><div id="imp-res"></div>';
   } catch (e) { box.innerHTML = '<div class="err" style="display:block">' + esc(dErr(e)) + '</div>'; }
@@ -812,7 +895,7 @@ async function impGo() {
   var btn = dEl('imp-go'); btn.disabled = true; var tot = { m: 0, s: 0, e: [] };
   for (var i = 0; i < IMP_ROWS.length; i += 400) {
     btn.textContent = 'Importing ' + Math.min(i + 400, IMP_ROWS.length) + ' / ' + IMP_ROWS.length + '…';
-    var r = await _supa.rpc('ph_import', { p_clinic_id: _clinicId, p_rows: IMP_ROWS.slice(i, i + 400) });
+    var r = await _supa.rpc('ph_import', { p_clinic_id: _clinicId, p_rows: IMP_ROWS.slice(i, i + 400).map(function (o) { var c = Object.assign({}, o); delete c._miss; return c; }) });
     if (r.error) { dEl('imp-res').innerHTML = '<div class="err" style="display:block">' + esc(dErr(r.error)) + '</div>'; btn.disabled = false; return; }
     tot.m += r.data.medicines_added; tot.s += r.data.stock_lines_added; (r.data.errors || []).forEach(function (x) { x.row += i; tot.e.push(x); });
   }
@@ -1270,6 +1353,8 @@ function unlinkIfRenamed(v) {
 init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
 <script src="pharmacy-pro.js?v=4"></script>
+<script src="aura-scan-pages.js?v=1"></script>
 <script src="aura-drop.js?v=1"></script>
+<script src="aura-sticky.js?v=1"></script>
 </body>
 </html>
