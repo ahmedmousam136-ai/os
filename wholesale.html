@@ -16,6 +16,10 @@
 <script src="aura-loader.js?v=2"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261021a"/>
 <script src="aura-themes.js?v=1"></script>
+<style>.as-opts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.as-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);cursor:pointer;color:var(--text-primary);font:inherit}
+.as-opt:hover{border-color:var(--green);background:var(--green-bg)}.as-opt span{font-size:22px}.as-opt b{font-size:14px}.as-opt small{font-size:11.5px;color:var(--text-secondary)}
+@media(max-width:700px){.as-opts{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
 </head>
 <body>
 <div id="loading" class="aura-loader" data-label="Loading AuraScale"></div><script>AuraLoader.fill('loading')</script>
@@ -174,11 +178,18 @@
         <button data-s="ret" onclick="buySeg('ret')">&#8618; Return to supplier</button>
       </div>
       <div id="b-new">
-        <div class="card" style="margin-bottom:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-bg);border-color:var(--green-border)">
-          <div style="font-size:28px">&#128248;</div>
-          <div style="flex:1;min-width:220px"><b>Scan the supplier's bill</b><div class="tiny">Take a clear photo of the whole bill. AI reads the supplier, bill number and every line. You check the lines, then save.</div></div>
-          <label class="btn btn-g" style="cursor:pointer">&#128247; Take / choose photo<input type="file" id="b-scan" accept="image/*" capture="environment" onchange="scanPick(this)" style="display:none"/></label>
-          <div class="tiny" id="b-scan-st" style="width:100%"></div>
+        <div class="as-opts">
+          <button type="button" class="as-opt" onclick="asPick('pick')"><span>&#128247;</span><b>Bill photos</b><small>1&ndash;10 photos of one bill</small></button>
+          <button type="button" class="as-opt" onclick="asPick('pdf')"><span>&#128196;</span><b>PDF bill</b><small>Supplier's bill as PDF</small></button>
+          <button type="button" class="as-opt" onclick="asPick('xlsx')"><span>&#128202;</span><b>Excel</b><small>Stock list .xlsx / .xls</small></button>
+          <button type="button" class="as-opt" onclick="asPick('csv')"><span>&#128209;</span><b>CSV</b><small>Stock list .csv</small></button>
+        </div>
+        <div class="card" id="as-scan" style="margin-bottom:14px;background:var(--green-bg);border-color:var(--green-border)">
+          <b>&#128248; Supplier's bill &mdash; photos or PDF</b>
+          <div class="tiny">AI reads the supplier, bill number and every line. Every line needs <b>batch, expiry, MRP, GST %</b> and <b>quantity</b>; a plain list of names is not accepted.</div>
+          <div id="wh-tray"></div>
+          <div class="tiny" id="b-scan-st" style="width:100%;margin-top:6px"></div>
+        </div>
         </div>
         <div class="row2" style="margin-bottom:12px">
           <div style="flex:1;min-width:260px;position:relative"><label class="flbl">Supplier *</label><div id="pp-buy"></div></div>
@@ -430,8 +441,10 @@
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=7"></script>
-<script src="wholesale.js?v=33"></script>
+<script src="wholesale.js?v=34"></script>
 <script src="wholesale-order.js?v=3"></script>
+<script src="aura-scan-pages.js?v=1"></script>
 <script src="aura-drop.js?v=1"></script>
+<script src="aura-sticky.js?v=1"></script>
 </body>
 </html>
