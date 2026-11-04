@@ -160,7 +160,7 @@
     var $ = function (s) { return document.getElementById(id + s); };
     function paint(state) {
       $('-t').innerHTML = P.map(function (p, i) {
-        return '<div class="ap-th' + (state && state[i] ? ' st-' + state[i] : '') + '"><img src="' + p.data + '" alt="page ' + (i + 1) + '"/><b>' + (i + 1) + '</b>'
+        return '<div class="ap-th' + (state && state[i] ? ' st-' + state[i] : '') + '"><img src="' + p.data + '" alt="page ' + (i + 1) + '" data-v="' + i + '" title="Tap to see it big and zoom" style="cursor:zoom-in"/><b>' + (i + 1) + '</b>'
           + (busy ? '' : '<button type="button" data-x="' + i + '" title="Remove">&#10005;</button><div class="mv"><button type="button" data-l="' + i + '" title="Move left">&#8592;</button><button type="button" data-r="' + i + '" title="Move right">&#8594;</button></div>') + '</div>';
       }).join('')
         /* like WhatsApp: after the first photo, a "+ Add more" box for the next pages */
@@ -188,6 +188,8 @@
       var fs = t.files; add(fs).then(function () { t.value = ''; });
     });
     host.addEventListener('click', function (e) {
+      var v = e.target.getAttribute && e.target.getAttribute('data-v');
+      if (v != null && window.AuraDocs) { AuraDocs.view(P.map(function (p) { return p.data; }), 'Bill pages', +v); return; }   /* tap a page: see it big, zoom in */
       var b = e.target.closest && e.target.closest('button'); if (!b || busy) return;
       var x = b.getAttribute('data-x'), l = b.getAttribute('data-l'), r = b.getAttribute('data-r');
       if (x != null) { P.splice(+x, 1); paint(); }
