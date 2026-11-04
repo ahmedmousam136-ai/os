@@ -188,7 +188,7 @@
         <div class="card" style="margin-bottom:12px">
           <div style="position:relative;margin-bottom:10px">
             <label class="flbl">Item</label>
-            <input class="finput" id="b-q" placeholder="Type the product name&hellip;" autocomplete="off" oninput="buySearch()" onkeydown="ddKey(event,'b-dd')"/>
+            <input class="finput" id="b-q" placeholder="Type the product name&hellip;" autocomplete="off" oninput="buySearch()" onkeydown="ddKey(event,'b-dd')" onblur="setTimeout(buyAuto,200)"/>
             <div id="b-dd" class="dd" style="display:none"></div>
             <div class="tiny" id="b-picked" style="margin-top:4px"></div>
           </div>
@@ -430,7 +430,7 @@
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1200px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div><div class="modal-b" id="scan-body"></div></div></div>
 
 <script src="wholesale-lang.js?v=7"></script>
-<script src="wholesale.js?v=32"></script>
+<script src="wholesale.js?v=33"></script>
 <script src="wholesale-order.js?v=3"></script>
 <script src="aura-drop.js?v=1"></script>
 </body>
