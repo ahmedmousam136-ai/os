@@ -34,7 +34,8 @@
 
   /* ---------- files -> page pictures ---------- */
   function resize(srcCanvasOrImg, w, h) {
-    var max = 2200, k = Math.min(1, max / Math.max(w, h)), c = document.createElement('canvas');
+    /* the AI looks at a picture at most ~1600 px wide: a bigger photo only takes longer to send */
+    var max = 1600, k = Math.min(1, max / Math.max(w, h)), c = document.createElement('canvas');
     c.width = Math.round(w * k); c.height = Math.round(h * k);
     var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(srcCanvasOrImg, 0, 0, c.width, c.height);
     return c;
@@ -63,7 +64,7 @@
     await loadPdfJs();
     var doc = await window.pdfjsLib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise, out = [];
     for (var p = 1; p <= doc.numPages && out.length < room; p++) {
-      var pg = await doc.getPage(p), v0 = pg.getViewport({ scale: 1 }), sc = Math.min(3, 2000 / Math.max(v0.width, v0.height));
+      var pg = await doc.getPage(p), v0 = pg.getViewport({ scale: 1 }), sc = Math.min(3, 1600 / Math.max(v0.width, v0.height));
       var v = pg.getViewport({ scale: sc }), c = document.createElement('canvas'); c.width = Math.round(v.width); c.height = Math.round(v.height);
       var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
       await pg.render({ canvasContext: x, viewport: v }).promise;
@@ -126,7 +127,7 @@
         else { res[i] = null; errs.push({ page: i + 1, message: msgOf(d) }); progress && progress(i, 'bad', msgOf(d)); }
       }
     }
-    await Promise.all([worker(), worker()]);
+    await Promise.all([worker(), worker(), worker()]);   /* three pages at a time */
     var out = Object.assign({}, first), lines = [], seen = {};
     res.forEach(function (d, i) {
       if (!d) return;
@@ -145,7 +146,7 @@
   /* ---------- the tray: take / choose photos or a PDF, see the pages, read them ---------- */
   function tray(host, opt) {
     opt = opt || {};
-    var P = [], busy = false, id = 'ap' + Math.random().toString(36).slice(2, 7);
+    var P = [], busy = false, done = false, id = 'ap' + Math.random().toString(36).slice(2, 7);
     host.innerHTML = '<div class="ap-tray">'
       + '<div class="ap-btns">'
       /* data-cam: aura-dept.js must not rename or split these buttons */
@@ -173,6 +174,7 @@
     }
     async function add(files) {
       if (busy || !files || !files.length) return;
+      if (done) { P = []; done = false; }   /* the last bill was read: these photos start a NEW bill */
       var room = MAX - P.length; if (room <= 0) { $('-s').innerHTML = '<span style="color:var(--red)">Up to ' + MAX + ' pages at a time. Read these first.</span>'; return; }
       $('-s').textContent = 'Preparing the pages…';
       try {
@@ -207,7 +209,7 @@
     $('-read').onclick = async function () {
       if (busy || !P.length) return; busy = true; var state = P.map(function () { return ''; }); paint(state);
       var t0 = Date.now();
-      $('-s').innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading ' + P.length + ' page' + (P.length === 1 ? '' : 's') + '… about ' + (P.length === 1 ? '20&ndash;40 seconds' : Math.ceil(P.length * 20 / 60 + 0.5) + ' minute(s)') + '.';
+      $('-s').innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading ' + P.length + ' page' + (P.length === 1 ? '' : 's') + '… about ' + (P.length === 1 ? '15&ndash;30 seconds' : (P.length <= 4 ? '30&ndash;60 seconds' : '1&ndash;2 minutes')) + '.';
       var result;
       try {
         result = await readBill(P, opt.extra || (opt.module ? { module: opt.module } : null), function (i, st, info) {
@@ -220,6 +222,10 @@
         $('-s').innerHTML = '&#10003; ' + result.lines.length + ' lines read from ' + result.pages + ' page' + (result.pages === 1 ? '' : 's') + '.'
           + (result.page_errors.length ? ' <span style="color:var(--red)">Not read: ' + result.page_errors.map(function (x) { return 'page ' + x.page + ' (' + esc(x.message) + ')'; }).join(', ') + '. Take that page again, or type its lines.</span>' : '');
         result._first = P[0];
+        var keep = P.slice(); P = []; done = true; paint();   /* clear the tray: the next photos are the next bill */
+        $('-s').innerHTML += '<br><span class="tiny">The pages were cleared. Photos you add now start a new bill.</span>';
+        if (opt.onRead) opt.onRead(result, keep);
+        return;
       } else $('-s').innerHTML = '<span style="color:var(--red)">&#9888; ' + esc(result && result.message || 'Could not read the bill.') + '</span>';
       if (opt.onRead) opt.onRead(result, P.slice());
     };
