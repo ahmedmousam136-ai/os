@@ -609,10 +609,24 @@ function buyPick(id) {
   if (last && last.ptr && !dEl('b-ptr').value) dEl('b-ptr').value = last.ptr;
   dEl('b-batch').focus();
 }
+/* typed a name but did not tap the list: the same item already in stock is picked by itself, anything else becomes a new item */
+function buyNorm(t) { return String(t || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+function buyAuto() {
+  if (BITEM && BITEM.name) return true;
+  var q = buyNorm(dEl('b-q').value); if (!q) return false;
+  var same = ITEMS.filter(function (it) { return buyNorm(it.name) === q; })[0];
+  if (same) { buyPick(same.id); return true; }
+  return false;
+}
 function buyNewItem() { BITEM = { item_id: null, name: dEl('b-q').value.trim() }; dEl('b-dd').style.display = 'none'; dEl('b-newitem').style.display = 'grid'; dEl('b-picked').innerHTML = '<b>New item</b> &mdash; fill salt, HSN and pack once.'; dEl('bn-comp').focus(); }
 function buyAddLine() {
   dShowErr('b-line-err', '');
-  if (!BITEM || !BITEM.name) { dShowErr('b-line-err', 'Choose the item (or "New item").'); return; }
+  if ((!BITEM || !BITEM.name) && !buyAuto()) {
+    if (!dEl('b-q').value.trim()) { dShowErr('b-line-err', 'Type the item name.'); dEl('b-q').focus(); return; }
+    buyNewItem();   /* not in your list yet: add it as a new item */
+    dShowErr('b-line-err', '"' + dEl('b-q').value.trim() + '" is not in your list yet, so it will be added as a NEW item. Fill salt / HSN / pack (optional), then press Add line again.');
+    return;
+  }
   var l = { item_id: BITEM.item_id, name: BITEM.name, batch: dEl('b-batch').value.trim().toUpperCase(), expiry: dEl('b-exp').value, qty: num(dEl('b-qty').value), free: num(dEl('b-free').value),
     rate: num(dEl('b-rate').value), sch: num(dEl('b-sch').value), td: num(dEl('b-td').value), cd: num(dEl('b-cd').value), disc: discAll(dEl('b-sch').value, dEl('b-td').value, dEl('b-cd').value), gst: Number(dEl('b-gst').value), mrp: num(dEl('b-mrp').value), ptr: dEl('b-ptr').value === '' ? null : num(dEl('b-ptr').value) };
   if (!l.item_id) l.item = { name: l.name, composition: dEl('bn-comp').value.trim(), hsn: dEl('bn-hsn').value.trim(), gst_rate: l.gst, unit: dEl('bn-unit').value, pack: dEl('bn-pack').value.trim(), manufacturer: dEl('bn-mfg').value.trim() };
