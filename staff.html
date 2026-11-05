@@ -34,6 +34,11 @@
 .punch.out{background:#b42318;box-shadow:0 8px 20px rgba(180,35,24,.22)}.punch:disabled{opacity:.6}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:420px}.cal div{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px}
 .cal .hd{aspect-ratio:auto;font-weight:700;color:var(--text-secondary)}.cal small{font-size:10px;font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.chips button{border:1.5px solid var(--border);background:var(--surface,#fff);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.chips button.on{border-color:var(--green);background:#e6f6ee;color:#0b6b4a}
+.acc{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acc button{border:2px solid var(--border);background:var(--surface,#fff);border-radius:12px;padding:10px;text-align:left;cursor:pointer;font-size:13px}.acc button b{display:block;font-size:14px}.acc button.on{border-color:var(--green);background:#f0faf5}
+.hr-done{position:fixed;inset:0;z-index:2000;background:rgba(11,107,74,.96);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.hr-done.out{background:rgba(29,78,216,.96)}.hr-done .big{font-size:84px;line-height:1}.hr-done .t{font-size:26px;font-weight:800;margin-top:10px}.hr-done .s{font-size:17px;margin-top:6px;opacity:.9}
 .hr-modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:900;display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto}
 .hr-modal.open{display:flex}.hr-modal>.box{background:var(--surface,#fff);border-radius:16px;max-width:620px;width:100%;padding:18px}
 .pay-in{width:90px;padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;text-align:right;font-size:13px}
@@ -83,7 +88,8 @@
     <div class="d-view" id="v-today">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
         <input class="finput" type="date" id="td-d" style="max-width:180px" onchange="tdLoad()"/>
-        <span class="tiny">P = present &middot; &frac12; = half day &middot; A = absent &middot; L = leave (paid)</span>
+        <button class="btn btn-g btn-sm" id="td-all" onclick="tdAllPresent()">&#9989; Everyone present</button>
+        <span class="tiny">Then tap A for whoever did not come. P = present &middot; &frac12; = half day &middot; A = absent &middot; L = leave (paid)</span>
       </div>
       <div class="hr-sum" id="td-sum"></div>
       <div class="card" style="padding:0;overflow-x:auto"><table class="dt"><thead><tr><th>Staff</th><th>Status</th><th>In / out</th><th>Mark</th></tr></thead><tbody id="td-b"></tbody></table></div>
@@ -105,7 +111,7 @@
         <button class="btn btn-g" onclick="stEdit(null)">&#10133; Add staff</button>
         <label class="tiny" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="st-old" onchange="stRender()"/> Show staff who left</label>
       </div>
-      <div class="card" style="padding:0;overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Login</th><th class="r">Monthly salary</th><th>Weekly off</th><th></th></tr></thead><tbody id="st-b"></tbody></table></div>
+      <div class="card" style="padding:0;overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Attendance by</th><th class="r">Monthly salary</th><th>Weekly off</th><th></th></tr></thead><tbody id="st-b"></tbody></table></div>
       <p class="tiny" style="margin-top:8px">&#128274; Salary, phone, UPI and address are seen only by you (the owner) and by that staff member. An <b>attendance manager</b> sees and marks everyone&rsquo;s attendance, but never salaries.</p>
     </div>
 
@@ -122,7 +128,7 @@
         <b>&#128181; Advance</b>
         <div class="grid4" style="margin-top:8px;align-items:end">
           <div><label class="flbl">Staff</label><select class="finput" id="ad-s"></select></div>
-          <div><label class="flbl">Amount (&#8377;)</label><input class="finput" id="ad-a" type="number" min="1" inputmode="decimal"/></div>
+          <div><label class="flbl">Amount (&#8377;)</label><input class="finput" id="ad-a" type="number" min="1" inputmode="decimal"/><div class="chips"><button type="button" onclick="dEl('ad-a').value=500">&#8377;500</button><button type="button" onclick="dEl('ad-a').value=1000">&#8377;1,000</button><button type="button" onclick="dEl('ad-a').value=2000">&#8377;2,000</button><button type="button" onclick="dEl('ad-a').value=5000">&#8377;5,000</button></div></div>
           <div><label class="flbl">Note</label><input class="finput" id="ad-n" maxlength="200" placeholder="optional"/></div>
           <div><button class="btn btn-g" onclick="adSave()">Give advance</button></div>
         </div>
@@ -146,10 +152,14 @@
         <div class="err" id="se-err"></div>
       </div>
       <div class="card" style="margin-top:12px">
-        <b>&#128307; Shop QR for check-in</b>
-        <p class="tiny" style="margin:4px 0 10px">Print it and stick it inside the shop. Staff open the phone camera, scan it and press Check in. If you think someone took a photo of it, make a new QR: the old one stops working.</p>
-        <div id="se-qr" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"></div>
+        <b>&#128242; Attendance QR (WhatsApp) &mdash; for everyone</b>
+        <p class="tiny" style="margin:4px 0 10px">Print it and stick it inside the shop. Staff scan it with the phone camera &rarr; WhatsApp opens &rarr; <b>Send</b>. Morning = in, evening = out. No login, no typing. Their WhatsApp mobile must be saved in Staff. If you think someone took a photo of it, make a new QR: the old one stops working.</p>
+        <div id="se-wa" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"></div>
       </div>
+      <details class="card" style="margin-top:12px">
+        <summary style="cursor:pointer"><b>&#128307; App QR</b> <span class="tiny">(optional, for staff who have a login and check in inside the app)</span></summary>
+        <div id="se-qr" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:10px"></div>
+      </details>
     </div>
   </div>
 </div>
@@ -159,21 +169,25 @@
   <div style="display:flex;align-items:center;margin-bottom:10px"><b id="m-st-t" style="font-size:17px">Add staff</b><button class="btn btn-sm" style="margin-left:auto" onclick="dClose('m-st')">&#10005;</button></div>
   <div class="grid4">
     <div style="grid-column:span 2"><label class="flbl">Name *</label><input class="finput" id="f-name" maxlength="120"/></div>
-    <div style="grid-column:span 2"><label class="flbl">Designation</label><input class="finput" id="f-desg" maxlength="80" placeholder="Salesman, Pharmacist, Helper&hellip;"/></div>
-    <div><label class="flbl">Monthly salary (&#8377;) *</label><input class="finput" id="f-sal" type="number" min="0" inputmode="decimal"/></div>
+    <div style="grid-column:span 2"><label class="flbl">Designation</label><input class="finput" id="f-desg" maxlength="80" placeholder="tap one, or write"/><div class="chips" id="c-desg"></div></div>
+    <div style="grid-column:span 4"><label class="flbl">Monthly salary (&#8377;) *</label><input class="finput" id="f-sal" type="number" min="0" inputmode="decimal" style="max-width:200px" placeholder="tap one, or write"/><div class="chips" id="c-sal"></div></div>
     <div><label class="flbl">Joined on</label><input class="finput" id="f-join" type="date"/></div>
     <div><label class="flbl">Weekly off</label><select class="finput" id="f-off"><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="-1">No weekly off</option></select></div>
     <div><label class="flbl">Duty starts at</label><input class="finput" id="f-duty" type="time" value="10:00"/></div>
-    <div><label class="flbl">Mobile</label><input class="finput" id="f-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="10 digits"/></div>
+    <div><label class="flbl">WhatsApp mobile</label><input class="finput" id="f-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="10 digits"/></div>
     <div><label class="flbl">UPI ID</label><input class="finput" id="f-upi" maxlength="80" placeholder="for paying salary"/></div>
     <div style="grid-column:span 2"><label class="flbl">Address</label><input class="finput" id="f-addr" maxlength="300"/></div>
-    <div style="grid-column:span 2"><label class="flbl">Login (to check in from their own phone)</label><select class="finput" id="f-login"></select></div>
+    <div style="grid-column:span 4"><label class="flbl">How will this person give attendance?</label>
+      <div class="acc"><button type="button" id="acc-wa" onclick="stAcc('wa')"><b>&#128242; WhatsApp only</b>No login. Scans the shop QR &rarr; Send. Needs the WhatsApp mobile above.</button>
+      <button type="button" id="acc-login" onclick="stAcc('login')"><b>&#128273; Login too</b>Has an AuraScale login (for billing / work). Check-in in the app or on WhatsApp.</button></div>
+      <div id="f-login-box" style="margin-top:8px;display:none"><label class="flbl">Login</label><select class="finput" id="f-login"></select><div id="f-inv" style="margin-top:8px"></div></div>
+    </div>
     <div style="grid-column:span 2;display:flex;flex-direction:column;gap:8px;justify-content:end">
       <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><input type="checkbox" id="f-mgr" style="margin-top:3px"/><span><b>Attendance manager</b> &mdash; can see and mark everyone&rsquo;s attendance (never salaries)</span></label>
       <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="f-act" checked/> Working here (untick when the person leaves)</label>
     </div>
   </div>
-  <p class="tiny" style="margin-top:8px">No Aadhaar or other ID number is needed or kept. A staff member without a login is marked present / absent by you or the attendance manager. To give a login: Settings of your portal &rarr; Staff logins.</p>
+  <p class="tiny" style="margin-top:8px">No Aadhaar or other ID number is needed or kept. You or the attendance manager can always mark anyone by hand too.</p>
   <div class="err" id="f-err"></div>
   <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-g" id="f-save" onclick="stSave()">Save</button><button class="btn" onclick="dClose('m-st')">Cancel</button></div>
 </div></div>
@@ -200,6 +214,24 @@ function hrDays(m) { var y = +m.slice(0, 4), mo = +m.slice(5, 7); return new Dat
 function hrDow(day) { return new Date(day + 'T12:00:00Z').getUTCDay(); }
 var HR_ST = { present: ['P', 'st-present', 'Present'], half: ['&frac12;', 'st-half', 'Half day'], absent: ['A', 'st-absent', 'Absent'], leave: ['L', 'st-leave', 'Leave'] };
 var HR_DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+var HR_WA = '916289246076';   /* AuraScale WhatsApp number: the attendance QR opens a chat with it */
+var HR_DESG = ['Salesman', 'Pharmacist', 'Helper', 'Reception', 'Delivery', 'Cashier', 'Accountant', 'Cleaner'];
+var HR_SAL = [6000, 8000, 10000, 12000, 15000, 20000];
+/* a short "ding" + vibration when attendance is saved */
+function hrDing() {
+  try { if (navigator.vibrate) navigator.vibrate([60, 40, 60]); } catch (e) {}
+  try {
+    var A = window.AudioContext || window.webkitAudioContext; if (!A) return; var ctx = new A();
+    [[880, 0], [1320, 0.13]].forEach(function (n) { var o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = n[0];
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + n[1]); g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + n[1] + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + n[1] + 0.35);
+      o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime + n[1]); o.stop(ctx.currentTime + n[1] + 0.4); });
+  } catch (e) {}
+}
+function hrDone(out, title, sub) {
+  var d = document.createElement('div'); d.className = 'hr-done' + (out ? ' out' : '');
+  d.innerHTML = '<div class="big">' + (out ? '&#128075;' : '&#10004;') + '</div><div class="t">' + title + '</div><div class="s">' + sub + '</div><div class="s" style="margin-top:22px;font-size:13px">Tap to close</div>';
+  d.onclick = function () { d.remove(); }; document.body.appendChild(d); hrDing(); setTimeout(function () { if (d.parentNode) d.remove(); }, 4000);
+}
 function hrErr(e) { var m = (e && (e.message || e.error_description)) || String(e || ''); return m.replace(/^[A-Z_]+:\s*/, ''); }
 function hrIsOwner() { return HR.role === 'owner'; }
 function hrIsMgr() { return HR.role === 'owner' || HR.role === 'manager'; }
@@ -266,7 +298,8 @@ async function hrLoadStaff(all) {
 async function onTab_me() {
   dEl('me-date').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
   await meToday(); meLoadMonth(); meSlips();
-  if (HR.qr) { dEl('me-err').style.display = 'block'; dEl('me-err').style.color = 'var(--green)'; dEl('me-err').textContent = 'Shop QR scanned. Press the button.'; }
+  /* came from the shop's app QR: check in / out at once, no button */
+  if (HR.qr) { var b = dEl('me-btn'); if (b.style.display !== 'none' && !b.disabled) mePunch(); else HR.qr = ''; }
 }
 async function meToday() {
   var r = await _supa.from('hr_attendance').select('*').eq('staff_id', HR.cur.staff_id).eq('day', HR.today).maybeSingle();
@@ -300,7 +333,8 @@ async function mePunch() {
     else { var c = await meWhere(); args.p_lat = c.latitude; args.p_lng = c.longitude; btn.textContent = 'Saving…'; }
     var r = await _supa.rpc('hr_punch', args);
     if (r.error) throw r.error;
-    showToast(k === 'in' ? 'Checked in at ' + hrTime(r.data.in_at) + (r.data.late ? ' (late)' : '') : 'Checked out at ' + hrTime(r.data.out_at));
+    if (k === 'in') hrDone(false, 'Checked in ' + hrTime(r.data.in_at), (HR.cur.staff_name || '') + (r.data.late ? ' &middot; late' : '') + ' &middot; have a good day');
+    else hrDone(true, 'Checked out ' + hrTime(r.data.out_at), (HR.cur.staff_name || '') + ' &middot; see you tomorrow');
     HR.qr = '';
     await meToday(); meLoadMonth();
   } catch (e) { dShowErr('me-err', hrErr(e)); btn.disabled = false; btn.textContent = old; }
@@ -344,7 +378,7 @@ async function tdLoad() {
   dEl('td-b').innerHTML = staff.length ? staff.map(function (s) {
     var a = by[s.id], off = !a && s.week_off >= 0 && hrDow(day) === s.week_off;
     if (a) cnt[a.status]++; else if (off) cnt.off++; else cnt.none++;
-    var how = function (h) { return h === 'gps' ? ' &#128205;' : h === 'qr' ? ' &#128307;' : ''; };
+    var how = function (h) { return h === 'gps' ? ' &#128205;' : h === 'qr' ? ' &#128307;' : h === 'whatsapp' ? ' &#128242;' : ''; };
     return '<tr><td><b>' + esc(s.name) + '</b><div class="tiny">' + esc(s.designation || '') + (s.att_manager ? ' &middot; manager' : '') + '</div></td>'
       + '<td>' + (a ? '<span class="hr-chip ' + HR_ST[a.status][1] + '">' + HR_ST[a.status][2] + '</span>' + (a.late ? ' <span class="hr-chip st-half">late</span>' : '') : off ? '<span class="hr-chip st-off">Weekly off</span>' : '<span class="hr-chip st-none">Not marked</span>') + '</td>'
       + '<td class="tiny">' + (a && a.in_at ? 'In ' + hrTime(a.in_at) + how(a.in_how) + (a.out_at ? '<br>Out ' + hrTime(a.out_at) + how(a.out_how) : '') : '') + '</td>'
@@ -353,6 +387,16 @@ async function tdLoad() {
       + (a ? '<button title="Clear" onclick="hrMark(\'' + s.id + '\',\'' + day + '\',\'clear\',tdLoad)">&#10005;</button>' : '') + '</div></td></tr>';
   }).join('') : '<tr><td colspan="4" class="muted" style="padding:18px">No staff yet.' + (hrIsOwner() ? ' Add them in <a href="#" onclick="dTab(\'staff\');return false">Staff</a>.' : '') + '</td></tr>';
   dEl('td-sum').innerHTML = '<div><b>' + cnt.present + '</b>Present</div><div><b>' + cnt.half + '</b>Half day</div><div><b>' + cnt.absent + '</b>Absent</div><div><b>' + cnt.leave + '</b>Leave</div>' + (cnt.off ? '<div><b>' + cnt.off + '</b>Weekly off</div>' : '') + '<div style="color:' + (cnt.none ? 'var(--amber)' : 'inherit') + '"><b>' + cnt.none + '</b>Not marked</div>';
+}
+async function tdAllPresent() {
+  var day = dEl('td-d').value || HR.today, btn = dEl('td-all');
+  var r = await _supa.from('hr_attendance').select('staff_id').eq('clinic_id', _clinicId).eq('day', day);
+  var done = {}; (r.data || []).forEach(function (a) { done[a.staff_id] = 1; });
+  var todo = HR.staff.filter(function (s) { return s.is_active && !done[s.id] && (!s.join_date || s.join_date <= day) && !(s.week_off >= 0 && hrDow(day) === s.week_off); });
+  if (!todo.length) { showToast('Everyone is already marked'); return; }
+  btn.disabled = true;
+  for (var i = 0; i < todo.length; i++) { var m = await _supa.rpc('hr_mark', { p_staff: todo[i].id, p_day: day, p_status: 'present', p_note: null }); if (m.error) { showToast(hrErr(m.error)); break; } }
+  btn.disabled = false; hrDing(); showToast(todo.length + ' marked present. Tap A for anyone who did not come.'); tdLoad();
 }
 async function hrMark(staffId, day, status, after) {
   var r = await _supa.rpc('hr_mark', { p_staff: staffId, p_day: day, p_status: status, p_note: null });
@@ -420,7 +464,7 @@ function stRender() {
     var pay = HR.pay[s.id] || {}, l = lg[s.user_id];
     return '<tr' + (s.is_active ? '' : ' style="opacity:.55"') + '><td><b>' + esc(s.name) + '</b>' + (s.att_manager ? ' <span class="tag t-g">manager</span>' : '') + (s.is_active ? '' : ' <span class="tag">left</span>')
       + '<div class="tiny">' + esc(s.designation || '') + (s.join_date ? ' &middot; joined ' + dDate(s.join_date) : '') + '</div></td>'
-      + '<td class="tiny">' + (s.user_id ? (l ? esc(l.email || l.name || '') : 'linked') : '<span class="muted">no login</span>') + '</td>'
+      + '<td class="tiny">' + (s.user_id ? '&#128273; ' + (l ? esc(l.email || l.name || '') : 'login') : '') + (pay.phone ? (s.user_id ? '<br>' : '') + '&#128242; ' + esc(pay.phone) : (s.user_id ? '' : '<span style="color:var(--amber)">add WhatsApp mobile</span>')) + '</td>'
       + '<td class="r"><b>' + hrMoney(pay.monthly_salary) + '</b></td><td class="tiny">' + (s.week_off >= 0 ? HR_DAY[s.week_off] : 'none') + '<br>duty ' + String(s.duty_start || '').slice(0, 5) + '</td>'
       + '<td><button class="btn btn-sm" onclick="stEdit(\'' + s.id + '\')">&#9998; Edit</button></td></tr>';
   }).join('') : '<tr><td colspan="5" class="muted" style="padding:18px">No staff yet. Press <b>Add staff</b>.</td></tr>';
@@ -437,15 +481,71 @@ function stEdit(id) {
   var used = {}; HR.staff.forEach(function (x) { if (x.user_id && x.id !== id) used[x.user_id] = 1; });
   dEl('f-login').innerHTML = '<option value="">No login (marked by you / manager)</option>' + (HR.logins || []).filter(function (l) { return !used[l.id] && l.role !== 'owner'; }).map(function (l) {
     return '<option value="' + l.id + '"' + (l.id === s.user_id ? ' selected' : '') + '>' + esc((l.name || '') + ' — ' + (l.email || '') + ' (' + (l.role || '') + ')') + '</option>'; }).join('');
-  dShowErr('f-err', ''); dOpen('m-st'); dEl('f-name').focus();
+  var chip = function (box, list, inp, fmt) {
+    dEl(box).innerHTML = list.map(function (v) { return '<button type="button" data-v="' + v + '">' + (fmt ? fmt(v) : esc(v)) + '</button>'; }).join('');
+    var paint = function () { [].forEach.call(dEl(box).children, function (b) { b.classList.toggle('on', String(dEl(inp).value) === b.getAttribute('data-v')); }); };
+    [].forEach.call(dEl(box).children, function (b) { b.onclick = function () { dEl(inp).value = b.getAttribute('data-v'); paint(); }; });
+    dEl(inp).oninput = paint; paint();
+  };
+  chip('c-desg', HR_DESG, 'f-desg'); chip('c-sal', HR_SAL, 'f-sal', function (v) { return '&#8377;' + Number(v).toLocaleString('en-IN'); });
+  dEl('f-inv').innerHTML = '';
+  stAcc(s.user_id ? 'login' : 'wa');
+  dShowErr('f-err', ''); dOpen('m-st'); if (!id) dEl('f-name').focus();
 }
-async function stSave() {
+function stAcc(k) {
+  HR.acc = k;
+  dEl('acc-wa').classList.toggle('on', k === 'wa'); dEl('acc-login').classList.toggle('on', k === 'login');
+  dEl('f-login-box').style.display = k === 'login' ? 'block' : 'none';
+  if (k === 'login') {
+    var roles = hrInviteRoles();
+    dEl('f-inv').innerHTML = roles.length ? '<div class="tiny" style="margin-bottom:6px">No login yet? Save, then send an invite on WhatsApp:</div><div class="chips">' + roles.map(function (r) {
+      return '<button type="button" onclick="stInvite(\'' + r[0] + '\')">&#128242; Invite as ' + esc(r[1]) + '</button>'; }).join('') + '</div><div id="f-inv-res" style="margin-top:8px"></div>'
+      : '<div class="tiny" style="color:var(--amber)">This kind of business has no staff logins yet. Use <b>WhatsApp only</b> &mdash; it works without a login.</div>';
+  }
+}
+/* the logins this kind of business can give (the same roles as the portal's own invites) */
+function hrInviteRoles() {
+  var t = HR.cur.business_type || '';
+  if (HR.cur.facility_type && HR.cur.facility_type !== 'nursing_home') return [];   /* a doctor's clinic: no staff logins yet */
+  if (t === 'pharmacy') return [['pharmacist', 'Pharmacist']];
+  if (t === 'lab') return [['lab', 'Lab staff']];
+  if (t === 'wholesale_pharmacy') return [['sales', 'Sales'], ['inventory', 'Inventory'], ['accounts', 'Accounts']];
+  if (t === 'nursing_home') return [['receptionist', 'Receptionist'], ['pharmacist', 'Pharmacist'], ['lab', 'Lab staff']];
+  return [];
+}
+async function stInvite(role) {
+  var box = dEl('f-inv-res'), phone = dEl('f-phone').value.replace(/\D/g, '');
+  if (!/^[6-9]\d{9}$/.test(phone)) { dShowErr('f-err', 'Write their 10-digit WhatsApp mobile first: the invite goes there.'); dEl('f-phone').focus(); return; }
+  if (!HR.editing) { await stSave(true); if (!HR.editing) return; }
+  box.innerHTML = '<span class="tiny">Making the invite&hellip;</span>';
+  try {
+    var t = HR.cur.business_type || '', label = dEl('f-name').value.trim(), r;
+    if (t === 'wholesale_pharmacy') r = await _supa.rpc('wh_invite', { p_clinic: _clinicId, p_role: role, p_label: label });
+    else if (role === 'pharmacist' || role === 'lab') r = await _supa.rpc('nhx_dept_invite', { p_clinic_id: _clinicId, p_dept: role, p_label: label });
+    else r = await _supa.rpc('nh_generate_invite', { p_role: role, p_label: label, p_clinic_id: _clinicId });
+    if (r.error) throw r.error;
+    if (!r.data || !r.data.ok) throw new Error((r.data && r.data.error) || 'Could not make the invite.');
+    var code = r.data.code;
+    await _supa.rpc('hr_invite_link', { p_code: code, p_staff: HR.editing });   /* when they join, they are linked to this staff member */
+    var msg = 'Hi ' + label + '! You have been invited to join ' + (HR.cur.name || '') + ' on AuraScale.\n\nYour invite code: ' + code + '\n\nOpen this link to join: https://os.aurascale.in/nh.html?invite=' + encodeURIComponent(code);
+    var sent = false;
+    try { var sx = await _supa.functions.invoke('send-staff-invite', { body: { code: code, phone: phone } }); sent = !sx.error && sx.data && sx.data.ok; } catch (e) {}
+    box.innerHTML = '<div class="card" style="padding:10px 12px">Invite code <b>' + esc(code) + '</b> ' + (sent ? 'sent on WhatsApp to ' + esc(phone) + '. ' : 'made. ')
+      + '<a class="btn btn-sm btn-g" target="_blank" href="https://wa.me/91' + phone + '?text=' + encodeURIComponent(msg) + '">&#128242; ' + (sent ? 'Send again from my WhatsApp' : 'Send from my WhatsApp') + '</a>'
+      + '<div class="tiny" style="margin-top:6px">When they join with this code, their login is linked here by itself.</div></div>';
+    hrDing();
+  } catch (e) { box.innerHTML = '<div class="err" style="display:block">' + esc(hrErr(e)) + '</div>'; }
+}
+async function stSave(stay) {
   var name = dEl('f-name').value.trim(), sal = dEl('f-sal').value, phone = dEl('f-phone').value.replace(/\D/g, '');
   if (!name) { dShowErr('f-err', 'Write the name.'); return; }
   if (sal === '' || Number(sal) < 0) { dShowErr('f-err', 'Write the monthly salary (0 if none).'); return; }
   if (phone && !/^[6-9]\d{9}$/.test(phone)) { dShowErr('f-err', 'Mobile number must be 10 digits starting with 6-9.'); return; }
+  if (HR.acc === 'wa' && !phone) { dShowErr('f-err', 'For WhatsApp attendance, write their WhatsApp mobile number.'); dEl('f-phone').focus(); return; }
+  var dupe = Object.keys(HR.pay).filter(function (k) { return k !== HR.editing && HR.pay[k].phone === phone && (HR.staff.filter(function (x) { return x.id === k; })[0] || {}).is_active; })[0];
+  if (phone && dupe) { dShowErr('f-err', 'This mobile number is already saved for another staff member.'); return; }
   var row = { clinic_id: _clinicId, name: name, designation: dEl('f-desg').value.trim() || null, join_date: dEl('f-join').value || null, week_off: Number(dEl('f-off').value),
-              duty_start: dEl('f-duty').value || '10:00', att_manager: dEl('f-mgr').checked, is_active: dEl('f-act').checked, user_id: dEl('f-login').value || null };
+              duty_start: dEl('f-duty').value || '10:00', att_manager: dEl('f-mgr').checked, is_active: dEl('f-act').checked, user_id: HR.acc === 'login' ? (dEl('f-login').value || null) : null };
   var btn = dEl('f-save'); btn.disabled = true;
   try {
     var r = HR.editing ? await _supa.from('hr_staff').update(row).eq('id', HR.editing).select().single() : await _supa.from('hr_staff').insert(row).select().single();
@@ -453,6 +553,8 @@ async function stSave() {
     var sid = r.data.id, pr = { staff_id: sid, clinic_id: _clinicId, monthly_salary: Number(sal), phone: phone || null, upi: dEl('f-upi').value.trim() || null, address: dEl('f-addr').value.trim() || null, updated_at: new Date().toISOString() };
     var p = HR.pay[sid] ? await _supa.from('hr_pay').update(pr).eq('staff_id', sid) : await _supa.from('hr_pay').insert(pr);
     if (p.error) throw p.error;
+    HR.pay[sid] = pr;
+    if (stay === true) { HR.editing = sid; dEl('m-st-t').textContent = 'Edit staff'; await onTab_staff(); return; }
     dClose('m-st'); showToast('Saved'); onTab_staff();
   } catch (e) { dShowErr('f-err', /hr_staff_login|duplicate/i.test(hrErr(e)) ? 'This login is already linked to another staff member.' : hrErr(e)); }
   finally { btn.disabled = false; }
@@ -554,10 +656,17 @@ function seRender() {
   var c = HR.cfg || {};
   dEl('se-r').value = c.radius_m || 150; dEl('se-g').value = c.grace_min != null ? c.grace_min : 15;
   dEl('se-loc').innerHTML = c.lat != null ? '<span class="tag t-g">&#10004; Set</span> <a class="tiny" target="_blank" href="https://www.google.com/maps?q=' + c.lat + ',' + c.lng + '">' + Number(c.lat).toFixed(5) + ', ' + Number(c.lng).toFixed(5) + ' (open map)</a> <button class="btn btn-sm" onclick="seClear()">Remove</button>' : '<span class="tag t-a">Not set</span>';
+  var wa = dEl('se-wa');
+  if (!c.wa_code) wa.innerHTML = c.clinic_id && !('wa_code' in c) ? '<span class="tag t-a">Run SQL 55 for WhatsApp attendance</span>' : '<button class="btn btn-g" onclick="seNewQr(true)">&#128242; Make the attendance QR</button>';
+  else {
+    var wurl = 'https://wa.me/' + HR_WA + '?text=' + encodeURIComponent('হাজিরা ' + c.wa_code);
+    wa.innerHTML = '<div id="se-wa-img" style="background:#fff;padding:10px;border-radius:10px;border:1px solid var(--border)"></div><div style="display:flex;flex-direction:column;gap:8px"><div class="tiny">Code <b>' + esc(c.wa_code) + '</b></div><button class="btn btn-g" onclick="sePrintQr(\'se-wa-img\',true)">&#128424; Print attendance QR</button><button class="btn" onclick="seNewQr(false)">&#8635; Make a new QR (old stops working)</button></div>';
+    hrQr(dEl('se-wa-img'), wurl, 180);
+  }
   var box = dEl('se-qr');
-  if (!c.qr_code) { box.innerHTML = '<button class="btn btn-g" onclick="seNewQr(true)">&#128307; Make the shop QR</button>'; return; }
+  if (!c.qr_code) { box.innerHTML = '<button class="btn" onclick="seNewQr(true)">&#128307; Make the app QR</button>'; return; }
   var url = location.origin + location.pathname.replace(/[^\/]*$/, '') + 'staff.html?c=' + _clinicId + '&q=' + c.qr_code;
-  box.innerHTML = '<div id="se-qr-img" style="background:#fff;padding:10px;border-radius:10px;border:1px solid var(--border)"></div><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-g" onclick="sePrintQr()">&#128424; Print QR</button><button class="btn" onclick="seNewQr(false)">&#8635; Make a new QR (old stops working)</button></div>';
+  box.innerHTML = '<div id="se-qr-img" style="background:#fff;padding:10px;border-radius:10px;border:1px solid var(--border)"></div><div style="display:flex;flex-direction:column;gap:8px"><button class="btn" onclick="sePrintQr(\'se-qr-img\',false)">&#128424; Print app QR</button></div>';
   hrQr(dEl('se-qr-img'), url, 180);
 }
 function hrQr(el, text, size) {
@@ -576,11 +685,11 @@ function seUseHere() {
 }
 async function seSave() { if (await seSet({ radius_m: Number(dEl('se-r').value) || 150, grace_min: Number(dEl('se-g').value) || 0 })) showToast('Saved'); }
 async function seClear() { if (confirm('Remove the shop location? Then check-in works only with the shop QR.')) await seSet({ clear_location: true }); }
-async function seNewQr(first) { if (!first && !confirm('Make a new QR? The printed QR stops working; print the new one.')) return; if (await seSet({ new_qr: true })) showToast(first ? 'QR made. Print it.' : 'New QR made. Print it and replace the old one.'); }
-function sePrintQr() {
-  var img = dEl('se-qr-img').querySelector('img,canvas'); if (!img) return;
+async function seNewQr(first) { if (!first && !confirm('Make new QR codes? The printed ones stop working; print the new ones.')) return; if (await seSet({ new_qr: true })) showToast(first ? 'QR made. Print it.' : 'New QR made. Print it and replace the old one.'); }
+function sePrintQr(boxId, isWa) {
+  var img = dEl(boxId || 'se-qr-img').querySelector('img,canvas'); if (!img) return;
   var src = img.tagName === 'CANVAS' ? img.toDataURL() : img.src;
-  dEl('print-area').innerHTML = '<div style="text-align:center;font-family:DM Sans,Arial,sans-serif;padding-top:40px"><h1 style="margin:0 0 6px">' + esc(HR.cur.name || '') + '</h1><div style="font-size:22px;margin-bottom:24px">Staff check-in / check-out</div><img src="' + src + '" style="width:340px;height:340px;image-rendering:pixelated"/><div style="font-size:18px;margin-top:22px">Open the phone camera &rarr; scan &rarr; press <b>Check in</b> or <b>Check out</b></div><div style="font-size:13px;color:#777;margin-top:30px">AuraScale OS</div></div>';
+  dEl('print-area').innerHTML = '<div style="text-align:center;font-family:DM Sans,Arial,sans-serif;padding-top:40px"><h1 style="margin:0 0 6px">' + esc(HR.cur.name || '') + '</h1><div style="font-size:22px;margin-bottom:24px">' + (isWa ? 'স্টাফ হাজিরা &middot; Staff attendance' : 'Staff check-in / check-out (app)') + '</div><img src="' + src + '" style="width:340px;height:340px;image-rendering:pixelated"/><div style="font-size:18px;margin-top:22px">' + (isWa ? 'ফোনের ক্যামেরায় স্ক্যান করুন &rarr; WhatsApp খুলবে &rarr; <b>Send</b><br>সকালে = হাজিরা &middot; ছুটির সময় = আবার Send' : 'Open the phone camera &rarr; scan &rarr; you are checked in / out') + '</div><div style="font-size:13px;color:#777;margin-top:30px">AuraScale OS</div></div>';
   window.print();
 }
 </script>
