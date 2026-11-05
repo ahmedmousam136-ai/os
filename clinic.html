@@ -1459,6 +1459,10 @@ main.content{
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 7 12 12 16 14"/></svg></span>
         <span data-i18n="nav_audit">Activity Log</span>
       </button>
+      <button class="nb" onclick="location.href='staff.html?c='+encodeURIComponent(_clinicId||'')">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span>Staff &amp; attendance</span>
+      </button>
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
         <span data-i18n="nav_settings">Settings</span>
@@ -2201,6 +2205,9 @@ main.content{
             <p class="ss">Clinic profile, integrations &amp; preferences</p>
           </div>
         </div>
+        <a href="#" onclick="location.href='staff.html?c='+encodeURIComponent(_clinicId||'');return false" style="display:flex;align-items:center;gap:12px;padding:14px 16px;margin:0 0 14px;border:1.5px solid var(--border);border-radius:14px;background:var(--surface,#fff);text-decoration:none;color:inherit">
+          <span style="font-size:24px">&#128101;</span><span style="flex:1"><b>Staff &amp; attendance</b><br><span style="font-size:12.5px;opacity:.75">Check-in by location / QR, monthly salary, advances, salary slips</span></span><span style="font-size:18px;opacity:.5">&rsaquo;</span>
+        </a>
 
         <div class="settings-section">
           <div class="ph">
