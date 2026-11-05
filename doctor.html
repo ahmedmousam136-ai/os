@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<style id="aura-nozoom">html,body,*{touch-action:manipulation}</style>
+<script>/* AuraScale: no zoom by mistake (double tap / tapping a box). Photo viewer keeps its own zoom. */
+(function(){var m=document.querySelector('meta[name="viewport"]');if(m&&m.content.indexOf('maximum-scale')<0)m.content+=',maximum-scale=1';var last=0;document.addEventListener('touchend',function(e){var now=Date.now(),t=e.target;if(now-last<350&&e.changedTouches.length===1&&!(t.closest&&t.closest('input,textarea,select,[contenteditable],.adv-s'))){e.preventDefault();if(t.click)t.click();}last=now;},{passive:false});})();</script>
 <title>AuraScale NH — Doctor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
