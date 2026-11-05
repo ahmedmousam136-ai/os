@@ -256,6 +256,7 @@ function deptMenu(back, g) {
   var roleTxt = { owner: 'Owner', receptionist: 'Reception', pharmacist: 'Pharmacist', lab: 'Lab staff', sales: 'Sales', inventory: 'Inventory', accounts: 'Accounts' }[g.role] || 'Staff';
   m.innerHTML = '<div class="who">Signed in: <b>' + esc(g.name || '') + '</b> (' + roleTxt + ')</div>'
     + (typeof auraBizMenuHtml === 'function' ? auraBizMenuHtml(_clinicId) : '')
+    + '<a href="staff.html?c=' + encodeURIComponent(_clinicId || '') + '">&#128101; Staff &amp; attendance</a>'
     + (back ? '<a href="' + back + '">&#8617; ' + (back === 'nh.html' ? 'Owner portal' : 'Reception portal') + '</a>' : '')
     + (!back && g.role === 'owner' && DEPT.standalone ? '<a href="#" onclick="if(auraDeptHomeId()){auraDeptHome();}return false;" class="d-home-link" style="display:none">&#8617; Nursing home owner portal</a>' : '')
     + (DEPT.module === 'pharmacy' && DEPT.clinic.mod_lab && DEPT.role !== 'pharmacist' ? '<a href="lab.html">&#129514; Lab</a>' : '')
