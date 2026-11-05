@@ -38,19 +38,43 @@
     var bar = document.createElement('div'); bar.className = 'cq-bar'; bar.id = 'cq-bar';
     bar.innerHTML = '<span class="cq-now" id="cq-now">Now with doctor:<b>—</b></span>'
       + '<button class="cq-btn" type="button" id="cq-qr-btn">&#128242; WhatsApp booking QR</button>'
-      + '<button class="cq-btn pri" type="button" id="cq-next">&#128226; Call next patient</button>';
+      + '<button class="cq-btn" type="button" id="cq-next" title="Optional. The queue also moves by itself with the clock.">&#128226; Call next (optional)</button>';
     list.parentNode.insertBefore(bar, list);
     $('cq-next').onclick = callNext; $('cq-qr-btn').onclick = openQr;
-    paintNow();
+    paintNow(); settings().then(paintNow, function () {});
+    setInterval(function () { if (SET) paintNow(); else settings().then(paintNow, function () {}); }, 60000);
   }
   function today() { var d = new Date(Date.now() + 330 * 60000); return d.toISOString().slice(0, 10); }
+  /* by the clock: start time + minutes per patient (same rule as the server, SQL 55) */
+  function gone(st) { return /^(cancelled|canceled|no[ -]?show|missed|rejected)$/i.test(st || ''); }
+  function clockQueue(list) {
+    if (!SET || !SET.start) return null;
+    var d = today(), avg = Math.max(1, Number(SET.avg_min) || 10) * 60000;
+    var cur = new Date(d + 'T' + SET.start + ':00+05:30').getTime(), out = [];
+    list.filter(function (a) { return a.token && !gone(a.status) && a.status !== 'Completed'; })
+        .sort(function (a, b) { return a.token - b.token; })
+        .forEach(function (a) { cur = Math.max(cur, a.created_at ? new Date(a.created_at).getTime() : cur); out.push({ a: a, est: cur }); cur += avg; });
+    return out;
+  }
+  function hm(t) { return new Date(t).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' }); }
   function paintNow() {
     var el = $('cq-now'); if (!el) return;
     var all = window._auraAllAppointments || [], d = today();
-    var cur = all.filter(function (a) { return String(a.appointment_date) === d && a.status === 'In Consultation'; })
-                 .sort(function (a, b) { return (b.token || 0) - (a.token || 0); })[0];
-    var wait = all.filter(function (a) { return String(a.appointment_date) === d && (!a.status || a.status === 'Waiting' || a.status === 'Checked In'); }).length;
-    el.innerHTML = 'Now with doctor:<b>' + (cur ? 'Token ' + esc(cur.token || '?') + ' · ' + esc(cur.patient_name || '') : '—') + '</b>'
+    var todays = all.filter(function (a) { return String(a.appointment_date) === d; });
+    var manual = todays.some(function (a) { return a.token && (a.status === 'In Consultation' || a.status === 'Completed'); });
+    var wait = todays.filter(function (a) { return !a.status || a.status === 'Waiting' || a.status === 'Checked In'; }).length;
+    if (!manual) {
+      var q = clockQueue(todays);
+      if (q) {
+        var now = Date.now(), cur = null, next = null;
+        q.forEach(function (x) { if (x.est <= now) cur = x; else if (!next) next = x; });
+        el.innerHTML = 'By the clock now:<b>' + (cur ? 'Token ' + esc(cur.a.token) + ' · ' + esc(cur.a.patient_name || '') : '—') + '</b>'
+          + (next ? ' <span style="margin-left:8px">next: token ' + esc(next.a.token) + ' at ' + hm(next.est) + '</span>' : '') + ' <span style="margin-left:8px">' + wait + ' booked</span>';
+        return;
+      }
+    }
+    var cur2 = todays.filter(function (a) { return a.status === 'In Consultation'; }).sort(function (a, b) { return (b.token || 0) - (a.token || 0); })[0];
+    el.innerHTML = 'Now with doctor:<b>' + (cur2 ? 'Token ' + esc(cur2.token || '?') + ' · ' + esc(cur2.patient_name || '') : '—') + '</b>'
       + ' <span style="margin-left:8px">' + wait + ' waiting</span>';
   }
   async function callNext() {
@@ -81,19 +105,22 @@
       + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0 6px">'
       + '<button class="cq-btn pri" id="cq-print">&#128424; Print QR poster</button><button class="cq-btn" id="cq-copy">&#128279; Copy booking link</button></div>'
       + '<div class="cq-row"><span>Bookings on WhatsApp today</span><select id="cq-open" style="padding:6px 8px;border:1px solid var(--border-mid,var(--border));border-radius:8px;background:var(--bg);color:var(--text-primary);font:inherit;font-weight:600"><option value="1"' + (s.open ? ' selected' : '') + '>On</option><option value="0"' + (s.open ? '' : ' selected') + '>Off</option></select></div>'
-      + '<div class="cq-row"><span>Average minutes per patient<br><small style="color:var(--text-tertiary)">used for the waiting time patients see</small></span><span><input type="number" id="cq-avg" min="1" max="120" value="' + esc(s.avg_min) + '"/> min</span></div>'
-      + '<p style="margin-top:8px">Use <b>Call next patient</b> on the Dashboard when the doctor is ready: the queue moves on the live page, and the patient called (and those 2 away) get a WhatsApp.</p></div>';
+      + '<div class="cq-row"><span>Chamber starts at<br><small style="color:var(--text-tertiary)">token 1&rsquo;s time; the queue moves by itself from here</small></span><span><input type="time" id="cq-start" value="' + esc(s.start || '10:00') + '" style="padding:6px 8px;border:1px solid var(--border-mid,var(--border));border-radius:8px;background:var(--bg);color:var(--text-primary);font:inherit;font-weight:600"/></span></div>'
+      + '<div class="cq-row"><span>Minutes per patient<br><small style="color:var(--text-tertiary)">each token&rsquo;s time = start + patients before &times; this</small></span><span><input type="number" id="cq-avg" min="1" max="120" value="' + esc(s.avg_min) + '"/> min</span></div>'
+      + '<div class="cq-row"><span>WhatsApp before the patient&rsquo;s time</span><select id="cq-lead" style="padding:6px 8px;border:1px solid var(--border-mid,var(--border));border-radius:8px;background:var(--bg);color:var(--text-primary);font:inherit;font-weight:600">' + [15, 20, 30, 45].map(function (m) { return '<option value="' + m + '"' + (Number(s.lead_min || 20) === m ? ' selected' : '') + '>' + m + ' min</option>'; }).join('') + '</select></div>'
+      + '<p style="margin-top:8px"><b>Nobody needs to press anything.</b> The queue moves by itself with the clock. Each patient gets a WhatsApp before their time and at their time. ' + (s.start ? '' : '<b style="color:var(--red)">Run SQL 55 for this.</b> ') + '<span style="color:var(--text-tertiary)">(Call next is optional: if someone uses it on a day, that day follows the real queue.)</span></p></div>';
     $('cq-x').onclick = closeQr;
     try { new QRCode($('cq-qr'), { text: waLink(s.code), width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); }
     catch (e) { $('cq-qr').innerHTML = '<p>QR could not be drawn. Link: ' + esc(waLink(s.code)) + '</p>'; }
     $('cq-copy').onclick = function () { try { navigator.clipboard.writeText(waLink(s.code)); toast('Booking link copied'); } catch (e) { prompt('Booking link', waLink(s.code)); } };
     $('cq-print').onclick = function () { printPoster(s); };
     var save = async function () {
-      var r = await sb().rpc('clq_set', { p_clinic: cid(), p_avg_min: parseInt($('cq-avg').value, 10) || null, p_open: $('cq-open').value === '1' });
+      var r = await sb().rpc('clq_set2', { p_clinic: cid(), p_avg_min: parseInt($('cq-avg').value, 10) || null, p_open: $('cq-open').value === '1', p_start: $('cq-start').value || null, p_lead_min: parseInt($('cq-lead').value, 10) || null });
+      if (r.error && /clq_set2|does not exist|PGRST202|Could not find/i.test(r.error.message || '')) r = await sb().rpc('clq_set', { p_clinic: cid(), p_avg_min: parseInt($('cq-avg').value, 10) || null, p_open: $('cq-open').value === '1' });
       if (r.error) { toast('Could not save: ' + r.error.message); return; }
-      SET = r.data; toast(SET.open ? 'Saved · WhatsApp bookings are ON' : 'Saved · WhatsApp bookings are OFF');
+      SET = r.data; paintNow(); toast(SET.open ? 'Saved · WhatsApp bookings are ON' : 'Saved · WhatsApp bookings are OFF');
     };
-    $('cq-open').onchange = save; $('cq-avg').onchange = save;
+    $('cq-open').onchange = save; $('cq-avg').onchange = save; $('cq-start').onchange = save; $('cq-lead').onchange = save;
   }
   function printPoster(s) {
     var img = $('cq-qr').querySelector('img'), cv = $('cq-qr').querySelector('canvas');
