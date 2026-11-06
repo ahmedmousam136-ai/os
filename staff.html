@@ -207,7 +207,8 @@
   </div>
   <p class="tiny" style="margin-top:8px">No Aadhaar or other ID number is needed or kept. You or the attendance manager can always mark anyone by hand too.</p>
   <div class="err" id="f-err"></div>
-  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-g" id="f-save" onclick="stSave()">Save</button><button class="btn" onclick="dClose('m-st')">Cancel</button></div>
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-g" id="f-save" onclick="stSave()">Save</button><button class="btn" onclick="dClose('m-st')">Cancel</button>
+    <button class="btn" id="f-remove" style="margin-left:auto;color:var(--red);border-color:var(--red);display:none" onclick="stRemove()">&#128683; Remove staff &amp; revoke access</button></div>
 </div></div>
 
 <!-- payslip view -->
@@ -554,6 +555,7 @@ function stEdit(id, acc) {
   stAcc(acc || (s.user_id ? 'login' : (id ? 'wa' : (hrInviteRoles().length ? 'login' : 'wa'))));
   dEl('f-req').checked = s.att_required !== false;
   dEl('f-save').onclick = function () { stSave(); };
+  dEl('f-remove').style.display = id && s.is_active !== false ? '' : 'none';
   dShowErr('f-err', ''); dOpen('m-st'); if (!id) dEl('f-name').focus();
 }
 function stAcc(k) {
@@ -574,6 +576,14 @@ function stNeedsInvite() { return HR.acc === 'login' && !dEl('f-login').value &&
 function stSaveLabel() {
   var b = dEl('f-save'); if (b) b.innerHTML = stNeedsInvite() ? '&#128242; Save &amp; send invite' : 'Save';
   var inv = dEl('f-inv'); if (inv && HR.acc === 'login') inv.style.display = dEl('f-login').value ? 'none' : '';
+}
+/* remove a staff member: their login can no longer open anything of this business */
+async function stRemove() {
+  var s = HR.staff.filter(function (x) { return x.id === HR.editing; })[0]; if (!s) return;
+  if (!confirm('Remove ' + s.name + ' and revoke their access?\n\n' + (s.user_id ? 'Their login is closed at once: they cannot open AuraScale for this business or check in. An open screen on their phone closes within 2 minutes.\n\n' : '') + 'Their attendance and salary history stay. No patient or bill data is deleted. To bring them back you send a new invite.')) return;
+  var r = await _supa.rpc('hr_remove_staff', { p_staff: s.id });
+  if (r.error) { dShowErr('f-err', /hr_remove_staff|does not exist|Could not find/i.test(r.error.message || '') ? 'Run SQL 59 once in Supabase for this.' : hrErr(r.error)); return; }
+  dClose('m-st'); hrTick('Access removed', esc(s.name) + ' can no longer open AuraScale here'); onTab_staff();
 }
 /* the logins this kind of business can give (the same roles as the portal's own invites) */
 function hrInviteRoles() {
