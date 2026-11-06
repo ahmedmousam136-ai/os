@@ -37,6 +37,13 @@
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.chips button{border:1.5px solid var(--border);background:var(--surface,#fff);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
 .chips button.on{border-color:var(--green);background:#e6f6ee;color:#0b6b4a}
 .acc{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acc button{border:2px solid var(--border);background:var(--surface,#fff);border-radius:12px;padding:10px;text-align:left;cursor:pointer;font-size:13px}.acc button b{display:block;font-size:14px}.acc button.on{border-color:var(--green);background:#f0faf5}
+.hr-ok{position:fixed;inset:0;z-index:2100;background:rgba(255,255,255,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;animation:hrfade .2s ease}
+.hr-ok svg{width:132px;height:132px}.hr-ok .c{fill:#16a34a;transform-origin:50% 50%;animation:hrpop .45s cubic-bezier(.2,1.4,.4,1) both}
+.hr-ok .k{fill:none;stroke:#fff;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80;animation:hrdraw .38s .32s ease-out forwards}
+.hr-ok .r{fill:none;stroke:#16a34a;stroke-width:3;opacity:0;transform-origin:50% 50%;animation:hrring .9s .2s ease-out}
+.hr-ok .t{font-size:24px;font-weight:800;color:#0b6b4a;margin-top:16px;opacity:0;animation:hrup .35s .55s ease forwards}.hr-ok .s{font-size:15px;color:#444;margin-top:6px;opacity:0;animation:hrup .35s .65s ease forwards}
+@keyframes hrpop{0%{transform:scale(0)}100%{transform:scale(1)}}@keyframes hrdraw{to{stroke-dashoffset:0}}@keyframes hrring{0%{opacity:.6;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}
+@keyframes hrup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes hrfade{from{opacity:0}to{opacity:1}}
 .hr-done{position:fixed;inset:0;z-index:2000;background:rgba(11,107,74,.96);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
 .hr-done.out{background:rgba(29,78,216,.96)}.hr-done .big{font-size:84px;line-height:1}.hr-done .t{font-size:26px;font-weight:800;margin-top:10px}.hr-done .s{font-size:17px;margin-top:6px;opacity:.9}
 .hr-modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:900;display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto}
@@ -190,7 +197,7 @@
     <div style="grid-column:span 4"><label class="flbl">How will this person give attendance?</label>
       <div class="acc"><button type="button" id="acc-wa" onclick="stAcc('wa')"><b>&#128242; WhatsApp only</b>No login. Scans the shop QR &rarr; Send. Needs the WhatsApp mobile above.</button>
       <button type="button" id="acc-login" onclick="stAcc('login')"><b>&#128273; Login too</b>Has an AuraScale login (for billing / work). Check-in in the app or on WhatsApp.</button></div>
-      <div id="f-login-box" style="margin-top:8px;display:none"><label class="flbl">Login</label><select class="finput" id="f-login"></select><div id="f-inv" style="margin-top:8px"></div></div>
+      <div id="f-login-box" style="margin-top:8px;display:none"><label class="flbl">Login</label><select class="finput" id="f-login" onchange="stSaveLabel()"></select><div id="f-inv" style="margin-top:8px"></div></div>
     </div>
     <div style="grid-column:span 2;display:flex;flex-direction:column;gap:8px;justify-content:end">
       <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><input type="checkbox" id="f-mgr" style="margin-top:3px"/><span><b>Attendance manager</b> &mdash; can see and mark everyone&rsquo;s attendance (never salaries)</span></label>
@@ -238,7 +245,16 @@ function hrDing() {
       o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime + n[1]); o.stop(ctx.currentTime + n[1] + 0.4); });
   } catch (e) {}
 }
-function hrDone(out, title, sub) {
+/* payment-style green tick: pops in, the tick draws itself, "ding" */
+function hrTick(title, sub, ms) {
+  var d = document.createElement('div'); d.className = 'hr-ok';
+  d.innerHTML = '<svg viewBox="0 0 100 100"><circle class="r" cx="50" cy="50" r="46"/><circle class="c" cx="50" cy="50" r="44"/><path class="k" d="M29 51 L44 66 L72 37"/></svg>'
+    + '<div class="t">' + title + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '');
+  d.onclick = function () { d.remove(); }; document.body.appendChild(d); setTimeout(hrDing, 300);
+  setTimeout(function () { if (d.parentNode) d.remove(); }, ms || 2600);
+}
+function hrDone(out, title, sub) { hrTick(title, sub); }
+function hrDoneOld(out, title, sub) {
   var d = document.createElement('div'); d.className = 'hr-done' + (out ? ' out' : '');
   d.innerHTML = '<div class="big">' + (out ? '&#128075;' : '&#10004;') + '</div><div class="t">' + title + '</div><div class="s">' + sub + '</div><div class="s" style="margin-top:22px;font-size:13px">Tap to close</div>';
   d.onclick = function () { d.remove(); }; document.body.appendChild(d); hrDing(); setTimeout(function () { if (d.parentNode) d.remove(); }, 4000);
@@ -417,7 +433,7 @@ async function tdAllPresent() {
   if (!todo.length) { showToast('Everyone is already marked'); return; }
   btn.disabled = true;
   for (var i = 0; i < todo.length; i++) { var m = await _supa.rpc('hr_mark', { p_staff: todo[i].id, p_day: day, p_status: 'present', p_note: null }); if (m.error) { showToast(hrErr(m.error)); break; } }
-  btn.disabled = false; hrDing(); showToast(todo.length + ' marked present. Tap A for anyone who did not come.'); tdLoad();
+  btn.disabled = false; hrTick(todo.length + ' marked present', 'Tap A for anyone who did not come'); tdLoad();
 }
 async function hrMark(staffId, day, status, after) {
   var r = await _supa.rpc('hr_mark', { p_staff: staffId, p_day: day, p_status: status, p_note: null });
@@ -513,6 +529,7 @@ function stEdit(id, acc) {
   dEl('f-inv').innerHTML = '';
   stAcc(acc || (s.user_id ? 'login' : (id ? 'wa' : (hrInviteRoles().length ? 'login' : 'wa'))));
   dEl('f-req').checked = s.att_required !== false;
+  dEl('f-save').onclick = function () { stSave(); };
   dShowErr('f-err', ''); dOpen('m-st'); if (!id) dEl('f-name').focus();
 }
 function stAcc(k) {
@@ -521,11 +538,16 @@ function stAcc(k) {
   dEl('f-login-box').style.display = k === 'login' ? 'block' : 'none';
   if (k === 'login') {
     var roles = hrInviteRoles();
-    dEl('f-inv').innerHTML = roles.length ? '<div class="tiny" style="margin-bottom:6px">No login yet? Save, then send an invite on WhatsApp:</div><div class="chips">' + roles.map(function (r) {
-      return '<button type="button" onclick="stInvite(\'' + r[0] + '\')">&#128242; Invite as ' + esc(r[1]) + '</button>'; }).join('') + '</div><div id="f-inv-res" style="margin-top:8px"></div>'
+    if (!HR.invRole || !roles.some(function (r) { return r[0] === HR.invRole; })) HR.invRole = roles.length ? roles[0][0] : '';
+    dEl('f-inv').innerHTML = roles.length ? '<div class="tiny" style="margin-bottom:6px">Their work in AuraScale (the invite code goes to their WhatsApp when you press <b>Save &amp; send invite</b>):</div><div class="chips" id="f-roles">' + roles.map(function (r) {
+      return '<button type="button" data-r="' + r[0] + '" class="' + (r[0] === HR.invRole ? 'on' : '') + '" onclick="HR.invRole=\'' + r[0] + '\';[].forEach.call(dEl(\'f-roles\').children,function(b){b.classList.toggle(\'on\',b===this)},this)">' + esc(r[1]) + '</button>'; }).join('') + '</div><div id="f-inv-res" style="margin-top:8px"></div>'
       : '<div class="tiny" style="color:var(--amber)">This kind of business has no staff logins yet. Use <b>WhatsApp only</b> &mdash; it works without a login.</div>';
   }
+  stSaveLabel();
 }
+/* "Save & send invite" when a new login is to be made, otherwise "Save" */
+function stNeedsInvite() { return HR.acc === 'login' && !dEl('f-login').value && hrInviteRoles().length > 0; }
+function stSaveLabel() { var b = dEl('f-save'); if (b) b.innerHTML = stNeedsInvite() ? '&#128242; Save &amp; send invite' : 'Save'; }
 /* the logins this kind of business can give (the same roles as the portal's own invites) */
 function hrInviteRoles() {
   var t = HR.cur.business_type || '';
@@ -556,7 +578,7 @@ async function stInvite(role) {
     box.innerHTML = '<div class="card" style="padding:10px 12px">Invite code <b>' + esc(code) + '</b> ' + (sent ? 'sent on WhatsApp to ' + esc(phone) + '. ' : 'made. ')
       + '<a class="btn btn-sm btn-g" target="_blank" href="https://wa.me/91' + phone + '?text=' + encodeURIComponent(msg) + '">&#128242; ' + (sent ? 'Send again from my WhatsApp' : 'Send from my WhatsApp') + '</a>'
       + '<div class="tiny" style="margin-top:6px">When they join with this code, their login is linked here by itself.</div></div>';
-    hrDing();
+    hrTick(sent ? 'Invite sent' : 'Invite ready', sent ? 'Code ' + esc(code) + ' went to WhatsApp ' + esc(phone) : 'Press &ldquo;Send from my WhatsApp&rdquo;');
   } catch (e) { box.innerHTML = '<div class="err" style="display:block">' + esc(hrErr(e)) + '</div>'; }
 }
 async function stSave(stay) {
@@ -564,6 +586,7 @@ async function stSave(stay) {
   if (!name) { dShowErr('f-err', 'Write the name.'); return; }
   if (sal === '' || Number(sal) < 0) { dShowErr('f-err', 'Write the monthly salary (0 if none).'); return; }
   if (phone && !/^[6-9]\d{9}$/.test(phone)) { dShowErr('f-err', 'Mobile number must be 10 digits starting with 6-9.'); return; }
+  if (stNeedsInvite() && !phone) { dShowErr('f-err', 'Write their WhatsApp mobile: the invite code goes there.'); dEl('f-phone').focus(); return; }
   if (HR.acc === 'wa' && !phone) { dShowErr('f-err', 'For WhatsApp attendance, write their WhatsApp mobile number.'); dEl('f-phone').focus(); return; }
   var dupe = Object.keys(HR.pay).filter(function (k) { return k !== HR.editing && HR.pay[k].phone === phone && (HR.staff.filter(function (x) { return x.id === k; })[0] || {}).is_active; })[0];
   if (phone && dupe) { dShowErr('f-err', 'This mobile number is already saved for another staff member.'); return; }
@@ -578,7 +601,13 @@ async function stSave(stay) {
     if (p.error) throw p.error;
     HR.pay[sid] = pr;
     if (stay === true) { HR.editing = sid; dEl('m-st-t').textContent = 'Edit staff'; await onTab_staff(); return; }
-    dClose('m-st'); showToast('Saved'); onTab_staff();
+    if (stNeedsInvite()) {   /* new login: send the invite now and keep the form open to show it */
+      HR.editing = sid; dEl('m-st-t').textContent = 'Invite staff'; await onTab_staff();
+      await stInvite(HR.invRole);
+      dEl('f-save').innerHTML = '&#10004; Done'; dEl('f-save').onclick = function () { dEl('f-save').onclick = function () { stSave(); }; dClose('m-st'); };
+      return;
+    }
+    dClose('m-st'); hrTick('Saved', esc(row.name)); onTab_staff();
   } catch (e) { dShowErr('f-err', /hr_staff_login|duplicate/i.test(hrErr(e)) ? 'This login is already linked to another staff member.' : hrErr(e)); }
   finally { btn.disabled = false; }
 }
@@ -619,9 +648,9 @@ async function pySave() {
   var r = await _supa.rpc('hr_payslip_save', { p_clinic: _clinicId, p_month: m + '-01', p_rows: rows });
   btn.disabled = false;
   if (r.error) { showToast(hrErr(r.error)); return; }
-  showToast('Salary of ' + hrMonthName(m) + ' saved for ' + r.data + ' staff'); pyLoad();
+  hrTick('Salary saved', hrMonthName(m) + ' &middot; ' + r.data + ' staff'); pyLoad();
 }
-async function pyPaid(id, mode) { var r = await _supa.rpc('hr_payslip_paid', { p_id: id, p_paid: true, p_mode: mode }); if (r.error) { showToast(hrErr(r.error)); } else showToast('Marked paid'); pyLoad(); adLoad(); }
+async function pyPaid(id, mode) { var r = await _supa.rpc('hr_payslip_paid', { p_id: id, p_paid: true, p_mode: mode }); if (r.error) { showToast(hrErr(r.error)); } else hrTick('Salary paid', hrMoney(r.data.net) + ' &middot; ' + esc(r.data.staff_name || '') + ' &middot; ' + String(mode).toUpperCase()); pyLoad(); adLoad(); }
 async function pyUnpaid(id) { if (!confirm('Mark this salary as NOT paid?')) return; var r = await _supa.rpc('hr_payslip_paid', { p_id: id, p_paid: false, p_mode: null }); if (r.error) showToast(hrErr(r.error)); pyLoad(); }
 async function adLoad() {
   if (!HR.staff.length) await hrLoadStaff(true);
@@ -638,7 +667,7 @@ async function adSave() {
   if (!(amt > 0)) { dShowErr('ad-err', 'Write the amount.'); return; }
   var r = await _supa.from('hr_advances').insert({ clinic_id: _clinicId, staff_id: dEl('ad-s').value, amount: amt, note: dEl('ad-n').value.trim() || null, given_on: HR.today });
   if (r.error) { dShowErr('ad-err', hrErr(r.error)); return; }
-  dShowErr('ad-err', ''); dEl('ad-a').value = ''; dEl('ad-n').value = ''; showToast('Advance saved'); adLoad(); pyLoad();
+  dShowErr('ad-err', ''); dEl('ad-a').value = ''; dEl('ad-n').value = ''; hrTick('Advance saved', hrMoney(amt)); adLoad(); pyLoad();
 }
 async function adDel(id) { if (!confirm('Delete this advance? (only if it was entered by mistake)')) return; var r = await _supa.from('hr_advances').delete().eq('id', id); if (r.error) showToast(hrErr(r.error)); adLoad(); pyLoad(); }
 
