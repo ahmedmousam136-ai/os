@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style id="aura-nozoom">html,body,*{touch-action:manipulation}</style>
+<script>/* AuraScale: no zoom by mistake (double tap / tapping a box). Photo viewer keeps its own zoom. */
+(function(){var m=document.querySelector('meta[name="viewport"]');if(m&&m.content.indexOf('maximum-scale')<0)m.content+=',maximum-scale=1';var last=0;document.addEventListener('touchend',function(e){var now=Date.now(),t=e.target;if(now-last<350&&e.changedTouches.length===1&&!(t.closest&&t.closest('input,textarea,select,[contenteditable],.adv-s'))){e.preventDefault();if(t.click)t.click();}last=now;},{passive:false});})();</script>
+<title>Import old data · AuraScale</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="aura-biz.js?v=1"></script>
+<script src="nh-shared.js?v=20261019z"></script>
+<script src="aura-dept.js?v=20261106g"></script>
+<script src="aura-loader.js?v=2"></script>
+<link rel="stylesheet" href="aura-theme.css?v=20261021a"/>
+<script src="aura-themes.js?v=1"></script>
+<style>
+.im-wrap{max-width:980px;margin:0 auto;padding:16px}
+.im-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.im-top h1{font-size:24px;margin:0}.im-top .sub{font-size:13px;color:var(--text-secondary)}
+.im-card{background:var(--surface,#fff);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.im-step{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--green,#0b6b4a);color:#fff;font-weight:800;font-size:13px;margin-right:8px}
+.im-drop{display:block;border:2px dashed var(--border);border-radius:14px;padding:26px 14px;text-align:center;cursor:pointer;margin-top:10px}
+.im-drop.on{border-color:var(--green,#0b6b4a);background:#e6f6ee}
+.im-what{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
+.im-what div{border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px}.im-what b{display:block;margin-bottom:2px}
+.im-sheet{border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-top:10px}
+.im-sheet.off{opacity:.55}
+.im-sheet .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.im-tbl{overflow-x:auto;margin-top:8px}.im-tbl table{border-collapse:collapse;font-size:12px;min-width:100%}
+.im-tbl th,.im-tbl td{border:1px solid var(--border);padding:4px 6px;white-space:nowrap;text-align:left;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.im-tbl th{background:var(--bg,#f6f6f4)}
+.im-chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;margin:2px 3px 2px 0}
+.im-ok{background:#e6f6ee;color:#0b6b4a}.im-miss{background:#fde8e8;color:#b42318}.im-ign{background:#f1f1ef;color:#777}
+.im-bar{height:10px;border-radius:99px;background:var(--border);overflow:hidden;margin-top:8px}.im-bar i{display:block;height:100%;width:0;background:var(--green,#0b6b4a);transition:width .2s}
+.im-res{font-size:13.5px;margin-top:6px}.im-err{color:#b42318;font-size:12.5px;max-height:180px;overflow:auto;margin-top:6px}
+.im-btn{border:0;border-radius:10px;padding:11px 18px;font-weight:700;font-size:14px;cursor:pointer;background:var(--green,#0b6b4a);color:#fff;text-decoration:none;display:inline-block}
+.im-btn.ghost{background:transparent;color:inherit;border:1.5px solid var(--border)}
+.im-btn:disabled{opacity:.5;cursor:default}
+.im-sel{padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface,#fff);color:inherit}
+.tiny{font-size:12px;color:var(--text-secondary)}
+.hr-ok{position:fixed;inset:0;z-index:2100;background:rgba(255,255,255,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.hr-ok svg{width:132px;height:132px}.hr-ok .c{fill:#16a34a;transform-origin:50% 50%;animation:hrpop .45s cubic-bezier(.2,1.4,.4,1) both}
+.hr-ok .k{fill:none;stroke:#fff;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80;animation:hrdraw .38s .32s ease-out forwards}
+.hr-ok .t{font-size:24px;font-weight:800;color:#0b6b4a;margin-top:16px}.hr-ok .s{font-size:15px;color:#444;margin-top:6px;max-width:420px}
+@keyframes hrpop{0%{transform:scale(0)}100%{transform:scale(1)}}@keyframes hrdraw{to{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<div id="loading" class="aura-loader" data-label="Loading"></div><script>AuraLoader.fill('loading')</script>
+<div id="msg" style="display:none;max-width:460px;margin:60px auto;text-align:center;padding:0 16px"></div>
+<div class="im-wrap" id="app" style="display:none">
+  <div class="im-top">
+    <div style="min-width:0"><h1>&#11014;&#65039; Import old data</h1><div class="sub" id="fac"></div></div>
+    <a class="im-btn ghost" href="nh.html" style="margin-left:auto">&#8617; Back</a>
+  </div>
+
+  <div class="im-card">
+    <div><span class="im-step">1</span><b>Download the template</b> &mdash; one Excel file, one sheet for each kind of data. Fill only what you have.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <a class="im-btn" href="AuraScale-NursingHome-Import-Template.xlsx" download>&#128229; Excel template (.xlsx)</a>
+      <button class="im-btn ghost" onclick="imCsvTemplates()">&#128229; CSV templates</button>
+    </div>
+    <div class="im-what">
+      <div><b>&#128719; Beds</b>bed number, ward, rate per day</div>
+      <div><b>&#129658; Admitted now</b>patients in a bed today, with their bill and advance so far</div>
+      <div><b>&#128101; Patients</b>old patient list (register)</div>
+      <div><b>&#128203; Rate list</b>your charges: ICU, CBC, X-ray, doctor visit&hellip;</div>
+      <div><b>&#128230; Stock</b>oxygen, gloves, medicines in store</div>
+    </div>
+    <p class="tiny" style="margin-top:10px">Their own Excel works too, if the column names are close (&ldquo;Bed No&rdquo;, &ldquo;Patient Name&rdquo;, &ldquo;Mobile&rdquo;, &ldquo;DOA&rdquo;&hellip;). You will see a check before anything is saved. &#128274; Do not put Aadhaar numbers in the file &mdash; that column is never read.</p>
+  </div>
+
+  <div class="im-card">
+    <div><span class="im-step">2</span><b>Choose the filled file</b> &mdash; Excel (.xlsx / .xls) or CSV</div>
+    <label class="im-drop" id="drop">
+      <input type="file" id="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none" onchange="imFile(this.files[0])"/>
+      <div style="font-size:34px">&#128194;</div>
+      <div style="font-weight:700;margin-top:4px">Tap to choose a file</div>
+      <div class="tiny">or drop it here</div>
+    </label>
+    <div id="sheets"></div>
+  </div>
+
+  <div class="im-card" id="go-card" style="display:none">
+    <div><span class="im-step">3</span><b>Import</b></div>
+    <p class="tiny" style="margin:8px 0">Order: Beds &rarr; Rate list &rarr; Patients &rarr; Admitted now &rarr; Stock. Nothing is added twice: the same bed, the same patient (same old ID, or same name + phone) or the same item is updated or skipped. You can import the same file again safely.</p>
+    <button class="im-btn" id="go" onclick="imGo()">&#11014;&#65039; Import now</button>
+    <div id="results" style="margin-top:12px"></div>
+  </div>
+
+  <div class="im-card">
+    <b>Where does it show?</b>
+    <ul class="tiny" style="margin:6px 0 0 18px;line-height:1.7">
+      <li><b>Beds</b> &rarr; Bed Management (empty beds are green).</li>
+      <li><b>Admitted now</b> &rarr; their bed turns occupied, Admissions, Billing. The bill shows &ldquo;Bill before AuraScale&rdquo; and &ldquo;Advance paid before AuraScale&rdquo; (minus), so the balance is right. New charges go on from today.</li>
+      <li><b>Patients</b> &rarr; Patients (search by name, phone or old ID). Old ID is kept as the UHID.</li>
+      <li><b>Rate list</b> &rarr; Reception &rarr; Add Charge &rarr; &ldquo;From your rate list&rdquo;: type ICU / CBC, the price fills by itself.</li>
+      <li><b>Stock</b> &rarr; Stock.</li>
+      <li>Old PDFs / photos of a patient &rarr; open the patient &rarr; Documents &rarr; Upload.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+/* ---------- what each sheet can hold (column names people use → our field) ---------- */
+var IM = { cid: null, file: '', sheets: [] };
+var KINDS = {
+  beds:     { label: '\u{1F6CF} Beds', order: 1, need: ['bed_number'],
+              f: { bed_number: ['bed number', 'bed no', 'bed', 'bed id', 'bed name', 'bed no.'], ward: ['ward', 'ward name', 'room', 'floor', 'ward room', 'type'],
+                   daily_rate: ['rate per day', 'daily rate', 'rate', 'per day', 'bed charge', 'charge per day', 'rent', 'tariff', 'price'] } },
+  tariff:   { label: '\u{1F4CB} Rate list', order: 2, need: ['name', 'rate'],
+              f: { category: ['category', 'type', 'head', 'group', 'department', 'charge type'], name: ['item', 'item name', 'service', 'service name', 'name', 'test', 'test name', 'particulars', 'description'],
+                   rate: ['rate', 'price', 'charge', 'amount', 'fee', 'fees', 'mrp', 'rate rs', 'rs'], code: ['code', 'item code', 'service code'] } },
+  patients: { label: '\u{1F465} Patients', order: 3, need: ['name'],
+              f: { uhid: ['old id', 'uhid', 'patient id', 'reg no', 'registration no', 'registration number', 'mrd no', 'mrd', 'ip no', 'ipd no', 'id', 'old patient id'],
+                   name: ['name', 'patient name', 'patient', 'full name', 'patients name'], age: ['age', 'age years', 'age yrs'], gender: ['gender', 'sex', 'm f'],
+                   phone: ['phone', 'mobile', 'mobile no', 'phone no', 'contact', 'contact no', 'phone number', 'mobile number'],
+                   guardian: ['guardian', 'father husband', 'father', 'husband', 'relative', 'attendant', 'care of', 'c o', 'guardian name', 's o w o d o'],
+                   address: ['address', 'village', 'city', 'full address', 'addr'] } },
+  admitted: { label: '\u{1FA7A} Admitted now', order: 4, need: ['name', 'bed_number'],
+              f: { name: ['name', 'patient name', 'patient', 'full name'], uhid: ['old id', 'uhid', 'patient id', 'reg no', 'registration no', 'ip no', 'ipd no', 'mrd no', 'id'],
+                   age: ['age', 'age years'], gender: ['gender', 'sex'], phone: ['phone', 'mobile', 'mobile no', 'phone no', 'contact', 'contact no'],
+                   guardian: ['guardian', 'father husband', 'father', 'husband', 'relative', 'attendant', 'care of'], address: ['address', 'village', 'city'],
+                   bed_number: ['bed number', 'bed no', 'bed', 'bed id', 'bed no.'], admission_date: ['admission date', 'admitted on', 'doa', 'date of admission', 'adm date', 'date', 'admit date'],
+                   doctor: ['doctor', 'consultant', 'under dr', 'under doctor', 'admitting doctor', 'dr', 'doctor name'], diagnosis: ['diagnosis', 'disease', 'complaint', 'provisional diagnosis', 'problem'],
+                   daily_rate: ['rate per day', 'daily rate', 'bed rate', 'per day'],
+                   bill_so_far: ['bill so far', 'bill till today', 'total bill', 'bill', 'bill amount', 'charges so far', 'total charges', 'bill total'],
+                   advance_paid: ['advance paid', 'advance', 'deposit', 'paid', 'amount paid', 'advance deposit'] } },
+  stock:    { label: '\u{1F4E6} Stock', order: 5, need: ['name'],
+              f: { name: ['item', 'item name', 'name', 'medicine', 'product', 'product name', 'particulars'], unit: ['unit', 'uom', 'pack'],
+                   quantity: ['quantity in stock', 'quantity', 'qty', 'stock', 'opening', 'balance', 'opening stock', 'closing stock'],
+                   price: ['price', 'rate', 'mrp', 'selling price', 'charge'], low_level: ['low level', 'alert below', 'reorder', 'reorder level', 'min', 'minimum'],
+                   category: ['category', 'type', 'charge type'] } }
+};
+var TEMPLATE = {
+  beds: [['Bed number', 'Ward', 'Rate per day'], ['e.g. G-01', 'General Ward', '800']],
+  admitted: [['Patient name', 'Old ID', 'Age', 'Gender', 'Phone', 'Guardian', 'Address', 'Bed number', 'Admission date', 'Doctor', 'Diagnosis', 'Bill so far', 'Advance paid'],
+             ['e.g. Rina Das', 'IP-2231', '45', 'F', '9830011111', 'Late S. Das (husband)', 'Baruipur', 'G-01', '02/11/2026', 'Dr A. Roy', 'Fever', '18400', '10000']],
+  patients: [['Patient name', 'Old ID', 'Age', 'Gender', 'Phone', 'Guardian', 'Address'], ['e.g. Babu Sk', 'OPD-1180', '62', 'M', '9733022222', 'Rahim Sk (son)', 'Canning']],
+  tariff: [['Category', 'Item', 'Rate'], ['e.g. Bed Charge', 'ICU bed per day', '3500']],
+  stock: [['Item', 'Unit', 'Quantity in stock', 'Price', 'Alert below', 'Category'], ['e.g. Oxygen cylinder', 'cylinder', '12', '600', '3', 'Other']]
+};
+var CSV_NAME = { beds: 'Beds', admitted: 'Admitted-now', patients: 'Patients', tariff: 'Rate-list', stock: 'Stock' };
+
+function $(id) { return document.getElementById(id); }
+function norm(h) { return String(h == null ? '' : h).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+function cellStr(v) {
+  if (v == null) return '';
+  if (v instanceof Date) { var d = new Date(v.getTime() + 12 * 3600e3); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  if (typeof v === 'number') return String(Math.round(v * 100) / 100);
+  return String(v).replace(/\s+/g, ' ').trim();
+}
+
+/* ---------- start: only the owner of a nursing home ---------- */
+(async function () {
+  var s = await _supa.auth.getSession(), u = s.data && s.data.session && s.data.session.user;
+  if (!u) return imMsg('&#128274;', 'Please sign in first', 'Open your nursing home portal, sign in as the owner, then tap <b>Import old data</b>.', '<a class="im-btn" href="nh.html">Sign in</a>');
+  var want = new URLSearchParams(location.search).get('c') || '';
+  var r = await _supa.from('nh_staff').select('clinic_id,role').eq('id', u.id).eq('role', 'owner');
+  var mine = (r.data || []).map(function (x) { return x.clinic_id; });
+  if (!mine.length) return imMsg('&#128274;', 'Only the owner can import data', 'Ask the owner of the nursing home to do this.', '<a class="im-btn ghost" href="nh.html">&#8617; Back</a>');
+  IM.cid = mine.indexOf(want) >= 0 ? want : mine[0];
+  var c = await _supa.from('clinics').select('name').eq('id', IM.cid).maybeSingle();
+  $('fac').textContent = ((c.data && c.data.name) || 'Nursing home') + ' · Owner';
+  $('loading').style.display = 'none'; $('app').style.display = 'block';
+  var dr = $('drop');
+  ['dragover', 'dragenter'].forEach(function (e) { dr.addEventListener(e, function (ev) { ev.preventDefault(); dr.classList.add('on'); }); });
+  ['dragleave', 'drop'].forEach(function (e) { dr.addEventListener(e, function (ev) { ev.preventDefault(); dr.classList.remove('on'); }); });
+  dr.addEventListener('drop', function (ev) { var f = ev.dataTransfer.files[0]; if (f) imFile(f); });
+})();
+function imMsg(icon, t, txt, btn) {
+  $('loading').style.display = 'none'; var m = $('msg'); m.style.display = 'block';
+  m.innerHTML = '<div style="font-size:42px">' + icon + '</div><h2 style="margin:10px 0 6px">' + t + '</h2><p class="tiny" style="font-size:14px;margin-bottom:16px">' + txt + '</p>' + btn;
+}
+
+/* ---------- CSV templates: one file per sheet ---------- */
+function imCsvTemplates() {
+  Object.keys(TEMPLATE).forEach(function (k, i) {
+    setTimeout(function () {
+      var csv = TEMPLATE[k].map(function (r) { return r.map(function (c) { return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\r\n');
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+      a.download = 'AuraScale-' + CSV_NAME[k] + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+    }, i * 400);
+  });
+}
+
+/* ---------- read the file ---------- */
+function imFile(f) {
+  if (!f) return;
+  if (f.size > 25 * 1024 * 1024) { alertBox('This file is bigger than 25 MB. Split it into two files.'); return; }
+  IM.file = f.name; $('sheets').innerHTML = '<p class="tiny" style="margin-top:10px">Reading ' + esc(f.name) + '&hellip;</p>';
+  var isCsv = /\.csv$/i.test(f.name) || f.type === 'text/csv';
+  var rd = new FileReader();
+  rd.onload = function () {
+    try {
+      var wb = isCsv ? XLSX.read(rd.result, { type: 'string', raw: true }) : XLSX.read(new Uint8Array(rd.result), { type: 'array', cellDates: true });
+      IM.sheets = [];
+      wb.SheetNames.forEach(function (sn) {
+        var rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: '' });
+        var sh = imSheet(isCsv ? f.name.replace(/\.csv$/i, '') : sn, rows);
+        if (sh) IM.sheets.push(sh);
+      });
+      imShow();
+    } catch (e) { $('sheets').innerHTML = '<p class="im-err">Could not read this file: ' + esc(e.message || e) + '. Save it again as .xlsx or .csv and try.</p>'; }
+  };
+  rd.onerror = function () { $('sheets').innerHTML = '<p class="im-err">Could not open the file.</p>'; };
+  if (isCsv) rd.readAsText(f); else rd.readAsArrayBuffer(f);
+  $('file').value = '';
+}
+function alertBox(t) { $('sheets').innerHTML = '<p class="im-err">' + esc(t) + '</p>'; }
+
+/* which kind is this sheet: by its name first, then by its columns */
+function kindByName(n) {
+  n = norm(n);
+  if (/instruction|read me|readme|help/.test(n)) return 'skip';
+  if (/admit|current|indoor|ipd|in patient|inpatient/.test(n)) return 'admitted';
+  if (/tariff|rate list|ratelist|price list|charges|rates/.test(n)) return 'tariff';
+  if (/stock|inventory|store/.test(n)) return 'stock';
+  if (/bed|ward/.test(n)) return 'beds';
+  if (/patient|register/.test(n)) return 'patients';
+  return '';
+}
+function mapCols(kind, head) {
+  var f = KINDS[kind].f, map = {}, used = {};
+  Object.keys(f).forEach(function (field) {
+    for (var i = 0; i < f[field].length; i++) {
+      var j = head.indexOf(f[field][i]);
+      if (j >= 0 && !used[j]) { map[field] = j; used[j] = 1; return; }
+    }
+  });
+  return map;
+}
+function imSheet(name, rows) {
+  rows = rows.filter(function (r) { return r.some(function (c) { return cellStr(c) !== ''; }); });
+  if (!rows.length) return null;
+  var byName = kindByName(name);
+  if (byName === 'skip') return null;
+  /* the header is one of the first 8 rows: the one that matches the most column names */
+  var best = { score: -1 };
+  for (var h = 0; h < Math.min(8, rows.length); h++) {
+    var head = rows[h].map(norm);
+    Object.keys(KINDS).forEach(function (k) {
+      var m = mapCols(k, head), hit = Object.keys(m).length, needOk = KINDS[k].need.every(function (x) { return x in m; });
+      var score = hit + (needOk ? 3 : 0) + (k === byName ? 4 : 0);
+      if (hit && score > best.score) best = { score: score, kind: k, h: h, map: m };
+    });
+  }
+  if (best.score < 0) return { name: name, kind: '', rows: [], head: rows[0].map(cellStr), on: false };
+  var kind = byName && byName !== 'skip' ? byName : best.kind;
+  var hr = best.kind === kind ? best.h : best.h;
+  var head2 = rows[hr].map(norm);
+  return mkSheet(name, kind, rows[hr].map(cellStr), head2, rows.slice(hr + 1), hr);
+}
+function mkSheet(name, kind, headRaw, head, body, hr) {
+  var map = mapCols(kind, head);
+  var data = [];
+  body.forEach(function (r, i) {
+    var first = cellStr(r.filter(function (c) { return cellStr(c) !== ''; })[0]);
+    if (/^e\.?g\.?\s/i.test(first) || /^example/i.test(first)) return;          /* the example row of the template */
+    var o = { _row: hr + 2 + i };
+    Object.keys(map).forEach(function (fld) { o[fld] = cellStr(r[map[fld]]); });
+    data.push(o);
+  });
+  var aad = headRaw.some(function (x) { return /aadh?aar|aadhar/i.test(x); });
+  var missing = KINDS[kind].need.filter(function (x) { return !(x in map); });
+  return { name: name, kind: kind, headRaw: headRaw, head: head, body: body, hr: hr, map: map, rows: data, missing: missing, aadhaar: aad, on: !missing.length && data.length > 0 };
+}
+function imChangeKind(i, k) {
+  var s = IM.sheets[i];
+  if (!k) { s.kind = ''; s.on = false; imShow(); return; }
+  IM.sheets[i] = mkSheet(s.name, k, s.headRaw, s.head, s.body, s.hr); imShow();
+}
+var FIELD_LABEL = { bed_number: 'Bed number', ward: 'Ward', daily_rate: 'Rate per day', category: 'Category', name: 'Name', rate: 'Rate', code: 'Code', uhid: 'Old ID', age: 'Age', gender: 'Gender',
+  phone: 'Phone', guardian: 'Guardian', address: 'Address', admission_date: 'Admission date', doctor: 'Doctor', diagnosis: 'Diagnosis', bill_so_far: 'Bill so far', advance_paid: 'Advance paid',
+  unit: 'Unit', quantity: 'Quantity', price: 'Price', low_level: 'Alert below' };
+function imShow() {
+  var el = $('sheets');
+  if (!IM.sheets.length) { el.innerHTML = '<p class="im-err" style="margin-top:10px">No data found in this file.</p>'; $('go-card').style.display = 'none'; return; }
+  el.innerHTML = '<p style="margin-top:12px"><b>' + esc(IM.file) + '</b> &mdash; check each sheet below.</p>' + IM.sheets.map(function (s, i) {
+    if (!s.kind) return '<div class="im-sheet off"><div class="hd"><b>' + esc(s.name) + '</b><select class="im-sel" onchange="imChangeKind(' + i + ',this.value)">' + kindOpts('') + '</select><span class="tiny">Could not tell what this sheet is. Pick one, or leave it.</span></div></div>';
+    var K = KINDS[s.kind], fl = Object.keys(K.f);
+    var chips = fl.map(function (f) { var need = K.need.indexOf(f) >= 0;
+      return f in s.map ? '<span class="im-chip im-ok">&#10003; ' + FIELD_LABEL[f] + '</span>' : need ? '<span class="im-chip im-miss">&#10007; ' + FIELD_LABEL[f] + ' missing</span>' : '<span class="im-chip im-ign">' + FIELD_LABEL[f] + '</span>'; }).join('');
+    var cols = fl.filter(function (f) { return f in s.map; });
+    var prev = s.rows.slice(0, 5).map(function (r) { return '<tr>' + cols.map(function (c) { return '<td>' + esc(r[c] || '') + '</td>'; }).join('') + '</tr>'; }).join('');
+    return '<div class="im-sheet' + (s.on ? '' : ' off') + '"><div class="hd">'
+      + '<label style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" ' + (s.on ? 'checked' : '') + (s.missing.length || !s.rows.length ? ' disabled' : '') + ' onchange="IM.sheets[' + i + '].on=this.checked;imShow()"/> ' + esc(s.name) + '</label>'
+      + '<span class="tiny">is</span><select class="im-sel" onchange="imChangeKind(' + i + ',this.value)">' + kindOpts(s.kind) + '</select>'
+      + '<span class="tiny"><b>' + s.rows.length.toLocaleString('en-IN') + '</b> rows</span></div>'
+      + '<div style="margin-top:6px">' + chips + '</div>'
+      + (s.missing.length ? '<p class="im-err">This sheet needs a column for: ' + s.missing.map(function (m) { return FIELD_LABEL[m]; }).join(', ') + '. Rename the column heading in the file (as in the template) and choose the file again.</p>' : '')
+      + (s.aadhaar ? '<p class="tiny" style="color:#9a6200">&#128274; The Aadhaar column is not read and not saved.</p>' : '')
+      + (cols.length && s.rows.length ? '<div class="im-tbl"><table><thead><tr>' + cols.map(function (c) { return '<th>' + FIELD_LABEL[c] + '</th>'; }).join('') + '</tr></thead><tbody>' + prev + '</tbody></table></div>' + (s.rows.length > 5 ? '<div class="tiny" style="margin-top:4px">First 5 rows shown.</div>' : '') : '')
+      + '<div id="res-' + i + '"></div></div>';
+  }).join('');
+  var any = IM.sheets.some(function (s) { return s.on; });
+  $('go-card').style.display = any ? 'block' : 'none';
+  if (any) { $('go').disabled = false; $('results').innerHTML = ''; }
+}
+function kindOpts(sel) {
+  return '<option value="">&mdash; not used &mdash;</option>' + Object.keys(KINDS).map(function (k) { return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + KINDS[k].label + '</option>'; }).join('');
+}
+
+/* ---------- import: small parts, one after the other; a part that is too slow is split ---------- */
+async function imSend(kind, rows) {
+  var clean = rows.map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { if (k !== '_row') o[k] = r[k]; }); return o; });
+  var r = await _supa.rpc('nh_import', { p_clinic: IM.cid, p_kind: kind, p_rows: clean });
+  if (r.error) {
+    var m = r.error.message || '';
+    if (rows.length > 10 && /timeout|canceling statement|504|fetch|network/i.test(m)) {
+      var h = Math.ceil(rows.length / 2), a = await imSend(kind, rows.slice(0, h)), b = await imSend(kind, rows.slice(h));
+      return { added: a.added + b.added, updated: a.updated + b.updated, skipped: a.skipped + b.skipped, errors: a.errors.concat(b.errors) };
+    }
+    if (/nh_import|PGRST202|Could not find|does not exist/i.test(m)) throw new Error('Import is not set up yet: run SQL 60 in Supabase first.');
+    if (/owner/i.test(m)) throw new Error(m);
+    return { added: 0, updated: 0, skipped: 0, errors: rows.map(function (x) { return { row: x._row, name: x.name || x.bed_number || '', error: m.replace(/^[A-Z_]+:\s*/, '') }; }) };
+  }
+  var d = r.data || {};
+  return { added: d.added || 0, updated: d.updated || 0, skipped: d.skipped || 0,
+           errors: (d.errors || []).map(function (e) { var src = rows[(e.row || 1) - 1] || {}; return { row: src._row, name: e.name, error: e.error }; }) };
+}
+async function imGo() {
+  var list = IM.sheets.map(function (s, i) { return { s: s, i: i }; }).filter(function (x) { return x.s.on && x.s.kind; })
+    .sort(function (a, b) { return KINDS[a.s.kind].order - KINDS[b.s.kind].order; });
+  if (!list.length) return;
+  $('go').disabled = true; $('results').innerHTML = '';
+  var summary = [], allErr = [], total = 0;
+  try {
+    for (var n = 0; n < list.length; n++) {
+      var s = list[n].s, box = $('res-' + list[n].i), K = KINDS[s.kind], tot = { added: 0, updated: 0, skipped: 0, errors: [] };
+      box.innerHTML = '<div class="im-bar"><i></i></div><div class="im-res">Importing ' + K.label + '&hellip;</div>';
+      var bar = box.querySelector('i'), res = box.querySelector('.im-res'), SIZE = 150;
+      for (var k = 0; k < s.rows.length; k += SIZE) {
+        var part = await imSend(s.kind, s.rows.slice(k, k + SIZE));
+        tot.added += part.added; tot.updated += part.updated; tot.skipped += part.skipped; tot.errors = tot.errors.concat(part.errors);
+        var done = Math.min(s.rows.length, k + SIZE);
+        bar.style.width = Math.round(done * 100 / s.rows.length) + '%';
+        res.innerHTML = 'Importing ' + K.label + '&hellip; ' + done.toLocaleString('en-IN') + ' of ' + s.rows.length.toLocaleString('en-IN');
+      }
+      var line = '<b>' + K.label + ':</b> ' + tot.added.toLocaleString('en-IN') + ' added'
+        + (tot.updated ? ' &middot; ' + tot.updated.toLocaleString('en-IN') + ' updated' : '')
+        + (tot.skipped ? ' &middot; ' + tot.skipped.toLocaleString('en-IN') + ' already there (skipped)' : '')
+        + (tot.errors.length ? ' &middot; <span style="color:#b42318">' + tot.errors.length + ' not added</span>' : '');
+      res.innerHTML = (tot.errors.length ? '&#9888;&#65039; ' : '&#9989; ') + line
+        + (tot.errors.length ? '<div class="im-err">' + tot.errors.slice(0, 200).map(function (e) { return 'Row ' + e.row + (e.name ? ' (' + esc(e.name) + ')' : '') + ': ' + esc(e.error); }).join('<br>') + (tot.errors.length > 200 ? '<br>&hellip;' : '') + '</div>' : '');
+      summary.push(line); total += tot.added + tot.updated;
+      tot.errors.forEach(function (e) { allErr.push([K.label.replace(/^\S+\s/, ''), s.name, e.row, e.name, e.error]); });
+    }
+  } catch (e) {
+    $('results').innerHTML = '<p class="im-err" style="font-size:14px">' + esc(e.message || e) + '</p>'; $('go').disabled = false; return;
+  }
+  IM.errRows = allErr;
+  $('results').innerHTML = '<div style="font-size:14px;line-height:1.8">' + summary.join('<br>') + '</div>'
+    + (allErr.length ? '<p class="tiny" style="margin-top:6px">Fix those rows in the file and import it again &mdash; rows already added are skipped.</p><button class="im-btn ghost" style="margin-top:6px" onclick="imErrCsv()">&#128229; Download the rows not added</button>' : '')
+    + '<div style="margin-top:10px"><a class="im-btn" href="nh.html">Open the portal</a></div>';
+  if (total) imTick(allErr.length ? 'Imported, with a few rows left' : 'All imported', summary.map(function (x) { return x.replace(/<[^>]+>/g, ''); }).join(' · '));
+}
+function imErrCsv() {
+  var rows = [['Sheet', 'Sheet name', 'Row', 'Name / bed', 'Problem']].concat(IM.errRows || []);
+  var csv = rows.map(function (r) { return r.map(function (c) { c = String(c == null ? '' : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\r\n');
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); a.download = 'AuraScale-rows-not-imported.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+function imTick(t, s) {
+  var d = document.createElement('div'); d.className = 'hr-ok';
+  d.innerHTML = '<svg viewBox="0 0 100 100"><circle class="c" cx="50" cy="50" r="44"/><path class="k" d="M30 52 L45 66 L71 37"/></svg><div class="t">' + esc(t) + '</div><div class="s">' + esc(s) + '</div><div class="tiny" style="margin-top:20px">Tap to close</div>';
+  d.onclick = function () { d.remove(); }; document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 3500);
+}
+</script>
+</body>
+</html>
