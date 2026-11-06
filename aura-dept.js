@@ -256,7 +256,7 @@ function deptMenu(back, g) {
   var roleTxt = { owner: 'Owner', receptionist: 'Reception', pharmacist: 'Pharmacist', lab: 'Lab staff', sales: 'Sales', inventory: 'Inventory', accounts: 'Accounts' }[g.role] || 'Staff';
   m.innerHTML = '<div class="who">Signed in: <b>' + esc(g.name || '') + '</b> (' + roleTxt + ')</div>'
     + (typeof auraBizMenuHtml === 'function' ? auraBizMenuHtml(_clinicId) : '')
-    + '<a href="staff.html?c=' + encodeURIComponent(_clinicId || '') + '">&#128101; Staff &amp; attendance</a>'
+    + (g.role !== 'owner' ? '<a href="staff.html?c=' + encodeURIComponent(_clinicId || '') + '">&#128337; My attendance &amp; salary slips</a>' : '')
     + (back ? '<a href="' + back + '">&#8617; ' + (back === 'nh.html' ? 'Owner portal' : 'Reception portal') + '</a>' : '')
     + (!back && g.role === 'owner' && DEPT.standalone ? '<a href="#" onclick="if(auraDeptHomeId()){auraDeptHome();}return false;" class="d-home-link" style="display:none">&#8617; Nursing home owner portal</a>' : '')
     + (DEPT.module === 'pharmacy' && DEPT.clinic.mod_lab && DEPT.role !== 'pharmacist' ? '<a href="lab.html">&#129514; Lab</a>' : '')
@@ -265,6 +265,15 @@ function deptMenu(back, g) {
     + '<button onclick="if(typeof toggleTheme===\'function\')toggleTheme()">&#127912; Theme</button>'
     + '<button onclick="handleLogout()" style="color:var(--red)">&#10162; Log out</button>';
   var wrap = document.createElement('div'); wrap.style.marginLeft = 'auto'; wrap.style.display = 'flex'; wrap.style.alignItems = 'center'; wrap.style.gap = '8px';
+  if (g.role === 'owner') {   /* the owner's Staff & attendance in the left navigation (next to Photos / Settings) */
+    var tabsEl = document.querySelector('.d-tabs');
+    if (tabsEl && !tabsEl.querySelector('[data-t="hr"]')) {
+      var hb = document.createElement('button'); hb.className = 'd-tab'; hb.setAttribute('data-t', 'hr');
+      hb.innerHTML = '<span class="ti">&#128101;</span><span class="tl">Staff &amp; attendance</span>';
+      hb.onclick = function () { location.href = 'staff.html?c=' + encodeURIComponent(_clinicId || ''); };
+      tabsEl.insertBefore(hb, tabsEl.querySelector('.d-tab[data-t="settings"]'));
+    }
+  }
   if (g.role === 'owner') {   /* the owner's Subscription button: plans for 1 month / 6 months / 1 year + Cashfree */
     var sb = document.createElement('button'); sb.className = 'd-sub-btn'; sb.type = 'button';
     sb.innerHTML = '&#128179;<span> Subscription</span>'; sb.title = 'Subscription & plans';
