@@ -2146,6 +2146,11 @@ async function handleInviteSignup(){
       emailRedirectTo:location.origin+location.pathname
     }});
     /* Email confirmation is ON: the invite is used when they confirm and sign in for the first time. */
+    /* Supabase hides an existing account: signUp then returns a user with NO identities and sends no email.
+       Treat that as "already registered" and sign in with the password instead (then the code is used). */
+    if(!r.error&&r.data&&r.data.user&&!r.data.session&&Array.isArray(r.data.user.identities)&&r.data.user.identities.length===0){
+      r={data:null,error:{status:422,message:'User already registered'}};
+    }
     if(!r.error&&r.data&&r.data.user&&!r.data.session){ _auraCheckEmailScreen(email,true); return; }
     if(r.error){
       /* Same identity may already exist (e.g. this email already has a
