@@ -87,6 +87,20 @@
     };
   }
 
+  /* ---------- the owner removed this login: close everything and sign out ---------- */
+  function removedWall() {
+    var old = document.getElementById('aa-wall'); if (old) old.remove();
+    var c = document.getElementById('aa-chip'); if (c) c.remove();
+    addCss();
+    var w = document.createElement('div'); w.id = 'aa-wall'; w.style.background = 'linear-gradient(160deg,#7a1f1f,#4a1212)';
+    w.innerHTML = '<div class="bx"><div style="font-size:64px">&#128683;</div><div class="nm">Access removed</div>'
+      + '<div style="font-size:15px;opacity:.9;margin-top:10px">The owner has removed your access to this business.<br>You are being signed out.</div>'
+      + '<button class="so" id="aa-so" style="margin-top:22px">Sign out now</button></div>';
+    document.body.appendChild(w);
+    var out = function () { (A.logout || window.handleLogout)(); };
+    document.getElementById('aa-so').onclick = out; setTimeout(out, 5000);
+  }
+
   /* ---------- a day off: the portal stays locked ---------- */
   function offWall() {
     if (document.getElementById('aa-wall')) return;
@@ -155,6 +169,7 @@
     var r; try { r = await sb().rpc('hr_gate', { p_clinic: A.clinic }); } catch (e) { return; }
     if (r.error || !r.data) return;            /* server not ready: never block */
     A.st = r.data; A.ready = true;
+    if (A.st.mode === 'removed') { removedWall(); return; }
     if (A.st.mode === 'off') { offWall(); return; }
     if (A.st.mode !== 'staff') return;
     hookLogout();
@@ -166,6 +181,13 @@
     A.clinic = cid(); check();
   })();
   /* a new day while the page stays open: ask again */
-  setInterval(function () { if (A.ready && A.st && (A.st.mode === 'staff' || A.st.mode === 'off') && !document.getElementById('aa-wall')) { var d0 = A.day; A.day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); if (d0 && d0 !== A.day) check(); } }, 60000);
+  setInterval(function () {
+    if (!A.ready || !A.st || ['staff', 'off', 'free'].indexOf(A.st.mode) < 0 || document.getElementById('aa-wall')) return;
+    var d0 = A.day; A.day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    if (d0 && d0 !== A.day) { check(); return; }
+    /* every 2 minutes: has the owner removed this login? */
+    A.n = (A.n || 0) + 1; if (A.n % 2) return;
+    sb().rpc('hr_gate', { p_clinic: A.clinic }).then(function (r) { if (r && !r.error && r.data && r.data.mode === 'removed') { A.st = r.data; removedWall(); } }, function () {});
+  }, 60000);
   A.day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 })();
