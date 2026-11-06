@@ -14,7 +14,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="aura-biz.js?v=1"></script>
 <script src="nh-shared.js?v=20261019z"></script>
-<script src="aura-dept.js?v=20261105s"></script>
+<script src="aura-dept.js?v=20261106g"></script>
 <script src="aura-loader.js?v=2"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261021a"/>
 <script src="aura-themes.js?v=1"></script>
@@ -74,7 +74,7 @@
         <div id="me-state" style="margin:8px 0;font-size:15px"></div>
         <button class="punch" id="me-btn" onclick="mePunch()">Check in</button>
         <div class="err" id="me-err" style="max-width:420px;margin:6px auto 0"></div>
-        <p class="tiny" style="margin-top:8px">Check in works only at the shop: allow <b>location</b> on this phone when asked, or open the phone camera and <b>scan the shop&rsquo;s QR</b>.</p>
+        <p class="tiny" style="margin-top:8px">One tap. If the owner asks for it, check-in works only inside the shop (allow <b>location</b> when the phone asks).</p>
       </div>
       <div class="card" style="margin-top:12px">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px"><b>This month</b><input class="finput" type="month" id="me-m" style="max-width:170px" onchange="meLoadMonth()"/></div>
@@ -108,7 +108,8 @@
     <!-- STAFF (owner) -->
     <div class="d-view" id="v-staff">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-        <button class="btn btn-g" onclick="stEdit(null)">&#10133; Add staff</button>
+        <button class="btn btn-g" onclick="stEdit(null,'login')">&#10133; Invite staff (with login)</button>
+        <button class="btn" onclick="stEdit(null,'wa')">&#10133; Add without login (WhatsApp)</button>
         <label class="tiny" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="st-old" onchange="stRender()"/> Show staff who left</label>
       </div>
       <div class="card" style="padding:0;overflow-x:auto"><table class="dt"><thead><tr><th>Name</th><th>Attendance by</th><th class="r">Monthly salary</th><th>Weekly off</th><th></th></tr></thead><tbody id="st-b"></tbody></table></div>
@@ -141,7 +142,7 @@
     <div class="d-view" id="v-settings">
       <div class="card">
         <b>&#128205; Shop location</b>
-        <p class="tiny" style="margin:4px 0 10px">Stand <b>inside the shop</b> with this phone and press the button. Staff can then check in only when their phone is inside this area.</p>
+        <p class="tiny" style="margin:4px 0 10px">Optional. Stand <b>inside the shop</b> with this phone and press the button, then tick &ldquo;Check-in only inside the shop&rdquo; if you want that rule.</p>
         <div id="se-loc" style="margin-bottom:10px"></div>
         <div class="grid4" style="align-items:end">
           <div><button class="btn btn-g" onclick="seUseHere()">&#128205; Use this phone&rsquo;s location now</button></div>
@@ -149,6 +150,7 @@
           <div><label class="flbl">Late after duty time (minutes)</label><input class="finput" id="se-g" type="number" min="0" max="180" value="15"/></div>
           <div><button class="btn" onclick="seSave()">Save</button></div>
         </div>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin-top:12px"><input type="checkbox" id="se-req" style="margin-top:3px" onchange="seSet({ require_location: this.checked }).then(function (ok) { if (ok) showToast('Saved'); })"/><span><b>Check-in only inside the shop</b> &mdash; the phone&rsquo;s location must be inside the area above. Off = one tap from anywhere (simplest).</span></label>
         <div class="err" id="se-err"></div>
       </div>
       <div class="card" style="margin-top:12px">
@@ -184,6 +186,7 @@
     </div>
     <div style="grid-column:span 2;display:flex;flex-direction:column;gap:8px;justify-content:end">
       <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><input type="checkbox" id="f-mgr" style="margin-top:3px"/><span><b>Attendance manager</b> &mdash; can see and mark everyone&rsquo;s attendance (never salaries)</span></label>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><input type="checkbox" id="f-req" checked style="margin-top:3px"/><span><b>Must check in</b> before their portal opens (untick for e.g. a visiting doctor)</span></label>
       <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="f-act" checked/> Working here (untick when the person leaves)</label>
     </div>
   </div>
@@ -232,7 +235,7 @@ function hrDone(out, title, sub) {
   d.innerHTML = '<div class="big">' + (out ? '&#128075;' : '&#10004;') + '</div><div class="t">' + title + '</div><div class="s">' + sub + '</div><div class="s" style="margin-top:22px;font-size:13px">Tap to close</div>';
   d.onclick = function () { d.remove(); }; document.body.appendChild(d); hrDing(); setTimeout(function () { if (d.parentNode) d.remove(); }, 4000);
 }
-function hrErr(e) { var m = (e && (e.message || e.error_description)) || String(e || ''); return m.replace(/^[A-Z_]+:\s*/, ''); }
+function hrErr(e) { var m = (e && (e.message || e.error_description)) || String(e || ''); return m.replace(/^NEED_LOCATION:\s*/, '').replace(/^[A-Z_]+:\s*/, ''); }
 function hrIsOwner() { return HR.role === 'owner'; }
 function hrIsMgr() { return HR.role === 'owner' || HR.role === 'manager'; }
 
@@ -330,8 +333,9 @@ async function mePunch() {
   try {
     var args = { p_clinic: _clinicId, p_kind: k };
     if (HR.qr) args.p_qr = HR.qr;
-    else { var c = await meWhere(); args.p_lat = c.latitude; args.p_lng = c.longitude; btn.textContent = 'Saving…'; }
+    btn.textContent = 'Saving…';
     var r = await _supa.rpc('hr_punch', args);
+    if (r.error && /NEED_LOCATION/.test(r.error.message || '') && !HR.qr) { btn.textContent = 'Finding your location…'; var c = await meWhere(); args.p_lat = c.latitude; args.p_lng = c.longitude; r = await _supa.rpc('hr_punch', args); }
     if (r.error) throw r.error;
     if (k === 'in') hrDone(false, 'Checked in ' + hrTime(r.data.in_at), (HR.cur.staff_name || '') + (r.data.late ? ' &middot; late' : '') + ' &middot; have a good day');
     else hrDone(true, 'Checked out ' + hrTime(r.data.out_at), (HR.cur.staff_name || '') + ' &middot; see you tomorrow');
@@ -465,11 +469,11 @@ function stRender() {
     return '<tr' + (s.is_active ? '' : ' style="opacity:.55"') + '><td><b>' + esc(s.name) + '</b>' + (s.att_manager ? ' <span class="tag t-g">manager</span>' : '') + (s.is_active ? '' : ' <span class="tag">left</span>')
       + '<div class="tiny">' + esc(s.designation || '') + (s.join_date ? ' &middot; joined ' + dDate(s.join_date) : '') + '</div></td>'
       + '<td class="tiny">' + (s.user_id ? '&#128273; ' + (l ? esc(l.email || l.name || '') : 'login') : '') + (pay.phone ? (s.user_id ? '<br>' : '') + '&#128242; ' + esc(pay.phone) : (s.user_id ? '' : '<span style="color:var(--amber)">add WhatsApp mobile</span>')) + '</td>'
-      + '<td class="r"><b>' + hrMoney(pay.monthly_salary) + '</b></td><td class="tiny">' + (s.week_off >= 0 ? HR_DAY[s.week_off] : 'none') + '<br>duty ' + String(s.duty_start || '').slice(0, 5) + '</td>'
+      + '<td class="r">' + (Number(pay.monthly_salary) ? '<b>' + hrMoney(pay.monthly_salary) + '</b>' : '<button class="btn btn-sm" style="border-color:var(--amber);color:var(--amber)" onclick="stEdit(\'' + s.id + '\')">Write salary</button>') + '</td><td class="tiny">' + (s.week_off >= 0 ? HR_DAY[s.week_off] : 'none') + '<br>duty ' + String(s.duty_start || '').slice(0, 5) + '</td>'
       + '<td><button class="btn btn-sm" onclick="stEdit(\'' + s.id + '\')">&#9998; Edit</button></td></tr>';
   }).join('') : '<tr><td colspan="5" class="muted" style="padding:18px">No staff yet. Press <b>Add staff</b>.</td></tr>';
 }
-function stEdit(id) {
+function stEdit(id, acc) {
   var s = HR.staff.filter(function (x) { return x.id === id; })[0] || { week_off: 0, duty_start: '10:00', is_active: true };
   var pay = (id && HR.pay[id]) || {};
   HR.editing = id || null;
@@ -489,7 +493,8 @@ function stEdit(id) {
   };
   chip('c-desg', HR_DESG, 'f-desg'); chip('c-sal', HR_SAL, 'f-sal', function (v) { return '&#8377;' + Number(v).toLocaleString('en-IN'); });
   dEl('f-inv').innerHTML = '';
-  stAcc(s.user_id ? 'login' : 'wa');
+  stAcc(acc || (s.user_id ? 'login' : (id ? 'wa' : (hrInviteRoles().length ? 'login' : 'wa'))));
+  dEl('f-req').checked = s.att_required !== false;
   dShowErr('f-err', ''); dOpen('m-st'); if (!id) dEl('f-name').focus();
 }
 function stAcc(k) {
@@ -545,7 +550,7 @@ async function stSave(stay) {
   var dupe = Object.keys(HR.pay).filter(function (k) { return k !== HR.editing && HR.pay[k].phone === phone && (HR.staff.filter(function (x) { return x.id === k; })[0] || {}).is_active; })[0];
   if (phone && dupe) { dShowErr('f-err', 'This mobile number is already saved for another staff member.'); return; }
   var row = { clinic_id: _clinicId, name: name, designation: dEl('f-desg').value.trim() || null, join_date: dEl('f-join').value || null, week_off: Number(dEl('f-off').value),
-              duty_start: dEl('f-duty').value || '10:00', att_manager: dEl('f-mgr').checked, is_active: dEl('f-act').checked, user_id: HR.acc === 'login' ? (dEl('f-login').value || null) : null };
+              duty_start: dEl('f-duty').value || '10:00', att_manager: dEl('f-mgr').checked, is_active: dEl('f-act').checked, att_required: dEl('f-req').checked, user_id: HR.acc === 'login' ? (dEl('f-login').value || null) : null };
   var btn = dEl('f-save'); btn.disabled = true;
   try {
     var r = HR.editing ? await _supa.from('hr_staff').update(row).eq('id', HR.editing).select().single() : await _supa.from('hr_staff').insert(row).select().single();
@@ -655,6 +660,7 @@ async function onTab_settings() {
 function seRender() {
   var c = HR.cfg || {};
   dEl('se-r').value = c.radius_m || 150; dEl('se-g').value = c.grace_min != null ? c.grace_min : 15;
+  dEl('se-req').checked = !!c.require_location; dEl('se-req').disabled = c.lat == null;
   dEl('se-loc').innerHTML = c.lat != null ? '<span class="tag t-g">&#10004; Set</span> <a class="tiny" target="_blank" href="https://www.google.com/maps?q=' + c.lat + ',' + c.lng + '">' + Number(c.lat).toFixed(5) + ', ' + Number(c.lng).toFixed(5) + ' (open map)</a> <button class="btn btn-sm" onclick="seClear()">Remove</button>' : '<span class="tag t-a">Not set</span>';
   var wa = dEl('se-wa');
   if (!c.wa_code) wa.innerHTML = c.clinic_id && !('wa_code' in c) ? '<span class="tag t-a">Run SQL 55 for WhatsApp attendance</span>' : '<button class="btn btn-g" onclick="seNewQr(true)">&#128242; Make the attendance QR</button>';
