@@ -1211,6 +1211,11 @@ main.content{flex:1;padding:20px;overflow-y:auto}
       <button class="mclose" onclick="closeModal('mod-expense')">&#10005;</button>
     </div>
     <div class="mb">
+        <div id="exp-tariff-wrap" style="display:none">
+          <label class="flbl">&#128203; From your rate list</label>
+          <input class="finput" id="exp-tariff" list="exp-tariff-dl" placeholder="Type to search: ICU, CBC, X-ray&hellip;" oninput="expPickTariff()" autocomplete="off"/>
+          <datalist id="exp-tariff-dl"></datalist>
+        </div>
         <div id="exp-stock-wrap" style="display:none;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:10px">
           <label class="flbl">From stock (optional)</label>
           <select class="finput" id="exp-stock" onchange="expPickStock()" style="margin-bottom:4px"><option value="">&mdash; Not a stock item &mdash;</option></select>
@@ -3775,7 +3780,29 @@ function openExpenseModal(){
   if(imgEl)   imgEl.style.display  = 'none';
   _expBillFile = null;
   expLoadStock();
+  expLoadTariff();
   openModal('mod-expense');
+}
+/* ── RATE LIST in Add Charge (Import data → Rate list): pick an item, type and price fill by themselves ── */
+var _expTariff = [];
+function expTariffKey(t){ return t.name+' \u00B7 \u20B9'+Number(t.rate).toLocaleString('en-IN')+' \u00B7 '+t.category; }
+async function expLoadTariff(){
+  var wrap = document.getElementById('exp-tariff-wrap'), inp = document.getElementById('exp-tariff'), dl = document.getElementById('exp-tariff-dl'); if(!wrap||!inp||!dl) return;
+  inp.value = '';
+  try {
+    var r = await _supa.from('nh_tariff').select('category,name,rate').eq('clinic_id',_clinicId).eq('is_active',true).order('name').limit(5000);
+    _expTariff = r.error ? [] : (r.data||[]);
+  } catch(e){ _expTariff = []; }
+  wrap.style.display = _expTariff.length ? 'block' : 'none';
+  dl.innerHTML = _expTariff.map(function(t){ return '<option value="'+esc(expTariffKey(t))+'"></option>'; }).join('');
+}
+function expPickTariff(){
+  var v = (document.getElementById('exp-tariff')||{}).value || '';
+  var t = _expTariff.filter(function(x){ return expTariffKey(x)===v; })[0]; if(!t) return;
+  var ty = document.getElementById('exp-type'); if(ty) ty.value = t.category;
+  document.getElementById('exp-desc').value = t.name;
+  document.getElementById('exp-price').value = Number(t.rate);
+  calcExp();
 }
 /* ── STOCK in Add Charge: picking an item fills the charge, and saving it takes the item out of stock ── */
 var _expStock = [];
