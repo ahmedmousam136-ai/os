@@ -197,7 +197,7 @@
     <div style="grid-column:span 4"><label class="flbl">How will this person give attendance?</label>
       <div class="acc"><button type="button" id="acc-wa" onclick="stAcc('wa')"><b>&#128242; WhatsApp only</b>No login. Scans the shop QR &rarr; Send. Needs the WhatsApp mobile above.</button>
       <button type="button" id="acc-login" onclick="stAcc('login')"><b>&#128273; Login too</b>Has an AuraScale login (for billing / work). Check-in in the app or on WhatsApp.</button></div>
-      <div id="f-login-box" style="margin-top:8px;display:none"><label class="flbl">Login</label><select class="finput" id="f-login" onchange="stSaveLabel()"></select><div id="f-inv" style="margin-top:8px"></div></div>
+      <div id="f-login-box" style="margin-top:8px;display:none"><div id="f-login-wrap"><label class="flbl" id="f-login-lbl">Already has an AuraScale login?</label><select class="finput" id="f-login" onchange="stSaveLabel()"></select></div><div id="f-inv" style="margin-top:8px"></div></div>
     </div>
     <div style="grid-column:span 2;display:flex;flex-direction:column;gap:8px;justify-content:end">
       <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><input type="checkbox" id="f-mgr" style="margin-top:3px"/><span><b>Attendance manager</b> &mdash; can see and mark everyone&rsquo;s attendance (never salaries)</span></label>
@@ -517,7 +517,9 @@ function stEdit(id, acc) {
   dEl('f-phone').value = pay.phone || ''; dEl('f-upi').value = pay.upi || ''; dEl('f-addr').value = pay.address || '';
   dEl('f-mgr').checked = !!s.att_manager; dEl('f-act').checked = s.is_active !== false;
   var used = {}; HR.staff.forEach(function (x) { if (x.user_id && x.id !== id) used[x.user_id] = 1; });
-  dEl('f-login').innerHTML = '<option value="">No login (marked by you / manager)</option>' + (HR.logins || []).filter(function (l) { return !used[l.id] && l.role !== 'owner'; }).map(function (l) {
+  var freeLogins = (HR.logins || []).filter(function (l) { return !used[l.id] && l.role !== 'owner'; });
+  dEl('f-login-wrap').style.display = freeLogins.length || s.user_id ? '' : 'none';   /* nothing to choose: just send a new invite */
+  dEl('f-login').innerHTML = '<option value="">' + (s.user_id ? 'Remove the login link' : 'No &mdash; send a new invite code (below)') + '</option>' + freeLogins.map(function (l) {
     return '<option value="' + l.id + '"' + (l.id === s.user_id ? ' selected' : '') + '>' + esc((l.name || '') + ' — ' + (l.email || '') + ' (' + (l.role || '') + ')') + '</option>'; }).join('');
   var chip = function (box, list, inp, fmt) {
     dEl(box).innerHTML = list.map(function (v) { return '<button type="button" data-v="' + v + '">' + (fmt ? fmt(v) : esc(v)) + '</button>'; }).join('');
@@ -547,7 +549,10 @@ function stAcc(k) {
 }
 /* "Save & send invite" when a new login is to be made, otherwise "Save" */
 function stNeedsInvite() { return HR.acc === 'login' && !dEl('f-login').value && hrInviteRoles().length > 0; }
-function stSaveLabel() { var b = dEl('f-save'); if (b) b.innerHTML = stNeedsInvite() ? '&#128242; Save &amp; send invite' : 'Save'; }
+function stSaveLabel() {
+  var b = dEl('f-save'); if (b) b.innerHTML = stNeedsInvite() ? '&#128242; Save &amp; send invite' : 'Save';
+  var inv = dEl('f-inv'); if (inv && HR.acc === 'login') inv.style.display = dEl('f-login').value ? 'none' : '';
+}
 /* the logins this kind of business can give (the same roles as the portal's own invites) */
 function hrInviteRoles() {
   var t = HR.cur.business_type || '';
