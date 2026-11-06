@@ -54,7 +54,8 @@
 <div id="app" style="display:none">
   <div class="d-top">
     <div class="d-brand"><div style="min-width:0"><div class="d-title">&#128101; Staff &amp; attendance</div><div class="d-sub" id="d-fac"></div></div></div>
-    <a class="btn btn-sm" id="hr-back" href="#" style="margin-left:auto">&#8617; Back</a>
+    <button class="btn btn-g btn-sm" id="hr-invite" style="margin-left:auto;display:none" onclick="dTab('staff');stEdit(null,'login')">&#10133; Invite staff</button>
+    <a class="btn btn-sm" id="hr-back" href="#" style="margin-left:8px">&#8617; Back</a>
   </div>
   <div class="d-tabs" id="d-tabs">
     <button class="d-tab" data-t="me" onclick="dTab('me')"><span class="ti">&#128337;</span><span class="tl">My attendance</span></button>
@@ -62,6 +63,7 @@
     <button class="d-tab" data-t="month" onclick="dTab('month')"><span class="ti">&#128197;</span><span class="tl">Month</span></button>
     <button class="d-tab" data-t="staff" onclick="dTab('staff')"><span class="ti">&#128101;</span><span class="tl">Staff</span></button>
     <button class="d-tab" data-t="payroll" onclick="dTab('payroll')"><span class="ti">&#8377;</span><span class="tl">Salary</span></button>
+    <button class="d-tab" data-t="holidays" onclick="dTab('holidays')"><span class="ti">&#127796;</span><span class="tl">Holidays</span></button>
     <button class="d-tab" data-t="settings" onclick="dTab('settings')"><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
   </div>
   <div class="d-main" id="d-body">
@@ -74,7 +76,7 @@
         <div id="me-state" style="margin:8px 0;font-size:15px"></div>
         <button class="punch" id="me-btn" onclick="mePunch()">Check in</button>
         <div class="err" id="me-err" style="max-width:420px;margin:6px auto 0"></div>
-        <p class="tiny" style="margin-top:8px">One tap. If the owner asks for it, check-in works only inside the shop (allow <b>location</b> when the phone asks).</p>
+        <p class="tiny" style="margin-top:8px">One tap. Check out when you go home.</p>
       </div>
       <div class="card" style="margin-top:12px">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px"><b>This month</b><input class="finput" type="month" id="me-m" style="max-width:170px" onchange="meLoadMonth()"/></div>
@@ -139,28 +141,34 @@
     </div>
 
     <!-- SETTINGS (owner) -->
+    <div class="d-view" id="v-holidays">
+      <div class="card">
+        <b>&#127796; Holidays of the business</b>
+        <p class="tiny" style="margin:4px 0 10px">On these days nobody has to come: the staff portals stay closed, nobody is marked absent and the day is paid. Each person&rsquo;s weekly off is set in <a href="#" onclick="dTab('staff');return false">Staff</a> &rarr; Edit. A single person&rsquo;s leave: <a href="#" onclick="dTab('month');return false">Month</a> &rarr; tap the day &rarr; L.</p>
+        <div class="grid4" style="align-items:end">
+          <div><label class="flbl">Date</label><input class="finput" id="ho-d" type="date"/></div>
+          <div style="grid-column:span 2"><label class="flbl">Name</label><input class="finput" id="ho-n" maxlength="80" placeholder="e.g. Durga Puja"/><div class="chips" id="ho-c"></div></div>
+          <div><button class="btn btn-g" onclick="hoAdd()">&#10133; Add holiday</button></div>
+        </div>
+        <div class="err" id="ho-err"></div>
+        <div id="ho-list" style="margin-top:12px"></div>
+      </div>
+    </div>
+
     <div class="d-view" id="v-settings">
       <div class="card">
-        <b>&#128205; Shop location</b>
-        <p class="tiny" style="margin:4px 0 10px">Optional. Stand <b>inside the shop</b> with this phone and press the button, then tick &ldquo;Check-in only inside the shop&rdquo; if you want that rule.</p>
-        <div id="se-loc" style="margin-bottom:10px"></div>
-        <div class="grid4" style="align-items:end">
-          <div><button class="btn btn-g" onclick="seUseHere()">&#128205; Use this phone&rsquo;s location now</button></div>
-          <div><label class="flbl">Area around the shop (metres)</label><input class="finput" id="se-r" type="number" min="30" max="2000" value="150"/></div>
+        <b>&#9200; Late</b>
+        <div class="grid4" style="align-items:end;margin-top:8px">
           <div><label class="flbl">Late after duty time (minutes)</label><input class="finput" id="se-g" type="number" min="0" max="180" value="15"/></div>
           <div><button class="btn" onclick="seSave()">Save</button></div>
         </div>
-        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin-top:12px"><input type="checkbox" id="se-req" style="margin-top:3px" onchange="seSet({ require_location: this.checked }).then(function (ok) { if (ok) showToast('Saved'); })"/><span><b>Check-in only inside the shop</b> &mdash; the phone&rsquo;s location must be inside the area above. Off = one tap from anywhere (simplest).</span></label>
+        <p class="tiny" style="margin-top:8px">Staff with a login check in with one tap when they open AuraScale. A working day with no check-in becomes <b>Absent</b> by itself after midnight.</p>
         <div class="err" id="se-err"></div>
       </div>
-      <div class="card" style="margin-top:12px">
-        <b>&#128242; Attendance QR (WhatsApp) &mdash; for everyone</b>
-        <p class="tiny" style="margin:4px 0 10px">Print it and stick it inside the shop. Staff scan it with the phone camera &rarr; WhatsApp opens &rarr; <b>Send</b>. Morning = in, evening = out. No login, no typing. Their WhatsApp mobile must be saved in Staff. If you think someone took a photo of it, make a new QR: the old one stops working.</p>
-        <div id="se-wa" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"></div>
-      </div>
       <details class="card" style="margin-top:12px">
-        <summary style="cursor:pointer"><b>&#128307; App QR</b> <span class="tiny">(optional, for staff who have a login and check in inside the app)</span></summary>
-        <div id="se-qr" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:10px"></div>
+        <summary style="cursor:pointer"><b>&#128242; Staff without a login</b> <span class="tiny">(optional: attendance by WhatsApp)</span></summary>
+        <p class="tiny" style="margin:8px 0 10px">For a helper or delivery boy who has no AuraScale login: print this QR and keep it in the shop. They scan it &rarr; WhatsApp opens &rarr; <b>Send</b>. Their WhatsApp mobile must be saved in Staff. (Works after the WhatsApp setup in Make.)</p>
+        <div id="se-wa" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"></div>
       </details>
     </div>
   </div>
@@ -277,8 +285,9 @@ function hrSwitch(i) { HR.cur = HR.me[+i]; HR.staff = []; HR.pay = {}; HR.cfg = 
 function hrOpen() {
   HR.role = HR.cur.role; _clinicId = HR.cur.clinic_id; HR.today = hrIST();
   dEl('d-fac').innerHTML = esc(HR.cur.name || '') + ' &middot; ' + ({ owner: 'Owner', manager: 'Attendance manager', staff: 'Staff' }[HR.role]);
-  var show = { me: HR.role !== 'owner', today: hrIsMgr(), month: hrIsMgr(), staff: hrIsOwner(), payroll: hrIsOwner(), settings: hrIsOwner() };
+  var show = { me: HR.role !== 'owner', today: hrIsMgr(), month: hrIsMgr(), staff: hrIsOwner(), payroll: hrIsOwner(), holidays: hrIsOwner(), settings: hrIsOwner() };
   [].forEach.call(document.querySelectorAll('.d-tab'), function (b) { b.style.display = show[b.getAttribute('data-t')] ? '' : 'none'; });
+  dEl('hr-invite').style.display = HR.role === 'owner' ? '' : 'none';
   var nTabs = Object.keys(show).filter(function (k) { return show[k]; }).length;
   dEl('d-tabs').style.display = nTabs > 1 ? '' : 'none';   /* a staff member has only one screen */
   var m = HR.today.slice(0, 7);
@@ -289,6 +298,10 @@ function hrOpen() {
   if (!show[start]) start = HR.role === 'owner' ? 'today' : 'me';
   if (HR.qr && HR.role !== 'owner') start = 'me';
   dTab(start, true);
+}
+async function hrHolidays(from, to) {
+  var r = await _supa.from('hr_holidays').select('day,name').eq('clinic_id', _clinicId).gte('day', from).lte('day', to);
+  var m = {}; (r.data || []).forEach(function (h) { m[h.day] = h.name; }); return m;
 }
 async function hrLoadStaff(all) {
   var r = await _supa.from('hr_staff').select('*').eq('clinic_id', _clinicId).order('name');
@@ -348,13 +361,14 @@ async function meLoadMonth() {
   var st = (await _supa.from('hr_staff').select('*').eq('id', HR.cur.staff_id).maybeSingle()).data || {};
   var r = await _supa.from('hr_attendance').select('day,status,in_at,out_at,late').eq('staff_id', HR.cur.staff_id).gte('day', m + '-01').lte('day', m + '-' + dim);
   var by = {}; (r.data || []).forEach(function (a) { by[a.day] = a; });
+  var hol = await hrHolidays(m + '-01', m + '-' + dim);
   var cnt = { present: 0, half: 0, absent: 0, leave: 0, late: 0, none: 0 };
   var html = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(function (x) { return '<div class="hd">' + x + '</div>'; }).join('');
   for (var i = 0; i < hrDow(m + '-01'); i++) html += '<div></div>';
   for (var d = 1; d <= dim; d++) {
     var day = m + '-' + ('0' + d).slice(-2), a = by[day], cls = 'st-none', lab = '';
     if (a) { cls = HR_ST[a.status][1]; lab = HR_ST[a.status][0]; cnt[a.status]++; if (a.late) cnt.late++; }
-    else if (st.week_off >= 0 && hrDow(day) === st.week_off) { cls = 'st-off'; lab = 'off'; }
+    else if (hol[day] || (st.week_off >= 0 && hrDow(day) === st.week_off)) { cls = 'st-off'; lab = hol[day] ? 'hol' : 'off'; }
     else if (day <= HR.today && (!st.join_date || day >= st.join_date)) { cnt.none++; lab = '&middot;'; }
     else cls = '';
     html += '<div class="' + cls + '" title="' + (a && a.in_at ? 'In ' + hrTime(a.in_at) + (a.out_at ? ', out ' + hrTime(a.out_at) : '') : '') + '">' + d + '<small>' + lab + '</small></div>';
@@ -377,14 +391,15 @@ async function tdLoad() {
   var staff = await hrLoadStaff(false);
   var r = await _supa.from('hr_attendance').select('*').eq('clinic_id', _clinicId).eq('day', day);
   var by = {}; (r.data || []).forEach(function (a) { by[a.staff_id] = a; });
+  var hol = (await hrHolidays(day, day))[day];
   var cnt = { present: 0, half: 0, absent: 0, leave: 0, none: 0, off: 0 };
   staff = staff.filter(function (s) { return !s.join_date || s.join_date <= day; });
   dEl('td-b').innerHTML = staff.length ? staff.map(function (s) {
-    var a = by[s.id], off = !a && s.week_off >= 0 && hrDow(day) === s.week_off;
+    var a = by[s.id], off = !a && (hol || (s.week_off >= 0 && hrDow(day) === s.week_off));
     if (a) cnt[a.status]++; else if (off) cnt.off++; else cnt.none++;
     var how = function (h) { return h === 'gps' ? ' &#128205;' : h === 'qr' ? ' &#128307;' : h === 'whatsapp' ? ' &#128242;' : ''; };
     return '<tr><td><b>' + esc(s.name) + '</b><div class="tiny">' + esc(s.designation || '') + (s.att_manager ? ' &middot; manager' : '') + '</div></td>'
-      + '<td>' + (a ? '<span class="hr-chip ' + HR_ST[a.status][1] + '">' + HR_ST[a.status][2] + '</span>' + (a.late ? ' <span class="hr-chip st-half">late</span>' : '') : off ? '<span class="hr-chip st-off">Weekly off</span>' : '<span class="hr-chip st-none">Not marked</span>') + '</td>'
+      + '<td>' + (a ? '<span class="hr-chip ' + HR_ST[a.status][1] + '">' + HR_ST[a.status][2] + '</span>' + (a.late ? ' <span class="hr-chip st-half">late</span>' : '') : off ? '<span class="hr-chip st-off">' + (hol ? 'Holiday: ' + esc(hol) : 'Weekly off') + '</span>' : '<span class="hr-chip st-none">Not marked</span>') + '</td>'
       + '<td class="tiny">' + (a && a.in_at ? 'In ' + hrTime(a.in_at) + how(a.in_how) + (a.out_at ? '<br>Out ' + hrTime(a.out_at) + how(a.out_how) : '') : '') + '</td>'
       + '<td><div class="hr-mk">' + ['present', 'half', 'absent', 'leave'].map(function (k) {
           return '<button class="' + k[0] + (a && a.status === k ? ' on' : '') + '" title="' + HR_ST[k][2] + '" onclick="hrMark(\'' + s.id + '\',\'' + day + '\',\'' + k + '\',tdLoad)">' + HR_ST[k][0] + '</button>'; }).join('')
@@ -396,6 +411,8 @@ async function tdAllPresent() {
   var day = dEl('td-d').value || HR.today, btn = dEl('td-all');
   var r = await _supa.from('hr_attendance').select('staff_id').eq('clinic_id', _clinicId).eq('day', day);
   var done = {}; (r.data || []).forEach(function (a) { done[a.staff_id] = 1; });
+  var hol = (await hrHolidays(day, day))[day];
+  if (hol) { showToast('Today is a holiday (' + hol + ')'); return; }
   var todo = HR.staff.filter(function (s) { return s.is_active && !done[s.id] && (!s.join_date || s.join_date <= day) && !(s.week_off >= 0 && hrDow(day) === s.week_off); });
   if (!todo.length) { showToast('Everyone is already marked'); return; }
   btn.disabled = true;
@@ -415,6 +432,7 @@ async function moLoad() {
   var staff = (await hrLoadStaff(true)).filter(function (s) { return (s.is_active || true) && (!s.join_date || s.join_date <= last); });
   var r = await _supa.from('hr_attendance').select('staff_id,day,status,late').eq('clinic_id', _clinicId).gte('day', m + '-01').lte('day', last);
   var by = {}; (r.data || []).forEach(function (a) { by[a.staff_id + a.day] = a; });
+  var hol = await hrHolidays(m + '-01', last);
   staff = staff.filter(function (s) { if (s.is_active) return true; for (var k in by) if (k.indexOf(s.id) === 0) return true; return false; });
   var head = '<tr><th>Staff</th>';
   for (var d = 1; d <= dim; d++) { var day = m + '-' + ('0' + d).slice(-2); head += '<th class="' + (hrDow(day) === 0 ? 'wk' : '') + '">' + d + '<div style="font-weight:400;font-size:10px">' + 'SMTWTFS'[hrDow(day)] + '</div></th>'; }
@@ -426,7 +444,7 @@ async function moLoad() {
       if (s.join_date && day < s.join_date) { row += '<td class="st-off">&ndash;</td>'; continue; }
       if (day > HR.today) { row += '<td></td>'; continue; }
       if (a) { c[a.status]++; row += '<td class="c ' + HR_ST[a.status][1] + '" onclick="moPop(event,\'' + s.id + '\',\'' + day + '\')">' + HR_ST[a.status][0] + (a.late ? '<sup>&bull;</sup>' : '') + '</td>'; }
-      else if (s.week_off >= 0 && hrDow(day) === s.week_off) row += '<td class="c st-off wk" onclick="moPop(event,\'' + s.id + '\',\'' + day + '\')">off</td>';
+      else if (hol[day] || (s.week_off >= 0 && hrDow(day) === s.week_off)) row += '<td class="c st-off wk" title="' + esc(hol[day] || 'Weekly off') + '" onclick="moPop(event,\'' + s.id + '\',\'' + day + '\')">' + (hol[day] ? 'hol' : 'off') + '</td>';
       else { c.none++; row += '<td class="c" style="color:#bbb" onclick="moPop(event,\'' + s.id + '\',\'' + day + '\')">&middot;</td>'; }
     }
     return row + '<td><b>' + c.present + '</b></td><td>' + c.half + '</td><td>' + c.absent + '</td><td>' + c.leave + '</td><td style="color:var(--amber)">' + (c.none || '') + '</td></tr>';
@@ -477,7 +495,7 @@ function stEdit(id, acc) {
   var s = HR.staff.filter(function (x) { return x.id === id; })[0] || { week_off: 0, duty_start: '10:00', is_active: true };
   var pay = (id && HR.pay[id]) || {};
   HR.editing = id || null;
-  dEl('m-st-t').textContent = id ? 'Edit staff' : 'Add staff';
+  dEl('m-st-t').textContent = id ? 'Edit staff' : (acc === 'wa' ? 'Add staff (no login)' : 'Invite staff');
   dEl('f-name').value = s.name || ''; dEl('f-desg').value = s.designation || ''; dEl('f-sal').value = pay.monthly_salary != null ? Number(pay.monthly_salary) : '';
   dEl('f-join').value = s.join_date || (id ? '' : HR.today); dEl('f-off').value = String(s.week_off != null ? s.week_off : 0); dEl('f-duty').value = String(s.duty_start || '10:00').slice(0, 5);
   dEl('f-phone').value = pay.phone || ''; dEl('f-upi').value = pay.upi || ''; dEl('f-addr').value = pay.address || '';
@@ -652,6 +670,26 @@ function slipOpen(id) {
   dOpen('m-slip');
 }
 
+/* ---------- HOLIDAYS (owner) ---------- */
+var HR_HOL_NAMES = ['Durga Puja', 'Kali Puja', 'Diwali', 'Holi', 'Eid', 'Christmas', 'Poila Boishakh', 'Independence Day', 'Republic Day'];
+async function onTab_holidays() {
+  if (!dEl('ho-d').value) dEl('ho-d').value = HR.today;
+  dEl('ho-c').innerHTML = HR_HOL_NAMES.map(function (n) { return '<button type="button" onclick="dEl(\'ho-n\').value=this.textContent">' + esc(n) + '</button>'; }).join('');
+  var r = await _supa.from('hr_holidays').select('*').eq('clinic_id', _clinicId).gte('day', HR.today.slice(0, 4) + '-01-01').order('day');
+  if (r.error) { dEl('ho-list').innerHTML = '<div class="err" style="display:block">' + esc(/hr_holidays|does not exist/i.test(r.error.message || '') ? 'Run SQL 57 once in Supabase for holidays.' : hrErr(r.error)) + '</div>'; return; }
+  dEl('ho-list').innerHTML = (r.data || []).length ? '<table class="dt"><tbody>' + r.data.map(function (h) {
+    return '<tr' + (h.day < HR.today ? ' style="opacity:.55"' : '') + '><td>' + new Date(h.day + 'T12:00:00Z').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + '</td><td><b>' + esc(h.name) + '</b></td><td><button class="btn btn-sm" onclick="hoDel(\'' + h.day + '\')">&#128465;</button></td></tr>'; }).join('') + '</tbody></table>'
+    : '<p class="tiny muted">No holiday added for this year.</p>';
+}
+async function hoAdd() {
+  var d = dEl('ho-d').value, n = dEl('ho-n').value.trim();
+  if (!d || !n) { dShowErr('ho-err', 'Choose the date and write the name.'); return; }
+  var r = await _supa.from('hr_holidays').insert({ clinic_id: _clinicId, day: d, name: n });
+  if (r.error) { dShowErr('ho-err', /duplicate|hr_holidays_pkey/i.test(r.error.message || '') ? 'That day is already a holiday.' : hrErr(r.error)); return; }
+  dShowErr('ho-err', ''); dEl('ho-n').value = ''; showToast('Holiday added'); onTab_holidays();
+}
+async function hoDel(d) { if (!confirm('Remove this holiday?')) return; var r = await _supa.from('hr_holidays').delete().eq('clinic_id', _clinicId).eq('day', d); if (r.error) showToast(hrErr(r.error)); onTab_holidays(); }
+
 /* ---------- SETTINGS (owner) ---------- */
 async function onTab_settings() {
   var r = await _supa.from('hr_settings').select('*').eq('clinic_id', _clinicId).maybeSingle();
@@ -659,21 +697,14 @@ async function onTab_settings() {
 }
 function seRender() {
   var c = HR.cfg || {};
-  dEl('se-r').value = c.radius_m || 150; dEl('se-g').value = c.grace_min != null ? c.grace_min : 15;
-  dEl('se-req').checked = !!c.require_location; dEl('se-req').disabled = c.lat == null;
-  dEl('se-loc').innerHTML = c.lat != null ? '<span class="tag t-g">&#10004; Set</span> <a class="tiny" target="_blank" href="https://www.google.com/maps?q=' + c.lat + ',' + c.lng + '">' + Number(c.lat).toFixed(5) + ', ' + Number(c.lng).toFixed(5) + ' (open map)</a> <button class="btn btn-sm" onclick="seClear()">Remove</button>' : '<span class="tag t-a">Not set</span>';
+  dEl('se-g').value = c.grace_min != null ? c.grace_min : 15;
   var wa = dEl('se-wa');
-  if (!c.wa_code) wa.innerHTML = c.clinic_id && !('wa_code' in c) ? '<span class="tag t-a">Run SQL 55 for WhatsApp attendance</span>' : '<button class="btn btn-g" onclick="seNewQr(true)">&#128242; Make the attendance QR</button>';
+  if (!c.wa_code) wa.innerHTML = '<button class="btn" onclick="seNewQr(true)">&#128242; Make the WhatsApp attendance QR</button>';
   else {
     var wurl = 'https://wa.me/' + HR_WA + '?text=' + encodeURIComponent('হাজিরা ' + c.wa_code);
-    wa.innerHTML = '<div id="se-wa-img" style="background:#fff;padding:10px;border-radius:10px;border:1px solid var(--border)"></div><div style="display:flex;flex-direction:column;gap:8px"><div class="tiny">Code <b>' + esc(c.wa_code) + '</b></div><button class="btn btn-g" onclick="sePrintQr(\'se-wa-img\',true)">&#128424; Print attendance QR</button><button class="btn" onclick="seNewQr(false)">&#8635; Make a new QR (old stops working)</button></div>';
+    wa.innerHTML = '<div id="se-wa-img" style="background:#fff;padding:10px;border-radius:10px;border:1px solid var(--border)"></div><div style="display:flex;flex-direction:column;gap:8px"><div class="tiny">Code <b>' + esc(c.wa_code) + '</b></div><button class="btn btn-g" onclick="sePrintQr(\'se-wa-img\',true)">&#128424; Print QR</button><button class="btn" onclick="seNewQr(false)">&#8635; Make a new QR (old stops working)</button></div>';
     hrQr(dEl('se-wa-img'), wurl, 180);
   }
-  var box = dEl('se-qr');
-  if (!c.qr_code) { box.innerHTML = '<button class="btn" onclick="seNewQr(true)">&#128307; Make the app QR</button>'; return; }
-  var url = location.origin + location.pathname.replace(/[^\/]*$/, '') + 'staff.html?c=' + _clinicId + '&q=' + c.qr_code;
-  box.innerHTML = '<div id="se-qr-img" style="background:#fff;padding:10px;border-radius:10px;border:1px solid var(--border)"></div><div style="display:flex;flex-direction:column;gap:8px"><button class="btn" onclick="sePrintQr(\'se-qr-img\',false)">&#128424; Print app QR</button></div>';
-  hrQr(dEl('se-qr-img'), url, 180);
 }
 function hrQr(el, text, size) {
   function draw() { el.innerHTML = ''; try { new QRCode(el, { text: text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { el.textContent = 'Could not make the QR. Refresh the page.'; } }
@@ -681,15 +712,7 @@ function hrQr(el, text, size) {
   var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = draw; s.onerror = function () { el.textContent = 'Could not load the QR maker. Check the internet.'; }; document.head.appendChild(s);
 }
 async function seSet(p) { var r = await _supa.rpc('hr_settings_set', { p_clinic: _clinicId, p: p }); if (r.error) { dShowErr('se-err', hrErr(r.error)); return false; } HR.cfg = r.data; dShowErr('se-err', ''); seRender(); return true; }
-function seUseHere() {
-  if (!navigator.geolocation) { dShowErr('se-err', 'This phone cannot give its location.'); return; }
-  dShowErr('se-err', ''); showToast('Finding the location… stand inside the shop');
-  navigator.geolocation.getCurrentPosition(async function (p) {
-    if (p.coords.accuracy > 200) showToast('Location is rough (±' + Math.round(p.coords.accuracy) + ' m). Go near the door / turn on GPS and try again for better accuracy.');
-    if (await seSet({ lat: p.coords.latitude, lng: p.coords.longitude, radius_m: Number(dEl('se-r').value) || 150 })) showToast('Shop location saved');
-  }, function (e) { dShowErr('se-err', e.code === 1 ? 'Location is blocked for this site. Allow it in the browser settings.' : 'Could not get the location. Turn on GPS and try again.'); }, { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 });
-}
-async function seSave() { if (await seSet({ radius_m: Number(dEl('se-r').value) || 150, grace_min: Number(dEl('se-g').value) || 0 })) showToast('Saved'); }
+async function seSave() { if (await seSet({ grace_min: Number(dEl('se-g').value) || 0 })) showToast('Saved'); }
 async function seClear() { if (confirm('Remove the shop location? Then check-in works only with the shop QR.')) await seSet({ clear_location: true }); }
 async function seNewQr(first) { if (!first && !confirm('Make new QR codes? The printed ones stop working; print the new ones.')) return; if (await seSet({ new_qr: true })) showToast(first ? 'QR made. Print it.' : 'New QR made. Print it and replace the old one.'); }
 function sePrintQr(boxId, isWa) {
