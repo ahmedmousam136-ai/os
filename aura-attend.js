@@ -10,7 +10,11 @@
     + '#aa-wall .bx{max-width:420px;width:100%;text-align:center}#aa-wall .hi{font-size:15px;opacity:.85}#aa-wall .nm{font-size:28px;font-weight:800;margin:6px 0 2px}#aa-wall .dt{font-size:14px;opacity:.8}'
     + '#aa-wall .clk{font-size:54px;font-weight:800;letter-spacing:1px;margin:22px 0 4px}#aa-wall .go{display:block;width:100%;margin:22px 0 10px;padding:22px;border:0;border-radius:20px;background:#fff;color:#0b6b4a;font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.25)}'
     + '#aa-wall .go:disabled{opacity:.7}#aa-wall .er{background:rgba(255,255,255,.14);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:8px;display:none}#aa-wall .so{color:#fff;opacity:.75;font-size:13px;background:none;border:0;text-decoration:underline;cursor:pointer;margin-top:14px}'
-    + '#aa-wall .ok{font-size:90px;line-height:1;display:none}'
+    + '#aa-wall .ok{display:none;margin:18px auto 0;width:128px;height:128px}#aa-wall .ok .c{fill:#fff;transform-origin:50% 50%;animation:aapop .45s cubic-bezier(.2,1.4,.4,1) both}'
+    + '#aa-wall .ok .k,.aa-tk .k{fill:none;stroke:#16a34a;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80;animation:aadraw .38s .3s ease-out forwards}'
+    + '.aa-tk{position:fixed;inset:0;z-index:2147483002;background:rgba(255,255,255,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"DM Sans",system-ui,sans-serif;text-align:center}'
+    + '.aa-tk svg{width:128px;height:128px}.aa-tk .c{fill:#16a34a;transform-origin:50% 50%;animation:aapop .45s cubic-bezier(.2,1.4,.4,1) both}.aa-tk .k{stroke:#fff}.aa-tk b{font-size:23px;color:#0b6b4a;margin-top:14px}.aa-tk span{font-size:15px;color:#444;margin-top:6px}'
+    + '@keyframes aapop{0%{transform:scale(0)}100%{transform:scale(1)}}@keyframes aadraw{to{stroke-dashoffset:0}}'
     + '#aa-chip{position:fixed;left:12px;bottom:14px;z-index:2147482000;background:#fff;color:#0b6b4a;border:1.5px solid #0b6b4a;border-radius:999px;padding:7px 12px;font:600 12.5px "DM Sans",system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.12);cursor:pointer;display:flex;gap:6px;align-items:center}'
     + '@media(max-width:820px){#aa-chip{bottom:78px;left:8px;padding:6px 10px;font-size:12px}}'
     + '#aa-md{position:fixed;inset:0;z-index:2147483001;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;font-family:"DM Sans",system-ui,sans-serif}'
@@ -58,7 +62,7 @@
     var w = document.createElement('div'); w.id = 'aa-wall';
     w.innerHTML = '<div class="bx"><div class="hi">' + hello() + '</div><div class="nm">' + esc(A.st.name || '') + '</div>'
       + '<div class="dt">' + new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Kolkata' }) + '</div>'
-      + '<div class="clk" id="aa-clk"></div><div class="ok" id="aa-ok">&#10004;</div>'
+      + '<div class="clk" id="aa-clk"></div><svg class="ok" id="aa-ok" viewBox="0 0 100 100"><circle class="c" cx="50" cy="50" r="44"/><path class="k" d="M29 51 L44 66 L72 37"/></svg>'
       + '<button class="go" id="aa-go">' + (back ? '&#9654; আবার কাজ শুরু · Back to work' : '&#10004; হাজিরা দিন · Check in') + '</button>'
       + '<div style="font-size:13px;opacity:.8">' + (back ? 'You checked out at ' + hm(back) + ' today.' : 'AuraScale খুলতে আগে হাজিরা দিন') + '</div>'
       + '<div class="er" id="aa-er"></div><button class="so" id="aa-so">Sign out</button></div>';
@@ -75,7 +79,7 @@
         document.getElementById('aa-clk').style.display = 'none'; document.getElementById('aa-ok').style.display = 'block';
         b.style.display = 'none';
         b.nextSibling.innerHTML = '<b style="font-size:18px">' + (d.resumed ? 'Welcome back' : 'Checked in ' + hm(d.in_at)) + '</b>' + (d.late && !d.resumed ? ' · late' : '');
-        setTimeout(function () { clearInterval(A.clkT); w.remove(); chip(); }, 1300);
+        setTimeout(function () { clearInterval(A.clkT); w.remove(); chip(); }, 1800);
       } catch (e) {
         er.textContent = errText(e); er.style.display = 'block'; b.disabled = false;
         b.innerHTML = back ? '&#9654; আবার কাজ শুরু · Back to work' : '&#10004; হাজিরা দিন · Check in';
@@ -122,12 +126,18 @@
       if (signingOut) document.getElementById('aa-only').onclick = function () { close('only'); };
       document.getElementById('aa-out').onclick = async function () {
         this.disabled = true; this.textContent = 'Saving…';
-        try { var d = await punch(signingOut ? 'signout' : 'out'); ding(); chip(); close('out'); if (!signingOut) toast('Checked out ' + hm(d.out_at) + '. Have a good evening!'); }
+        try { var d = await punch(signingOut ? 'signout' : 'out'); ding(); chip(); m.remove(); await tick('Checked out ' + hm(d.out_at), 'Have a good evening!'); done('out'); }
         catch (e) { document.getElementById('aa-mer').textContent = errText(e); this.disabled = false; this.textContent = 'Check out'; }
       };
     });
   }
   function toast(t) { if (typeof showToast === 'function') showToast(t); }
+  function tick(title, sub) {
+    addCss(); var d = document.createElement('div'); d.className = 'aa-tk';
+    d.innerHTML = '<svg viewBox="0 0 100 100"><circle class="c" cx="50" cy="50" r="44"/><path class="k" d="M29 51 L44 66 L72 37"/></svg><b>' + title + '</b><span>' + (sub || '') + '</span>';
+    document.body.appendChild(d); d.onclick = function () { d.remove(); };
+    return new Promise(function (res) { setTimeout(function () { d.remove(); res(); }, 1700); });
+  }
   function hookLogout() {
     if (A.hooked || typeof window.handleLogout !== 'function') return;
     A.hooked = true; A.logout = window.handleLogout;
