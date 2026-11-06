@@ -83,6 +83,21 @@
     };
   }
 
+  /* ---------- a day off: the portal stays locked ---------- */
+  function offWall() {
+    if (document.getElementById('aa-wall')) return;
+    addCss();
+    var r = A.st.reason || '', why = r === 'weekly' ? 'আজ আপনার সাপ্তাহিক ছুটি' + (A.st.weekly_day ? ' (' + A.st.weekly_day + ')' : '') : r === 'leave' ? 'আজ আপনার ছুটি (leave)' : r.indexOf('holiday: ') === 0 ? 'আজ ছুটির দিন: ' + r.slice(9) : 'আজ আপনার ছুটি';
+    var w = document.createElement('div'); w.id = 'aa-wall'; w.style.background = 'linear-gradient(160deg,#3b4a5c,#24303d)';
+    w.innerHTML = '<div class="bx"><div style="font-size:64px">&#127796;</div><div class="nm">' + esc(A.st.name || '') + '</div>'
+      + '<div style="font-size:19px;font-weight:700;margin-top:10px">' + esc(why) + '</div>'
+      + '<div style="font-size:14px;opacity:.85;margin-top:10px">Today is a day off, so AuraScale stays closed for you.<br>If you have to work today, ask the owner to mark you <b>Present</b> for today, then open again.</div>'
+      + '<button class="go" id="aa-again" style="font-size:17px;padding:16px">&#8635; Check again</button><button class="so" id="aa-so">Sign out</button></div>';
+    document.body.appendChild(w);
+    document.getElementById('aa-so').onclick = function () { (A.logout || window.handleLogout)(); };
+    document.getElementById('aa-again').onclick = function () { w.remove(); check(); };
+  }
+
   /* ---------- "on duty" chip ---------- */
   function chip() {
     addCss(); var c = document.getElementById('aa-chip');
@@ -130,6 +145,7 @@
     var r; try { r = await sb().rpc('hr_gate', { p_clinic: A.clinic }); } catch (e) { return; }
     if (r.error || !r.data) return;            /* server not ready: never block */
     A.st = r.data; A.ready = true;
+    if (A.st.mode === 'off') { offWall(); return; }
     if (A.st.mode !== 'staff') return;
     hookLogout();
     if (!A.st.in_at || A.st.out_at) wall(); else chip();
@@ -140,6 +156,6 @@
     A.clinic = cid(); check();
   })();
   /* a new day while the page stays open: ask again */
-  setInterval(function () { if (A.ready && A.st && A.st.mode === 'staff' && !document.getElementById('aa-wall')) { var d0 = A.day; A.day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); if (d0 && d0 !== A.day) check(); } }, 60000);
+  setInterval(function () { if (A.ready && A.st && (A.st.mode === 'staff' || A.st.mode === 'off') && !document.getElementById('aa-wall')) { var d0 = A.day; A.day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); if (d0 && d0 !== A.day) check(); } }, 60000);
   A.day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 })();
