@@ -82,11 +82,6 @@
       </div>
           </div>
           <div class="pos-card">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;border-radius:10px;background:var(--green-bg);border:1px solid var(--green-border)">
-            <div style="flex:1;min-width:200px"><b>&#128221; Photo of the prescription</b><div class="tiny">Doctor's prescription or a handwritten list. AI reads the medicines and how many, and fills the bill. You check, then save.</div></div>
-            <label class="btn btn-g btn-sm" style="cursor:pointer">&#128247; Take / choose photo<input type="file" id="rx-file" accept="image/*" onchange="rxPick(this)" style="display:none"/></label>
-            <div class="tiny" id="rx-st" style="width:100%"></div>
-          </div>
           <div id="c-repeat" style="margin-bottom:10px"></div>
           <div style="position:relative;margin-bottom:10px">
         <label class="flbl">Add medicine</label>
@@ -276,8 +271,6 @@
 <div class="modal-bg" id="m-done"><div class="modal"><div class="modal-h"><span id="done-title">Bill saved</span><button class="btn btn-sm" onclick="dClose('m-done')">&times;</button></div>
   <div class="modal-b" id="done-body"></div></div></div>
 <!-- scanned bill: check the lines -->
-<div class="modal-bg" id="m-rx"><div class="modal" style="max-width:960px"><div class="modal-h"><span>Check the prescription read from the photo</span><button class="btn btn-sm" onclick="dClose('m-rx')">&times;</button></div>
-  <div class="modal-b" id="rx-body"></div></div></div>
 <div class="modal-bg" id="m-scan"><div class="modal" style="max-width:1180px"><div class="modal-h"><span>Check the lines read from the bill</span><button class="btn btn-sm" onclick="dClose('m-scan')">&times;</button></div>
   <div class="modal-b" id="scan-body"></div></div></div>
 <!-- medicine batches / edit -->
@@ -1213,7 +1206,7 @@ async function scanSave() {
 }
 
 /* ---------------- LESS TYPING AT THE COUNTER ----------------
-   1. photo of the prescription -> the bill fills itself (rxPick)
+   1. (removed) photo of the prescription
    2. "repeat last bill" for a regular customer (repeatOffer)                          */
 function mNorm(s) {
   return String(s || '').toLowerCase()
@@ -1239,147 +1232,7 @@ function cartAdd(id, qty) {
   return { short: qty - take };
 }
 
-var RX = [], RX_IMG = '', RX_PHOTO = '', RX_STOCK = [];
-async function rxPick(inp) {
-  var f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
-  var st = dEl('rx-st'); st.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border-width:2px"></span> Reading the prescription&hellip; about 15-30 seconds.';
-  try {
-    var data = await scanResize(f);
-    /* the pharmacy's own medicines (in stock first): the doctor's medicine is almost always one of them */
-    RX_STOCK = MEDS.filter(function (m) { return m.is_active; }).sort(function (a, b) { return (b.stock > 0) - (a.stock > 0); }).slice(0, 1500);
-    var names = RX_STOCK.map(function (m) { return m.name + (m.composition ? ' - ' + m.composition : ''); });
-    var r = await _supa.functions.invoke('pharmacy-bill-scan', { body: { clinic_id: _clinicId, image_base64: data.split(',')[1], mime_type: 'image/jpeg', kind: 'rx', stock: names } });
-    var d = r.data; if (r.error) { try { if (r.error.context && r.error.context.json) d = await r.error.context.json(); } catch (e) {} }
-    if (!d || !d.ok || d.kind !== 'rx') {
-      var why = { daily_limit: 'Today\'s limit of photos is used up. Please add the medicines by typing.', ai_key_not_set: 'Photo reading is not set up on the server yet.', pharmacy_module_off: 'The Pharmacy module is not active.', nothing_read: 'No medicines could be read. Take a clearer photo of the whole prescription.', not_signed_in: 'Your login has expired. Please log in again.' };
-      st.textContent = '⚠ ' + (why[d && d.reason] || ((d && d.ok) ? 'Please update the bill-scan function on the server (see the setup steps).' : 'Could not read the prescription. Please add the medicines by typing.'));
-      return;
-    }
-    st.textContent = '';
-    if (KIND === 'walkin') {
-      if (d.patient && !dEl('c-name').value.trim()) dEl('c-name').value = d.patient;
-      if (d.doctor && !dEl('c-doctor').value.trim()) dEl('c-doctor').value = d.doctor;
-    }
-    var pool = MEDS.filter(function (m) { return m.is_active; }), byNo = function (n) { return n != null && RX_STOCK[n] ? RX_STOCK[n].id : ''; };
-    RX_IMG = data; RX_PHOTO = data; RX_DIAG = d.diag || null;
-    RX = d.lines.map(function (l) {
-      var c = mBest(l.name, pool, 8), fz = c.map(function (o) { return o.x.id; });
-      var auto = c.length && c[0].s >= 0.55 && (!c[1] || c[0].s - c[1].s >= 0.08);
-      var pick = byNo(l.pick), alts = (l.alts || []).map(byNo).filter(Boolean);
-      var cands = [pick].concat(alts, fz).filter(function (id, k, a) { return id && a.indexOf(id) === k; }).slice(0, 10);
-      /* green = sure, yellow = check it, red = not found in your stock */
-      var lvl = l.pick !== undefined ? (pick ? (l.sure === 'high' ? 'g' : 'y') : (cands.length ? 'y' : 'r')) : (auto ? 'g' : cands.length ? 'y' : 'r');
-      var x = { read: l.name, raw: l.raw || '', per_day: l.per_day, days: l.days, qty0: l.qty, unit0: l.unit || '', cands: cands, med: pick || (auto ? c[0].x.id : ''), sure: lvl === 'g', lvl: lvl, box: l.box || null };
-      x.qty = rxQty(x); return x;
-    });
-    rxReview(); rxCrops();
-  } catch (e) { st.textContent = '⚠ ' + dErr(e); }
-}
-/* how many to give: loose tablets = doses a day x days; otherwise the written quantity */
-/* tablets in one strip: saved for the medicine (file 32), else written in its name ("15's", "1x10"), else 0 = not known */
-function rxPack(m) {
-  if (!m) return 0; if (Number(m.pack_size) > 0) return Number(m.pack_size);
-  var k = String(m.name || '').match(/(\d{1,3})\s*'?\s*s\b|\b1\s*x\s*(\d{1,3})\b/i); return k ? Number(k[1] || k[2]) : 0;
-}
-function rxQty(x) {
-  var m = x.med ? MEDMAP[x.med] : null, loose = m ? /^(tab|tablet|cap|capsule)s?$/i.test(m.unit) : /tab|cap/i.test(x.unit0 + ' ' + x.read);
-  var strip = m && /strip/i.test(m.unit), doses = x.per_day > 0 && x.days > 0 ? Math.ceil(x.per_day * x.days) : 0;
-  x.doses = 0; x.guess = false;
-  if (x.qty0 > 0 && !(loose && /strip/i.test(x.unit0))) {
-    if (strip && /tab|cap/i.test(x.unit0)) doses = x.qty0; else return x.qty0;   /* "Tab x 30" for a medicine sold by the strip */
-  }
-  if (loose && doses) return doses;
-  if (strip && doses) {   /* 1-0-0 x 30 days = 30 tablets = 2 strips of 15 */
-    var pk = Number(x.pack) > 0 ? Number(x.pack) : rxPack(m);
-    if (!pk) { pk = 10; x.guess = true; }
-    x.pk = pk; x.doses = doses; return Math.ceil(doses / pk);
-  }
-  if (m && !loose && !strip && (doses || x.per_day > 0)) return 1;   /* syrup, cream, drops: one bottle / tube */
-  if (!loose && x.qty0 > 0) return x.qty0;
-  return '';
-}
-function rxSetPack(i, v) { var x = RX[i]; x.pack = Math.max(1, Math.round(Number(v) || 0)) || ''; x.packEdited = true; x.qty = rxQty(x); rxReview(); }
-function rxHow(x) {
-  var p = [];
-  if (x.per_day) p.push(x.per_day + ' a day'); if (x.days) p.push(x.days + ' day' + (x.days === 1 ? '' : 's')); if (x.qty0) p.push('written: ' + x.qty0 + (x.unit0 ? ' ' + x.unit0 : ''));
-  return p.join(' &middot; ');
-}
-var RX_DIAG = null;
-/* the part of the photo where a line is written, so a hard word can be checked against the paper */
-function rxCrops() {
-  if (!RX_IMG) return;
-  var im = new Image();
-  im.onload = function () {
-    RX.forEach(function (x, i) {
-      var el = dEl('rx-crop-' + i); if (!el || !x.box) return;
-      var W = im.width, H = im.height, b = x.box, pad = 0.025;
-      var x0 = Math.max(0, b[0] - pad) * W, y0 = Math.max(0, b[1] - pad) * H, x1 = Math.min(1, b[2] + pad) * W, y1 = Math.min(1, b[3] + pad) * H;
-      var cw = Math.max(20, x1 - x0), ch = Math.max(20, y1 - y0), k = Math.min(1, 640 / cw);
-      var c = document.createElement('canvas'); c.width = Math.round(cw * k); c.height = Math.round(ch * k);
-      c.getContext('2d').drawImage(im, x0, y0, cw, ch, 0, 0, c.width, c.height);
-      el.innerHTML = '<img src="' + c.toDataURL('image/jpeg', 0.85) + '" alt="Handwriting of this line" style="display:block;max-width:100%;max-height:110px;border:1px solid var(--border);border-radius:8px;margin-top:6px;background:#fff"/>';
-    });
-  };
-  im.src = RX_IMG;
-}
-function rxPickMed(i, id) { var x = RX[i]; x.med = id; x.lvl = id ? 'g' : x.lvl; x.ok = !!id; if (x.qty === '' || x.doses) x.qty = rxQty(x); rxReview(); rxCrops(); }
-function rxSkip(i) { var x = RX[i]; x.med = ''; x.skip = true; rxReview(); rxCrops(); }
-function rxBadge(x) {
-  if (x.skip) return '<span class="rx-b" style="background:var(--surface2);color:var(--text-secondary)">Skipped</span>';
-  var k = x.ok ? 'g' : x.lvl;
-  return k === 'g' ? '<span class="rx-b" style="background:var(--green-bg);color:var(--green)">&#128994; ' + (x.ok ? 'Checked' : 'Sure') + '</span>'
-    : k === 'y' ? '<span class="rx-b" style="background:#FEF3C7;color:#92400E">&#128993; Check this</span>'
-    : '<span class="rx-b" style="background:var(--red-bg);color:var(--red)">&#128308; Not found</span>';
-}
-function rxOpen(x) { return !x.skip && !x.ok && x.lvl !== 'g'; }   /* still needs a look */
-function rxReview() {
-  var rows = RX.map(function (x, i) {
-    var opts = '<option value="">&mdash; skip this line &mdash;</option>' + x.cands.map(function (id) { var m = MEDMAP[id]; return '<option value="' + id + '"' + (id === x.med ? ' selected' : '') + '>' + esc(m.name) + ' &middot; ' + (m.stock > 0 ? m.stock + ' ' + esc(m.unit) + ' in stock' : 'OUT OF STOCK') + '</option>'; }).join('');
-    var m = x.med ? MEDMAP[x.med] : null, open = rxOpen(x), col = x.skip ? 'var(--border)' : (x.ok || x.lvl === 'g') ? 'var(--green)' : x.lvl === 'y' ? '#F59E0B' : 'var(--red)';
-    var chips = open && x.cands.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">' + x.cands.slice(0, 3).map(function (id) { var c = MEDMAP[id]; return '<button type="button" class="btn btn-sm" style="' + (id === x.med ? 'border-color:var(--green);background:var(--green-bg)' : '') + '" onclick="rxPickMed(' + i + ',\'' + id + '\')">' + (id === x.med ? '&#10003; ' : '') + esc(c.name) + '</button>'; }).join('') + '<button type="button" class="btn btn-sm" onclick="rxSkip(' + i + ')">Skip</button></div>' : '';
-    return '<tr id="rx-' + i + '" style="box-shadow:inset 4px 0 0 ' + col + (x.skip ? ';opacity:.55' : '') + '"><td style="padding-left:12px">' + rxBadge(x) + '<div style="margin-top:4px"><b>' + esc(x.read) + '</b></div>' + (x.raw && x.raw !== x.read ? '<div class="tiny">written: ' + esc(x.raw) + '</div>' : '') + (rxHow(x) ? '<div class="tiny">' + rxHow(x) + '</div>' : '')
-      + (open ? '<div id="rx-crop-' + i + '"></div>' : '') + '</td>'
-      + '<td><select class="finput" style="min-width:230px" onchange="rxPickMed(' + i + ',this.value);if(!this.value)rxSkip(' + i + ')">' + opts + '</select>'
-      + (x.cands.length ? (open ? '<div class="tiny" style="color:#92400E;font-weight:700;margin-top:4px">Look at the handwriting and tap the right medicine:</div>' : '') : '<div class="tiny over">Not in your stock list: add it by typing after this, or skip.</div>')
-      + chips
-      + (m && m.stock <= 0 && window.subsFor && subsFor(m, 1).length ? '<div class="pp-sub">&#8644; Out of stock. Same salt in stock: <a href="#" style="font-weight:700" onclick="rxPickMed(' + i + ',\'' + subsFor(m, 1)[0].id + '\');return false">' + esc(subsFor(m, 1)[0].name) + '</a> (' + (subsFor(m, 1)[0].next ? dMoney(subsFor(m, 1)[0].next.mrp) : '') + ')</div>' : '') + '</td>'
-      + '<td class="r"><input class="finput" type="number" min="0" step="1" value="' + esc(x.qty) + '" style="width:80px;text-align:right" oninput="RX[' + i + '].qty=this.value;rxCheck()"/><div class="tiny">' + esc(m ? m.unit : '') + '</div>'
-        + (x.doses ? '<div class="tiny" style="white-space:nowrap;' + (x.guess ? 'color:var(--amber);font-weight:700' : '') + '">= ' + x.doses + ' tablets &middot; <input class="finput" type="number" min="1" step="1" value="' + esc(x.pk) + '" style="width:52px;padding:2px 4px;font-size:12px;text-align:right" onchange="rxSetPack(' + i + ',this.value)" title="Tablets in one strip"/> per strip' + (x.guess ? ' (check)' : '') + '</div>' : '')
-        + '</td></tr>';
-  }).join('');
-  var nOpen = RX.filter(rxOpen).length, nG = RX.filter(function (x) { return !x.skip && (x.ok || x.lvl === 'g'); }).length;
-  dEl('rx-body').innerHTML = '<style>.rx-b{display:inline-block;font-size:11.5px;font-weight:800;padding:2px 9px;border-radius:999px}</style>'
-    + '<div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px">'
-    + (RX_IMG ? '<img src="' + RX_IMG + '" alt="Prescription photo" title="Tap to make it bigger" style="max-height:120px;max-width:160px;border:1px solid var(--border);border-radius:8px;cursor:zoom-in" onclick="this.style.maxHeight=this.style.maxHeight===\'none\'?\'120px\':\'none\';this.style.maxWidth=this.style.maxWidth===\'100%\'?\'160px\':\'100%\'"/>' : '')
-    + '<div style="flex:1;min-width:220px"><div style="font-weight:800;font-size:15px">' + (nOpen ? '&#128993; ' + nOpen + ' line' + (nOpen === 1 ? '' : 's') + ' to check' : '&#128994; All lines are sure') + '</div>'
-    + '<p class="tiny" style="margin-top:4px">&#128994; Sure: just glance at it. &#128993; Check this: look at the handwriting shown under it and tap the right medicine. &#128308; Not found: not in your stock list. The medicine and quantity must be what the doctor wrote: you are the pharmacist, the AI only helps.</p>'
-    + (RX_DIAG ? '<div class="tiny muted">Reader ' + esc(RX_DIAG.version) + (RX_DIAG.retried === 'used' ? ' &middot; read twice' : '') + ' &middot; compared with ' + esc(RX_DIAG.stock) + ' medicines in your stock</div>' : '') + '</div></div>'
-    + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Read from the prescription</th><th>Medicine in your stock</th><th class="r">Qty</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-    + '<div class="err" id="rx-err"></div>'
-    + '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="dClose(\'m-rx\')">Cancel</button><button class="btn" onclick="rxUse()">Add to the bill</button>'
-    + '<button class="btn btn-g" id="rx-go" ' + (nOpen || !nG ? 'disabled title="Check the yellow and red lines first"' : '') + ' onclick="rxUse(true)">&#10003; Add &amp; save bill</button></div>';
-  dOpen('m-rx'); rxCheck();
-}
-function rxCheck() {
-  var bad = 0;
-  RX.forEach(function (x, i) { var tr = dEl('rx-' + i); if (!tr) return; var need = x.med && !(Number(x.qty) > 0); tr.querySelector('input').style.borderColor = need ? 'var(--red)' : ''; if (need) bad++; });
-  return bad;
-}
-function rxUse(save) {
-  if (rxCheck()) { dShowErr('rx-err', 'Type the quantity for every chosen medicine (red boxes), or choose "skip this line".'); return; }
-  if (save && RX.some(rxOpen)) { dShowErr('rx-err', 'Check the yellow and red lines first (tap the right medicine, or Skip).'); return; }
-  var n = 0, notes = [];
-  RX.forEach(function (x) { if (!x.med) return; var r = cartAdd(x.med, Number(x.qty)); if (r.short < Number(x.qty)) n++; if (r.short > 0) notes.push(MEDMAP[x.med].name + ': ' + (r.short === Number(x.qty) ? 'out of stock' : r.short + ' short')); });
-  var skipped = RX.filter(function (x) { return !x.med; }).map(function (x) { return x.read; });
-  dClose('m-rx'); posRender();
-  var packs = RX.filter(function (x) { return x.med && x.packEdited && Number(x.pack) > 0; }).map(function (x) { MEDMAP[x.med].pack_size = Number(x.pack); return { id: x.med, n: Number(x.pack) }; });
-  if (packs.length) _supa.rpc('ph_set_pack', { p_clinic_id: _clinicId, p: packs }).then(function () {}, function () {});
-  var rxDays = Math.max.apply(null, [0].concat(RX.filter(function (x) { return x.med; }).map(function (x) { return Number(x.days) || 0; }))), rfl = window.ppRefillFromRx ? ppRefillFromRx(rxDays) : '';
-  if (n && window.phOk) phOk(n + ' medicine' + (n === 1 ? '' : 's') + ' added', 'From the prescription.' + (rfl ? '<br>' + esc(rfl) : ''));
-  dEl('rx-st').innerHTML = '<span style="color:var(--green);font-weight:700">&#10003; ' + n + ' medicine' + (n === 1 ? '' : 's') + ' added from the prescription.</span>'
-    + (notes.length ? '<div class="over">' + esc(notes.join(' · ')) + '</div>' : '') + (skipped.length ? '<div>Not added: ' + esc(skipped.join(', ')) + ' &mdash; add them by typing if needed.</div>' : '');
-  if (save && n) posSave();
-}
+var RX_PHOTO = ''; /* prescription photo reading removed (Nov 2026); old bills still open their saved photo */
 
 /* the customer's last bill, again */
 var _repKey = '', _repSale = null;
