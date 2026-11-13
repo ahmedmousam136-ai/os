@@ -936,12 +936,13 @@ async function impRead(inp) {
     if (/\.csv$/i.test(f.name)) { await impLoadXlsx(); var wbc = XLSX.read(await f.text(), { type: 'string', raw: true }); raw = XLSX.utils.sheet_to_json(wbc.Sheets[wbc.SheetNames[0]], { defval: '', raw: false }); }
     else { await impLoadXlsx(); var wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: false }); raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' }); }
     var alias = { name: ['name', 'medicine', 'item', 'item name', 'product', 'product name', 'medicine name', 'description'], composition: ['composition', 'salt', 'generic', 'content'],
-      gst_rate: ['gst', 'gst%', 'gst %', 'tax', 'tax%', 'gst rate'], hsn: ['hsn', 'hsn code'], unit: ['unit', 'uom', 'pack type'], batch_no: ['batch', 'batch no', 'batch no.', 'batchno', 'batch number'],
-      expiry: ['expiry', 'exp', 'exp date', 'expiry date', 'exp.'], mrp: ['mrp', 'm.r.p', 'm.r.p.'], purchase_rate: ['rate', 'purchase rate', 'ptr', 'cost', 'p.rate', 'purchase price'],
-      qty: ['qty', 'quantity', 'stock', 'closing stock', 'balance', 'qty.'], supplier: ['supplier', 'distributor', 'party'], schedule: ['schedule', 'sch'] };
+      gst_rate: ['gst', 'gst%', 'gst %', 'tax', 'tax%', 'gst rate', 'igst', 'igst%', 'gst %age'], hsn: ['hsn', 'hsn code'], unit: ['unit', 'uom', 'pack type'], batch_no: ['batch', 'batch no', 'batch no.', 'batchno', 'batch number', 'b.no', 'b no', 'bno', 'lot', 'lot no'],
+      expiry: ['expiry', 'exp', 'exp date', 'expiry date', 'exp.', 'exp dt', 'expdt', 'exp. date', 'expiry dt'], mrp: ['mrp', 'm.r.p', 'm.r.p.', 'mrp/unit', 'mrp per unit'], purchase_rate: ['rate', 'purchase rate', 'ptr', 'cost', 'p.rate', 'purchase price', 'pur rate', 'pur. rate', 'p rate', 'net rate', 'rate/unit', 'cost price'],
+      qty: ['qty', 'quantity', 'stock', 'closing stock', 'balance', 'qty.', 'total qty', 'stock qty', 'cl stock', 'cl. stock'], supplier: ['supplier', 'distributor', 'party'], schedule: ['schedule', 'sch'] };
     IMP_ROWS = raw.map(function (row) {
       var o = {}, keys = Object.keys(row);
-      Object.keys(alias).forEach(function (k) { var hit = keys.filter(function (c) { return alias[k].indexOf(String(c).trim().toLowerCase()) >= 0; })[0]; if (hit !== undefined) o[k] = row[hit]; });
+      var nz = function (v) { return String(v || '').toLowerCase().replace(/[^a-z0-9%]/g, ''); };
+      Object.keys(alias).forEach(function (k) { var A2 = alias[k].map(nz); var hit = keys.filter(function (c) { return A2.indexOf(nz(c)) >= 0; })[0]; if (hit !== undefined) o[k] = row[hit]; });
       o.name = String(o.name || '').trim(); o.expiry = impExpiry(o.expiry);
       ['gst_rate', 'mrp', 'purchase_rate', 'qty'].forEach(function (k) { if (o[k] !== undefined && o[k] !== '') o[k] = String(Number(String(o[k]).replace(/[^\d.]/g, '')) || 0); });
       /* a stock line must have all of these: never assume a GST rate, batch or expiry */
@@ -956,8 +957,9 @@ async function impRead(inp) {
     }).filter(function (o) { return o.name; });
     if (!IMP_ROWS.length) { box.innerHTML = '<div class="err" style="display:block">No rows found. Check that the first row has column names like name, batch, expiry, mrp, gst, qty.</div>'; return; }
     /* which needed columns are not in the file at all */
-    var cols = Object.keys(raw[0] || {}).map(function (c) { return String(c).trim().toLowerCase(); }), noCol = [];
-    [['batch_no', 'batch'], ['expiry', 'expiry'], ['mrp', 'MRP'], ['gst_rate', 'GST'], ['qty', 'qty']].forEach(function (k) { if (!alias[k[0]].some(function (a) { return cols.indexOf(a) >= 0; })) noCol.push(k[1]); });
+    var nz2 = function (v) { return String(v || '').toLowerCase().replace(/[^a-z0-9%]/g, ''); };
+    var cols = Object.keys(raw[0] || {}).map(nz2), noCol = [];
+    [['batch_no', 'batch'], ['expiry', 'expiry'], ['mrp', 'MRP'], ['gst_rate', 'GST'], ['qty', 'qty']].forEach(function (k) { if (!alias[k[0]].some(function (a) { return cols.indexOf(nz2(a)) >= 0; })) noCol.push(k[1]); });
     var ALL = IMP_ROWS, good = ALL.filter(function (o) { return !o._miss.length; }), badRows = ALL.length - good.length;
     if (noCol.length || !good.length) {
       box.innerHTML = '<div class="card" style="border-color:var(--red);background:#fff5f5"><b style="color:var(--red)">&#9888; This file cannot be imported as stock</b><div class="tiny" style="margin-top:4px">'
