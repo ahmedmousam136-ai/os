@@ -162,11 +162,13 @@ function roRender() {
     h += '<div class="card" style="margin-bottom:12px;padding:12px 14px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>' + esc(gr.sup) + '</b> <span class="tiny">' + gr.idx.length + ' medicine' + (gr.idx.length === 1 ? '' : 's') + '</span>'
       + (wh && wh.length ? '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; On AuraScale as ' + esc(wh[0].name) + ': the order goes straight into their billing</div>' : '') + '</div>'
       + (gr.sup !== 'Supplier not known' ? '<input class="finput" style="width:150px;padding:6px" placeholder="Supplier WhatsApp" value="' + esc(phones[k] || '') + '" onchange="roPhone(' + gi + ',this.value)" type="tel"/>' : '') + '</div>'
-      + '<div style="overflow-x:auto;margin-top:8px"><table class="dt"><thead><tr><th></th><th>Medicine</th><th class="r">In stock</th><th class="r">Sold in 30 days</th><th class="r">Order</th><th class="r">Last rate</th></tr></thead><tbody>'
+      + '<div class="tiny" style="margin-top:6px;color:var(--amber);font-weight:700">&#9888; Check the GST % of each medicine before sending (change it in the list if the supplier\'s bill shows another rate).</div>'
+      + '<div style="overflow-x:auto;margin-top:8px"><table class="dt"><thead><tr><th></th><th>Medicine</th><th class="r">In stock</th><th class="r">Sold in 30 days</th><th class="r">Order</th><th class="r">Last rate</th><th class="r">GST %</th></tr></thead><tbody>'
       + gr.idx.map(function (i) { var r = RO.rows[i], m = MEDMAP[r.id]; if (!m) return '';
         return '<tr><td><input type="checkbox" ' + (r.on ? 'checked' : '') + ' onchange="RO.rows[' + i + '].on=this.checked;roTotRender(' + gi + ')" style="width:18px;height:18px;appearance:auto"/></td><td><b>' + esc(m.name) + '</b><div class="tiny">' + esc(m.composition || '') + '</div></td>'
           + '<td class="r">' + (m.stock > 0 ? m.stock : '<span class="over">0</span>') + ' <span class="tiny">' + esc(m.unit) + '</span></td><td class="r">' + (RO.sold[m.id] || 0) + '</td>'
-          + '<td class="r"><input class="finput" type="number" min="1" step="1" value="' + esc(r.qty) + '" style="width:80px;text-align:right;padding:6px" oninput="RO.rows[' + i + '].qty=this.value;roTotRender(' + gi + ')"/><div class="tiny">' + esc(m.unit) + '</div></td><td class="r">' + (roRate(m) ? dMoney(roRate(m)) + '<div class="tiny">+' + Number(m.gst_rate || 0) + '% GST</div>' : '<span class="tiny">no rate yet</span>') + '</td></tr>';
+          + '<td class="r"><input class="finput" type="number" min="1" step="1" value="' + esc(r.qty) + '" style="width:80px;text-align:right;padding:6px" oninput="RO.rows[' + i + '].qty=this.value;roTotRender(' + gi + ')"/><div class="tiny">' + esc(m.unit) + '</div></td><td class="r">' + (roRate(m) ? dMoney(roRate(m)) : '<span class="tiny">no rate yet</span>') + '</td>'
+          + '<td class="r"><select class="finput" id="ro-g-' + i + '" style="width:76px;padding:6px' + (Number(roGst(r)) !== Number(m.gst_rate) ? ';border-color:var(--amber)' : '') + '" onchange="roSetGst(' + i + ',this.value,' + gi + ')">' + [0, 5, 12, 18, 28].map(function (g) { return '<option value="' + g + '"' + (g === Number(roGst(r)) ? ' selected' : '') + '>' + g + '%</option>'; }).join('') + '</select><div class="tiny" id="ro-gn-' + i + '">' + (Number(roGst(r)) !== Number(m.gst_rate) ? 'saved ' + Number(m.gst_rate) + '% &rarr; <b>' + Number(roGst(r)) + '%</b>' : '') + '</div></td></tr>';
       }).join('') + '</tbody></table></div>'
       + '<div id="ro-tot-' + gi + '" style="margin-top:8px"></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
@@ -212,8 +214,29 @@ function roRate(m) {
 }
 function roLines(gi) {
   return RO.groups[gi].idx.map(function (i) { return RO.rows[i]; }).filter(function (r) { return r.on && Number(r.qty) > 0 && MEDMAP[r.id]; })
-    .map(function (r) { var m = MEDMAP[r.id], rate = roRate(m), q = Number(r.qty), g = Number(m.gst_rate) || 0;
+    .map(function (r) { var m = MEDMAP[r.id], rate = roRate(m), q = Number(r.qty), g = roGst(r);
       return { name: m.name, qty: q, unit: m.unit, composition: m.composition || '', rate: rate, gst: g, amount: Math.round(q * rate * (1 + g / 100) * 100) / 100 }; });
+}
+function roGst(r) { var m = MEDMAP[r.id]; return r.gst !== undefined && r.gst !== '' ? Number(r.gst) : (Number(m && m.gst_rate) || 0); }
+function roSetGst(i, v, gi) { RO.rows[i].gst = Number(v); var m = MEDMAP[RO.rows[i].id], sel = dEl('ro-g-' + i);
+  if (sel) sel.style.borderColor = m && Number(m.gst_rate) !== Number(v) ? 'var(--amber)' : ''; var n = dEl('ro-gn-' + i);
+  if (n) n.innerHTML = m && Number(m.gst_rate) !== Number(v) ? 'saved ' + Number(m.gst_rate) + '% &rarr; <b>' + Number(v) + '%</b>' : ''; roTotRender(gi); }
+/* before sending: ask once "is the GST right?", and offer to save any changed GST for future bills too */
+async function roGstCheck(gi) {
+  var rows = RO.groups[gi].idx.map(function (i) { return RO.rows[i]; }).filter(function (r) { return r.on && Number(r.qty) > 0 && MEDMAP[r.id]; });
+  if (!rows.length) { showToast('Tick at least one medicine.'); return false; }
+  var list = rows.map(function (r) { return '- ' + MEDMAP[r.id].name + ': ' + roGst(r) + '%'; }).join('\n');
+  if (!confirm('Is the GST right for every medicine?\n\n' + list + '\n\nOK = yes, send the order.  Cancel = go back and change the GST in the list.')) return false;
+  var ch = rows.filter(function (r) { return r.gst !== undefined && r.gst !== '' && Number(r.gst) !== Number(MEDMAP[r.id].gst_rate); });
+  if (ch.length && confirm(ch.length + ' medicine' + (ch.length === 1 ? '' : 's') + ' now ha' + (ch.length === 1 ? 's' : 've') + ' a different GST than saved.\n\n' + ch.map(function (r) { return '- ' + MEDMAP[r.id].name + ': ' + Number(MEDMAP[r.id].gst_rate) + '% -> ' + Number(r.gst) + '%'; }).join('\n') + '\n\nSave the new GST for future bills too?\nOK = yes, save.  Cancel = only for this order.')) {
+    var byG = {}; ch.forEach(function (r) { (byG[r.gst] = byG[r.gst] || []).push(r.id); });
+    for (var g in byG) {
+      var u = await _supa.rpc('ph_set_gst', { p_clinic_id: _clinicId, p_ids: byG[g], p_gst: Number(g) });
+      if (u.error) { showToast('GST not saved: ' + dErr(u.error)); break; }
+      byG[g].forEach(function (id) { if (MEDMAP[id]) MEDMAP[id].gst_rate = Number(g); });
+    }
+  }
+  return true;
 }
 function roTotal(gi) { return Math.round(roLines(gi).reduce(function (a, l) { return a + l.amount; }, 0) * 100) / 100; }
 function roText(gi) {
@@ -230,14 +253,16 @@ function roTotRender(gi) { var el = dEl('ro-tot-' + gi); if (el) el.innerHTML = 
 async function roSendApp(gi) {
   var gr = RO.groups[gi], wh = RO.whs[roSupKey(gr.sup)], L = roLines(gi);
   if (!L.length) { showToast('Tick at least one medicine.'); return; }
+  if (!(await roGstCheck(gi))) return;
   if (!confirm('Send ' + L.length + ' medicine(s) to ' + wh[0].name + ' on AuraScale?')) return;
   var r = await _supa.rpc('aura_order_send', { p_from: _clinicId, p_to: wh[0].id, p_lines: L, p_note: '' });
   if (r.error) { showToast(dErr(r.error)); return; }
   roDone(gi); phOk('Order ' + r.data.order_no + ' sent', esc(wh[0].name) + ' sees it in their billing now. You will see here when they bill it.', 2400);
   roLoad();
 }
-function roSendWa(gi) {
+async function roSendWa(gi) {
   var L = roLines(gi); if (!L.length) { showToast('Tick at least one medicine.'); return; }
+  if (!(await roGstCheck(gi))) return;
   var gr = RO.groups[gi], to = (ppLS('sup-phones') || {})[roSupKey(gr.sup)] || '';
   if (!to) { showToast('Type ' + gr.sup + '\'s WhatsApp number in the box first, then press Send on WhatsApp.'); return; }
   deptWhatsApp(to, roText(gi)); roDone(gi);
