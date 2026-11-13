@@ -46,6 +46,7 @@
     <button class="d-tab" data-t="bills" onclick="dTab('bills')"><span class="ti">&#128196;</span><span class="tl">Bills</span></button>
     <button class="d-tab" data-t="photos" onclick="dTab('photos')"><span class="ti">&#128193;</span><span class="tl">Photos</span></button>
     <button class="d-tab" data-t="settings" onclick="dTab('settings')" data-owner-only><span class="ti">&#9881;</span><span class="tl">Settings</span></button>
+    <button class="d-tab" data-t="help" onclick="dTab('help')"><span class="ti">&#10067;</span><span class="tl">Help</span></button>
   </div>
   <div class="d-main" id="d-body">
 
@@ -243,6 +244,7 @@
     </div>
 
     <!-- ============ SETTINGS ============ -->
+    <div class="d-view" id="v-help"><div id="help-root"><div class="card" style="text-align:center;padding:24px">Loading help&hellip;<div class="tiny" style="margin-top:6px">Support: <a href="tel:+918017465987">80174 65987</a></div></div></div></div>
     <div class="d-view" id="v-settings">
       <h3 style="font-size:15px;margin-bottom:4px">Pharmacy details printed on every bill</h3>
       <p class="tiny" style="margin-bottom:12px">Medicines sold at the counter are taxable goods. Choose how your pharmacy is registered for GST (ask your CA if unsure).</p>
@@ -1322,6 +1324,13 @@ async function saleCancel(id) {
 }
 
 /* ---------------- SETTINGS ---------------- */
+function onTab_help() {
+  if (window.helpRender) { helpRender(dEl('help-root')); return; }
+  var s = document.createElement('script'); s.src = 'pharmacy-help.js?v=1';
+  s.onload = function () { if (window.helpRender) helpRender(dEl('help-root')); };
+  s.onerror = function () { dEl('help-root').innerHTML = '<div class="card" style="padding:16px">Help could not load. Call support: <a href="tel:+918017465987"><b>80174 65987</b></a></div>'; };
+  document.head.appendChild(s);
+}
 function onTab_settings() {
   var s = ph();
   dEl('ps-name').value = s.name || DEPT.clinic.name || ''; dEl('ps-phone').value = s.phone || DEPT.clinic.phone || ''; dEl('ps-address').value = s.address || DEPT.clinic.address || '';
