@@ -259,6 +259,7 @@
         <div id="ps-gstin-box"><label class="flbl">Pharmacy GSTIN</label><input class="finput" id="ps-gstin" maxlength="15" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase().replace(/[^0-9A-Z]/g,'');setCheck()"/><div class="tiny" id="ps-gstin-st" style="margin-top:4px"></div></div>
         <div><label class="flbl">Drug licence no(s). (Form 20 / 21) *</label><input class="finput" id="ps-dl" maxlength="120" placeholder="e.g. WB/S24P/RCD-1234 (20B), RCD-1235 (21B)" oninput="setCheck()"/><div class="tiny" id="ps-dl-st" style="margin-top:4px">Write it exactly as on the licence certificate.</div></div>
         <div><label class="flbl">Registered pharmacist</label><input class="finput" id="ps-pharmacist"/></div>
+        <div><label class="flbl">Owner's WhatsApp (gets the 9 PM daily report)</label><input class="finput" id="ps-owner-wa" inputmode="numeric" maxlength="14" placeholder="10-digit mobile number"/><div class="tiny" style="margin-top:4px">Every night at 9 PM the day's sales, low stock and expiry report comes here on WhatsApp. Leave empty to stop it.</div></div>
         <div style="grid-column:1/-1"><label class="flbl">Line at the bottom of bills (optional)</label><input class="finput" id="ps-footer" placeholder="e.g. Please check medicines before leaving the counter."/></div>
       </div>
       <button class="btn btn-g" style="margin-top:14px" onclick="setSave()">&#10003; Save details</button>
@@ -1307,6 +1308,7 @@ function onTab_settings() {
   var s = ph();
   dEl('ps-name').value = s.name || DEPT.clinic.name || ''; dEl('ps-phone').value = s.phone || DEPT.clinic.phone || ''; dEl('ps-address').value = s.address || DEPT.clinic.address || '';
   dEl('ps-mode').value = s.gst_mode || 'none'; dEl('ps-gstin').value = s.gstin || ''; dEl('ps-dl').value = s.dl_no || ''; dEl('ps-pharmacist').value = s.pharmacist || ''; dEl('ps-footer').value = s.footer || '';
+  dEl('ps-owner-wa').value = dMobile(DEPT.clinic.whatsapp_number || '') || '';
   dEl('ps-gstin-box').style.display = dEl('ps-mode').value === 'none' ? 'none' : 'block';
   setCheck();
 }
@@ -1325,10 +1327,18 @@ async function setSave() {
   if (gp) { dShowErr('ps-err', 'GSTIN: ' + gp + ' If the pharmacy has no GSTIN, choose "No GSTIN".'); dEl('ps-gstin').focus(); return; }
   if (dp) { dShowErr('ps-err', 'Drug licence: ' + dp); dEl('ps-dl').focus(); return; }
   if (dEl('ps-phone').value.trim() && !deptPhoneOk(dEl('ps-phone').value)) { dShowErr('ps-err', 'The phone number looks wrong. Use 8 to 15 digits.'); dEl('ps-phone').focus(); return; }
+  var ownerWa = dEl('ps-owner-wa').value.trim(), ownerWa10 = ownerWa ? dMobile(ownerWa) : '';
+  if (ownerWa && !/^[6-9]\d{9}$/.test(ownerWa10 || '')) { dShowErr('ps-err', 'Owner\'s WhatsApp: enter a 10-digit mobile number (starting with 6, 7, 8 or 9), or leave it empty.'); dEl('ps-owner-wa').focus(); return; }
   var p = { name: dEl('ps-name').value, phone: dEl('ps-phone').value, address: dEl('ps-address').value, gst_mode: dEl('ps-mode').value, gstin: dEl('ps-gstin').value.toUpperCase().trim(), dl_no: dEl('ps-dl').value.toUpperCase().replace(/\s+/g, ' ').trim(), pharmacist: dEl('ps-pharmacist').value, footer: dEl('ps-footer').value };
   var r = await _supa.rpc('ph_save_settings', { p_clinic_id: _clinicId, p: p });
   if (r.error) { dShowErr('ps-err', dErr(r.error)); return; }
-  DEPT.clinic.ph_settings = r.data; setupNote(); posRender(); if (window.phOk) phOk('Pharmacy details saved'); else showToast('Pharmacy details saved.');
+  DEPT.clinic.ph_settings = r.data;
+  if ((ownerWa10 || '') !== (dMobile(DEPT.clinic.whatsapp_number || '') || '')) {
+    var w = await _supa.rpc('ph_set_owner_whatsapp', { p_clinic_id: _clinicId, p_phone: ownerWa10 || '' });
+    if (w.error) { dShowErr('ps-err', 'Details saved, but the owner\'s WhatsApp was not: ' + dErr(w.error)); return; }
+    DEPT.clinic.whatsapp_number = w.data || null;
+  }
+  setupNote(); posRender(); if (window.phOk) phOk('Pharmacy details saved'); else showToast('Pharmacy details saved.');
 }
 function posPay(v){ var sel=dEl('c-pay'); if(sel) sel.value=v; document.querySelectorAll('.pay-seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-pay')===v); }); }
 window.addEventListener('resize', function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
