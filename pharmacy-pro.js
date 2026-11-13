@@ -173,7 +173,8 @@ function roRender() {
       + '<div id="ro-tot-' + gi + '" style="margin-top:8px"></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
       + (gr.sup !== 'Supplier not known' ? (wh && wh.length ? '<button class="btn btn-g" onclick="roSendApp(' + gi + ')">&#128640; Send order on AuraScale</button>' : '<button class="btn btn-sm" onclick="roFind(' + gi + ')">&#128269; Is ' + esc(gr.sup) + ' on AuraScale?</button>') : '')
-      + '<button class="btn' + (wh && wh.length ? ' btn-sm' : ' btn-g') + '" onclick="roSendWa(' + gi + ')">&#128242; Send on WhatsApp</button><button class="btn btn-sm" onclick="roCopy(' + gi + ')">Copy list</button></div></div>';
+      + (gr.sup !== 'Supplier not known' ? '<button class="btn' + (wh && wh.length ? ' btn-sm' : ' btn-g') + '" id="ro-pdf-' + gi + '" onclick="roSendPdf(' + gi + ')">&#128228; Send PDF order (automatic)</button>' : '')
+      + '<button class="btn btn-sm" onclick="roSendWa(' + gi + ')">&#128242; Send from my WhatsApp</button><button class="btn btn-sm" onclick="roCopy(' + gi + ')">Copy list</button></div></div>';
   });
   if (RO.sent === null) h += '<p class="tiny">Sending orders inside AuraScale needs the database update (file 31). WhatsApp works now.</p>';
   else if (RO.sent.length) h += '<h3 style="font-size:15px;margin:16px 0 6px">Orders sent on AuraScale</h3><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Order</th><th>Wholesaler</th><th>Medicines</th><th>Status</th><th></th></tr></thead><tbody>'
@@ -267,6 +268,28 @@ async function roSendWa(gi) {
   if (!to) { showToast('Type ' + gr.sup + '\'s WhatsApp number in the box first, then press Send on WhatsApp.'); return; }
   deptWhatsApp(to, roText(gi)); roDone(gi);
   setTimeout(function () { phOk('Order ready on WhatsApp', 'Check it and press send in WhatsApp.'); }, 400);
+}
+/* automatic: the server makes the Purchase Order PDF and AuraScale's WhatsApp number sends it to the supplier */
+async function roSendPdf(gi) {
+  var L = roLines(gi); if (!L.length) { showToast('Tick at least one medicine.'); return; }
+  var gr = RO.groups[gi], k = roSupKey(gr.sup), to = String((ppLS('sup-phones') || {})[k] || '').replace(/\D/g, '').slice(-10);
+  if (!/^[6-9]\d{9}$/.test(to)) { showToast('Type ' + gr.sup + '\'s 10-digit WhatsApp number in the box first.'); return; }
+  if (!(await roGstCheck(gi))) return;
+  L = roLines(gi);
+  if (!confirm('Send this order as a PDF to ' + gr.sup + ' (WhatsApp ' + to + ')?\n\n' + L.length + ' medicine(s), approx. ' + dMoney(roTotal(gi)) + '\n\nIt goes from the AuraScale WhatsApp number. The supplier is told to call your shop phone for questions.')) return;
+  var btn = dEl('ro-pdf-' + gi); if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+  try {
+    var r = await _supa.functions.invoke('pharmacy-order-send', { body: { clinic_id: _clinicId, supplier: { name: gr.sup, phone: to }, lines: L.map(function (l) { return { name: l.name, qty: l.qty, unit: l.unit, rate: l.rate, gst: l.gst }; }) } });
+    var d = r.data;
+    if (r.error && r.error.context && r.error.context.json) { try { d = await r.error.context.json(); } catch (e) {} }
+    if (!d || !d.ok) {
+      var why = d && d.reason, msg = { shop_phone_missing: 'Add the shop phone in Settings first (the supplier calls it).', supplier_whatsapp_wrong: 'The supplier WhatsApp number is not right.', daily_limit: 'Too many orders today. Use "Send from my WhatsApp".', run_sql_65_first: 'The database update (file 65) is not run yet.', make_did_not_accept: 'WhatsApp sending is off right now. Use "Send from my WhatsApp".', webhook_not_configured: 'WhatsApp sending is not set up yet.' }[why];
+      showToast(msg || ('Not sent: ' + ((d && (d.message || d.reason)) || (r.error && r.error.message) || 'try again')));
+      return;
+    }
+    roDone(gi); phOk('Order ' + esc(d.order_no) + ' sent', 'The PDF is going to ' + esc(gr.sup) + ' on WhatsApp (' + esc(d.sent_to) + ').', 2600);
+  } catch (e) { showToast('Not sent: ' + (e && e.message || e)); }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = '&#128228; Send PDF order (automatic)'; } }
 }
 function roCopy(gi) { var t = roText(gi); try { navigator.clipboard.writeText(t).then(function () { phOk('Order copied', 'Paste it anywhere.'); }, function () { prompt('Copy the order:', t); }); } catch (e) { prompt('Copy the order:', t); } }
 function roDone(gi) { var ex = ppLS('ro-extra') || {}; RO.groups[gi].idx.forEach(function (i) { delete ex[RO.rows[i].id]; }); ppLS('ro-extra', ex); }
