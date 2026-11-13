@@ -714,7 +714,7 @@ function stockRender() {
   dEl('st-b').innerHTML = (list.length ? list.map(function (m) {
     if (GSTSEL) return '<tr style="cursor:pointer" onclick="gstTick(\'' + m.id + '\')"' + (GSTSEL[m.id] ? ' style="background:var(--green-bg)"' : '') + '><td><div style="display:flex;gap:10px;align-items:center"><input type="checkbox" style="width:18px;height:18px;appearance:auto" ' + (GSTSEL[m.id] ? 'checked ' : '') + 'onclick="event.stopPropagation();gstTick(\'' + m.id + '\')"/><span><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + '<b>GST ' + Number(m.gst_rate) + '%</b></div></span></div></td>'
       + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td><td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + (Number(m.gst_rate) ? Number(m.gst_rate) + '%' : 'Exempt') + '</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td></td></tr>';
-    return '<tr style="cursor:pointer" onclick="medOpen(\'' + m.id + '\')"><td><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + 'GST ' + Number(m.gst_rate) + '%</div></td>'
+    return '<tr style="cursor:pointer" onclick="medOpen(\'' + m.id + '\')"><td><b>' + esc(m.name) + '</b><div class="tiny">' + (m.composition ? esc(m.composition) + ' &middot; ' : '') + 'GST ' + Number(m.gst_rate) + '%</div>' + (window.medOrder && m.is_active && m.stock <= m.lowAt ? '<button class="btn btn-sm btn-g" style="margin-top:6px" onclick="event.stopPropagation();medOrder(\'' + m.id + '\')">&#128722; Order from supplier</button>' : '') + '</td>'
       + '<td class="r"><b>' + m.stock + '</b> <span class="tiny">' + esc(m.unit) + '</span></td><td>' + (m.nearestExp ? dExp(m.nearestExp) : '-') + '</td>'
       + '<td class="r">' + (m.next ? dMoney(m.next.mrp) : '-') + '</td><td class="r"><b>' + (Number(m.gst_rate) ? Number(m.gst_rate) + '%' : 'Exempt') + '</b><div class="tiny">HSN ' + esc(m.hsn || '3004') + '</div></td><td>' + medStatus(m) + '</td><td class="r"><button class="btn btn-sm">Open</button></td></tr>';
   }).join('') : '<tr><td colspan="7" class="muted" style="text-align:center;padding:20px">' + (MEDS.length ? 'Nothing matches.' : 'No medicines yet. Use <b>Add stock</b> or import your stock list.') + '</td></tr>')
@@ -1073,10 +1073,16 @@ function scanCandidates(name) {
 }
 function scanReview(d) {
   SCAN_BILL = { supplier: d.supplier || '', gstin: d.supplier_gstin || '', no: d.invoice_no || '', date: d.invoice_date || '', total: d.bill_total != null ? d.bill_total : '' };
+  var isDate = function (v) { return /^\s*\d{1,2}\s*[\/\-.]\s*\d{2,4}\s*$/.test(String(v || '')); };
   SCAN = d.lines.map(function (l) {
     var c = scanCandidates(l.name);
-    var med = c.best;
-    return { upd: true, pack: l.pack || '', inc: true, read: l.name, match: med ? med.id : '', cands: c.list, batch: l.batch || '', expiry: l.expiry || '', qty: l.qty || 0, free: l.free || 0, upp: l.units_per_pack || 1,
+    var med = c.best, fix = [];
+    /* distributors print the columns in different orders: put each value back in its right place */
+    var g0 = (l.gst !== null && l.gst !== undefined && l.gst !== '') ? Number(l.gst) : null;
+    if (g0 !== null && [2.5, 6, 9, 14].indexOf(g0) >= 0) { l.gst = g0 * 2; fix.push('GST was CGST only (' + g0 + '% + ' + g0 + '%)'); }
+    if (Number(l.mrp) > 0 && Number(l.rate) > 0 && Number(l.rate) > Number(l.mrp)) { var t = l.mrp; l.mrp = l.rate; l.rate = t; fix.push('MRP and Rate were swapped'); }
+    if (l.batch && isDate(l.batch) && (!l.expiry || !isDate(l.expiry))) { var t2 = l.expiry; l.expiry = l.batch; l.batch = t2 || ''; fix.push('Batch and Expiry were swapped'); }
+    return { fix: fix, upd: true, pack: l.pack || '', inc: true, read: l.name, match: med ? med.id : '', cands: c.list, batch: l.batch || '', expiry: l.expiry || '', qty: l.qty || 0, free: l.free || 0, upp: l.units_per_pack || 1,
       mrp: l.mrp || '', rate: l.rate || '', disc: l.disc || 0,
       gst: (l.gst !== null && l.gst !== undefined && [0, 5, 12, 18, 28].indexOf(Number(l.gst)) >= 0) ? Number(l.gst) : '',      /* never assume a GST rate */
       per: med ? (/^(tab|cap|pcs)$/.test(med.unit) && (l.units_per_pack || 1) > 1 ? 'unit' : 'pack') : 'pack' };
@@ -1086,7 +1092,7 @@ function scanReview(d) {
     var opts = '<option value="">&#10133; New: ' + esc(x.read) + '</option>' + x.cands.map(function (m) { return '<option value="' + m.id + '"' + (m.id === x.match ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
     return '<tr id="sr-' + i + '"><td><input type="checkbox" checked onchange="SCAN[' + i + '].inc=this.checked;scanTotals()" style="width:18px;height:18px"/></td>'
       + '<td><div class="tiny">Read: ' + esc(x.read || '(nothing)') + '</div><select class="finput" style="width:210px;padding:6px" onchange="SCAN[' + i + '].match=this.value;this.nextElementSibling.style.display=this.value?\'none\':\'block\';scanTotals()">' + opts + '</select>'
-      + '<input class="finput" style="width:210px;padding:6px;margin-top:4px;display:' + (x.match ? 'none' : 'block') + '" placeholder="Medicine name (type it if not read)" value="' + esc(x.read || '') + '" oninput="SCAN[' + i + '].read=this.value"/><div id="sg-' + i + '"></div><div id="ss-' + i + '"></div></td>'
+      + '<input class="finput" style="width:210px;padding:6px;margin-top:4px;display:' + (x.match ? 'none' : 'block') + '" placeholder="Medicine name (type it if not read)" value="' + esc(x.read || '') + '" oninput="SCAN[' + i + '].read=this.value"/>' + (x.fix.length ? '<div class="tiny" style="color:var(--amber);font-weight:700;margin-top:4px">&#9888; Put in the right column: ' + esc(x.fix.join(' · ')) + '. Please check.</div>' : '') + '<div id="sg-' + i + '"></div><div id="ss-' + i + '"></div></td>'
       + '<td>' + inp(i, 'batch', 90) + '</td><td>' + inp(i, 'expiry', 82) + '</td><td>' + inp(i, 'qty', 64, 1) + '</td><td>' + inp(i, 'free', 54, 1) + '</td><td>' + inp(i, 'upp', 54, 1) + '</td>'
       + '<td>' + inp(i, 'mrp', 76, 1) + '</td><td>' + inp(i, 'rate', 76, 1) + '</td><td>' + inp(i, 'disc', 56, 1) + '</td>'
       + '<td><select class="finput" data-k="gst" style="width:74px;padding:6px" onchange="SCAN[' + i + '].gst=this.value===\'\'?\'\':Number(this.value);scanTotals()"><option value=""' + (x.gst === '' ? ' selected' : '') + '>?</option>' + [0, 5, 12, 18, 28].map(function (g) { return '<option value="' + g + '"' + (g === x.gst ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td>'
@@ -1098,7 +1104,7 @@ function scanReview(d) {
     + '<div><label class="flbl">Bill no.</label><input class="finput" id="scan-no" value="' + esc(B.no) + '"/></div><div><label class="flbl">Bill date</label><input class="finput" id="scan-date" value="' + esc(B.date) + '" placeholder="DD/MM/YYYY"/></div>'
     + '<div><label class="flbl">Grand total on the bill &#8377;</label><input class="finput" id="scan-billtot" type="number" step="0.01" min="0" value="' + esc(B.total) + '" oninput="scanTotals()"/></div></div>'
     + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th></th><th>Medicine (match to your list)</th><th>Batch</th><th>Expiry MM/YY</th><th>Packs</th><th>Free</th><th>Units / pack</th><th>MRP / pack</th><th>Rate / pack</th><th>Disc %</th><th>GST %</th><th>Sell as</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-    + '<div id="scan-tot" class="card" style="margin-top:10px;padding:10px 12px"></div><div id="scan-gstall"></div>'
+    + '<div id="scan-tot" class="card" style="margin-top:10px;padding:10px 12px"></div><div id="scan-miss"></div><div id="scan-gstall"></div>'
     + '<div id="scan-why-box" style="display:none;margin-top:8px"><label class="flbl">The totals do not match. Why? (needed to continue)</label><input class="finput" id="scan-why" placeholder="e.g. bill has a cash discount / one line is a scheme item / some lines not received"/></div>'
     + '<button class="btn btn-g" style="margin-top:12px" id="scan-go" onclick="scanSave()">&#10003; Add checked lines to stock</button><div class="err" id="scan-err"></div><div id="scan-res"></div>';
   dOpen('m-scan'); scanTotals();
@@ -1144,6 +1150,16 @@ function scanTotals() {
     + '<div class="tiny">' + gd.map(function (x) { var m = MEDMAP[x.match]; return esc(m.name) + ': ' + Number(m.gst_rate) + '% &rarr; <b>' + Number(x.gst) + '%</b>'; }).join(' &middot; ') + '</div>'
     + '<div class="tiny" style="margin-top:4px"><b>' + gd.filter(function (x) { return x.upd; }).length + ' of ' + gd.length + '</b> will be updated to the bill\'s GST when you press <b>Add checked lines to stock</b>, or now: '
     + '<button class="btn btn-sm btn-g" style="margin-left:4px" onclick="scanGstNow()">&#10003; Update GST now</button> &middot; <a href="#" onclick="SCAN.forEach(function(x){x.upd=false});scanTotals();return false">Keep all as saved</a></div></div>' : '';
+  /* a column the bill does not have (or the photo did not show): say so clearly, saving stays blocked until filled */
+  var mb = dEl('scan-miss');
+  if (mb) {
+    var on = SCAN.filter(function (x) { return x.inc; }), need = [['batch', 'Batch'], ['expiry', 'Expiry'], ['qty', 'Quantity'], ['mrp', 'MRP'], ['rate', 'Rate'], ['gst', 'GST %']], msgs = [];
+    need.forEach(function (n) {
+      var miss = on.filter(function (x) { var v = x[n[0]]; return n[0] === 'qty' ? !((Number(x.qty) || 0) + (Number(x.free) || 0) > 0) : (v === '' || v === null || v === undefined || (n[0] === 'mrp' && !(Number(v) > 0))); }).length;
+      if (miss) msgs.push(miss === on.length ? '<b>' + n[1] + '</b> was not found on this bill at all: type it for every line' : '<b>' + n[1] + '</b> is missing on ' + miss + ' line' + (miss === 1 ? '' : 's'));
+    });
+    mb.innerHTML = msgs.length ? '<div class="card" style="margin-top:8px;padding:10px 12px;border-color:var(--red)"><b style="color:var(--red)">&#9888; Some columns are missing</b><div class="tiny" style="margin-top:4px">' + msgs.join('<br>') + '</div><div class="tiny" style="margin-top:4px">Fill the red boxes, or untick a line you do not want. <b>The stock is not saved until every ticked line is complete.</b> Free and Disc % may stay empty.</div></div>' : '';
+  }
   /* red boxes: what is still missing on ticked lines */
   SCAN.forEach(function (x, i) {
     var tr = dEl('sr-' + i); if (!tr) return;
