@@ -62,8 +62,8 @@
       </div>
           <div class="pos-card">
           <div id="pos-walkin" class="grid4" style="margin-bottom:12px">
-        <div><label class="flbl">Customer name *</label><input class="finput" id="c-name" oninput="unlinkIfRenamed(this.value)" placeholder="Walk-in customer"/></div>
-        <div><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" oninput="if(window.deptPhoneInput)deptPhoneInput(this);repeatOffer()"/></div>
+        <div style="position:relative"><label class="flbl">Customer name *</label><input class="finput" id="c-name" oninput="unlinkIfRenamed(this.value);custSuggest('name')" onkeydown="custKey(event,'name')" onblur="custHide('name')" placeholder="Walk-in customer" autocomplete="off"/><div id="c-name-dd" class="dd" style="display:none"></div></div>
+        <div style="position:relative"><label class="flbl">Mobile (for WhatsApp bill)</label><input class="finput" id="c-phone" type="tel" inputmode="numeric" maxlength="16" placeholder="10-digit mobile" autocomplete="off" oninput="if(window.deptPhoneInput)deptPhoneInput(this);repeatOffer();custSuggest('phone')" onkeydown="custKey(event,'phone')" onblur="custHide('phone')"/><div id="c-phone-dd" class="dd" style="display:none"></div></div>
         <div><label class="flbl">Doctor</label><input class="finput" id="c-doctor" placeholder="Prescribed by (optional)"/></div>
         <div style="position:relative"><label class="flbl">UHID (optional)</label><input class="finput" id="c-uhid" placeholder="Link a saved patient" oninput="posPatientSearch(this.value)" autocomplete="off"/><div id="c-uhid-dd" class="dd" style="display:none"></div></div>
       </div>
@@ -1256,6 +1256,52 @@ function cartAdd(id, qty) {
 var RX_PHOTO = ''; /* prescription photo reading removed (Nov 2026); old bills still open their saved photo */
 
 /* the customer's last bill, again */
+/* earlier customers: type 2+ letters of a name or 3+ digits of a mobile, pick one, name + mobile fill in */
+var _custT = null, _custSeq = 0, _custList = [], _custSel = 0;
+function custSuggest(which) {
+  var inp = dEl(which === 'name' ? 'c-name' : 'c-phone'), dd = dEl('c-' + which + '-dd'); if (!inp || !dd) return;
+  var q = String(inp.value || '').trim(), digits = q.replace(/\D/g, '');
+  if (which === 'phone' ? digits.length < 3 : q.length < 2) { dd.style.display = 'none'; return; }
+  clearTimeout(_custT);
+  _custT = setTimeout(async function () {
+    var seq = ++_custSeq;
+    var b = _supa.from('ph_sales').select('patient_name,patient_phone,created_at').eq('clinic_id', _clinicId).eq('kind', 'walkin').order('created_at', { ascending: false }).limit(300);
+    b = which === 'phone' ? b.ilike('patient_phone', '%' + digits + '%') : b.ilike('patient_name', '%' + q.replace(/[%_,()]/g, ' ') + '%');
+    var r; try { r = await b; } catch (e) { return; }
+    if (seq !== _custSeq || r.error) { if (r && r.error) dd.style.display = 'none'; return; }
+    var seen = {}, list = [];
+    (r.data || []).forEach(function (x) {
+      var nm = String(x.patient_name || '').trim(), ph = String(x.patient_phone || '').replace(/\D/g, '').slice(-10);
+      if (!nm && !ph) return; var k = nm.toLowerCase() + '|' + ph; if (seen[k]) { seen[k].n++; return; }
+      seen[k] = { name: nm, phone: ph, last: x.created_at, n: 1 }; list.push(seen[k]);
+    });
+    if (which === 'phone') list.sort(function (a, b) { return (b.phone.indexOf(digits) === 0) - (a.phone.indexOf(digits) === 0); });
+    _custList = list.slice(0, 8); _custSel = 0;
+    if (!_custList.length) { dd.style.display = 'none'; return; }
+    dd.innerHTML = '<div class="tiny" style="padding:6px 12px;color:var(--text-secondary)">Earlier customers &mdash; tap to fill</div>' + _custList.map(function (c, i) {
+      return '<div class="dd-i' + (i === 0 ? ' hl' : '') + '" data-i="' + i + '" onmousedown="event.preventDefault();custPick(' + i + ')"><div style="display:flex;justify-content:space-between;gap:8px"><b>' + esc(c.name || '(no name)') + '</b><span>' + esc(c.phone ? c.phone.slice(0, 5) + ' ' + c.phone.slice(5) : 'no mobile') + '</span></div>'
+        + '<div class="tiny">' + c.n + ' bill' + (c.n === 1 ? '' : 's') + ' &middot; last ' + dDate(c.last) + '</div></div>';
+    }).join('');
+    dd.style.display = 'block';
+  }, 250);
+}
+function custPick(i) {
+  var c = _custList[i]; if (!c) return;
+  dEl('c-name').value = c.name || ''; dEl('c-phone').value = c.phone || '';
+  if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone'));
+  ['name', 'phone'].forEach(function (w) { var d = dEl('c-' + w + '-dd'); if (d) d.style.display = 'none'; });
+  try { unlinkIfRenamed(c.name || ''); } catch (e) {}
+  _repKey = ''; repeatOffer();
+  var m = dEl('m-search'); if (m) m.focus();
+}
+function custKey(e, which) {
+  var dd = dEl('c-' + which + '-dd'); if (!dd || dd.style.display === 'none') return;
+  var items = [].slice.call(dd.querySelectorAll('.dd-i[data-i]')); if (!items.length) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); _custSel = (_custSel + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length; items.forEach(function (x, k) { x.classList.toggle('hl', k === _custSel); }); }
+  else if (e.key === 'Enter') { e.preventDefault(); custPick(_custSel); }
+  else if (e.key === 'Escape') dd.style.display = 'none';
+}
+function custHide(which) { setTimeout(function () { var d = dEl('c-' + which + '-dd'); if (d) d.style.display = 'none'; }, 150); }
 var _repKey = '', _repSale = null;
 async function repeatOffer() {
   var box = dEl('c-repeat'); if (!box || KIND !== 'walkin') return;
