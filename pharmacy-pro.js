@@ -162,12 +162,13 @@ function roRender() {
     h += '<div class="card" style="margin-bottom:12px;padding:12px 14px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>' + esc(gr.sup) + '</b> <span class="tiny">' + gr.idx.length + ' medicine' + (gr.idx.length === 1 ? '' : 's') + '</span>'
       + (wh && wh.length ? '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; On AuraScale as ' + esc(wh[0].name) + ': the order goes straight into their billing</div>' : '') + '</div>'
       + (gr.sup !== 'Supplier not known' ? '<input class="finput" style="width:150px;padding:6px" placeholder="Supplier WhatsApp" value="' + esc(phones[k] || '') + '" onchange="roPhone(' + gi + ',this.value)" type="tel"/>' : '') + '</div>'
-      + '<div style="overflow-x:auto;margin-top:8px"><table class="dt"><thead><tr><th></th><th>Medicine</th><th class="r">In stock</th><th class="r">Sold in 30 days</th><th class="r">Order</th></tr></thead><tbody>'
+      + '<div style="overflow-x:auto;margin-top:8px"><table class="dt"><thead><tr><th></th><th>Medicine</th><th class="r">In stock</th><th class="r">Sold in 30 days</th><th class="r">Order</th><th class="r">Last rate</th></tr></thead><tbody>'
       + gr.idx.map(function (i) { var r = RO.rows[i], m = MEDMAP[r.id]; if (!m) return '';
-        return '<tr><td><input type="checkbox" ' + (r.on ? 'checked' : '') + ' onchange="RO.rows[' + i + '].on=this.checked" style="width:18px;height:18px;appearance:auto"/></td><td><b>' + esc(m.name) + '</b><div class="tiny">' + esc(m.composition || '') + '</div></td>'
+        return '<tr><td><input type="checkbox" ' + (r.on ? 'checked' : '') + ' onchange="RO.rows[' + i + '].on=this.checked;roTotRender(' + gi + ')" style="width:18px;height:18px;appearance:auto"/></td><td><b>' + esc(m.name) + '</b><div class="tiny">' + esc(m.composition || '') + '</div></td>'
           + '<td class="r">' + (m.stock > 0 ? m.stock : '<span class="over">0</span>') + ' <span class="tiny">' + esc(m.unit) + '</span></td><td class="r">' + (RO.sold[m.id] || 0) + '</td>'
-          + '<td class="r"><input class="finput" type="number" min="1" step="1" value="' + esc(r.qty) + '" style="width:80px;text-align:right;padding:6px" oninput="RO.rows[' + i + '].qty=this.value"/><div class="tiny">' + esc(m.unit) + '</div></td></tr>';
+          + '<td class="r"><input class="finput" type="number" min="1" step="1" value="' + esc(r.qty) + '" style="width:80px;text-align:right;padding:6px" oninput="RO.rows[' + i + '].qty=this.value;roTotRender(' + gi + ')"/><div class="tiny">' + esc(m.unit) + '</div></td><td class="r">' + (roRate(m) ? dMoney(roRate(m)) + '<div class="tiny">+' + Number(m.gst_rate || 0) + '% GST</div>' : '<span class="tiny">no rate yet</span>') + '</td></tr>';
       }).join('') + '</tbody></table></div>'
+      + '<div id="ro-tot-' + gi + '" style="margin-top:8px"></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
       + (gr.sup !== 'Supplier not known' ? (wh && wh.length ? '<button class="btn btn-g" onclick="roSendApp(' + gi + ')">&#128640; Send order on AuraScale</button>' : '<button class="btn btn-sm" onclick="roFind(' + gi + ')">&#128269; Is ' + esc(gr.sup) + ' on AuraScale?</button>') : '')
       + '<button class="btn' + (wh && wh.length ? ' btn-sm' : ' btn-g') + '" onclick="roSendWa(' + gi + ')">&#128242; Send on WhatsApp</button><button class="btn btn-sm" onclick="roCopy(' + gi + ')">Copy list</button></div></div>';
@@ -180,6 +181,7 @@ function roRender() {
         + '<td>' + (o.status === 'sent' || o.status === 'seen' ? '<button class="btn btn-sm btn-r" onclick="roCancel(' + A(o.id) + ')">Cancel</button>' : '') + '</td></tr>';
     }).join('') + '</tbody></table></div>';
   root.innerHTML = h;
+  RO.groups.forEach(function (gr, gi) { roTotRender(gi); });
   RO.groups.forEach(function (gr) { var k = roSupKey(gr.sup); if (gr.sup !== 'Supplier not known' && RO.whs[k] === undefined && RO.sent !== null) roAutoFind(gr.sup); });
 }
 async function roAutoFind(sup) {
@@ -201,15 +203,30 @@ async function roFind(gi) {
   RO.whs[k] = r.data; roRender(); phOk('Found on AuraScale', esc(r.data[0].name) + ' can get your orders directly.');
 }
 function roPhone(gi, v, quiet) { var gr = RO.groups[gi], ph1 = ppLS('sup-phones') || {}; ph1[roSupKey(gr.sup)] = String(v || '').trim(); ppLS('sup-phones', ph1); if (!quiet) { RO.whs[roSupKey(gr.sup)] = undefined; roRender(); } }
+/* the last purchase rate of a medicine (per sold unit, before GST), from its newest batch that has one */
+function roRate(m) {
+  var bs = (m.batches || []).filter(function (b) { return Number(b.purchase_rate) > 0; });
+  if (!bs.length) return 0;
+  bs.sort(function (a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); });
+  return Number(bs[0].purchase_rate) || 0;
+}
 function roLines(gi) {
   return RO.groups[gi].idx.map(function (i) { return RO.rows[i]; }).filter(function (r) { return r.on && Number(r.qty) > 0 && MEDMAP[r.id]; })
-    .map(function (r) { var m = MEDMAP[r.id]; return { name: m.name, qty: Number(r.qty), unit: m.unit, composition: m.composition || '' }; });
+    .map(function (r) { var m = MEDMAP[r.id], rate = roRate(m), q = Number(r.qty), g = Number(m.gst_rate) || 0;
+      return { name: m.name, qty: q, unit: m.unit, composition: m.composition || '', rate: rate, gst: g, amount: Math.round(q * rate * (1 + g / 100) * 100) / 100 }; });
 }
+function roTotal(gi) { return Math.round(roLines(gi).reduce(function (a, l) { return a + l.amount; }, 0) * 100) / 100; }
 function roText(gi) {
-  var p = ph(), L = roLines(gi);
-  return 'Order from ' + (p.name || DEPT.clinic.name || '') + (p.dl_no ? ' (DL ' + p.dl_no + ')' : '') + '\nDate: ' + dDate(new Date().toISOString()) + '\n\n'
-    + L.map(function (l, i) { return (i + 1) + '. ' + l.name + ' - ' + l.qty + ' ' + l.unit; }).join('\n') + '\n\nPlease send with the bill. Thank you.';
+  var p = ph(), L = roLines(gi), tot = roTotal(gi), noRate = L.filter(function (l) { return !l.rate; }).length;
+  var shopPh = p.phone || DEPT.clinic.phone || '', no = 'PO-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + ('0' + new Date().getHours()).slice(-2) + ('0' + new Date().getMinutes()).slice(-2);
+  return '*New order - ' + (p.name || DEPT.clinic.name || '') + '*\n'
+    + 'Order no: ' + no + '\nDate: ' + dDate(new Date().toISOString()) + '\n'
+    + (p.dl_no ? 'Drug licence: ' + p.dl_no + '\n' : '') + (p.gstin ? 'GSTIN: ' + p.gstin + '\n' : '') + (shopPh ? 'Shop phone: ' + shopPh + '\n' : '') + '\n'
+    + L.map(function (l, i) { return (i + 1) + '. ' + l.name + ' - ' + l.qty + ' ' + l.unit + (l.rate ? ' x ' + dMoney(l.rate) + (l.gst ? ' +' + l.gst + '% GST' : '') + ' = ' + dMoney(l.amount) : ''); }).join('\n')
+    + '\n\n*Approx. total: ' + dMoney(tot) + '*' + (noRate ? ' (' + noRate + ' item' + (noRate === 1 ? '' : 's') + ' without a past rate not counted)' : '') + '\n(at our last purchase rates, incl. GST)\n\n'
+    + 'Please send with the bill.' + (shopPh ? ' For any question call ' + shopPh + '.' : '') + ' Thank you.';
 }
+function roTotRender(gi) { var el = dEl('ro-tot-' + gi); if (el) el.innerHTML = 'Approx. order value: <b>' + dMoney(roTotal(gi)) + '</b> <span class="tiny">(last purchase rate + GST)</span>'; }
 async function roSendApp(gi) {
   var gr = RO.groups[gi], wh = RO.whs[roSupKey(gr.sup)], L = roLines(gi);
   if (!L.length) { showToast('Tick at least one medicine.'); return; }
@@ -221,7 +238,9 @@ async function roSendApp(gi) {
 }
 function roSendWa(gi) {
   var L = roLines(gi); if (!L.length) { showToast('Tick at least one medicine.'); return; }
-  var gr = RO.groups[gi]; deptWhatsApp((ppLS('sup-phones') || {})[roSupKey(gr.sup)] || '', roText(gi)); roDone(gi);
+  var gr = RO.groups[gi], to = (ppLS('sup-phones') || {})[roSupKey(gr.sup)] || '';
+  if (!to) { showToast('Type ' + gr.sup + '\'s WhatsApp number in the box first, then press Send on WhatsApp.'); return; }
+  deptWhatsApp(to, roText(gi)); roDone(gi);
   setTimeout(function () { phOk('Order ready on WhatsApp', 'Check it and press send in WhatsApp.'); }, 400);
 }
 function roCopy(gi) { var t = roText(gi); try { navigator.clipboard.writeText(t).then(function () { phOk('Order copied', 'Paste it anywhere.'); }, function () { prompt('Copy the order:', t); }); } catch (e) { prompt('Copy the order:', t); } }
