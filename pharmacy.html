@@ -110,7 +110,7 @@
             <div class="tiny" id="s-gst-na" style="text-align:right;margin-top:-2px;display:none">GST not charged (see Settings &rarr; GST registration)</div>
           </div>
           <div class="sum-row big"><span>To pay</span><span id="s-total">₹0</span></div>
-          <div><label class="flbl">Discount %</label><input class="finput" id="c-disc" type="number" min="0" max="100" step="0.5" value="0" oninput="posRender()"/></div>
+          <div><label class="flbl" style="display:flex;justify-content:space-between;align-items:center">Discount % <button type="button" class="btn btn-sm" style="padding:3px 9px" onclick="discOpen()">&#129518; Calculator</button></label><input class="finput" id="c-disc" type="number" min="0" max="100" step="any" value="0" oninput="posRender()"/><div class="tiny" id="c-disc-note"></div></div>
           <div id="pay-box"><label class="flbl">Paid by</label>
             <div class="pay-seg" role="group" aria-label="Paid by">
               <button type="button" data-pay="cash" class="on" onclick="posPay('cash')">Cash</button><button type="button" data-pay="upi" onclick="posPay('upi')">UPI</button><button type="button" data-pay="card" onclick="posPay('card')">Card</button><button type="button" data-pay="credit" onclick="posPay('credit')">Credit</button>
@@ -266,11 +266,25 @@
       </div>
       <button class="btn btn-g" style="margin-top:14px" onclick="setSave()">&#10003; Save details</button>
       <div class="err" id="ps-err"></div>
+
+      <div class="card" id="psig" style="margin-top:18px;padding:14px">
+        <h3 style="font-size:15px;margin-bottom:4px">&#9997;&#65039; Signature &amp; stamp on bills (owner)</h3>
+        <p class="tiny" style="margin-bottom:10px">Printed at the bottom of every bill, above &ldquo;Registered Pharmacist / Authorised Signatory&rdquo;. Sign (and stamp) on plain white paper, take a clear photo from above in good light and choose it here &mdash; the white paper is removed by itself.</p>
+        <div class="grid2">
+          <div><label class="flbl">Name of the person who signs (optional)</label><input class="finput" id="psig-name" maxlength="80" placeholder="e.g. Md. Ahmed (Proprietor)" oninput="psigPreview()"/></div>
+          <div><label class="flbl">Signature or stamp picture (JPG or PNG)</label><input class="finput" type="file" id="psig-file" accept="image/png,image/jpeg" onchange="psigPicked(this)"/></div>
+        </div>
+        <div class="tiny" style="margin:10px 0 4px;font-weight:700">How it will look on the bill</div>
+        <div id="psig-prev" style="border:1px dashed var(--border);border-radius:10px;padding:12px;background:#fff;display:flex;justify-content:flex-end"></div>
+        <div id="psig-msg" class="tiny" style="margin-top:8px;display:none"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-g" id="psig-save" onclick="psigSave()">&#10003; Save signature</button><button class="btn" onclick="psigRemove()">Remove</button></div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- after saving a bill -->
+<div class="modal-bg" id="m-disc"><div class="modal" style="max-width:640px"><div class="modal-h"><span>&#129518; Discount calculator</span><button class="btn btn-sm" onclick="dClose('m-disc')">&times;</button></div><div class="modal-b" id="disc-body"></div></div></div>
 <div class="modal-bg" id="m-done"><div class="modal"><div class="modal-h"><span id="done-title">Bill saved</span><button class="btn btn-sm" onclick="dClose('m-done')">&times;</button></div>
   <div class="modal-b" id="done-body"></div></div></div>
 <!-- scanned bill: check the lines -->
@@ -548,7 +562,7 @@ async function posSave() {
     if (RX_PHOTO) { var rxp = RX_PHOTO; RX_PHOTO = ''; rxSavePhoto(sale, rxp); }
     if (waOk) { var w = await _supa.rpc('ph_set_whatsapp', { p_sale_id: sale.id, p_ok: true, p_refill_days: refill || null }); if (!w.error && w.data) sale = Object.assign(sale, w.data); }
     if (dEl('c-repeat')) dEl('c-repeat').innerHTML = ''; if (dEl('rx-st')) dEl('rx-st').innerHTML = ''; _repKey = '';
-    CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid', 'c-paddr', 'c-daddr', 'c-dreg'].forEach(function (id) { if (dEl(id)) dEl(id).value = ''; }); if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone')); dEl('c-disc').value = 0; dEl('c-refill').value = '0'; dEl('c-wa').checked = true; posPay('cash');
+    CART = []; LINKED = null; ['c-name', 'c-phone', 'c-doctor', 'c-uhid', 'c-paddr', 'c-daddr', 'c-dreg'].forEach(function (id) { if (dEl(id)) dEl(id).value = ''; }); if (window.deptPhoneInput) deptPhoneInput(dEl('c-phone')); dEl('c-disc').value = 0; if (dEl('c-disc-note')) dEl('c-disc-note').textContent = ''; dEl('c-refill').value = '0'; dEl('c-wa').checked = true; posPay('cash');
     posRender(); loadMeds(); if (dEl('pp-subs')) dEl('pp-subs').innerHTML = ''; if (window.refillLoad) refillLoad();
     showDone(sale, true);
   } catch (e) { dShowErr('pos-err', dErr(e)); }
@@ -1080,6 +1094,12 @@ var PH_H1 = ['alprazolam','balofloxacin','buprenorphine','capreomycin','cefdinir
 function phH1Guess(t) { t = String(t || '').toLowerCase(); for (var i = 0; i < PH_H1.length; i++) if (t.indexOf(PH_H1[i]) >= 0) return PH_H1[i]; return ''; }
 function scanReview(d) {
   SCAN_BILL = { supplier: d.supplier || '', gstin: d.supplier_gstin || '', no: d.invoice_no || '', date: d.invoice_date || '', total: d.bill_total != null ? d.bill_total : '' };
+  /* one WhatsApp number for the supplier: from the bill if the reader found any, else the one saved before */
+  try {
+    var sk0 = String(SCAN_BILL.supplier || '').toLowerCase().replace(/[^a-z0-9]/g, ''), saved0 = sk0 && window.ppLS ? ((ppLS('sup-phones') || {})[sk0] || '') : '';
+    var fromBill = window.supBestPhone ? supBestPhone(d.supplier_whatsapp, d.supplier_mobile, d.supplier_phone, d.supplier_phones, d.phone, d.phones, d.mobile, d.contact) : '';
+    SCAN_BILL.phone = String(saved0 || fromBill || '').replace(/\D/g, '').slice(-10); SCAN_BILL.phoneFrom = saved0 ? 'saved' : (fromBill ? 'bill' : '');
+  } catch (e) { SCAN_BILL.phone = ''; }
   var isDate = function (v) { return /^\s*\d{1,2}\s*[\/\-.]\s*\d{2,4}\s*$/.test(String(v || '')); };
   SCAN = d.lines.map(function (l) {
     var c = scanCandidates(l.name);
@@ -1117,6 +1137,7 @@ function scanReview(d) {
     + '<label class="tiny" style="display:flex;gap:6px;align-items:center;margin-left:auto">Lines on the paper bill <input class="finput" id="scan-cnt" type="number" min="0" style="width:70px;padding:6px" value="' + esc(cnt0) + '" oninput="scanCount()"/></label><div id="scan-cnt-msg" style="width:100%"></div></div>'
     + '<div class="note">AI can misread. <b>Check every line against the paper bill</b> (especially batch, expiry and MRP) before adding. Red boxes must be filled.</div>'
     + '<div class="grid4" style="margin-bottom:10px"><div><label class="flbl">Supplier *</label><input class="finput" id="scan-sup" value="' + esc(B.supplier) + '"/>' + (B.gstin ? '<div class="tiny">GSTIN ' + esc(B.gstin) + '</div>' : '') + '</div>'
+    + '<div><label class="flbl">Supplier WhatsApp (for orders)</label><input class="finput" id="scan-sup-ph" type="tel" inputmode="numeric" placeholder="10-digit mobile" value="' + esc(B.phone || '') + '"/><div class="tiny">' + (B.phoneFrom === 'bill' ? 'Read from the bill &mdash; check it' : B.phoneFrom === 'saved' ? 'Saved earlier' : 'Type one mobile number from the bill (only one)') + '</div></div>'
     + '<div><label class="flbl">Bill no.</label><input class="finput" id="scan-no" value="' + esc(B.no) + '"/></div><div><label class="flbl">Bill date</label><input class="finput" id="scan-date" value="' + esc(B.date) + '" placeholder="DD/MM/YYYY"/></div>'
     + '<div><label class="flbl">Grand total on the bill &#8377;</label><input class="finput" id="scan-billtot" type="number" step="0.01" min="0" value="' + esc(B.total) + '" oninput="scanTotals()"/></div></div>'
     + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>Medicine (match to your list)</th><th>Batch</th><th>Expiry MM/YY</th><th>Packs</th><th>Free</th><th>Units / pack</th><th>MRP / pack</th><th>Rate / pack</th><th>Disc %</th><th>GST %</th><th>Schedule</th><th>Sell as</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
@@ -1202,6 +1223,9 @@ function scanDateIso(v) { var m = String(v || '').match(/(\d{1,2})[\/\-.](\d{1,2
 async function scanSave() {
   dShowErr('scan-err', '');
   var sup = dEl('scan-sup').value.trim(), rows = [], bad = [];
+  var sph = dEl('scan-sup-ph') ? (window.supBestPhone ? supBestPhone(dEl('scan-sup-ph').value) : '') : '';
+  if (dEl('scan-sup-ph') && dEl('scan-sup-ph').value.trim() && !sph) { showToast('Supplier WhatsApp: type one 10-digit mobile number, or leave it empty.'); return; }
+  if (sph && sup && window.ppLS) { try { var spk = sup.toLowerCase().replace(/[^a-z0-9]/g, ''); if (window.SUP_NAMES) SUP_NAMES[spk] = sup; var spm = ppLS('sup-phones') || {}; if (spm[spk] !== sph) { spm[spk] = sph; ppLS('sup-phones', spm); } } catch (e) {} }
   SCAN.forEach(function (x, i) {
     if (!x.inc) return;
     if (!x.match && !String(x.read || '').trim()) { bad.push(i + 1); return; }
@@ -1337,6 +1361,136 @@ function custKey(e, which) {
   else if (e.key === 'Escape') dd.style.display = 'none';
 }
 function custHide(which) { setTimeout(function () { var d = dEl('c-' + which + '-dd'); if (d) d.style.display = 'none'; }, 150); }
+
+/* ---- signature & stamp on pharmacy bills (owner): picture -> transparent PNG -> bills/<clinic>/branding/ ---- */
+var _psBlob = null, _psPath = '', _psShown = '';
+function psigMsg(t, ok) { var m = dEl('psig-msg'); if (!m) return; m.textContent = t || ''; m.style.color = ok ? 'var(--green)' : 'var(--red)'; m.style.display = t ? 'block' : 'none'; }
+function psigPreview() {
+  var box = dEl('psig-prev'); if (!box) return; var s = ph(), nm = (dEl('psig-name').value || '').trim();
+  box.innerHTML = '<div style="width:230px;text-align:center;font-size:11px;color:#4a5b53">For ' + esc(s.name || DEPT.clinic.name || 'your pharmacy')
+    + (_psShown ? '<img src="' + _psShown + '" alt="" style="max-width:200px;max-height:70px;display:block;margin:4px auto 2px">' : '<div style="height:56px;display:flex;align-items:center;justify-content:center;color:#a1a8a4">No signature yet</div>')
+    + '<div style="border-top:1px solid #14201b;padding-top:4px;color:#14201b;font-weight:600">' + (s.pharmacist ? 'Registered Pharmacist' : 'Authorised Signatory') + '</div>' + (nm ? '<div>' + esc(nm) + '</div>' : '') + '</div>';
+}
+async function psigLoad() {
+  if (!dEl('psig')) return;
+  dEl('psig').style.display = DEPT.role === 'owner' ? 'block' : 'none';
+  _psBlob = null; psigMsg(''); _psPath = DEPT.clinic.bill_sign_path || ''; dEl('psig-name').value = DEPT.clinic.bill_signatory || '';
+  _psShown = _psPath ? await deptSignature() : ''; psigPreview();
+}
+function psigPicked(input) {
+  var f = input.files && input.files[0]; psigMsg(''); if (!f) return;
+  if (!/^image\/(png|jpe?g)$/i.test(f.type)) { psigMsg('Choose a JPG or PNG picture.'); input.value = ''; return; }
+  if (f.size > 8 * 1024 * 1024) { psigMsg('This picture is too big. Choose one smaller than 8 MB.'); input.value = ''; return; }
+  var url = URL.createObjectURL(f), img = new Image();
+  img.onload = function () {
+    var sc = Math.min(1, 900 / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * sc)), h = Math.max(1, Math.round(img.height * sc));
+    var c = document.createElement('canvas'); c.width = w; c.height = h; var x = c.getContext('2d'); x.drawImage(img, 0, 0, w, h);
+    var d = x.getImageData(0, 0, w, h), p = d.data, minX = w, minY = h, maxX = -1, maxY = -1;
+    for (var i = 0; i < p.length; i += 4) {
+      var lum = 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2];
+      if (lum > 185) p[i + 3] = 0; else if (lum > 150) p[i + 3] = Math.round(p[i + 3] * (185 - lum) / 35);
+      if (p[i + 3] > 40) { var k = i / 4, px = k % w, py = (k - px) / w; if (px < minX) minX = px; if (px > maxX) maxX = px; if (py < minY) minY = py; if (py > maxY) maxY = py; }
+    }
+    x.putImageData(d, 0, 0); URL.revokeObjectURL(url);
+    if (maxX < 0) { psigMsg('No signature found in this picture. Sign darker on white paper and try again.'); return; }
+    var pad = 6; minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad); maxX = Math.min(w - 1, maxX + pad); maxY = Math.min(h - 1, maxY + pad);
+    var cw = maxX - minX + 1, ch = maxY - minY + 1, o = document.createElement('canvas'); o.width = cw; o.height = ch;
+    o.getContext('2d').drawImage(c, minX, minY, cw, ch, 0, 0, cw, ch);
+    o.toBlob(function (b) { _psBlob = b; _psShown = o.toDataURL('image/png'); psigPreview(); }, 'image/png');
+  };
+  img.onerror = function () { psigMsg('This picture could not be opened.'); };
+  img.src = url;
+}
+async function psigSave() {
+  var btn = dEl('psig-save'), name = (dEl('psig-name').value || '').trim(); psigMsg(''); btn.disabled = true;
+  try {
+    var path = _psPath;
+    if (_psBlob) {
+      path = _clinicId + '/branding/signature-' + Date.now() + '.png';
+      var up = await _supa.storage.from('bills').upload(path, _psBlob, { contentType: 'image/png', upsert: true, cacheControl: '3600' });
+      if (up.error) throw up.error;
+    }
+    var r = await _supa.rpc('ph_set_bill_signature', { p_clinic_id: _clinicId, p_path: path || null, p_name: name });
+    if (r.error) throw r.error;
+    if (_psBlob && _psPath && _psPath !== path) { try { await _supa.storage.from('bills').remove([_psPath]); } catch (e) {} }
+    DEPT.clinic.bill_sign_path = path || null; DEPT.clinic.bill_signatory = name; _psPath = path; _psBlob = null; _deptSign = undefined; dEl('psig-file').value = '';
+    psigMsg('Saved. It will appear on the next bills.', true);
+  } catch (e) {
+    var m = (e && e.message) || String(e);
+    psigMsg(/ph_set_bill_signature|schema cache|does not exist/i.test(m) ? 'One database update (file 67) is needed first. Ask AuraScale support.' : 'Not saved: ' + m);
+  }
+  btn.disabled = false;
+}
+async function psigRemove() {
+  psigMsg('');
+  try {
+    var r = await _supa.rpc('ph_set_bill_signature', { p_clinic_id: _clinicId, p_path: null, p_name: (dEl('psig-name').value || '').trim() });
+    if (r.error) throw r.error;
+    if (_psPath) { try { await _supa.storage.from('bills').remove([_psPath]); } catch (e) {} }
+    DEPT.clinic.bill_sign_path = null; _psPath = ''; _psBlob = null; _psShown = ''; _deptSign = undefined; dEl('psig-file').value = ''; psigPreview();
+    psigMsg('Removed. Bills will have an empty space to sign by hand.', true);
+  } catch (e) { psigMsg('Not removed: ' + ((e && e.message) || e)); }
+}
+
+/* ---- discount calculator: % on the bill, rupees off, "customer pays", or a % per medicine.
+   The bill keeps ONE discount %, so the result is turned into the matching bill %. ---- */
+var DISC = { mode: 'pct', v: '', per: {} };
+function discBase() {
+  var mrp = 0, cost = 0, lines = [];
+  CART.forEach(function (c) {
+    var m = MEDMAP[c.medicine_id]; if (!m || !(c.qty > 0)) return; var g = 0, k = 0;
+    allocate(m, c.qty).forEach(function (l) { g += l.q * Number(l.b.mrp || 0); k += l.q * Number(l.b.purchase_rate || 0); });
+    g = Math.round(g * 100) / 100; mrp += g; cost += k; lines.push({ id: c.medicine_id, name: m.name, qty: c.qty, unit: m.unit, mrp: g, cost: k });
+  });
+  return { mrp: Math.round(mrp * 100) / 100, cost: Math.round(cost * 100) / 100, lines: lines };
+}
+function discOpen() {
+  if (KIND === 'ipd') { showToast('No discount on medicines issued to admitted patients.'); return; }
+  var B = discBase(); if (!B.lines.length) { showToast('Add medicines to the bill first.'); return; }
+  DISC.v = ''; DISC.per = {}; discDraw(); dOpen('m-disc');
+}
+function discMode(m) { DISC.mode = m; DISC.v = ''; discDraw(); }
+function discDraw() {
+  var B = discBase(), md = DISC.mode;
+  var tabs = [['pct', '% off bill'], ['rs', '&#8377; off'], ['pay', 'Customer pays'], ['per', '% per medicine']].map(function (t) {
+    return '<button type="button" class="btn btn-sm' + (md === t[0] ? ' btn-g' : '') + '" onclick="discMode(\'' + t[0] + '\')">' + t[1] + '</button>'; }).join('');
+  var inp = '';
+  if (md === 'pct') inp = '<label class="flbl">Discount on the whole bill (%)</label><input class="finput" id="disc-in" type="number" min="0" max="100" step="any" value="' + esc(DISC.v) + '" oninput="DISC.v=this.value;discShow()" placeholder="e.g. 10"/>';
+  if (md === 'rs') inp = '<label class="flbl">Rupees off the whole bill (&#8377;)</label><input class="finput" id="disc-in" type="number" min="0" step="any" value="' + esc(DISC.v) + '" oninput="DISC.v=this.value;discShow()" placeholder="e.g. 50"/>';
+  if (md === 'pay') inp = '<label class="flbl">The customer will pay (&#8377;, final amount)</label><input class="finput" id="disc-in" type="number" min="0" step="any" value="' + esc(DISC.v) + '" oninput="DISC.v=this.value;discShow()" placeholder="e.g. ' + Math.floor(B.mrp / 10) * 10 + '"/>';
+  if (md === 'per') inp = '<div style="overflow-x:auto"><table class="dt"><thead><tr><th>Medicine</th><th class="r">MRP amount</th><th class="r">Discount %</th><th class="r">Off</th></tr></thead><tbody>'
+    + B.lines.map(function (l) { return '<tr><td><b>' + esc(l.name) + '</b><div class="tiny">' + l.qty + ' ' + esc(l.unit) + '</div></td><td class="r">' + dMoney(l.mrp) + '</td><td class="r"><input class="finput" type="number" min="0" max="100" step="any" style="width:80px;text-align:right;padding:6px" value="' + esc(DISC.per[l.id] || '') + '" oninput="DISC.per[\'' + l.id + '\']=this.value;discShow()" placeholder="0"/></td><td class="r" id="disc-off-' + l.id + '">-</td></tr>'; }).join('')
+    + '</tbody></table></div><div class="tiny" style="margin-top:4px">The bill shows one discount % for all medicines; the total comes out the same.</div>';
+  dEl('disc-body').innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">' + tabs + '</div>' + inp
+    + '<div id="disc-res" class="card" style="margin-top:12px;padding:12px"></div>'
+    + '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-g" onclick="discApply()">&#10003; Apply to the bill</button><button class="btn" onclick="dClose(\'m-disc\')">Cancel</button></div>';
+  discShow(); var i = dEl('disc-in'); if (i) setTimeout(function () { i.focus(); }, 30);
+}
+function discCalc() {
+  var B = discBase(), md = DISC.mode, v = Number(DISC.v) || 0, off = 0;
+  if (md === 'pct') off = B.mrp * Math.min(Math.max(v, 0), 100) / 100;
+  if (md === 'rs') off = Math.min(Math.max(v, 0), B.mrp);
+  if (md === 'pay') off = DISC.v === '' ? 0 : Math.min(Math.max(B.mrp - v, 0), B.mrp);
+  if (md === 'per') B.lines.forEach(function (l) { var p1 = Math.min(Math.max(Number(DISC.per[l.id]) || 0, 0), 100), o = l.mrp * p1 / 100; off += o; var e = dEl('disc-off-' + l.id); if (e) e.textContent = o ? '-' + dMoney(o) : '-'; });
+  var pct = B.mrp ? Math.round(off / B.mrp * 10000) / 100 : 0;
+  return { B: B, off: B.mrp * pct / 100, pct: pct, pay: B.mrp - B.mrp * pct / 100 };
+}
+function discShow() {
+  var r = discCalc(), box = dEl('disc-res'); if (!box) return;
+  var profit = r.pay - r.B.cost, hasCost = r.B.cost > 0;
+  box.innerHTML = '<div class="sum-row"><span>MRP total</span><span>' + dMoney(r.B.mrp) + '</span></div>'
+    + '<div class="sum-row"><span>Discount (' + r.pct + '%)</span><span>-' + dMoney(r.off) + '</span></div>'
+    + '<div class="sum-row big"><span>Customer pays</span><span>' + dMoney(Math.round(r.pay)) + '</span></div>'
+    + (hasCost ? '<div class="sum-row"><span class="tiny">Your purchase cost</span><span class="tiny">' + dMoney(r.B.cost) + '</span></div>'
+      + '<div class="sum-row"><span class="tiny">Your profit on this bill (approx.)</span><span class="tiny" style="font-weight:700;color:' + (profit < 0 ? 'var(--red)' : 'var(--green)') + '">' + (profit < 0 ? '-' : '') + dMoney(Math.abs(profit)) + '</span></div>'
+      + (profit < 0 ? '<div style="color:var(--red);font-weight:700;margin-top:6px">&#9888; This discount is more than your profit &mdash; you will sell below cost.</div>' : '') : '');
+}
+function discApply() {
+  var r = discCalc();
+  dEl('c-disc').value = r.pct; posRender();
+  var n = dEl('c-disc-note'); if (n) n.textContent = r.pct ? 'Discount ' + dMoney(r.off) + ' (' + r.pct + '%)' : '';
+  dClose('m-disc');
+}
 var _repKey = '', _repSale = null;
 async function repeatOffer() {
   var box = dEl('c-repeat'); if (!box || KIND !== 'walkin') return;
@@ -1413,6 +1567,7 @@ function onTab_help() {
   document.head.appendChild(s);
 }
 function onTab_settings() {
+  try { psigLoad(); } catch (e) {}
   var s = ph();
   dEl('ps-name').value = s.name || DEPT.clinic.name || ''; dEl('ps-phone').value = s.phone || DEPT.clinic.phone || ''; dEl('ps-address').value = s.address || DEPT.clinic.address || '';
   dEl('ps-mode').value = s.gst_mode || 'none'; dEl('ps-gstin').value = s.gstin || ''; dEl('ps-dl').value = s.dl_no || ''; dEl('ps-pharmacist').value = s.pharmacist || ''; dEl('ps-footer').value = s.footer || '';
@@ -1460,7 +1615,7 @@ function unlinkIfRenamed(v) {
 
 init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
-<script src="pharmacy-pro.js?v=7"></script>
+<script src="pharmacy-pro.js?v=8"></script>
 <script src="aura-docs.js?v=1"></script>
 <script src="aura-scan-pages.js?v=2"></script>
 <script src="aura-drop.js?v=1"></script>
