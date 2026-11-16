@@ -402,7 +402,24 @@ function medStatus(md) {
   if (!md.is_active) t.push('<span class="tag">Hidden</span>');
   return t.join(' ') || '<span class="tag t-g">OK</span>';
 }
-function matchMed(md, q) { q = q.toLowerCase(); return (md.name || '').toLowerCase().indexOf(q) >= 0 || (md.composition || '').toLowerCase().indexOf(q) >= 0; }
+/* medicine search: first letters count most. "asc" finds Ascoril first, then words starting with it, then the salt, then anywhere.
+   Spaces and dots are ignored ("para 650" finds Paracetamol 650). */
+function medScore(md, q) {
+  q = String(q || '').toLowerCase().trim(); if (!q) return 9;
+  var n = String(md.name || '').toLowerCase(), c = String(md.composition || '').toLowerCase(), nq = q.replace(/[\s.\-]/g, ''), nn = n.replace(/[\s.\-]/g, '');
+  if (n.indexOf(q) === 0 || nn.indexOf(nq) === 0) return 0;
+  if ((' ' + n).indexOf(' ' + q) >= 0) return 1;
+  var words = q.split(/\s+/); if (words.length > 1 && words.every(function (w) { return n.indexOf(w) >= 0 || c.indexOf(w) >= 0; })) return 2;
+  if (c.indexOf(q) === 0 || (' ' + c).indexOf(' ' + q) >= 0) return 3;
+  if (n.indexOf(q) >= 0 || nn.indexOf(nq) >= 0) return 4;
+  if (c.indexOf(q) >= 0) return 5;
+  return 9;
+}
+function matchMed(md, q) { return medScore(md, q) < 9; }
+function medFind(q, filter, max) {
+  return MEDS.filter(function (m) { return (!filter || filter(m)) && medScore(m, q) < 9; })
+    .sort(function (a, b) { return medScore(a, q) - medScore(b, q) || (b.stock > 0) - (a.stock > 0) || String(a.name).localeCompare(String(b.name)); }).slice(0, max || 12);
+}
 
 /* ---------------- POS ---------------- */
 function posKind(k) {
@@ -421,8 +438,8 @@ function posKind(k) {
 var _ddSel = 0;
 function posSearch() {
   var q = dEl('m-search').value.trim(), dd = dEl('m-dd');
-  if (q.length < 2) { dd.style.display = 'none'; return; }
-  var list = MEDS.filter(function (m) { return m.is_active && matchMed(m, q); }).sort(function (a, b) { return (b.stock > 0) - (a.stock > 0); }).slice(0, 12);
+  if (q.length < 1) { dd.style.display = 'none'; return; }
+  var list = medFind(q, function (m) { return m.is_active; }, 12);
   _ddSel = 0;
   dd.innerHTML = list.length ? list.map(function (m, i) {
     return '<div class="dd-i' + (i === 0 ? ' hl' : '') + '" data-id="' + m.id + '" onclick="posAdd(\'' + m.id + '\')"><div style="display:flex;justify-content:space-between;gap:8px"><b>' + esc(m.name) + '</b><span>' + (m.next ? dMoney(m.next.mrp) + '/' + esc(m.unit) : '') + '</span></div>'
@@ -845,8 +862,8 @@ function asPick(k) {
 document.addEventListener('DOMContentLoaded', function () { setTimeout(asInit, 0); });
 function rcvSearch() {
   var q = dEl('r-med').value.trim(), dd = dEl('r-dd'); RCV_MED = null; dEl('r-new').style.display = 'none'; dEl('r-picked').textContent = '';
-  if (q.length < 2) { dd.style.display = 'none'; return; }
-  var list = MEDS.filter(function (m) { return matchMed(m, q); }).slice(0, 10);
+  if (q.length < 1) { dd.style.display = 'none'; return; }
+  var list = medFind(q, null, 10);
   var exact = MEDS.some(function (m) { return m.name.toLowerCase() === q.toLowerCase(); });
   dd.innerHTML = list.map(function (m) { return '<div class="dd-i" onclick="rcvPick(\'' + m.id + '\')"><b>' + esc(m.name) + '</b> <span class="tiny">' + esc(m.composition || '') + ' &middot; ' + m.stock + ' ' + esc(m.unit) + ' in stock</span></div>'; }).join('')
     + (exact ? '' : '<div class="dd-i" style="color:var(--green);font-weight:700" onclick="rcvNew()">&#10133; New medicine: &ldquo;' + esc(q) + '&rdquo;</div>');
@@ -1615,7 +1632,7 @@ function unlinkIfRenamed(v) {
 
 init().then(function () { var b = dEl('pos-bottom'); if (b) b.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : 'minmax(0,1fr) 340px'; });
 </script>
-<script src="pharmacy-pro.js?v=8"></script>
+<script src="pharmacy-pro.js?v=9"></script>
 <script src="aura-docs.js?v=1"></script>
 <script src="aura-scan-pages.js?v=2"></script>
 <script src="aura-drop.js?v=1"></script>
