@@ -40,7 +40,47 @@ function ppModal(id, title, wide) {
   d.innerHTML = '<div class="modal" style="max-width:' + (wide || 900) + 'px"><div class="modal-h"><span id="' + id + '-t">' + esc(title) + '</span><button class="btn btn-sm" onclick="dClose(\'' + id + '\')">&times;</button></div><div class="modal-b" id="' + id + '-b"></div></div>';
   document.body.appendChild(d);
 }
-function ppLS(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('aura-ph-' + _clinicId + '-' + k) || 'null'); localStorage.setItem('aura-ph-' + _clinicId + '-' + k, JSON.stringify(v)); } catch (e) { return null; } }
+function ppLS(k, v) {
+  try {
+    if (v === undefined) return JSON.parse(localStorage.getItem('aura-ph-' + _clinicId + '-' + k) || 'null');
+    if (k === 'sup-phones') supPushChanges(JSON.parse(localStorage.getItem('aura-ph-' + _clinicId + '-' + k) || 'null') || {}, v || {});
+    localStorage.setItem('aura-ph-' + _clinicId + '-' + k, JSON.stringify(v));
+  } catch (e) { return null; }
+}
+/* supplier WhatsApp numbers: kept in the database (SQL 66) so every phone and computer of the shop sees them;
+   the browser copy is only a cache. Works without SQL 66 too (then only on this device). */
+var SUP_NAMES = {}, _supSynced = false;
+function supPushChanges(oldM, newM) {
+  if (!window._supa || !_clinicId) return;
+  Object.keys(newM).forEach(function (k) {
+    var a = String(oldM[k] || '').replace(/\D/g, '').slice(-10), b = String(newM[k] || '').replace(/\D/g, '').slice(-10);
+    if (a === b) return;
+    _supa.rpc('ph_supplier_set', { p_clinic_id: _clinicId, p_key: k, p_name: SUP_NAMES[k] || '', p_phone: b }).then(function (r) { if (r && r.error && !/does not exist|schema cache/i.test(r.error.message || '')) showToast('Supplier number not saved: ' + r.error.message); });
+  });
+}
+async function supSync(force) {
+  if (_supSynced && !force) return; _supSynced = true;
+  try {
+    var r = await _supa.rpc('ph_supplier_list', { p_clinic_id: _clinicId }); if (r.error || !r.data) return;
+    var m = JSON.parse(localStorage.getItem('aura-ph-' + _clinicId + '-sup-phones') || 'null') || {}, ch = false;
+    r.data.forEach(function (x) { if (x.phone && m[x.key] !== x.phone) { m[x.key] = x.phone; ch = true; } if (x.name) SUP_NAMES[x.key] = x.name; });
+    if (ch) localStorage.setItem('aura-ph-' + _clinicId + '-sup-phones', JSON.stringify(m));
+  } catch (e) {}
+}
+/* the best single WhatsApp number from whatever the bill photo gave (several numbers, landlines, +91 ...) */
+function supBestPhone() {
+  var all = [];
+  [].slice.call(arguments).forEach(function (v) { (Array.isArray(v) ? v : [v]).forEach(function (x) { if (x) all.push(String(x)); }); });
+  var c = [];
+  all.join(' , ').split(/[,;\/|]|\s{2,}/).forEach(function (part) {
+    var d = part.replace(/\D/g, '');
+    if (d.length === 12 && d.indexOf('91') === 0) d = d.slice(2);
+    if (d.length === 11 && d[0] === '0') d = d.slice(1);
+    if (/^[6-9]\d{9}$/.test(d)) c.push(d);
+  });
+  if (!c.length) { var m = all.join(' ').replace(/[^\d+ ]/g, ' ').match(/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}/); if (m) { var d2 = m[0].replace(/\D/g, ''); c.push(d2.slice(-10)); } }
+  return c[0] || '';
+}
 function ppMissing(e) { return /PGRST202|Could not find the function|does not exist|schema cache/i.test(String((e && (e.message || e.code)) || e)); }
 
 /* =================================================================== 2. SUBSTITUTES (same salt, in stock) */
@@ -114,7 +154,7 @@ function ppRefillFromRx(days) {
 
 /* =================================================================== 1. RE-ORDER */
 var RO = { rows: [], groups: [], sold: {}, sup: {}, gst: {}, sent: [], whs: {} };
-function onTab_order() { roLoad(); }
+function onTab_order() { supSync(true).then(function () { try { if (RO.rows && RO.rows.length) roRender(); } catch (e) {} }); roLoad(); }
 async function roLoad() {
   var root = dEl('ro-root'); if (!root) return;
   root.innerHTML = '<div class="tiny">Working out what is running out&hellip;</div>';
@@ -158,10 +198,10 @@ function roRender() {
     + '<div style="position:relative;max-width:460px;margin-bottom:12px"><input class="finput" id="ro-q" placeholder="Add another medicine to the order&hellip;" oninput="roSearch()" autocomplete="off"/><div id="ro-dd" class="dd" style="display:none"></div></div>';
   if (!RO.rows.length) h += '<div class="card" style="text-align:center;padding:24px"><div style="font-size:30px">&#9989;</div><b>Nothing is running out.</b><div class="tiny">Set a <b>low-stock level</b> on a medicine (Stock &rarr; Open &rarr; Edit) to be warned earlier.</div></div>';
   RO.groups.forEach(function (gr, gi) {
-    var k = roSupKey(gr.sup), wh = RO.whs[k];
+    var k = roSupKey(gr.sup), wh = RO.whs[k]; SUP_NAMES[k] = gr.sup;
     h += '<div class="card" style="margin-bottom:12px;padding:12px 14px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>' + esc(gr.sup) + '</b> <span class="tiny">' + gr.idx.length + ' medicine' + (gr.idx.length === 1 ? '' : 's') + '</span>'
       + (wh && wh.length ? '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; On AuraScale as ' + esc(wh[0].name) + ': the order goes straight into their billing</div>' : '') + '</div>'
-      + (gr.sup !== 'Supplier not known' ? '<input class="finput" style="width:150px;padding:6px" placeholder="Supplier WhatsApp" value="' + esc(phones[k] || '') + '" onchange="roPhone(' + gi + ',this.value)" type="tel"/>' : '') + '</div>'
+      + (gr.sup !== 'Supplier not known' ? '<div style="text-align:right"><label class="tiny" style="display:block;font-weight:700">' + (phones[k] ? '&#128222; Supplier WhatsApp' : '<span style="color:var(--red)">&#9888; Add supplier WhatsApp</span>') + '</label><input class="finput" style="width:160px;padding:6px;font-weight:700' + (phones[k] ? '' : ';border-color:var(--red)') + '" placeholder="10-digit mobile" value="' + esc(phones[k] ? String(phones[k]).replace(/\D/g, '').slice(-10).replace(/^(\d{5})/, '$1 ') : '') + '" onchange="roPhone(' + gi + ',this.value)" type="tel" inputmode="numeric"/></div>' : '') + '</div>'
       + '<div class="tiny" style="margin-top:6px;color:var(--amber);font-weight:700">&#9888; Check the GST % of each medicine before sending (change it in the list if the supplier\'s bill shows another rate).</div>'
       + '<div style="overflow-x:auto;margin-top:8px"><table class="dt"><thead><tr><th></th><th>Medicine</th><th class="r">In stock</th><th class="r">Sold in 30 days</th><th class="r">Order</th><th class="r">Last rate</th><th class="r">GST %</th></tr></thead><tbody>'
       + gr.idx.map(function (i) { var r = RO.rows[i], m = MEDMAP[r.id]; if (!m) return '';
@@ -173,8 +213,9 @@ function roRender() {
       + '<div id="ro-tot-' + gi + '" style="margin-top:8px"></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
       + (gr.sup !== 'Supplier not known' ? (wh && wh.length ? '<button class="btn btn-g" onclick="roSendApp(' + gi + ')">&#128640; Send order on AuraScale</button>' : '<button class="btn btn-sm" onclick="roFind(' + gi + ')">&#128269; Is ' + esc(gr.sup) + ' on AuraScale?</button>') : '')
-      + (gr.sup !== 'Supplier not known' ? '<button class="btn' + (wh && wh.length ? ' btn-sm' : ' btn-g') + '" id="ro-pdf-' + gi + '" onclick="roSendPdf(' + gi + ')">&#128228; Send PDF order (automatic)</button>' : '')
-      + '<button class="btn btn-sm" onclick="roSendWa(' + gi + ')">&#128242; Send from my WhatsApp</button><button class="btn btn-sm" onclick="roCopy(' + gi + ')">Copy list</button></div></div>';
+      + (gr.sup !== 'Supplier not known' ? '<button class="btn' + (wh && wh.length ? '' : ' btn-g') + '" id="ro-pdf-' + gi + '" onclick="roSendPdf(' + gi + ')" style="font-weight:800">&#128228; Send order on WhatsApp</button>' : '<span class="tiny" style="align-self:center">Set the supplier on these medicines (Stock &rarr; Open) to send an order.</span>')
+      + '<button class="btn btn-sm" onclick="roCopy(' + gi + ')">Copy list</button></div>'
+      + (gr.sup !== 'Supplier not known' ? '<div class="tiny" style="margin-top:6px">One tap: the order PDF goes straight to the supplier\'s WhatsApp from the AuraScale number. Nothing opens.</div>' : '') + '</div>';
   });
   if (RO.sent === null) h += '<p class="tiny">Sending orders inside AuraScale needs the database update (file 31). WhatsApp works now.</p>';
   else if (RO.sent.length) h += '<h3 style="font-size:15px;margin:16px 0 6px">Orders sent on AuraScale</h3><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Order</th><th>Wholesaler</th><th>Medicines</th><th>Status</th><th></th></tr></thead><tbody>'
@@ -282,14 +323,15 @@ async function roSendPdf(gi) {
     var r = await _supa.functions.invoke('pharmacy-order-send', { body: { clinic_id: _clinicId, supplier: { name: gr.sup, phone: to }, lines: L.map(function (l) { return { name: l.name, qty: l.qty, unit: l.unit, rate: l.rate, gst: l.gst }; }) } });
     var d = r.data;
     if (r.error && r.error.context && r.error.context.json) { try { d = await r.error.context.json(); } catch (e) {} }
+    if (r.error && !d && /not found|404|Failed to send/i.test(String(r.error.message || '') + String(r.error.context && r.error.context.status || ''))) { showToast('Automatic sending is not switched on yet (function pharmacy-order-send). Ask AuraScale support (80174 65987), or use "Copy list" for now.'); return; }
     if (!d || !d.ok) {
-      var why = d && d.reason, msg = { shop_phone_missing: 'Add the shop phone in Settings first (the supplier calls it).', supplier_whatsapp_wrong: 'The supplier WhatsApp number is not right.', daily_limit: 'Too many orders today. Use "Send from my WhatsApp".', run_sql_65_first: 'The database update (file 65) is not run yet.', make_did_not_accept: 'WhatsApp sending is off right now. Use "Send from my WhatsApp".', webhook_not_configured: 'WhatsApp sending is not set up yet.' }[why];
+      var why = d && d.reason, msg = { shop_phone_missing: 'Add the shop phone in Settings first (the supplier calls it).', supplier_whatsapp_wrong: 'The supplier WhatsApp number is not right.', daily_limit: 'Too many orders today. Use "Copy list" for now.', run_sql_65_first: 'The database update (file 65) is not run yet.', make_did_not_accept: 'WhatsApp sending is off right now. Use "Copy list" for now.', webhook_not_configured: 'WhatsApp sending is not set up yet.' }[why];
       showToast(msg || ('Not sent: ' + ((d && (d.message || d.reason)) || (r.error && r.error.message) || 'try again')));
       return;
     }
     roDone(gi); phOk('Order ' + esc(d.order_no) + ' sent', 'The PDF is going to ' + esc(gr.sup) + ' on WhatsApp (' + esc(d.sent_to) + ').', 2600);
   } catch (e) { showToast('Not sent: ' + (e && e.message || e)); }
-  finally { if (btn) { btn.disabled = false; btn.innerHTML = '&#128228; Send PDF order (automatic)'; } }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = '&#128228; Send order on WhatsApp'; } }
 }
 function roCopy(gi) { var t = roText(gi); try { navigator.clipboard.writeText(t).then(function () { phOk('Order copied', 'Paste it anywhere.'); }, function () { prompt('Copy the order:', t); }); } catch (e) { prompt('Copy the order:', t); } }
 function roDone(gi) { var ex = ppLS('ro-extra') || {}; RO.groups[gi].idx.forEach(function (i) { delete ex[RO.rows[i].id]; }); ppLS('ro-extra', ex); }
