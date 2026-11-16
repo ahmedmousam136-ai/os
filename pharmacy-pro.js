@@ -185,49 +185,109 @@ async function roLoad() {
   try { var r = await _supa.rpc('aura_orders_sent', { p_from: _clinicId }); RO.sent = r.error ? null : (r.data || []); } catch (e) { RO.sent = null; }
   roRender();
 }
-function roGroups() {
-  var g = {}; RO.rows.forEach(function (r, i) { (g[r.supplier] = g[r.supplier] || []).push(i); });
-  return Object.keys(g).sort(function (a, b) { return (a === 'Supplier not known') - (b === 'Supplier not known') || a.localeCompare(b); }).map(function (k) { return { sup: k, idx: g[k] }; });
-}
+/* one list, one supplier: every medicine to order stays in one list (no grouping by supplier).
+   The supplier and their WhatsApp number are chosen once at the top. */
+function roGroups() { return [{ sup: RO.pick || '', idx: RO.rows.map(function (r, i) { return i; }) }]; }
 function roSupKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function roPh10(v) { var d = String(v || '').replace(/\D/g, ''); if (d.length === 12 && d.indexOf('91') === 0) d = d.slice(2); if (d.length === 11 && d[0] === '0') d = d.slice(1); return d.slice(-10); }
+/* every supplier the shop knows: from stock (last supplier of each medicine), saved numbers and scanned bills */
+function roSupList() {
+  var by = {}, add = function (name, k) { name = String(name || '').trim(); k = k || roSupKey(name); if (!k || k === 'suppliernotknown') return; if (!by[k]) by[k] = { k: k, name: name || SUP_NAMES[k] || k, phone: '' }; else if (name && by[k].name === k) by[k].name = name; };
+  Object.keys(RO.sup || {}).forEach(function (id) { add(RO.sup[id]); });
+  Object.keys(SUP_NAMES).forEach(function (k) { add(SUP_NAMES[k], k); });
+  var ph1 = ppLS('sup-phones') || {}; Object.keys(ph1).forEach(function (k) { add(SUP_NAMES[k] || '', k); if (by[k]) by[k].phone = roPh10(ph1[k]); });
+  return Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+}
 function roRender() {
   var root = dEl('ro-root'); RO.groups = roGroups();
-  var phones = ppLS('sup-phones') || {};
+  if (RO.pick === undefined) {   /* start with the supplier most of these medicines came from */
+    var cnt = {}; RO.rows.forEach(function (r) { if (r.supplier && r.supplier !== 'Supplier not known') cnt[r.supplier] = (cnt[r.supplier] || 0) + 1; });
+    RO.pick = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; })[0] || '';
+    RO.phone = roPh10((ppLS('sup-phones') || {})[roSupKey(RO.pick)] || '');
+  }
+  var k = roSupKey(RO.pick), wh = RO.whs[k];
+  RO.rows.sort(function (a, b) { var ma = MEDMAP[a.id], mb = MEDMAP[b.id]; return ((ma && ma.stock > 0) - (mb && mb.stock > 0)) || String(ma && ma.name).localeCompare(String(mb && mb.name)); });
   var h = '<div class="card" style="margin-bottom:12px;padding:12px 14px;background:var(--green-bg);border-color:var(--green-border)"><b>&#128722; What to order</b>'
-    + '<div class="tiny">Medicines that are low, out of stock, or will run out in about 2 weeks at the speed they sold in the last 30 days. The quantity is about one month of sales. Untick or change anything, then send each supplier its order in one tap.</div></div>'
-    + '<div style="position:relative;max-width:460px;margin-bottom:12px"><input class="finput" id="ro-q" placeholder="Add another medicine to the order&hellip;" oninput="roSearch()" autocomplete="off"/><div id="ro-dd" class="dd" style="display:none"></div></div>';
+    + '<div class="tiny">Medicines that are finished, low, or will run out in about 2 weeks. The quantity is about one month of sales. Choose the supplier once at the top, untick anything you do not want from them, then send in one tap.</div></div>'
+    + '<div style="display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(200px,1fr) minmax(160px,.8fr);gap:10px;align-items:end;margin-bottom:8px">'
+    + '<div style="position:relative"><label class="flbl">Add another medicine</label><input class="finput" id="ro-q" placeholder="Type the first letters&hellip;" oninput="roSearch()" autocomplete="off"/><div id="ro-dd" class="dd" style="display:none"></div></div>'
+    + '<div style="position:relative"><label class="flbl">Supplier</label><input class="finput" id="ro-sup" value="' + esc(RO.pick || '') + '" placeholder="Type or choose the supplier" autocomplete="off" oninput="roSupType()" onfocus="roSupType(true)" onblur="setTimeout(function(){var d=dEl(\'ro-sup-dd\');if(d)d.style.display=\'none\'},180);roSupSet(this.value)"/><div id="ro-sup-dd" class="dd" style="display:none"></div></div>'
+    + '<div><label class="flbl">Supplier WhatsApp</label><input class="finput" id="ro-ph" type="tel" inputmode="numeric" placeholder="10-digit mobile" value="' + esc(RO.phone ? RO.phone.replace(/^(\d{5})/, '$1 ') : '') + '" oninput="roPhType(this.value)" onblur="roPhType(this.value,true)" style="font-weight:700"/></div></div>'
+    + '<div id="ro-warn" style="margin-bottom:10px"></div>';
   if (!RO.rows.length) h += '<div class="card" style="text-align:center;padding:24px"><div style="font-size:30px">&#9989;</div><b>Nothing is running out.</b><div class="tiny">Set a <b>low-stock level</b> on a medicine (Stock &rarr; Open &rarr; Edit) to be warned earlier.</div></div>';
-  RO.groups.forEach(function (gr, gi) {
-    var k = roSupKey(gr.sup), wh = RO.whs[k]; SUP_NAMES[k] = gr.sup;
-    h += '<div class="card" style="margin-bottom:12px;padding:12px 14px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>' + esc(gr.sup) + '</b> <span class="tiny">' + gr.idx.length + ' medicine' + (gr.idx.length === 1 ? '' : 's') + '</span>'
-      + (wh && wh.length ? '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; On AuraScale as ' + esc(wh[0].name) + ': the order goes straight into their billing</div>' : '') + '</div>'
-      + (gr.sup !== 'Supplier not known' ? '<div style="text-align:right"><label class="tiny" style="display:block;font-weight:700">' + (phones[k] ? '&#128222; Supplier WhatsApp' : '<span style="color:var(--red)">&#9888; Add supplier WhatsApp</span>') + '</label><input class="finput" style="width:160px;padding:6px;font-weight:700' + (phones[k] ? '' : ';border-color:var(--red)') + '" placeholder="10-digit mobile" value="' + esc(phones[k] ? String(phones[k]).replace(/\D/g, '').slice(-10).replace(/^(\d{5})/, '$1 ') : '') + '" onchange="roPhone(' + gi + ',this.value)" type="tel" inputmode="numeric"/></div>' : '') + '</div>'
-      + '<div class="tiny" style="margin-top:6px;color:var(--amber);font-weight:700">&#9888; Check the GST % of each medicine before sending (change it in the list if the supplier\'s bill shows another rate).</div>'
-      + '<div style="overflow-x:auto;margin-top:8px"><table class="dt"><thead><tr><th></th><th>Medicine</th><th class="r">In stock</th><th class="r">Sold in 30 days</th><th class="r">Order</th><th class="r">Last rate</th><th class="r">GST %</th></tr></thead><tbody>'
-      + gr.idx.map(function (i) { var r = RO.rows[i], m = MEDMAP[r.id]; if (!m) return '';
-        return '<tr><td><input type="checkbox" ' + (r.on ? 'checked' : '') + ' onchange="RO.rows[' + i + '].on=this.checked;roTotRender(' + gi + ')" style="width:18px;height:18px;appearance:auto"/></td><td><b>' + esc(m.name) + '</b><div class="tiny">' + esc(m.composition || '') + '</div></td>'
-          + '<td class="r">' + (m.stock > 0 ? m.stock : '<span class="over">0</span>') + ' <span class="tiny">' + esc(m.unit) + '</span></td><td class="r">' + (RO.sold[m.id] || 0) + '</td>'
-          + '<td class="r"><input class="finput" type="number" min="1" step="1" value="' + esc(r.qty) + '" style="width:80px;text-align:right;padding:6px" oninput="RO.rows[' + i + '].qty=this.value;roTotRender(' + gi + ')"/><div class="tiny">' + esc(m.unit) + '</div></td><td class="r">' + (roRate(m) ? dMoney(roRate(m)) : '<span class="tiny">no rate yet</span>') + '</td>'
-          + '<td class="r"><select class="finput" id="ro-g-' + i + '" style="width:76px;padding:6px' + (Number(roGst(r)) !== Number(m.gst_rate) ? ';border-color:var(--amber)' : '') + '" onchange="roSetGst(' + i + ',this.value,' + gi + ')">' + [0, 5, 12, 18, 28].map(function (g) { return '<option value="' + g + '"' + (g === Number(roGst(r)) ? ' selected' : '') + '>' + g + '%</option>'; }).join('') + '</select><div class="tiny" id="ro-gn-' + i + '">' + (Number(roGst(r)) !== Number(m.gst_rate) ? 'saved ' + Number(m.gst_rate) + '% &rarr; <b>' + Number(roGst(r)) + '%</b>' : '') + '</div></td></tr>';
+  else {
+    h += '<div class="card" style="padding:12px 14px">'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px"><div class="tiny" style="color:var(--amber);font-weight:700;flex:1">&#9888; Check the GST % of each medicine before sending.</div>'
+      + (RO.pick ? '<button class="btn btn-sm" onclick="roTickFrom()">Tick only medicines last bought from ' + esc(RO.pick) + '</button>' : '') + '<button class="btn btn-sm" onclick="roTickAll(true)">Tick all</button><button class="btn btn-sm" onclick="roTickAll(false)">Untick all</button></div>'
+      + '<div style="overflow-x:auto"><table class="dt"><thead><tr><th></th><th>#</th><th>Medicine</th><th class="r">In stock</th><th class="r">Sold in 30 days</th><th class="r">Order</th><th class="r">Last rate</th><th class="r">GST %</th><th>Last bought from</th></tr></thead><tbody>'
+      + RO.rows.map(function (r, i) { var m = MEDMAP[r.id]; if (!m) return '';
+        return '<tr' + (m.stock <= 0 ? ' style="background:#fff1f1"' : '') + '><td><input type="checkbox" ' + (r.on ? 'checked' : '') + ' onchange="RO.rows[' + i + '].on=this.checked;roTotRender(0)" style="width:18px;height:18px;appearance:auto"/></td><td class="tiny">' + (i + 1) + '</td><td><b>' + esc(m.name) + '</b><div class="tiny">' + esc(m.composition || '') + '</div></td>'
+          + '<td class="r">' + (m.stock > 0 ? m.stock : '<span class="over">0 &mdash; finished</span>') + ' <span class="tiny">' + esc(m.unit) + '</span></td><td class="r">' + (RO.sold[m.id] || 0) + '</td>'
+          + '<td class="r"><input class="finput" type="number" min="1" step="1" value="' + esc(r.qty) + '" style="width:80px;text-align:right;padding:6px" oninput="RO.rows[' + i + '].qty=this.value;roTotRender(0)"/><div class="tiny">' + esc(m.unit) + '</div></td><td class="r">' + (roRate(m) ? dMoney(roRate(m)) : '<span class="tiny">&mdash;</span>') + '</td>'
+          + '<td class="r"><select class="finput" id="ro-g-' + i + '" style="width:76px;padding:6px' + (Number(roGst(r)) !== Number(m.gst_rate) ? ';border-color:var(--amber)' : '') + '" onchange="roSetGst(' + i + ',this.value,0)">' + [0, 5, 12, 18, 28].map(function (g) { return '<option value="' + g + '"' + (g === Number(roGst(r)) ? ' selected' : '') + '>' + g + '%</option>'; }).join('') + '</select><div class="tiny" id="ro-gn-' + i + '" style="color:var(--amber)"></div></td>'
+          + '<td class="tiny">' + esc(r.supplier && r.supplier !== 'Supplier not known' ? r.supplier : '&mdash;') + '</td></tr>';
       }).join('') + '</tbody></table></div>'
-      + '<div id="ro-tot-' + gi + '" style="margin-top:8px"></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
-      + (gr.sup !== 'Supplier not known' ? (wh && wh.length ? '<button class="btn btn-g" onclick="roSendApp(' + gi + ')">&#128640; Send order on AuraScale</button>' : '<button class="btn btn-sm" onclick="roFind(' + gi + ')">&#128269; Is ' + esc(gr.sup) + ' on AuraScale?</button>') : '')
-      + (gr.sup !== 'Supplier not known' ? '<button class="btn' + (wh && wh.length ? '' : ' btn-g') + '" id="ro-pdf-' + gi + '" onclick="roSendPdf(' + gi + ')" style="font-weight:800">&#128228; Send order on WhatsApp</button>' : '<span class="tiny" style="align-self:center">Set the supplier on these medicines (Stock &rarr; Open) to send an order.</span>')
-      + '<button class="btn btn-sm" onclick="roCopy(' + gi + ')">Copy list</button></div>'
-      + (gr.sup !== 'Supplier not known' ? '<div class="tiny" style="margin-top:6px">One tap: the order PDF goes straight to the supplier\'s WhatsApp from the AuraScale number. Nothing opens.</div>' : '') + '</div>';
-  });
-  if (RO.sent === null) h += '<p class="tiny">Sending orders inside AuraScale needs the database update (file 31). WhatsApp works now.</p>';
+      + '<div id="ro-tot-0" style="margin-top:8px"></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-g" id="ro-pdf-0" onclick="roSendPdf(0)" style="font-weight:800">&#128228; Send order on WhatsApp</button>'
+      + (wh && wh.length ? '<button class="btn btn-sm" onclick="roSendApp(0)" title="Only for suppliers who also use AuraScale: the order goes into their billing, not WhatsApp">&#128640; Also send inside AuraScale</button>' : '')
+      + '<button class="btn btn-sm" onclick="roCopy(0)">Copy list</button></div>'
+      + '<div class="tiny" style="margin-top:6px">One tap: the ticked medicines go as a PDF order to the supplier above, on WhatsApp, from the AuraScale number. Nothing opens.</div></div>';
+  }
+  if (RO.sent === null) h += '';
   else if (RO.sent.length) h += '<h3 style="font-size:15px;margin:16px 0 6px">Orders sent on AuraScale</h3><div style="overflow-x:auto"><table class="dt"><thead><tr><th>Order</th><th>Wholesaler</th><th>Medicines</th><th>Status</th><th></th></tr></thead><tbody>'
     + RO.sent.map(function (o) {
-      var st = { sent: '<span class="pp-pill" style="color:var(--amber)">Sent</span>', seen: '<span class="pp-pill" style="color:#2563eb">Seen by wholesaler</span>', billed: '<span class="pp-pill" style="color:var(--green)">&#10003; Billed</span>', rejected: '<span class="pp-pill" style="color:var(--red)">Cannot supply</span>', cancelled: '<span class="pp-pill">Cancelled</span>' }[o.status] || o.status;
+      var st = { sent: '<span class="pp-pill" style="color:var(--amber)">Sent</span>', seen: '<span class="pp-pill" style="color:#2563eb">Seen by wholesaler</span>', billed: '<span class="pp-pill" style="color:var(--green)">&#10003; Billed</span>', rejected: '<span class="pp-pill" style="color:var(--red)">Cannot supply</span>', cancelled: '<span class="pp-pill">Cancelled</span>' }[o.status] || esc(o.status);
       return '<tr><td><b>' + esc(o.order_no) + '</b><div class="tiny">' + dDateTime(o.created_at) + '</div></td><td>' + esc(o.to_name) + '</td><td class="tiny">' + o.lines.map(function (l) { return esc(l.name) + ' &times;' + Number(l.qty); }).join(', ') + '</td><td>' + st + (o.reply ? '<div class="tiny">' + esc(o.reply) + '</div>' : '') + '</td>'
         + '<td>' + (o.status === 'sent' || o.status === 'seen' ? '<button class="btn btn-sm btn-r" onclick="roCancel(' + A(o.id) + ')">Cancel</button>' : '') + '</td></tr>';
     }).join('') + '</tbody></table></div>';
   root.innerHTML = h;
-  RO.groups.forEach(function (gr, gi) { roTotRender(gi); });
-  RO.groups.forEach(function (gr) { var k = roSupKey(gr.sup); if (gr.sup !== 'Supplier not known' && RO.whs[k] === undefined && RO.sent !== null) roAutoFind(gr.sup); });
+  roTotRender(0); roWarn();
+  if (RO.pick && RO.whs[k] === undefined && RO.sent !== null) roAutoFind(RO.pick);
 }
+/* supplier box: type a few letters, pick from the list; the saved WhatsApp number comes by itself */
+function roSupType(all) {
+  var q = String(dEl('ro-sup').value || '').toLowerCase().trim(), dd = dEl('ro-sup-dd'); if (!dd) return;
+  var L = roSupList().filter(function (x) { return all && !q ? true : x.name.toLowerCase().indexOf(q) === 0 || (' ' + x.name.toLowerCase()).indexOf(' ' + q) >= 0 || x.phone.indexOf(q.replace(/\D/g, '') || '#') >= 0; }).slice(0, 12);
+  dd.innerHTML = L.length ? L.map(function (x) { return '<div class="dd-i" onmousedown="event.preventDefault();roSupSet(' + A(x.name) + ',true)"><div style="display:flex;justify-content:space-between;gap:8px"><b>' + esc(x.name) + '</b><span class="tiny">' + (x.phone ? x.phone.replace(/^(\d{5})/, '$1 ') : 'no number yet') + '</span></div></div>'; }).join('')
+    : (q ? '<div class="dd-i muted">New supplier &ldquo;' + esc(dEl('ro-sup').value) + '&rdquo; &mdash; type their WhatsApp number on the right.</div>' : '');
+  dd.style.display = dd.innerHTML ? 'block' : 'none';
+}
+function roSupSet(name, picked) {
+  name = String(name || '').trim(); var k = roSupKey(name);
+  if (name === RO.pick && !picked) return;
+  RO.pick = name; if (k) SUP_NAMES[k] = name;
+  var saved = roPh10((ppLS('sup-phones') || {})[k] || '');
+  if (saved) RO.phone = saved; else if (picked) RO.phone = '';
+  if (dEl('ro-sup')) dEl('ro-sup').value = name;
+  var dd = dEl('ro-sup-dd'); if (dd) dd.style.display = 'none';
+  roRender();
+}
+/* number box: typing a number that is saved for a supplier fills the supplier's name */
+function roPhType(v, done) {
+  RO.phone = roPh10(v);
+  if (RO.phone.length === 10) {
+    var owner = roSupList().filter(function (x) { return x.phone === RO.phone; })[0];
+    if (owner && !RO.pick) { RO.pick = owner.name; if (dEl('ro-sup')) dEl('ro-sup').value = owner.name; }
+    if (done && RO.pick && /^[6-9]\d{9}$/.test(RO.phone) && !roConflict()) { var m = ppLS('sup-phones') || {}, k = roSupKey(RO.pick); if (roPh10(m[k]) !== RO.phone) { SUP_NAMES[k] = RO.pick; m[k] = RO.phone; ppLS('sup-phones', m); } }
+  }
+  roWarn();
+}
+/* the number belongs to another supplier, or this supplier has another number saved */
+function roConflict() {
+  if (!RO.pick || RO.phone.length !== 10) return '';
+  var k = roSupKey(RO.pick), list = roSupList(), other = list.filter(function (x) { return x.phone === RO.phone && x.k !== k; })[0], mine = list.filter(function (x) { return x.k === k; })[0];
+  if (other) return 'This number is saved for <b>' + esc(other.name) + '</b>, not for ' + esc(RO.pick) + '.';
+  if (mine && mine.phone && mine.phone !== RO.phone) return esc(RO.pick) + '\'s saved number is <b>' + mine.phone.replace(/^(\d{5})/, '$1 ') + '</b>. You typed another one.';
+  return '';
+}
+function roWarn() {
+  var el = dEl('ro-warn'); if (!el) return; var c = roConflict();
+  if (!RO.pick) { el.innerHTML = '<div class="tiny" style="color:var(--red);font-weight:700">&#9888; Choose the supplier.</div>'; return; }
+  if (!/^[6-9]\d{9}$/.test(RO.phone)) { el.innerHTML = '<div class="tiny" style="color:var(--red);font-weight:700">&#9888; Add ' + esc(RO.pick) + '\'s 10-digit WhatsApp number.</div>'; return; }
+  el.innerHTML = c ? '<div class="tiny" style="color:var(--red);font-weight:700">&#9888; ' + c + ' Check before sending.</div>' : '<div class="tiny" style="color:var(--green);font-weight:700">&#10003; The order goes to ' + esc(RO.pick) + ' &middot; ' + RO.phone.replace(/^(\d{5})/, '$1 ') + '</div>';
+}
+function roTickFrom() { var k = roSupKey(RO.pick); RO.rows.forEach(function (r) { r.on = roSupKey(r.supplier) === k; }); roRender(); }
+function roTickAll(v) { RO.rows.forEach(function (r) { r.on = v; }); roRender(); }
 async function roAutoFind(sup) {
   var k = roSupKey(sup), phones = ppLS('sup-phones') || {}; RO.whs[k] = null;
   var g = RO.gst[k] || '', p = phones[k] || '';
@@ -237,7 +297,7 @@ async function roAutoFind(sup) {
   if (RO.whs[k].length) roRender();
 }
 async function roFind(gi) {
-  var gr = RO.groups[gi], k = roSupKey(gr.sup);
+  var gr = { sup: RO.pick }, k = roSupKey(gr.sup); if (!gr.sup) { showToast('Choose the supplier first.'); return; }
   var v = prompt('Type ' + gr.sup + '\'s GSTIN or mobile number (it is on their bill):', RO.gst[k] || (ppLS('sup-phones') || {})[k] || ''); if (!v) return;
   var g = /^[0-9]{2}[A-Za-z]{5}/.test(v.trim()) ? v.trim() : '', p = g ? '' : v;
   var r = await _supa.rpc('aura_find_wholesaler', { p_from: _clinicId, p_gstin: g, p_phone: p });
@@ -246,7 +306,7 @@ async function roFind(gi) {
   if (g) RO.gst[k] = g; else roPhone(gi, p, true);
   RO.whs[k] = r.data; roRender(); phOk('Found on AuraScale', esc(r.data[0].name) + ' can get your orders directly.');
 }
-function roPhone(gi, v, quiet) { var gr = RO.groups[gi], ph1 = ppLS('sup-phones') || {}; ph1[roSupKey(gr.sup)] = String(v || '').trim(); ppLS('sup-phones', ph1); if (!quiet) { RO.whs[roSupKey(gr.sup)] = undefined; roRender(); } }
+function roPhone(gi, v, quiet) { var ph1 = ppLS('sup-phones') || {}, k = roSupKey(RO.pick); if (!k) return; SUP_NAMES[k] = RO.pick; ph1[k] = roPh10(v); ppLS('sup-phones', ph1); RO.phone = roPh10(v); if (!quiet) { RO.whs[k] = undefined; roRender(); } }
 /* the last purchase rate of a medicine (per sold unit, before GST), from its newest batch that has one */
 function roRate(m) {
   var bs = (m.batches || []).filter(function (b) { return Number(b.purchase_rate) > 0; });
@@ -293,7 +353,7 @@ function roText(gi) {
 }
 function roTotRender(gi) { var el = dEl('ro-tot-' + gi); if (el) el.innerHTML = 'Approx. order value: <b>' + dMoney(roTotal(gi)) + '</b> <span class="tiny">(last purchase rate + GST)</span>'; }
 async function roSendApp(gi) {
-  var gr = RO.groups[gi], wh = RO.whs[roSupKey(gr.sup)], L = roLines(gi);
+  var wh = RO.whs[roSupKey(RO.pick)], L = roLines(gi); if (!wh || !wh.length) { showToast(RO.pick + ' is not on AuraScale.'); return; }
   if (!L.length) { showToast('Tick at least one medicine.'); return; }
   if (!(await roGstCheck(gi))) return;
   if (!confirm('Send ' + L.length + ' medicine(s) to ' + wh[0].name + ' on AuraScale?')) return;
@@ -313,8 +373,12 @@ async function roSendWa(gi) {
 /* automatic: the server makes the Purchase Order PDF and AuraScale's WhatsApp number sends it to the supplier */
 async function roSendPdf(gi) {
   var L = roLines(gi); if (!L.length) { showToast('Tick at least one medicine.'); return; }
-  var gr = RO.groups[gi], k = roSupKey(gr.sup), to = String((ppLS('sup-phones') || {})[k] || '').replace(/\D/g, '').slice(-10);
-  if (!/^[6-9]\d{9}$/.test(to)) { showToast('Type ' + gr.sup + '\'s 10-digit WhatsApp number in the box first.'); return; }
+  var gr = RO.groups[gi], k = roSupKey(RO.pick), to = RO.phone;
+  if (!RO.pick) { showToast('Choose the supplier at the top first.'); if (dEl('ro-sup')) dEl('ro-sup').focus(); return; }
+  if (!/^[6-9]\d{9}$/.test(to)) { showToast('Type ' + RO.pick + '\'s 10-digit WhatsApp number at the top first.'); if (dEl('ro-ph')) dEl('ro-ph').focus(); return; }
+  var cf = roConflict(); if (cf && !confirm(cf.replace(/<[^>]+>/g, '') + '\n\nSend to ' + RO.pick + ' on ' + to + ' anyway?')) return;
+  if (!cf) { var pm = ppLS('sup-phones') || {}; if (roPh10(pm[k]) !== to) { SUP_NAMES[k] = RO.pick; pm[k] = to; ppLS('sup-phones', pm); } }
+  gr = { sup: RO.pick, idx: gr.idx };
   if (!(await roGstCheck(gi))) return;
   L = roLines(gi);
   if (!confirm('Send this order as a PDF to ' + gr.sup + ' (WhatsApp ' + to + ')?\n\n' + L.length + ' medicine(s), approx. ' + dMoney(roTotal(gi)) + '\n\nIt goes from the AuraScale WhatsApp number. The supplier is told to call your shop phone for questions.')) return;
@@ -334,11 +398,11 @@ async function roSendPdf(gi) {
   finally { if (btn) { btn.disabled = false; btn.innerHTML = '&#128228; Send order on WhatsApp'; } }
 }
 function roCopy(gi) { var t = roText(gi); try { navigator.clipboard.writeText(t).then(function () { phOk('Order copied', 'Paste it anywhere.'); }, function () { prompt('Copy the order:', t); }); } catch (e) { prompt('Copy the order:', t); } }
-function roDone(gi) { var ex = ppLS('ro-extra') || {}; RO.groups[gi].idx.forEach(function (i) { delete ex[RO.rows[i].id]; }); ppLS('ro-extra', ex); }
+function roDone(gi) { var ex = ppLS('ro-extra') || {}; RO.rows.forEach(function (r) { if (r.on) { delete ex[r.id]; r.on = false; r.sentTo = RO.pick; } }); ppLS('ro-extra', ex); setTimeout(roRender, 50); }
 async function roCancel(id) { if (!confirm('Cancel this order?')) return; var r = await _supa.rpc('aura_order_cancel', { p_from: _clinicId, p_id: id }); if (r.error) { showToast(dErr(r.error)); return; } showToast('Order cancelled.'); roLoad(); }
 function roSearch() {
-  var q = dEl('ro-q').value.trim(), dd = dEl('ro-dd'); if (q.length < 2) { dd.style.display = 'none'; return; }
-  var L = MEDS.filter(function (m) { return m.is_active && matchMed(m, q); }).slice(0, 10);
+  var q = dEl('ro-q').value.trim(), dd = dEl('ro-dd'); if (q.length < 1) { dd.style.display = 'none'; return; }
+  var L = window.medFind ? medFind(q, function (m) { return m.is_active; }, 10) : MEDS.filter(function (m) { return m.is_active && matchMed(m, q); }).slice(0, 10);
   dd.innerHTML = L.length ? L.map(function (m) { return '<div class="dd-i" onclick="roAdd(\'' + m.id + '\')"><b>' + esc(m.name) + '</b> <span class="tiny">' + m.stock + ' ' + esc(m.unit) + ' in stock</span></div>'; }).join('') : '<div class="dd-i muted">No medicine found.</div>';
   dd.style.display = 'block';
 }
