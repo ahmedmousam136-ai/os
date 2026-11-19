@@ -18,8 +18,12 @@
       aLong: '{name} – in bed for {d} days', aLongSub: 'Bed {bed} · check discharge plan',
       aCln: '{n} beds waiting for cleaning', aClnSub: 'Mark them free in Bed Management when ready',
       days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], today: 'Today',
+      seeAll: 'See all', wardBeds: 'Beds by ward', recentPay: 'Recent payments', onDuty: 'On duty today', used: 'in use', today2: 'today', yest: 'yesterday', daysAgo: '{n} days ago', noPay: 'No payments yet.',
+      sPresent: 'Present', sLate: 'Late', sLeave: 'On leave', sAbsent: 'Absent', sHalf: 'Half day', sOff: 'Week off', sWill: 'Coming', sNot: 'Not in yet', stfT: 'On duty today', stfS: 'By shift — who is in, who is not', stfCame: '{a} / {b} present', shM: 'Morning', shA: 'Afternoon', shN: 'Night', attBook: 'Open attendance book', noStaff: 'No staff added for attendance yet. Add them in the attendance book.', logins: 'Login accounts',
+      lcT: 'Licences & compliance', lcS: 'You will be reminded before anything expires', lcUrg: 'Urgent (within 15 days)', lcSoon: 'Soon (within 60 days)', lcOk: 'OK', lc12: 'Next 12 months', lcLeft: 'days left', lcOver: 'days over', lcExp: 'Expires {d}', lcRem: 'Remind:', lcBefore: '{n} days before', lcRenew: 'Renewed', lcAdd: 'Add licence', lcEdit: 'Edit', lcName: 'Licence name', lcAuth: 'Issued by (office)', lcNo: 'Licence number', lcDate: 'Expiry date', lcSave: 'Save', lcCancel: 'Cancel', lcDel: 'Delete', lcNone: 'No licences added yet. Add your licences once — AuraScale will remind you before each one expires.', lcNeedSql: 'Licence list is not set up yet (run the SQL once).', lcNewDate: 'New expiry date', aLic: '{name} — expires in {n} days', aLicOver: '{name} — expired {n} days ago', aLicSub: 'Expires {d} · start renewal',
+      wdT: 'Waiting for discharge', wdSub: '{doc}advised discharge · {bill}', wdBill: 'bill {amt} due', wdClear: 'bill cleared', wdGo: 'Discharge', aWd: '{name} — discharge advised, {amt} still due', aWdSub: 'Bed {bed} · settle the bill and discharge', adv: 'Doctor advised discharge', advOn: '✓ Discharge advised', advOff: 'Mark: doctor advised discharge', advUndo: 'Undo', lic: 'Licences', staffN: 'Staff',
       bmT: 'Bed map', bmS: 'Tap a bed to see the patient or admit a new one', bmAll: 'All', bmUsed: '{a} / {b} in use', perDay: '/day', admit: 'Admit', addBed: 'Add bed', newAdm: 'New admission', daysN: '{n} days', todayAdm: 'Admitted today', dueTag: 'Due', critical: 'Critical', off: 'Switched off',
-      blT: 'Billing', blS: 'Who owes how much — in one place', blTotal: 'Total bill', blPaid: 'Collected', blDue: 'Due', blSearch: 'Search name or bed', blAllF: 'All', stUrg: 'Urgent due', stNone: 'Not paid', stPart: 'Part paid', stFull: 'Fully paid', stDis: 'Discharged', colPat: 'Patient', colTot: 'Total', colPaid: 'Paid', colDue: 'Due', colSt: 'Status', takePay: 'Take payment', viewPt: 'Open', paidOk: 'Fully paid', disAgo: 'Discharged · {n} days ago', disToday: 'Discharged · today', bedDays: 'Bed {b} · {n} days', blEmpty: 'No bills yet.', oldList: 'More billing tools', wG: 'General ward', wF: 'Female ward', wM: 'Maternity ward', wI: 'ICU / HDU', wE: 'Emergency', savedBills: 'Saved final bills',
+      blT: 'Billing', blS: 'Who owes how much — in one place', blTotal: 'Total bill', blPaid: 'Collected', blDue: 'Due', blSearch: 'Search name or bed', blAllF: 'All', stUrg: 'Overdue', stNone: 'Pending', stPart: 'Partly paid', stFull: 'Paid', stDis: 'Discharged', colPat: 'Patient', colTot: 'Total', colPaid: 'Paid', colDue: 'Due', colSt: 'Status', takePay: 'Take payment', viewPt: 'Open', paidOk: 'Fully paid', disAgo: 'Discharged · {n} days ago', disToday: 'Discharged · today', bedDays: 'Bed {b} · {n} days', blEmpty: 'No bills yet.', oldList: 'More billing tools', wG: 'General ward', wF: 'Female ward', wM: 'Maternity ward', wI: 'ICU / HDU', wE: 'Emergency', savedBills: 'Saved final bills',
       g1: 'Good morning', g2: 'Good afternoon', g3: 'Good evening', gsub: 'Today\'s money, beds and problems — at a glance',
       bBeds: 'Bed map', bRep: 'Reports', aSet: 'Bill setup is not finished', aSetSub: 'Address, signature & stamp are printed on every bill',
       nHome: 'Home', nPat: 'Patients', nBeds: 'Beds', nBills: 'Bills', nMore: 'Menu', bedsWord: 'beds', dark: 'Dark / light'
@@ -36,6 +40,10 @@
       aLong: '{name} — {d} দিন ধরে ভর্তি', aLongSub: 'বেড {bed} · ছুটির পরিকল্পনা দেখুন',
       aCln: '{n}টি বেড পরিষ্কারের অপেক্ষায়', aClnSub: 'পরিষ্কার হলে বেড ম্যানেজমেন্টে খালি করুন',
       days: ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'], today: 'আজ',
+      seeAll: 'সব দেখুন', wardBeds: 'ওয়ার্ড অনুযায়ী বেড', recentPay: 'সাম্প্রতিক জমা', onDuty: 'আজ ডিউটিতে', used: 'ব্যবহৃত', today2: 'আজ', yest: 'গতকাল', daysAgo: '{n} দিন আগে', noPay: 'এখনো কোনো জমা নেই।',
+      sPresent: 'উপস্থিত', sLate: 'দেরিতে', sLeave: 'ছুটিতে', sAbsent: 'অনুপস্থিত', sHalf: 'অর্ধেক দিন', sOff: 'সাপ্তাহিক ছুটি', sWill: 'আসবেন', sNot: 'এখনো আসেননি', stfT: 'আজ ডিউটিতে', stfS: 'শিফট অনুযায়ী — কে আছেন, কে নেই', stfCame: '{a} / {b} জন এসেছেন', shM: 'সকাল', shA: 'বিকেল', shN: 'রাত', attBook: 'হাজিরা খাতা খুলুন', noStaff: 'হাজিরার জন্য এখনো কোনো স্টাফ যোগ করা হয়নি। হাজিরা খাতায় যোগ করুন।', logins: 'লগইন অ্যাকাউন্ট',
+      lcT: 'লাইসেন্স ও নিয়মকানুন', lcS: 'মেয়াদ শেষের আগেই আপনাকে মনে করিয়ে দেওয়া হবে', lcUrg: 'জরুরি (১৫ দিনের মধ্যে)', lcSoon: 'শীঘ্রই (৬০ দিনের মধ্যে)', lcOk: 'ঠিক আছে', lc12: 'আগামী ১২ মাস', lcLeft: 'দিন বাকি', lcOver: 'দিন পেরিয়েছে', lcExp: 'মেয়াদ শেষ {d}', lcRem: 'মনে করান:', lcBefore: '{n} দিন আগে', lcRenew: 'নবীকরণ হয়েছে', lcAdd: 'লাইসেন্স যোগ করুন', lcEdit: 'বদলান', lcName: 'লাইসেন্সের নাম', lcAuth: 'কোন দপ্তর দিয়েছে', lcNo: 'লাইসেন্স নম্বর', lcDate: 'মেয়াদ শেষের তারিখ', lcSave: 'সেভ করুন', lcCancel: 'বাতিল', lcDel: 'মুছে দিন', lcNone: 'এখনো কোনো লাইসেন্স যোগ করা হয়নি। একবার যোগ করে দিন — মেয়াদ শেষের আগে AuraScale মনে করিয়ে দেবে।', lcNeedSql: 'লাইসেন্সের তালিকা এখনো চালু হয়নি (SQL একবার চালাতে হবে)।', lcNewDate: 'নতুন মেয়াদ শেষের তারিখ', aLic: '{name} — {n} দিনে মেয়াদ শেষ', aLicOver: '{name} — {n} দিন আগে মেয়াদ শেষ হয়েছে', aLicSub: 'শেষ তারিখ {d} · নবীকরণ শুরু করুন',
+      wdT: 'ছুটির অপেক্ষায়', wdSub: '{doc}ছুটির পরামর্শ · {bill}', wdBill: 'বিল {amt} বাকি', wdClear: 'বিল পরিষ্কার', wdGo: 'ছুটি দিন', aWd: '{name} — ছুটির পরামর্শ, বিল {amt} বাকি', aWdSub: 'বেড {bed} · বিল মিটিয়ে ছুটি দিন', adv: 'ডাক্তার ছুটির পরামর্শ দিয়েছেন', advOn: '✓ ছুটির পরামর্শ দেওয়া হয়েছে', advOff: 'চিহ্ন দিন: ডাক্তার ছুটির পরামর্শ দিয়েছেন', advUndo: 'ফিরিয়ে নিন', lic: 'লাইসেন্স', staffN: 'স্টাফ',
       bmT: 'বেড ম্যাপ', bmS: 'বেডে চাপ দিন — রোগী দেখতে বা নতুন রোগী ভর্তি করতে', bmAll: 'সব', bmUsed: '{a} / {b} ব্যবহৃত', perDay: '/দিন', admit: 'ভর্তি করুন', addBed: 'বেড যোগ করুন', newAdm: 'নতুন ভর্তি', daysN: '{n} দিন', todayAdm: 'আজ ভর্তি', dueTag: 'বকেয়া', critical: 'সংকটজনক', off: 'বন্ধ',
       blT: 'বিলিং', blS: 'কার কত বাকি, এক জায়গায়', blTotal: 'মোট বিল', blPaid: 'আদায়', blDue: 'বকেয়া', blSearch: 'নাম বা বেড লিখে খুঁজুন', blAllF: 'সব', stUrg: 'জরুরি বকেয়া', stNone: 'জমা হয়নি', stPart: 'আংশিক জমা', stFull: 'পুরো জমা', stDis: 'ছুটি হয়েছে', colPat: 'রোগী', colTot: 'মোট বিল', colPaid: 'জমা', colDue: 'বাকি', colSt: 'অবস্থা', takePay: 'টাকা জমা নিন', viewPt: 'দেখুন', paidOk: 'পুরো জমা হয়েছে', disAgo: 'ছুটি হয়েছে · {n} দিন আগে', disToday: 'ছুটি হয়েছে · আজ', bedDays: 'বেড {b} · {n} দিন', blEmpty: 'এখনো কোনো বিল নেই।', oldList: 'বিলের আরও কাজ', wG: 'জেনারেল ওয়ার্ড', wF: 'মহিলা ওয়ার্ড', wM: 'প্রসূতি ওয়ার্ড', wI: 'আইসিইউ / এইচডিইউ', wE: 'ইমার্জেন্সি', savedBills: 'সেভ করা চূড়ান্ত বিল',
       g1: 'সুপ্রভাত', g2: 'শুভ দুপুর', g3: 'শুভ সন্ধ্যা', gsub: 'আজকের টাকা, বেড আর সমস্যা — এক নজরে',
@@ -54,6 +62,10 @@
       aLong: '{name} — {d} दिन से भर्ती', aLongSub: 'बेड {bed} · छुट्टी की योजना देखें',
       aCln: '{n} बेड सफ़ाई का इंतज़ार', aClnSub: 'साफ़ होने पर बेड मैनेजमेंट में खाली करें',
       days: ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि'], today: 'आज',
+      seeAll: 'सब देखें', wardBeds: 'वार्ड के अनुसार बेड', recentPay: 'हाल की जमा', onDuty: 'आज ड्यूटी पर', used: 'उपयोग में', today2: 'आज', yest: 'कल', daysAgo: '{n} दिन पहले', noPay: 'अभी कोई जमा नहीं।',
+      sPresent: 'उपस्थित', sLate: 'देर से', sLeave: 'छुट्टी पर', sAbsent: 'अनुपस्थित', sHalf: 'आधा दिन', sOff: 'साप्ताहिक छुट्टी', sWill: 'आएँगे', sNot: 'अभी नहीं आए', stfT: 'आज ड्यूटी पर', stfS: 'शिफ़्ट के अनुसार — कौन है, कौन नहीं', stfCame: '{a} / {b} आए', shM: 'सुबह', shA: 'दोपहर', shN: 'रात', attBook: 'हाज़िरी रजिस्टर खोलें', noStaff: 'हाज़िरी के लिए अभी कोई स्टाफ नहीं जोड़ा गया।', logins: 'लॉगिन अकाउंट',
+      lcT: 'लाइसेंस और नियम', lcS: 'समाप्ति से पहले याद दिलाया जाएगा', lcUrg: 'ज़रूरी (15 दिन में)', lcSoon: 'जल्द (60 दिन में)', lcOk: 'ठीक है', lc12: 'अगले 12 महीने', lcLeft: 'दिन बाकी', lcOver: 'दिन बीत गए', lcExp: 'समाप्ति {d}', lcRem: 'याद दिलाएँ:', lcBefore: '{n} दिन पहले', lcRenew: 'नवीनीकरण हुआ', lcAdd: 'लाइसेंस जोड़ें', lcEdit: 'बदलें', lcName: 'लाइसेंस का नाम', lcAuth: 'किस दफ़्तर ने दिया', lcNo: 'लाइसेंस नंबर', lcDate: 'समाप्ति तिथि', lcSave: 'सेव करें', lcCancel: 'रद्द', lcDel: 'हटाएँ', lcNone: 'अभी कोई लाइसेंस नहीं जोड़ा गया।', lcNeedSql: 'लाइसेंस सूची अभी चालू नहीं है (SQL एक बार चलाएँ)।', lcNewDate: 'नई समाप्ति तिथि', aLic: '{name} — {n} दिन में समाप्त', aLicOver: '{name} — {n} दिन पहले समाप्त', aLicSub: 'अंतिम तिथि {d} · नवीनीकरण शुरू करें',
+      wdT: 'छुट्टी का इंतज़ार', wdSub: '{doc}छुट्टी की सलाह · {bill}', wdBill: 'बिल {amt} बाकी', wdClear: 'बिल साफ़', wdGo: 'छुट्टी दें', aWd: '{name} — छुट्टी की सलाह, बिल {amt} बाकी', aWdSub: 'बेड {bed} · बिल चुकाकर छुट्टी दें', adv: 'डॉक्टर ने छुट्टी की सलाह दी', advOn: '✓ छुट्टी की सलाह दी गई', advOff: 'चिह्नित करें: डॉक्टर ने छुट्टी की सलाह दी', advUndo: 'वापस लें', lic: 'लाइसेंस', staffN: 'स्टाफ',
       bmT: 'बेड मैप', bmS: 'बेड पर टैप करें — मरीज़ देखने या नया मरीज़ भर्ती करने के लिए', bmAll: 'सभी', bmUsed: '{a} / {b} उपयोग में', perDay: '/दिन', admit: 'भर्ती करें', addBed: 'बेड जोड़ें', newAdm: 'नई भर्ती', daysN: '{n} दिन', todayAdm: 'आज भर्ती', dueTag: 'बकाया', critical: 'गंभीर', off: 'बंद',
       blT: 'बिलिंग', blS: 'किस पर कितना बाकी, एक जगह', blTotal: 'कुल बिल', blPaid: 'वसूली', blDue: 'बकाया', blSearch: 'नाम या बेड से खोजें', blAllF: 'सभी', stUrg: 'ज़रूरी बकाया', stNone: 'जमा नहीं', stPart: 'आंशिक जमा', stFull: 'पूरा जमा', stDis: 'छुट्टी हो गई', colPat: 'मरीज़', colTot: 'कुल बिल', colPaid: 'जमा', colDue: 'बाकी', colSt: 'स्थिति', takePay: 'पैसा जमा करें', viewPt: 'देखें', paidOk: 'पूरा जमा हो गया', disAgo: 'छुट्टी · {n} दिन पहले', disToday: 'छुट्टी · आज', bedDays: 'बेड {b} · {n} दिन', blEmpty: 'अभी कोई बिल नहीं।', oldList: 'बिलिंग के और काम', wG: 'जनरल वार्ड', wF: 'महिला वार्ड', wM: 'प्रसूति वार्ड', wI: 'आईसीयू / एचडीयू', wE: 'इमरजेंसी', savedBills: 'सेव किए गए अंतिम बिल',
       g1: 'सुप्रभात', g2: 'नमस्ते', g3: 'शुभ संध्या', gsub: 'आज का पैसा, बेड और समस्याएँ — एक नज़र में',
@@ -209,8 +221,10 @@
         else if (a.k === 'dis') { tt = T('aDis', { name: esc(a.name), amt: rs(a.amt) }); ss = T('aDisSub', { d: a.d }); }
         else if (a.k === 'long') { tt = T('aLong', { name: esc(a.name), d: a.d }); ss = T('aLongSub', { bed: '<span class="nob">' + esc(a.bed) + '</span>' }); }
         else if (a.k === 'set') { tt = T('aSet'); ss = T('aSetSub'); }
+        else if (a.k === 'lic') { tt = a.n < 0 ? T('aLicOver', { name: esc(a.name), n: -a.n }) : T('aLic', { name: esc(a.name), n: a.n }); ss = T('aLicSub', { d: dLong(a.d) }); }
+        else if (a.k === 'wd') { tt = T('aWd', { name: esc(a.name), amt: rs(a.amt) }); ss = (a.by ? esc(a.by) + ' · ' : '') + T('aWdSub', { bed: '<span class="nob">' + esc(a.bed) + '</span>' }); }
         else { tt = T('aCln', { n: a.n }); ss = T('aClnSub'); }
-        var icn = a.k === 'due' ? 'rupee' : a.k === 'dis' ? 'phone' : a.k === 'long' ? 'clock' : a.k === 'set' ? 'warn' : 'spark';
+        var icn = a.k === 'due' ? 'rupee' : a.k === 'dis' ? 'phone' : a.k === 'long' ? 'clock' : a.k === 'set' ? 'warn' : a.k === 'lic' ? 'warn' : a.k === 'wd' ? 'out' : 'spark';
         h += '<li><button class="oh-a t-' + a.t + '" data-oh="al" data-i="' + i + '"><span class="oh-ai">' + ic(icn, 19) + '</span><span class="oh-at"><b>' + tt + '</b><span>' + ss + '</span></span><span class="oh-chev">' + ic('chev', 16) + '</span></button></li>';
       });
       h += '</ul>';
@@ -272,6 +286,7 @@
       'body.oh-skin #v-dashboard .dash-tab{font-size:14.5px}',
       'body.oh-skin .panel{border-radius:18px}',
       'body.oh-skin #aura-billsetup{margin-top:14px}',
+      'body.oh-live #aura-billsetup:not(.oh-show){display:none!important}',
       '.oh-bn{display:none}',
       '@media(max-width:600px){',
       ' .oh-ph{margin-bottom:14px;padding-bottom:14px}.oh-ph h1{font-size:23px}.oh-pa{width:100%;display:grid;grid-template-columns:1fr 1fr}',
@@ -338,6 +353,8 @@
         var b = e.target.closest('[data-ph]'); if (!b) return;
         var k = b.getAttribute('data-ph');
         if (k === 'adm') { if (typeof openRegisterModal === 'function') openRegisterModal(); return; }
+        if (k === 'oadm') { if (typeof openAdmitModal === 'function') openAdmitModal(); return; }
+        if (k === 'bill') { nav('bills', navBtn('bills')); return; }
         if (k === 'pay') { if (typeof openPayment === 'function') openPayment(); return; }
         if (k === 'beds') { if (typeof nav === 'function') nav('beds', navBtn('beds')); }
         else if (typeof dashTab === 'function') { dashTab('reports', document.querySelector('.dash-tab[data-dtab="reports"]')); var t = dv.querySelector('.dash-tabs'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -351,10 +368,10 @@
     ph.innerHTML = '<div><div class="oh-eb">' + esc(date) + '</div><h1>' + g + (who ? ', ' + esc(who) : '') + '</h1><p>' + T('gsub') + '</p></div>'
       + (PAGE === 'reception'
         ? '<div class="oh-pa"><button type="button" class="oh-b s" data-ph="pay">' + ic('rupee', 18) + T('takePay') + '</button><button type="button" class="oh-b p" data-ph="adm">+ ' + T('newAdm') + '</button></div>'
-        : '<div class="oh-pa"><button type="button" class="oh-b s" data-ph="rep">' + T('bRep') + '</button><button type="button" class="oh-b p" data-ph="beds">' + ic('bed', 18) + T('bBeds') + '</button></div>');
+        : '<div class="oh-pa"><button type="button" class="oh-b s" data-ph="bill">' + ic('rupee', 18) + T('blT') + '</button><button type="button" class="oh-b p" data-ph="oadm">+ ' + T('newAdm') + '</button></div>');
   }
   function skin() {
-    skinCss(); document.body.classList.add('oh-skin');
+    skinCss(); early(); document.body.classList.add('oh-skin'); licNav(); advButton();
     header(); bottomNav();
   }
 
@@ -452,19 +469,20 @@
   var BM = { f: 'all' };
   async function bedMap() {
     var cid = cidNow(), host = document.getElementById('beds-by-ward'); if (!cid || !host) return;
-    bmCss(); css(); await info(cid); try { skin(); } catch (e) {}
+    bmCss(); bottomCss(); css(); await info(cid); try { skin(); } catch (e) {}
     var r = await Promise.all([
       _supa.from('beds').select('*').eq('clinic_id', cid).order('ward').order('bed_number'),
       _supa.from('admissions').select('id,bed_id,patient_id,patient_name,admission_date').eq('clinic_id', cid).eq('status', 'Active'),
       money(cid)
     ]);
-    if (r[0].error) return;
+    if (r[0].error) { host.classList.add('oh-ready'); return; }
     var beds = r[0].data || [], adm = {}, M = r[2];
     (r[1].data || []).forEach(function (a) { if (a.bed_id) adm[a.bed_id] = a; });
     BM.data = { beds: beds, adm: adm, M: M };
+    BM.wd = await advised(cid).catch(function () { return []; });
     var btn = PAGE === 'reception'
-      ? '<button type="button" class="oh-b p" onclick="openRegisterModal()">+ ' + T('newAdm') + '</button>'
-      : '<button type="button" class="oh-b p" onclick="openAddBedModal()">+ ' + T('addBed') + '</button>';
+      ? '<button type="button" class="oh-b s" onclick="openPayment()">' + ic('rupee', 18) + T('takePay') + '</button><button type="button" class="oh-b p" onclick="openRegisterModal()">+ ' + T('newAdm') + '</button>'
+      : '<button type="button" class="oh-b s" onclick="openAddBedModal()">+ ' + T('addBed') + '</button><button type="button" class="oh-b p" onclick="openAdmitModal()">+ ' + T('newAdm') + '</button>';
     var ph = pageHead('v-beds', 'beds', T('bmT'), T('bmS'), btn); bnDigits(ph);
     host.classList.add('oh-bmhost');
     drawBeds();
@@ -476,7 +494,7 @@
     var key = function (s) { return s === 'free' ? 'free' : s === 'cleaning' ? 'cln' : s === 'reserved' ? 'res' : s === 'inactive' ? 'ina' : 'occ'; };
     D.beds.forEach(function (b) { var k = key(st(b)); grp.all++; if (grp[k] != null) grp[k]++; });
     var F = [['all', T('bmAll'), ''], ['free', T('free'), '#1BB880'], ['occ', T('occ'), '#2B4C9B'], ['cln', T('cln'), '#E0A43A'], ['res', T('res'), '#8A6AD8']];
-    var h = '<div class="oh-flt">' + F.map(function (f) { return '<button type="button" class="oh-f' + (BM.f === f[0] ? ' on' : '') + '" data-bf="' + f[0] + '">' + (f[2] ? '<i style="background:' + f[2] + '"></i>' : '') + f[1] + ' <em>' + grp[f[0]] + '</em></button>'; }).join('') + '</div>';
+    var h = wdHtml(BM.wd || [], D) + '<div class="oh-flt">' + F.map(function (f) { return '<button type="button" class="oh-f' + (BM.f === f[0] ? ' on' : '') + '" data-bf="' + f[0] + '">' + (f[2] ? '<i style="background:' + f[2] + '"></i>' : '') + f[1] + ' <em>' + grp[f[0]] + '</em></button>'; }).join('') + '</div>';
     var wards = {}, order = [];
     D.beds.forEach(function (b) { var w = b.ward || 'General'; if (!wards[w]) { wards[w] = []; order.push(w); } wards[w].push(b); });
     order.forEach(function (w) {
@@ -502,10 +520,18 @@
     });
     host.innerHTML = h;
     bnDigits(host);
+    host.classList.add('oh-ready'); document.body.classList.add('oh-live');
     if (!host._oh) { host._oh = 1; host.addEventListener('click', bedClick); }
   }
   function bedClick(e) {
     var f = e.target.closest('[data-bf]'); if (f) { BM.f = f.getAttribute('data-bf'); drawBeds(); return; }
+    var wd = e.target.closest('[data-wd]');
+    if (wd) {
+      var aa = (BM.wd || []).filter(function (x) { return String(x.id) === wd.getAttribute('data-wd'); })[0]; if (!aa) return;
+      if (PAGE === 'reception' && typeof openDischargeConfirm === 'function') openDischargeConfirm(aa.id, aa.bed_id, aa.patient_name || '');
+      else if (typeof openPatientFromBed === 'function') openPatientFromBed(aa.patient_id, aa.patient_name || '', '', '');
+      return;
+    }
     var t = e.target.closest('[data-bid]'); if (!t || !BM.data) return;
     var b = BM.data.beds.filter(function (x) { return String(x.id) === t.getAttribute('data-bid'); })[0]; if (!b) return;
     var a = BM.data.adm[b.id], s = window.AuraBeds ? AuraBeds.state(b, a) : (a ? 'occupied' : 'free'), ward = b.ward || 'General';
@@ -594,6 +620,333 @@
   }
   function rowOf(id) { return (BL.rows || []).filter(function (x) { return String(x.a.id) === String(id); })[0]; }
 
+  /* ---------------- fonts, fixed logo, no flash of old screens ---------------- */
+  function early() {
+    if (!document.getElementById('oh-font')) {
+      var l = document.createElement('link'); l.id = 'oh-font'; l.rel = 'stylesheet';
+      l.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap';
+      document.head.appendChild(l);
+    }
+    if (document.getElementById('oh-early-css')) return;
+    var s = document.createElement('style'); s.id = 'oh-early-css';
+    s.textContent = [
+      'body.oh-skin,body.oh-skin *:not(svg):not(path):not(code):not(pre){font-family:"Noto Sans Bengali","IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important}',
+      'html[lang=en] body.oh-skin,html[lang=en] body.oh-skin *:not(svg):not(path):not(code):not(pre){font-family:"IBM Plex Sans","Noto Sans Bengali",system-ui,sans-serif!important}',
+      'body.oh-skin .oh-bt .n,body.oh-skin .oh-mono,body.oh-skin .oh-mono *{font-family:"IBM Plex Mono",ui-monospace,monospace!important}',
+      'body.oh-skin #sidebar .sb-logo{position:sticky;top:0;z-index:6}',
+      'body.oh-skin header{position:sticky;top:0;z-index:30}',
+      /* hide the old screens until the new ones are drawn — no flash */
+      'body.oh-skin #v-beds>.sh,body.oh-skin #v-billing>.sh,body.oh-skin #v-bills>.sh,body.oh-skin #v-home>.sh,body.oh-skin #v-dashboard>.sh,body.oh-skin #v-staff>.sh{display:none!important}',
+      'body.oh-skin #beds-by-ward:not(.oh-ready){visibility:hidden;min-height:60vh}',
+      'body.oh-live #v-beds>*:not(.oh-ph):not(#beds-by-ward){display:none!important}',
+      'body.oh-live #dtab-overview>*:not(#oh-bottom):not(.oh-keep){display:none!important}',
+      'body.oh-live #v-home>*:not(.oh-ph):not(#oh-home):not(#oh-bottom){display:none!important}'
+    ].join('\n');
+    document.head.appendChild(s);
+    if (document.body) document.body.classList.add('oh-skin');
+  }
+
+  /* ---------------- home: beds by ward, recent payments, staff on duty ---------------- */
+  function bottomCss() {
+    if (document.getElementById('oh-bot-css')) return;
+    var s = document.createElement('style'); s.id = 'oh-bot-css';
+    s.textContent = [
+      '#oh-bottom{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;margin-top:14px;align-items:start}',
+      '.oh-pn{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;min-width:0}',
+      '.oh-pn.full{grid-column:1/-1}',
+      '.oh-pnh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--surface2);border-bottom:1px solid var(--border)}',
+      '.oh-pnh h3{margin:0;font-size:15px;font-weight:600;color:var(--text-primary)}',
+      '.oh-lnk{border:0;background:none;color:var(--green);font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;min-height:36px}',
+      '.oh-pnb{padding:16px 20px}',
+      '.oh-wr{margin-bottom:16px}.oh-wr:last-child{margin-bottom:2px}',
+      '.oh-wr div{display:flex;justify-content:space-between;font-size:14.5px;margin-bottom:8px}.oh-wr b{font-weight:600;color:var(--text-primary)}.oh-wr span{color:var(--text-tertiary)}',
+      '.oh-bar{height:10px;background:var(--border);border-radius:3px;overflow:hidden}.oh-bar i{display:block;height:100%;background:#1BB880}.oh-bar i.hi{background:#E0A43A}',
+      '.oh-py{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--border)}.oh-py:first-child{border-top:0;padding-top:4px}',
+      '.oh-pyi{width:38px;height:38px;border-radius:9px;background:var(--surface2);display:grid;place-items:center;color:var(--text-secondary);flex:none}',
+      '.oh-py b{display:block;font-size:14.5px;font-weight:600;color:var(--text-primary)}.oh-py span{font-size:13px;color:var(--text-tertiary)}.oh-py em{margin-left:auto;font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text-primary)}',
+      '.oh-duty{display:flex;flex-wrap:wrap;gap:10px}',
+      '.oh-dc{display:inline-flex;align-items:center;gap:10px;background:var(--surface2);border-radius:12px;padding:6px 12px 6px 6px}',
+      '.oh-dc .oh-av{width:32px;height:32px;border-radius:8px;font-size:13px}.oh-dc b{font-size:14px;font-weight:600;color:var(--text-primary)}.oh-dc span{font-size:13px;color:var(--text-tertiary)}',
+      '.oh-st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:5px;white-space:nowrap}',
+      '.oh-st:before{content:"";width:7px;height:7px;border-radius:2px;background:currentColor}',
+      '.oh-st.p{background:var(--green-bg);color:var(--green)}.oh-st.l{background:var(--amber-bg);color:var(--amber)}.oh-st.v{background:var(--red-bg);color:var(--red)}.oh-st.w{background:var(--surface2);color:var(--text-secondary);border:1px solid var(--border)}',
+      '.oh-note{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-tertiary);margin:16px 2px}',
+      '@media(max-width:900px){#oh-bottom{grid-template-columns:minmax(0,1fr)}}'
+    ].join('\n');
+    document.head.appendChild(s);
+  }
+  var IC2 = {
+    upi: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/>',
+    cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+    phone: IC.phone, shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+    users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+    bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+    calendar: IC.cal, clock: IC.clock, info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>'
+  };
+  function ic2(n, sz) { return '<svg width="' + (sz || 18) + '" height="' + (sz || 18) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC2[n] + '</svg>'; }
+  function when(d) { var k = dayKey(d), t = dayKey(new Date()), n = Math.round((new Date(t) - new Date(k)) / 86400000); return n <= 0 ? T('today2') : n === 1 ? T('yest') : T('daysAgo', { n: n }); }
+  function methodName(m) { m = String(m || '').toLowerCase(); return m.indexOf('cash') >= 0 ? T('cash') : m.indexOf('upi') >= 0 ? T('upi') : m.indexOf('card') >= 0 ? T('card') : (m ? m : T('other')); }
+
+  async function staffToday(cid) {
+    var day = dayKey(new Date());
+    var r = await Promise.all([
+      _supa.from('hr_staff').select('*').eq('clinic_id', cid).order('name'),
+      _supa.from('hr_attendance').select('staff_id,status,late,in_at,out_at').eq('clinic_id', cid).eq('day', day)
+    ]);
+    if (r[0].error) return null;
+    var att = {}; (r[1].data || []).forEach(function (a) { att[a.staff_id] = a; });
+    var nowMin = (function () { var p = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false }).split(':'); return +p[0] * 60 + +p[1]; })();
+    return (r[0].data || []).filter(function (s) { return s.is_active !== false; }).map(function (s) {
+      var a = att[s.id], ds = String(s.duty_start || '10:00').slice(0, 5), hm = ds.split(':'), start = (+hm[0] || 0) * 60 + (+hm[1] || 0);
+      var st = 'w', lab = T('sWill');
+      if (a) {
+        if (a.status === 'present') { st = a.late ? 'l' : 'p'; lab = a.late ? T('sLate') : T('sPresent'); }
+        else if (a.status === 'half') { st = 'l'; lab = T('sHalf'); }
+        else if (a.status === 'leave') { st = 'v'; lab = T('sLeave'); }
+        else if (a.status === 'off') { st = 'w'; lab = T('sOff'); }
+        else if (a.status === 'absent') { st = 'v'; lab = T('sAbsent'); }
+      } else if (nowMin > start + 15) { st = 'l'; lab = T('sNot'); }
+      var shift = start < 12 * 60 ? 'M' : start < 18 * 60 ? 'A' : 'N';
+      return { s: s, st: st, lab: lab, start: ds, shift: shift, came: !!(a && (a.status === 'present' || a.status === 'half')) };
+    });
+  }
+  function fmtTime(hm) {
+    var p = String(hm).split(':'), h = +p[0], m = +p[1] || 0, l = lang();
+    if (l === 'en') return (h % 12 || 12) + (m ? ':' + (m < 10 ? '0' : '') + m : '') + (h < 12 ? ' am' : ' pm');
+    return (h % 12 || 12) + (m ? ':' + (m < 10 ? '0' : '') + m : '') + (l === 'bn' ? 'টা' : ' बजे');
+  }
+
+  async function homeExtras() {
+    var cid = cidNow(); if (!cid) return;
+    var pnl = document.getElementById('dtab-overview') || document.getElementById('v-home'); if (!pnl) return;
+    bottomCss(); bmCss();
+    var bot = document.getElementById('oh-bottom');
+    if (!bot) {
+      bot = document.createElement('div'); bot.id = 'oh-bottom';
+      if (PAGE === 'owner') pnl.appendChild(bot); else { var hb = document.getElementById('oh-home'); hb.parentNode.insertBefore(bot, hb.nextSibling); }
+      bot.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-go]'); if (!b) return;
+        var g = b.getAttribute('data-go');
+        if (g === 'beds') nav('beds', navBtn('beds'));
+        else if (g === 'pay') { if (PAGE === 'reception') nav('billing', navBtn('billing')); else if (typeof dashTab === 'function') dashTab('payments', document.querySelector('.dash-tab[data-dtab="payments"]')); }
+        else if (g === 'staff') { if (PAGE === 'owner') nav('staff', navBtn('staff')); else location.href = 'staff.html?c=' + encodeURIComponent(cid); }
+      });
+    }
+    var r = await Promise.all([
+      _supa.from('beds').select('id,ward,status,is_active').eq('clinic_id', cid),
+      _supa.from('admissions').select('id,bed_id,patient_name').eq('clinic_id', cid).eq('status', 'Active'),
+      _supa.from('nh_payments').select('admission_id,amount,method,created_at').eq('clinic_id', cid).order('created_at', { ascending: false }).limit(5),
+      staffToday(cid).catch(function () { return null; })
+    ]);
+    var beds = r[0].data || [], act = r[1].data || [], pays = r[2].data || [], staff = r[3];
+    var occ = {}; act.forEach(function (a) { if (a.bed_id) occ[a.bed_id] = 1; });
+    var W = {}, order = [];
+    beds.forEach(function (b) { if (b.is_active === false) return; var w = b.ward || 'General'; if (!W[w]) { W[w] = { n: 0, u: 0 }; order.push(w); } W[w].n++; if (occ[b.id]) W[w].u++; });
+    var wards = order.map(function (w) { var x = W[w], pc = x.n ? Math.round(100 * x.u / x.n) : 0; return '<div class="oh-wr"><div><b>' + esc(wardName(w)) + '</b><span>' + x.u + ' / ' + x.n + ' ' + T('used') + '</span></div><div class="oh-bar"><i class="' + (pc >= 75 ? 'hi' : '') + '" style="width:' + pc + '%"></i></div></div>'; }).join('');
+    var nm = {}; act.forEach(function (a) { nm[a.id] = a.patient_name; });
+    var miss = pays.filter(function (p) { return p.admission_id && !nm[p.admission_id]; }).map(function (p) { return p.admission_id; });
+    if (miss.length) { var rr = await _supa.from('admissions').select('id,patient_name').in('id', miss); (rr.data || []).forEach(function (a) { nm[a.id] = a.patient_name; }); }
+    var payl = pays.map(function (p) { var cash = String(p.method || '').toLowerCase().indexOf('cash') >= 0; return '<div class="oh-py"><span class="oh-pyi">' + ic2(cash ? 'cash' : 'upi', 19) + '</span><div><b>' + esc(nm[p.admission_id] || '—') + '</b><span>' + esc(methodName(p.method)) + ' · ' + when(p.created_at) + '</span></div><em>' + rs(p.amount) + '</em></div>'; }).join('') || '<div style="color:var(--text-tertiary)">' + T('noPay') + '</div>';
+    var duty = '';
+    if (staff && staff.length) duty = '<div class="oh-duty">' + staff.map(function (x) { return '<span class="oh-dc">' + av(x.s.name) + '<b>' + esc(x.s.name) + '</b><span>· ' + esc(x.s.designation || x.s.role || '') + '</span><span class="oh-st ' + x.st + '">' + x.lab + '</span></span>'; }).join('') + '</div>';
+    else duty = '<div style="color:var(--text-tertiary)">' + T('noStaff') + '</div>';
+    var showDuty = !(staff === null && PAGE === 'reception');
+    var hd = function (t, go) { return '<div class="oh-pnh"><h3>' + t + '</h3><button type="button" class="oh-lnk" data-go="' + go + '">' + T('seeAll') + ic('chev', 15) + '</button></div>'; };
+    bot.innerHTML = '<div class="oh-pn">' + hd(T('wardBeds'), 'beds') + '<div class="oh-pnb">' + wards + '</div></div>'
+      + '<div class="oh-pn">' + hd(T('recentPay'), 'pay') + '<div class="oh-pnb">' + payl + '</div></div>'
+      + (showDuty ? '<div class="oh-pn full">' + hd(T('onDuty'), 'staff') + '<div class="oh-pnb">' + duty + '</div></div>' : '');
+    bnDigits(bot);
+  }
+
+  /* ---------------- staff page ---------------- */
+  async function staffBoard() {
+    var cid = cidNow(), v = document.getElementById('v-staff'); if (!cid || !v || PAGE !== 'owner') return;
+    bmCss(); bottomCss(); css(); await info(cid); try { skin(); } catch (e) {}
+    var list = await staffToday(cid).catch(function () { return null; }) || [];
+    var came = list.filter(function (x) { return x.came; }).length;
+    pageHead('v-staff', 'staff', T('stfT'), T('stfS'), '<span class="oh-st p" style="font-size:14px;padding:10px 14px">' + T('stfCame', { a: came, b: list.length }) + '</span><button type="button" class="oh-b s" data-sb="book">' + T('attBook') + '</button>');
+    var host = document.getElementById('oh-staff');
+    if (!host) {
+      host = document.createElement('div'); host.id = 'oh-staff';
+      var ph = document.getElementById('oh-ph-staff'); ph.parentNode.insertBefore(host, ph.nextSibling);
+      var more = document.createElement('div'); more.className = 'oh-more'; more.id = 'oh-staff-more'; host.parentNode.insertBefore(more, host.nextSibling);
+      v.addEventListener('click', function (e) { if (e.target.closest('[data-sb=book]')) location.href = 'staff.html?c=' + encodeURIComponent(cid); });
+    }
+    var css2 = document.getElementById('oh-stf-css');
+    if (!css2) { css2 = document.createElement('style'); css2.id = 'oh-stf-css'; css2.textContent = '.oh-sh{display:flex;gap:10px;align-items:baseline;margin:22px 0 12px}.oh-sh b{font-size:16px;font-weight:700;color:var(--text-primary)}.oh-sh span{font-size:13.5px;color:var(--text-tertiary)}.oh-sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}.oh-sc{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px;min-height:108px}.oh-sc .oh-av{width:40px;height:40px}.oh-sc .i{flex:1;min-width:0}.oh-sc b{display:block;font-size:15px;font-weight:700;color:var(--text-primary)}.oh-sc .d{font-size:13px;color:var(--text-tertiary);margin:2px 0 6px}.oh-sc a{display:inline-flex;gap:6px;align-items:center;color:var(--green);text-decoration:none;font-size:14.5px}'; document.head.appendChild(css2); }
+    if (!list.length) host.innerHTML = '<div class="oh-pn"><div class="oh-pnb" style="color:var(--text-tertiary)">' + T('noStaff') + '</div></div>';
+    else {
+      var SH = [['M', T('shM')], ['A', T('shA')], ['N', T('shN')]], h = '';
+      SH.forEach(function (sh) {
+        var g = list.filter(function (x) { return x.shift === sh[0]; }); if (!g.length) return;
+        var times = g.map(function (x) { return x.start; }).sort();
+        h += '<div class="oh-sh"><b>' + sh[1] + '</b><span>' + fmtTime(times[0]) + (times.length > 1 && times[times.length - 1] !== times[0] ? ' – ' + fmtTime(times[times.length - 1]) : '') + '</span></div><div class="oh-sg">';
+        h += g.map(function (x) {
+          var ph2 = x.s.phone || x.s.mobile || '';
+          return '<div class="oh-sc">' + av(x.s.name) + '<div class="i"><b>' + esc(x.s.name) + '</b><div class="d">' + esc([x.s.designation || x.s.role, fmtTime(x.start)].filter(Boolean).join(' · ')) + '</div>' + (ph2 ? '<a class="nob" href="tel:' + esc(ph2) + '">' + ic2('phone', 16) + esc(ph2) + '</a>' : '') + '</div><span class="oh-st ' + x.st + '">' + x.lab + '</span></div>';
+        }).join('') + '</div>';
+      });
+      host.innerHTML = h;
+    }
+    var more = document.getElementById('oh-staff-more'); if (more) more.textContent = T('logins');
+    bnDigits(v.querySelector('#oh-ph-staff')); bnDigits(host);
+  }
+
+  /* ---------------- licences (owner) ---------------- */
+  var LC = { rows: null, ok: true };
+  async function licLoad(cid) {
+    var r = await _supa.from('nh_licences').select('*').eq('clinic_id', cid).order('expires_on');
+    if (r.error) { LC.ok = false; LC.rows = []; return []; }
+    LC.ok = true; LC.rows = r.data || []; return LC.rows;
+  }
+  function daysTo(d) { return Math.round((new Date(String(d).slice(0, 10) + 'T00:00:00+05:30') - new Date(dayKey(new Date()) + 'T00:00:00+05:30')) / 86400000); }
+  function dLong(d) { var l = lang(); return new Date(String(d).slice(0, 10) + 'T12:00:00+05:30').toLocaleDateString(l === 'bn' ? 'bn-IN' : l === 'hi' ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  function licNav() {
+    if (PAGE !== 'owner' || document.getElementById('oh-nb-lic')) return;
+    var st = navBtn('staff'); if (!st) return;
+    var b = document.createElement('button'); b.className = 'nb owner-only'; b.id = 'oh-nb-lic'; b.type = 'button';
+    b.innerHTML = '<span class="nb-ic">' + ic2('shield', 18) + '</span><span class="oh-lic-t">' + T('lic') + '</span>';
+    b.onclick = function () { nav('licences', b); };
+    st.parentNode.insertBefore(b, st);
+    var dv = document.getElementById('v-dashboard');
+    if (dv && !document.getElementById('v-licences')) { var v = document.createElement('div'); v.className = 'view'; v.id = 'v-licences'; dv.parentNode.appendChild(v); }
+  }
+  async function licences() {
+    var cid = cidNow(), v = document.getElementById('v-licences'); if (!cid || !v) return;
+    bmCss(); bottomCss(); css(); await info(cid); try { skin(); } catch (e) {}
+    var t = document.getElementById('tab-title'); if (t) t.textContent = T('lic');
+    if (!document.getElementById('oh-lc-css')) { var c = document.createElement('style'); c.id = 'oh-lc-css'; c.textContent = [
+      '.oh-lsum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}',
+      '.oh-lsum div{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}',
+      '.oh-lsum i{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-style:normal}.oh-lsum b{display:block;font-size:22px;font-weight:700;color:var(--text-primary)}.oh-lsum span{font-size:14px;color:var(--text-secondary)}',
+      '.oh-tl{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px}.oh-tl div{background:var(--surface2);border-radius:8px;min-height:96px;padding:8px;font-size:12.5px;color:var(--text-secondary)}.oh-tl div.now{background:var(--green-bg)}',
+      '.oh-tl em{display:block;font-style:normal;margin-top:8px;border-radius:6px;padding:4px 6px;font-size:12px;font-weight:600;background:var(--surface);border:1px solid var(--border)}.oh-tl em.u{background:var(--red-bg);color:var(--red);border-color:transparent}.oh-tl em.s{background:var(--amber-bg);color:var(--amber);border-color:transparent}',
+      '.oh-lc{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:20px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:12px}',
+      '.oh-ld{border-radius:10px;text-align:center;padding:18px 6px}.oh-ld b{display:block;font-size:28px;font-weight:700}.oh-ld span{font-size:13px;font-weight:600}',
+      '.oh-ld.u{background:var(--red-bg);color:var(--red)}.oh-ld.s{background:var(--amber-bg);color:var(--amber)}.oh-ld.k{background:var(--green-bg);color:var(--green)}',
+      '.oh-lc h4{margin:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:16px;font-weight:700;color:var(--text-primary)}.oh-lc .m{font-size:13.5px;color:var(--text-tertiary);margin:4px 0}',
+      '.oh-lp{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:10px 0}.oh-lp i{display:block;height:100%}',
+      '.oh-rm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13.5px;color:var(--text-tertiary)}.oh-rm button{min-height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);font:inherit;font-size:13.5px;cursor:pointer;color:var(--text-secondary)}.oh-rm button.on{background:#0A6B4B;border-color:#0A6B4B;color:#fff}',
+      '.oh-la{display:flex;flex-direction:column;gap:8px;align-items:stretch}',
+      '.oh-mod{position:fixed;inset:0;background:rgba(10,20,15,.45);z-index:200;display:grid;place-items:center;padding:16px}.oh-mbox{background:var(--surface);border-radius:16px;width:min(460px,100%);padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3)}',
+      '.oh-mbox h3{margin:0 0 14px;font-size:18px}.oh-mbox label{display:block;font-size:13.5px;color:var(--text-secondary);margin:10px 0 4px}.oh-mbox input{width:100%;min-height:46px;border:1px solid var(--border-strong);border-radius:10px;padding:0 12px;font:inherit;font-size:15px;background:var(--surface);color:var(--text-primary);box-sizing:border-box}',
+      '.oh-mbtn{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}',
+      '@media(max-width:700px){.oh-lsum{grid-template-columns:1fr}.oh-tl{grid-template-columns:repeat(4,minmax(0,1fr))}.oh-lc{grid-template-columns:90px minmax(0,1fr)}.oh-la{grid-column:1/-1}}'
+    ].join('\n'); document.head.appendChild(c); }
+    pageHead('v-licences', 'lic', T('lcT'), T('lcS'), '<button type="button" class="oh-b p" data-lc="add">+ ' + T('lcAdd') + '</button>');
+    var host = document.getElementById('oh-lic');
+    if (!host) { host = document.createElement('div'); host.id = 'oh-lic'; v.appendChild(host); v.addEventListener('click', licClick); }
+    var rows = await licLoad(cid);
+    if (!LC.ok) { host.innerHTML = '<div class="oh-pn"><div class="oh-pnb" style="color:var(--text-tertiary)">' + T('lcNeedSql') + '</div></div>'; return; }
+    var cu = 0, cs = 0, ck = 0;
+    rows.forEach(function (x) { var d = daysTo(x.expires_on); if (d <= 15) cu++; else if (d <= 60) cs++; else ck++; });
+    var h = '<div class="oh-lsum"><div><i style="background:var(--red-bg);color:var(--red)">' + ic('warn', 20) + '</i><span><b>' + cu + '</b>' + T('lcUrg') + '</span></div><div><i style="background:var(--amber-bg);color:var(--amber)">' + ic2('clock', 20) + '</i><span><b>' + cs + '</b>' + T('lcSoon') + '</span></div><div><i style="background:var(--green-bg);color:var(--green)">' + ic('ok', 20) + '</i><span><b>' + ck + '</b>' + T('lcOk') + '</span></div></div>';
+    var l = lang(), loc = l === 'bn' ? 'bn-IN' : l === 'hi' ? 'hi-IN' : 'en-IN', now = new Date(), tl = '';
+    for (var i = 0; i < 12; i++) {
+      var md = new Date(now.getFullYear(), now.getMonth() + i, 1), y = md.getFullYear(), m = md.getMonth();
+      var lab = md.toLocaleDateString(loc, { month: 'short' }) + (i === 0 || m === 0 ? ' ' + String(y).slice(2) : '');
+      var items = rows.filter(function (x) { var e = new Date(String(x.expires_on).slice(0, 10) + 'T12:00:00'); return e.getFullYear() === y && e.getMonth() === m; }).map(function (x) { var d = daysTo(x.expires_on); return '<em class="' + (d <= 15 ? 'u' : d <= 60 ? 's' : '') + '">' + new Date(String(x.expires_on).slice(0, 10) + 'T12:00:00').getDate() + ' · ' + esc(String(x.name).split(' ')[0]) + '</em>'; }).join('');
+      tl += '<div class="' + (i === 0 ? 'now' : '') + '">' + lab + items + '</div>';
+    }
+    h += '<div class="oh-pn"><div class="oh-pnh"><h3>' + T('lc12') + '</h3>' + ic2('calendar', 18) + '</div><div class="oh-pnb"><div class="oh-tl">' + tl + '</div></div></div>';
+    if (!rows.length) h += '<div class="oh-pn" style="margin-top:12px"><div class="oh-pnb" style="color:var(--text-tertiary)">' + T('lcNone') + '</div></div>';
+    rows.forEach(function (x) {
+      var d = daysTo(x.expires_on), k = d <= 15 ? 'u' : d <= 60 ? 's' : 'k', col = k === 'u' ? 'var(--red)' : k === 's' ? '#E0A43A' : '#1BB880';
+      var chip = k === 'u' ? '<span class="oh-chip urg">' + T('stUrg').replace(T('stUrg'), lang() === 'en' ? 'Urgent' : lang() === 'hi' ? 'ज़रूरी' : 'জরুরি') + '</span>' : k === 's' ? '<span class="oh-chip none">' + (lang() === 'en' ? 'Soon' : lang() === 'hi' ? 'जल्द' : 'শীঘ্রই') + '</span>' : '<span class="oh-chip full">' + T('lcOk') + '</span>';
+      var pc = Math.max(3, Math.min(100, 100 - (Math.max(d, 0) / 365) * 100));
+      var rem = (x.remind_days || [30, 15, 7]);
+      h += '<div class="oh-lc"><div class="oh-ld ' + k + '"><b>' + Math.abs(d) + '</b><span>' + (d < 0 ? T('lcOver') : T('lcLeft')) + '</span></div><div style="min-width:0"><h4>' + esc(x.name) + chip + '</h4><div class="m">' + [x.authority ? esc(x.authority) : '', x.number ? (lang() === 'en' ? 'No. ' : 'নং ') + '<span class="nob">' + esc(x.number) + '</span>' : ''].filter(Boolean).join(' · ') + '</div><div class="m">' + ic2('calendar', 15) + ' ' + T('lcExp', { d: dLong(x.expires_on) }) + '</div><div class="oh-lp"><i style="width:' + pc + '%;background:' + col + '"></i></div>'
+        + '<div class="oh-rm">' + ic2('bell', 15) + T('lcRem') + [30, 15, 7].map(function (n) { return '<button type="button" class="' + (rem.indexOf(n) >= 0 ? 'on' : '') + '" data-rm="' + n + '" data-id="' + x.id + '">' + T('lcBefore', { n: n }) + '</button>'; }).join('') + '</div></div>'
+        + '<div class="oh-la"><button type="button" class="oh-b ' + (k === 'k' ? 's' : 'p') + '" data-lc="renew" data-id="' + x.id + '">' + ic('ok', 17) + T('lcRenew') + '</button><button type="button" class="oh-lnk" data-lc="edit" data-id="' + x.id + '">' + T('lcEdit') + '</button></div></div>';
+    });
+    host.innerHTML = h; bnDigits(host); bnDigits(document.getElementById('oh-ph-lic'));
+  }
+  function licRow(id) { return (LC.rows || []).filter(function (x) { return String(x.id) === String(id); })[0]; }
+  function licModal(x, renew) {
+    var old = document.getElementById('oh-lmod'); if (old) old.remove();
+    var m = document.createElement('div'); m.className = 'oh-mod'; m.id = 'oh-lmod';
+    var nd = '';
+    if (renew && x) { var e = new Date(String(x.expires_on).slice(0, 10) + 'T12:00:00'); e.setFullYear(e.getFullYear() + 1); nd = e.toISOString().slice(0, 10); }
+    m.innerHTML = '<div class="oh-mbox"><h3>' + (renew ? T('lcRenew') : x ? T('lcEdit') : T('lcAdd')) + '</h3>'
+      + (renew ? '<b>' + esc(x.name) + '</b>' : '<label>' + T('lcName') + '</label><input id="oh-lf-n" list="oh-lf-dl" value="' + esc(x ? x.name : '') + '"><datalist id="oh-lf-dl"><option value="Clinical Establishment Licence"><option value="Fire NOC"><option value="Biomedical Waste Authorisation"><option value="Pollution Consent (CTO)"><option value="Pharmacy (Drug) Licence"><option value="Trade Licence"><option value="PC-PNDT Registration"><option value="Lift Licence"></datalist>'
+        + '<label>' + T('lcAuth') + '</label><input id="oh-lf-a" value="' + esc(x ? x.authority || '' : '') + '"><label>' + T('lcNo') + '</label><input id="oh-lf-no" value="' + esc(x ? x.number || '' : '') + '">')
+      + '<label>' + (renew ? T('lcNewDate') : T('lcDate')) + '</label><input id="oh-lf-d" type="date" value="' + esc(renew ? nd : x ? String(x.expires_on).slice(0, 10) : '') + '">'
+      + '<div class="oh-mbtn">' + (x && !renew ? '<button type="button" class="oh-b s" data-lm="del" style="margin-right:auto;color:var(--red)">' + T('lcDel') + '</button>' : '') + '<button type="button" class="oh-b s" data-lm="x">' + T('lcCancel') + '</button><button type="button" class="oh-b p" data-lm="save">' + T('lcSave') + '</button></div></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', async function (e) {
+      if (e.target === m || e.target.closest('[data-lm=x]')) { m.remove(); return; }
+      var cid = cidNow();
+      if (e.target.closest('[data-lm=del]')) { if (!confirmDel()) return; await _supa.from('nh_licences').delete().eq('id', x.id); m.remove(); licences(); return; }
+      if (!e.target.closest('[data-lm=save]')) return;
+      var d = document.getElementById('oh-lf-d').value; if (!d) return;
+      var r;
+      if (renew) r = await _supa.from('nh_licences').update({ expires_on: d, renewed_at: new Date().toISOString() }).eq('id', x.id);
+      else {
+        var row = { name: document.getElementById('oh-lf-n').value.trim(), authority: document.getElementById('oh-lf-a').value.trim() || null, number: document.getElementById('oh-lf-no').value.trim() || null, expires_on: d };
+        if (!row.name) return;
+        r = x ? await _supa.from('nh_licences').update(row).eq('id', x.id) : await _supa.from('nh_licences').insert(Object.assign({ clinic_id: cid }, row));
+      }
+      if (r && r.error) { if (typeof showToast === 'function') showToast(r.error.message); return; }
+      m.remove(); licences();
+    });
+  }
+  function confirmDel() { try { return window.confirm('OK?'); } catch (e) { return true; } }
+  async function licClick(e) {
+    var a = e.target.closest('[data-lc]');
+    if (a) { var k = a.getAttribute('data-lc'), x = licRow(a.getAttribute('data-id')); if (k === 'add') licModal(null); else if (k === 'edit') licModal(x); else if (k === 'renew') licModal(x, true); return; }
+    var rb = e.target.closest('[data-rm]');
+    if (rb) {
+      var y = licRow(rb.getAttribute('data-id')); if (!y) return; var n = +rb.getAttribute('data-rm'), cur = (y.remind_days || [30, 15, 7]).slice();
+      cur = cur.indexOf(n) >= 0 ? cur.filter(function (z) { return z !== n; }) : cur.concat([n]);
+      rb.classList.toggle('on');
+      var r = await _supa.from('nh_licences').update({ remind_days: cur }).eq('id', y.id); if (!r.error) y.remind_days = cur;
+    }
+  }
+
+  /* ---------------- waiting for discharge ---------------- */
+  async function advised(cid) {
+    var r = await _supa.from('admissions').select('id,bed_id,patient_id,patient_name,discharge_advised_at,discharge_advised_by').eq('clinic_id', cid).eq('status', 'Active').not('discharge_advised_at', 'is', null);
+    if (r.error) return [];
+    return (r.data || []).filter(function (a) { return a.discharge_advised_at; });
+  }
+  function wdHtml(list, D) {
+    if (!list.length) return '';
+    var bn = {}; D.beds.forEach(function (b) { bn[b.id] = b.bed_number; });
+    return '<div class="oh-wd oh-pn" style="margin-bottom:18px"><div class="oh-pnh"><h3>' + T('wdT') + ' <span style="color:var(--text-tertiary);font-weight:500">· ' + list.length + '</span></h3></div><div class="oh-pnb">'
+      + list.map(function (a) {
+        var m = D.M[a.id] || { tot: 0, paid: 0 }, due = Math.round(m.tot - m.paid);
+        return '<div class="oh-py">' + av(a.patient_name) + '<div style="min-width:0"><b>' + esc(a.patient_name || '') + ' · ' + (lang() === 'en' ? 'Bed ' : lang() === 'hi' ? 'बेड ' : 'বেড ') + '<span class="nob">' + esc(bn[a.bed_id] || '') + '</span></b><span>' + T('wdSub', { doc: a.discharge_advised_by ? esc(a.discharge_advised_by) + (lang() === 'bn' ? '-এর ' : lang() === 'hi' ? ' की ' : ' ') : '', bill: due > 0 ? T('wdBill', { amt: rs(due) }) : T('wdClear') }) + '</span></div><button type="button" class="oh-b s" style="margin-left:auto;min-height:44px" data-wd="' + esc(a.id) + '">' + T('wdGo') + '</button></div>';
+      }).join('') + '</div></div>';
+  }
+  async function adviseToggle(admId, on, by) {
+    var r = await _supa.rpc('nh_advise_discharge', { p_admission_id: admId, p_on: on, p_by: by || null });
+    if (r.error && typeof showToast === 'function') showToast(r.error.message);
+    return !r.error;
+  }
+  function advButton() {
+    /* reception: inside the bed profile, a button to record the doctor's discharge advice */
+    if (PAGE !== 'reception' || typeof window.openBedProfile !== 'function' || window.openBedProfile._ohAdv) return;
+    var f = window.openBedProfile;
+    var w = function (bid, num, ward, status, admId, patId, patName) {
+      var res = f.apply(this, arguments);
+      setTimeout(async function () {
+        var op = document.getElementById('bp-occupied-panel'); if (!op || !admId) return;
+        var box = document.getElementById('oh-adv'); if (!box) { box = document.createElement('div'); box.id = 'oh-adv'; box.style.margin = '12px 0'; op.insertBefore(box, op.firstChild.nextSibling || null); }
+        var r = await _supa.from('admissions').select('discharge_advised_at,admitting_doctor').eq('id', admId).maybeSingle();
+        if (r.error) { box.innerHTML = ''; return; }
+        var d = r.data && (Array.isArray(r.data) ? r.data[0] : r.data) || {};
+        var draw = function (on) {
+          box.innerHTML = on ? '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="oh-chip full">' + T('advOn') + '</span><button type="button" class="oh-lnk" data-adv="0">' + T('advUndo') + '</button></div>'
+            : '<button type="button" class="oh-b s" style="width:100%" data-adv="1">' + ic('ok', 16) + T('advOff') + '</button>';
+        };
+        draw(!!d.discharge_advised_at);
+        box.onclick = async function (e) { var b = e.target.closest('[data-adv]'); if (!b) return; var on = b.getAttribute('data-adv') === '1'; if (await adviseToggle(admId, on, d.admitting_doctor)) { draw(on); if (BM.data) bedMap(); } };
+      }, 60);
+      return res;
+    };
+    w._ohAdv = true; window.openBedProfile = w;
+  }
+
   function click(e) {
     var b = e.target.closest('[data-oh]'); if (!b || !last) return;
     var k = b.getAttribute('data-oh');
@@ -604,7 +957,9 @@
     else if (k === 'al') {
       var a = last.alerts[+b.getAttribute('data-i')]; if (!a) return;
       if (a.k === 'cln') { if (typeof nav === 'function') nav('beds', navBtn('beds')); }
-      else if (a.k === 'set') { var bs = document.getElementById('aura-billsetup'); if (bs) bs.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      else if (a.k === 'lic') { if (PAGE === 'owner') nav('licences', document.getElementById('oh-nb-lic')); }
+      else if (a.k === 'wd') { nav('beds', navBtn('beds')); }
+      else if (a.k === 'set') { var bs = document.getElementById('aura-billsetup'); if (bs) bs.classList.add('oh-show'); if (bs) bs.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
       else if (a.pid && PAGE === 'reception' && typeof openProfile === 'function') openProfile(a.pid, a.name);
       else if (a.pid && typeof openPatientProfile === 'function') openPatientProfile(a.pid, a.name);
     }
@@ -676,6 +1031,12 @@
       if (d > 0) { alerts.push({ k: 'dis', t: 'amb', name: a.patient_name || '?', pid: a.patient_id, amt: d, d: Math.max(0, daysSince(a.discharge_date) - 1), s: 2e9 + d }); }
     });
     if (counts.cleaning) alerts.push({ k: 'cln', t: 'blu', n: counts.cleaning, s: 1 });
+    try {
+      var lic = await licLoad(cid);
+      lic.forEach(function (x) { var d = daysTo(x.expires_on); if (d <= 30) alerts.push({ k: 'lic', t: d <= 15 ? 'red' : 'amb', name: x.name, n: d, d: x.expires_on, s: 2.5e9 - d }); });
+      var adv = await advised(cid);
+      adv.forEach(function (a) { var dd = due[a.id] || 0; alerts.push({ k: 'wd', t: 'amb', name: a.patient_name || '?', pid: a.patient_id, aid: a.id, bed: bedNo[a.bed_id] || '-', amt: dd, by: a.discharge_advised_by, s: 2.8e9 + dd }); });
+    } catch (e) {}
     var bsc = document.getElementById('aura-billsetup');
     if (bsc && bsc.style.display !== 'none' && bsc.innerHTML.trim()) alerts.push({ k: 'set', t: 'amb', s: 1.5e9 });
     alerts.sort(function (x, y) { return y.s - x.s; });
@@ -684,8 +1045,10 @@
     Object.keys(due).forEach(function (k) { if (k && k !== 'null' && due[k] > 0.5) { allDue += due[k]; owing++; } });
     var duesText = rs(allDue);
     dueCount = owing;
+    try { await homeExtras(); } catch (e) { console.warn('nh-home extras', e); }
     last = { counts: counts, inToday: r[3].count || 0, outToday: r[4].count || 0, method: method, week: week, alerts: alerts, dueCount: dueCount, duesText: duesText };
     render();
+    document.body.classList.add('oh-live');
   }
 
   /* hook into the existing page: redraw after every dashboard refresh and language change */
@@ -705,8 +1068,9 @@
     wrap('setLanguage', relang);
     wrap('setFamLanguage', relang);
   }
+  try { early(); licNav(); } catch (e) {}
   hook();
-  if (typeof window.nav === 'function' && !window.nav._oh) { var nv = window.nav; window.nav = function () { var x = nv.apply(this, arguments); try { if (document.getElementById('oh-bn')) bottomNav(); if (arguments[0] === 'bills' && PAGE === 'owner') billing(); } catch (e) {} return x; }; window.nav._oh = true; }
+  if (typeof window.nav === 'function' && !window.nav._oh) { var nv = window.nav; window.nav = function () { var x = nv.apply(this, arguments); try { if (document.getElementById('oh-bn')) bottomNav(); if (arguments[0] === 'bills' && PAGE === 'owner') billing(); if (arguments[0] === 'staff') staffBoard(); if (arguments[0] === 'licences') licences(); } catch (e) {} return x; }; window.nav._oh = true; }
   window.ohLoad = function () { return load().catch(function (e) { console.warn('nh-home', e); }); };
   /* the first dashboard load may already have happened before this file arrived */
   setTimeout(function () { var v = document.getElementById('v-dashboard') || document.getElementById('v-home'); if (v && v.classList.contains('on')) window.ohLoad(); var vb = document.getElementById('v-beds'); if (vb && vb.classList.contains('on')) bedMap().catch(function () {}); }, 600);
