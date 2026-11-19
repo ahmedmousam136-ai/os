@@ -18,6 +18,7 @@
       aLong: '{name} – in bed for {d} days', aLongSub: 'Bed {bed} · check discharge plan',
       aCln: '{n} beds waiting for cleaning', aClnSub: 'Mark them free in Bed Management when ready',
       days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], today: 'Today',
+      wrT: 'Price per day', wrS: 'Every bed in this ward will use this price.', wrL: 'Price per day (₹)', wrDone: 'Ward price saved', wrEdit: 'Change price', cgBed: 'Bed charge', cgDoc: 'Doctor visit', cgMed: 'Medicines', cgLab: 'Tests', cgOt: 'OT / procedure', cgNur: 'Nursing', female: 'Female', male: 'Male', yrs: 'yrs', famPh: 'Family phone', ptPh: 'Phone', admBy: 'Admitted by', admWhy: 'Reason', admOn: 'Admitted on', howLong: 'Days', vitals: 'Vitals', lastAt: 'Last:', vBp: 'BP', vPulse: 'Pulse', vTemp: 'Temp', vSpo2: 'SpO2', chgList: 'Charges', paidSoFar: 'Paid so far', addChg: 'Add charge', fullProf: 'Full profile', itemsN: '{n} items', inactive: 'inactive', activate: 'Activate', deactivate: 'Deactivate', revoke: 'Revoke access', teamT: 'Team', invT: 'Invite codes', invite: 'Invite staff',
       seeAll: 'See all', wardBeds: 'Beds by ward', recentPay: 'Recent payments', onDuty: 'On duty today', used: 'in use', today2: 'today', yest: 'yesterday', daysAgo: '{n} days ago', noPay: 'No payments yet.',
       sPresent: 'Present', sLate: 'Late', sLeave: 'On leave', sAbsent: 'Absent', sHalf: 'Half day', sOff: 'Week off', sWill: 'Coming', sNot: 'Not in yet', stfT: 'On duty today', stfS: 'By shift — who is in, who is not', stfCame: '{a} / {b} present', shM: 'Morning', shA: 'Afternoon', shN: 'Night', attBook: 'Open attendance book', noStaff: 'No staff added for attendance yet. Add them in the attendance book.', logins: 'Login accounts',
       lcT: 'Licences & compliance', lcS: 'You will be reminded before anything expires', lcUrg: 'Urgent (within 15 days)', lcSoon: 'Soon (within 60 days)', lcOk: 'OK', lc12: 'Next 12 months', lcLeft: 'days left', lcOver: 'days over', lcExp: 'Expires {d}', lcRem: 'Remind:', lcBefore: '{n} days before', lcRenew: 'Renewed', lcAdd: 'Add licence', lcEdit: 'Edit', lcName: 'Licence name', lcAuth: 'Issued by (office)', lcNo: 'Licence number', lcDate: 'Expiry date', lcSave: 'Save', lcCancel: 'Cancel', lcDel: 'Delete', lcNone: 'No licences added yet. Add your licences once — AuraScale will remind you before each one expires.', lcNeedSql: 'Licence list is not set up yet (run the SQL once).', lcNewDate: 'New expiry date', aLic: '{name} — expires in {n} days', aLicOver: '{name} — expired {n} days ago', aLicSub: 'Expires {d} · start renewal',
@@ -40,6 +41,7 @@
       aLong: '{name} — {d} দিন ধরে ভর্তি', aLongSub: 'বেড {bed} · ছুটির পরিকল্পনা দেখুন',
       aCln: '{n}টি বেড পরিষ্কারের অপেক্ষায়', aClnSub: 'পরিষ্কার হলে বেড ম্যানেজমেন্টে খালি করুন',
       days: ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'], today: 'আজ',
+      wrT: 'দৈনিক দাম', wrS: 'এই ওয়ার্ডের সব বেড এই দামে চলবে।', wrL: 'প্রতিদিনের দাম (₹)', wrDone: 'ওয়ার্ডের দাম সেভ হয়েছে', wrEdit: 'দাম বদলান', cgBed: 'বেড ভাড়া', cgDoc: 'ডাক্তার ভিজিট', cgMed: 'ওষুধ', cgLab: 'পরীক্ষা', cgOt: 'OT / প্রসিডিওর', cgNur: 'নার্সিং', female: 'মহিলা', male: 'পুরুষ', yrs: 'বছর', famPh: 'পরিবারের ফোন', ptPh: 'ফোন', admBy: 'ভর্তি করেছেন', admWhy: 'ভর্তির কারণ', admOn: 'ভর্তির তারিখ', howLong: 'কত দিন', vitals: 'ভাইটালস', lastAt: 'শেষ:', vBp: 'রক্তচাপ', vPulse: 'পালস', vTemp: 'তাপমাত্রা', vSpo2: 'অক্সিজেন', chgList: 'খরচের তালিকা', paidSoFar: 'জমা হয়েছে', addChg: 'খরচ যোগ করুন', fullProf: 'পুরো প্রোফাইল', itemsN: '{n}টি', inactive: 'বন্ধ', activate: 'চালু করুন', deactivate: 'বন্ধ করুন', revoke: 'অ্যাক্সেস সরান', teamT: 'টিম', invT: 'আমন্ত্রণ কোড', invite: 'স্টাফ আমন্ত্রণ',
       seeAll: 'সব দেখুন', wardBeds: 'ওয়ার্ড অনুযায়ী বেড', recentPay: 'সাম্প্রতিক জমা', onDuty: 'আজ ডিউটিতে', used: 'ব্যবহৃত', today2: 'আজ', yest: 'গতকাল', daysAgo: '{n} দিন আগে', noPay: 'এখনো কোনো জমা নেই।',
       sPresent: 'উপস্থিত', sLate: 'দেরিতে', sLeave: 'ছুটিতে', sAbsent: 'অনুপস্থিত', sHalf: 'অর্ধেক দিন', sOff: 'সাপ্তাহিক ছুটি', sWill: 'আসবেন', sNot: 'এখনো আসেননি', stfT: 'আজ ডিউটিতে', stfS: 'শিফট অনুযায়ী — কে আছেন, কে নেই', stfCame: '{a} / {b} জন এসেছেন', shM: 'সকাল', shA: 'বিকেল', shN: 'রাত', attBook: 'হাজিরা খাতা খুলুন', noStaff: 'হাজিরার জন্য এখনো কোনো স্টাফ যোগ করা হয়নি। হাজিরা খাতায় যোগ করুন।', logins: 'লগইন অ্যাকাউন্ট',
       lcT: 'লাইসেন্স ও নিয়মকানুন', lcS: 'মেয়াদ শেষের আগেই আপনাকে মনে করিয়ে দেওয়া হবে', lcUrg: 'জরুরি (১৫ দিনের মধ্যে)', lcSoon: 'শীঘ্রই (৬০ দিনের মধ্যে)', lcOk: 'ঠিক আছে', lc12: 'আগামী ১২ মাস', lcLeft: 'দিন বাকি', lcOver: 'দিন পেরিয়েছে', lcExp: 'মেয়াদ শেষ {d}', lcRem: 'মনে করান:', lcBefore: '{n} দিন আগে', lcRenew: 'নবীকরণ হয়েছে', lcAdd: 'লাইসেন্স যোগ করুন', lcEdit: 'বদলান', lcName: 'লাইসেন্সের নাম', lcAuth: 'কোন দপ্তর দিয়েছে', lcNo: 'লাইসেন্স নম্বর', lcDate: 'মেয়াদ শেষের তারিখ', lcSave: 'সেভ করুন', lcCancel: 'বাতিল', lcDel: 'মুছে দিন', lcNone: 'এখনো কোনো লাইসেন্স যোগ করা হয়নি। একবার যোগ করে দিন — মেয়াদ শেষের আগে AuraScale মনে করিয়ে দেবে।', lcNeedSql: 'লাইসেন্সের তালিকা এখনো চালু হয়নি (SQL একবার চালাতে হবে)।', lcNewDate: 'নতুন মেয়াদ শেষের তারিখ', aLic: '{name} — {n} দিনে মেয়াদ শেষ', aLicOver: '{name} — {n} দিন আগে মেয়াদ শেষ হয়েছে', aLicSub: 'শেষ তারিখ {d} · নবীকরণ শুরু করুন',
@@ -62,6 +64,7 @@
       aLong: '{name} — {d} दिन से भर्ती', aLongSub: 'बेड {bed} · छुट्टी की योजना देखें',
       aCln: '{n} बेड सफ़ाई का इंतज़ार', aClnSub: 'साफ़ होने पर बेड मैनेजमेंट में खाली करें',
       days: ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि'], today: 'आज',
+      wrT: 'प्रतिदिन दाम', wrS: 'इस वार्ड के सभी बेड इसी दाम पर चलेंगे।', wrL: 'प्रतिदिन दाम (₹)', wrDone: 'वार्ड का दाम सेव हुआ', wrEdit: 'दाम बदलें', cgBed: 'बेड किराया', cgDoc: 'डॉक्टर विज़िट', cgMed: 'दवाइयाँ', cgLab: 'जाँच', cgOt: 'OT / प्रक्रिया', cgNur: 'नर्सिंग', female: 'महिला', male: 'पुरुष', yrs: 'वर्ष', famPh: 'परिवार का फ़ोन', ptPh: 'फ़ोन', admBy: 'भर्ती किया', admWhy: 'भर्ती का कारण', admOn: 'भर्ती तिथि', howLong: 'कितने दिन', vitals: 'वाइटल्स', lastAt: 'अंतिम:', vBp: 'बीपी', vPulse: 'पल्स', vTemp: 'तापमान', vSpo2: 'ऑक्सीजन', chgList: 'खर्च की सूची', paidSoFar: 'जमा हुआ', addChg: 'खर्च जोड़ें', fullProf: 'पूरी प्रोफ़ाइल', itemsN: '{n} आइटम', inactive: 'बंद', activate: 'चालू करें', deactivate: 'बंद करें', revoke: 'एक्सेस हटाएँ', teamT: 'टीम', invT: 'आमंत्रण कोड', invite: 'स्टाफ आमंत्रण',
       seeAll: 'सब देखें', wardBeds: 'वार्ड के अनुसार बेड', recentPay: 'हाल की जमा', onDuty: 'आज ड्यूटी पर', used: 'उपयोग में', today2: 'आज', yest: 'कल', daysAgo: '{n} दिन पहले', noPay: 'अभी कोई जमा नहीं।',
       sPresent: 'उपस्थित', sLate: 'देर से', sLeave: 'छुट्टी पर', sAbsent: 'अनुपस्थित', sHalf: 'आधा दिन', sOff: 'साप्ताहिक छुट्टी', sWill: 'आएँगे', sNot: 'अभी नहीं आए', stfT: 'आज ड्यूटी पर', stfS: 'शिफ़्ट के अनुसार — कौन है, कौन नहीं', stfCame: '{a} / {b} आए', shM: 'सुबह', shA: 'दोपहर', shN: 'रात', attBook: 'हाज़िरी रजिस्टर खोलें', noStaff: 'हाज़िरी के लिए अभी कोई स्टाफ नहीं जोड़ा गया।', logins: 'लॉगिन अकाउंट',
       lcT: 'लाइसेंस और नियम', lcS: 'समाप्ति से पहले याद दिलाया जाएगा', lcUrg: 'ज़रूरी (15 दिन में)', lcSoon: 'जल्द (60 दिन में)', lcOk: 'ठीक है', lc12: 'अगले 12 महीने', lcLeft: 'दिन बाकी', lcOver: 'दिन बीत गए', lcExp: 'समाप्ति {d}', lcRem: 'याद दिलाएँ:', lcBefore: '{n} दिन पहले', lcRenew: 'नवीनीकरण हुआ', lcAdd: 'लाइसेंस जोड़ें', lcEdit: 'बदलें', lcName: 'लाइसेंस का नाम', lcAuth: 'किस दफ़्तर ने दिया', lcNo: 'लाइसेंस नंबर', lcDate: 'समाप्ति तिथि', lcSave: 'सेव करें', lcCancel: 'रद्द', lcDel: 'हटाएँ', lcNone: 'अभी कोई लाइसेंस नहीं जोड़ा गया।', lcNeedSql: 'लाइसेंस सूची अभी चालू नहीं है (SQL एक बार चलाएँ)।', lcNewDate: 'नई समाप्ति तिथि', aLic: '{name} — {n} दिन में समाप्त', aLicOver: '{name} — {n} दिन पहले समाप्त', aLicSub: 'अंतिम तिथि {d} · नवीनीकरण शुरू करें',
@@ -371,7 +374,7 @@
         : '<div class="oh-pa"><button type="button" class="oh-b s" data-ph="bill">' + ic('rupee', 18) + T('blT') + '</button><button type="button" class="oh-b p" data-ph="oadm">+ ' + T('newAdm') + '</button></div>');
   }
   function skin() {
-    skinCss(); early(); document.body.classList.add('oh-skin'); licNav(); advButton();
+    skinCss(); early(); document.body.classList.add('oh-skin'); licNav(); advButton(); greenCss(); sidebarAdmit(); bedModalHooks();
     header(); bottomNav();
   }
 
@@ -429,16 +432,20 @@
       '.oh-bt .ps{font-size:12.5px;color:var(--text-tertiary)}',
       '.oh-bt .ad{margin-top:auto;font-size:13.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px}',
       '.oh-bt .dg{margin-top:6px;align-self:flex-start;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--red);background:var(--surface);border:1px solid var(--red-border,#f3c2c2);border-radius:99px;padding:1px 8px}',
-      '.oh-bt.free{background:#EAF7F1;border-color:#BFE6D3;border-top-color:#0A6B4B}.oh-bt.free .n,.oh-bt.free .c,.oh-bt.free .ad{color:#0A6B4B}',
-      '.oh-bt.occ{background:#EEF2FB;border-color:#C9D5EF;border-top-color:#2B4C9B}.oh-bt.occ .n{color:#2B4C9B}.oh-bt.occ .c{color:#2B4C9B}',
-      '.oh-bt.crit{background:#FDEEEE;border-color:#F3C2C2;border-top-color:#C0392B}.oh-bt.crit .n,.oh-bt.crit .c{color:#C0392B}',
-      '.oh-bt.cln{background:#FDF4E3;border-color:#F0D49A;border-top-color:#B7791F}.oh-bt.cln .n,.oh-bt.cln .c{color:#9A6212}',
-      '.oh-bt.res{background:#F2EEFB;border-color:#D6CBF3;border-top-color:#6B4FC8}.oh-bt.res .n,.oh-bt.res .c{color:#5B3FB5}',
+      '.oh-bt.free{background:#EEFBF3;border-color:#BDEBCF;border-top-color:#22C55E}.oh-bt.free .n,.oh-bt.free .c,.oh-bt.free .ad{color:#0A6B4B}',
+      '.oh-bt.occ,.oh-bt.crit{background:#FDF1F1;border-color:#F5C4C4;border-top-color:#E5484D}.oh-bt.occ .n,.oh-bt.occ .c,.oh-bt.crit .n,.oh-bt.crit .c{color:#C42B2B}',
+      '.oh-bt.cln{background:#FFF7EA;border-color:#F7D9A8;border-top-color:#F59E0B}.oh-bt.cln .n,.oh-bt.cln .c{color:#B45309}',
+      '.oh-bt.res{background:#EFF5FF;border-color:#BFD6F6;border-top-color:#3B82F6}.oh-bt.res .n,.oh-bt.res .c{color:#1D5FD1}',
       '.oh-bt.ina{background:var(--surface2);border-color:var(--border);border-top-color:var(--border-strong);opacity:.7}',
-      '[data-theme=dark] .oh-bt.free{background:rgba(27,184,128,.10);border-color:rgba(27,184,128,.35)}[data-theme=dark] .oh-bt.free .n,[data-theme=dark] .oh-bt.free .c,[data-theme=dark] .oh-bt.free .ad{color:#5FD4A6}',
-      '[data-theme=dark] .oh-bt.occ{background:rgba(90,130,230,.12);border-color:rgba(90,130,230,.35)}[data-theme=dark] .oh-bt.occ .n,[data-theme=dark] .oh-bt.occ .c{color:#9DB5F5}',
-      '[data-theme=dark] .oh-bt.crit{background:rgba(230,80,80,.12);border-color:rgba(230,80,80,.35)}[data-theme=dark] .oh-bt.cln{background:rgba(230,170,60,.12);border-color:rgba(230,170,60,.35)}[data-theme=dark] .oh-bt.cln .n,[data-theme=dark] .oh-bt.cln .c{color:#F0C46A}',
-      '[data-theme=dark] .oh-bt.res{background:rgba(140,110,230,.14);border-color:rgba(140,110,230,.35)}[data-theme=dark] .oh-bt.res .n,[data-theme=dark] .oh-bt.res .c{color:#B9A6F5}',
+      '[data-theme=dark] .oh-bt.free{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35)}[data-theme=dark] .oh-bt.free .n,[data-theme=dark] .oh-bt.free .c,[data-theme=dark] .oh-bt.free .ad{color:#5FD4A6}',
+      '[data-theme=dark] .oh-bt.occ,[data-theme=dark] .oh-bt.crit{background:rgba(229,72,77,.12);border-color:rgba(229,72,77,.35)}[data-theme=dark] .oh-bt.occ .n,[data-theme=dark] .oh-bt.occ .c{color:#F59B9E}',
+      '[data-theme=dark] .oh-bt.cln{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35)}[data-theme=dark] .oh-bt.cln .n,[data-theme=dark] .oh-bt.cln .c{color:#F6C065}',
+      '[data-theme=dark] .oh-bt.res{background:rgba(59,130,246,.13);border-color:rgba(59,130,246,.35)}[data-theme=dark] .oh-bt.res .n,[data-theme=dark] .oh-bt.res .c{color:#93B8F7}',
+      '.oh-wd{background:none!important;border:0!important}.oh-wd .oh-pnh{background:none!important;border:0!important;padding:0 0 10px!important}.oh-wd .oh-pnh h3{font-size:14.5px!important;font-weight:500!important;color:var(--text-secondary)!important}.oh-wd .oh-pnb{padding:0!important;display:flex;flex-direction:column;gap:10px}',
+      '.oh-wd .oh-py{background:#E7F6EE;border:1px solid #BFE6D3!important;border-radius:12px;padding:14px 16px!important}.oh-wd .oh-py b{font-size:16px}.oh-wd .oh-py .r{color:var(--red);font-weight:700}',
+      '[data-theme=dark] .oh-wd .oh-py{background:rgba(27,184,128,.1);border-color:rgba(27,184,128,.3)!important}',
+      '.oh-wd .oh-py .oh-b{background:#0A6B4B!important;color:#fff!important;border-color:#0A6B4B!important}',
+      '.oh-wr8{border:0;background:none;color:var(--green);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0 0 0 8px}',
       '.oh-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}',
       '.oh-sum div{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px}',
       '.oh-sum span{display:block;font-size:13.5px;color:var(--text-secondary)}.oh-sum b{display:block;font-size:24px;font-weight:800;margin-top:6px;color:var(--text-primary)}.oh-sum b.r{color:var(--red)}',
@@ -464,7 +471,7 @@
     document.head.appendChild(s);
   }
   var AVC = ['#FDECEC:#B03A2E', '#EEF2FB:#2B4C9B', '#EAF7F1:#0A6B4B', '#FDF4E3:#9A6212', '#F2EEFB:#5B3FB5'];
-  function av(name) { var n = String(name || '?').trim(), c = AVC[(n.charCodeAt(0) || 0) % AVC.length].split(':'); return '<span class="oh-av" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(n.charAt(0) || '?') + '</span>'; }
+  function av(name) { var n = String(name || '?').trim(), c = AVC[(n.charCodeAt(0) || 0) % AVC.length].split(':'); return '<span class="oh-av" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(ini(n)) + '</span>'; }
 
   var BM = { f: 'all' };
   async function bedMap() {
@@ -493,7 +500,7 @@
     var grp = { all: 0, free: 0, occ: 0, cln: 0, res: 0 };
     var key = function (s) { return s === 'free' ? 'free' : s === 'cleaning' ? 'cln' : s === 'reserved' ? 'res' : s === 'inactive' ? 'ina' : 'occ'; };
     D.beds.forEach(function (b) { var k = key(st(b)); grp.all++; if (grp[k] != null) grp[k]++; });
-    var F = [['all', T('bmAll'), ''], ['free', T('free'), '#1BB880'], ['occ', T('occ'), '#2B4C9B'], ['cln', T('cln'), '#E0A43A'], ['res', T('res'), '#8A6AD8']];
+    var F = [['all', T('bmAll'), ''], ['free', T('free'), '#22C55E'], ['occ', T('occ'), '#E5484D'], ['cln', T('cln'), '#F59E0B'], ['res', T('res'), '#3B82F6']];
     var h = wdHtml(BM.wd || [], D) + '<div class="oh-flt">' + F.map(function (f) { return '<button type="button" class="oh-f' + (BM.f === f[0] ? ' on' : '') + '" data-bf="' + f[0] + '">' + (f[2] ? '<i style="background:' + f[2] + '"></i>' : '') + f[1] + ' <em>' + grp[f[0]] + '</em></button>'; }).join('') + '</div>';
     var wards = {}, order = [];
     D.beds.forEach(function (b) { var w = b.ward || 'General'; if (!wards[w]) { wards[w] = []; order.push(w); } wards[w].push(b); });
@@ -516,7 +523,7 @@
         return '<button type="button" class="oh-bt ' + cls + '" data-bid="' + esc(b.id) + '"><span class="n">' + esc(b.bed_number) + '</span><span class="c">' + chip + '</span>' + body + '</button>';
       }).join('');
       if (!tiles) return;
-      h += '<section class="oh-ward"><div class="oh-wh"><h3>' + esc(wardName(w)) + '</h3><span>' + T('bmUsed', { a: used, b: act }) + (rate ? ' · ' + rs(rate) + T('perDay') : '') + '</span></div><div class="oh-bg">' + tiles + '</div></section>';
+      h += '<section class="oh-ward"><div class="oh-wh"><h3>' + esc(wardName(w)) + '</h3><span>' + T('bmUsed', { a: used, b: act }) + (rate ? ' · ' + rs(rate) + T('perDay') : '') + (PAGE === 'owner' ? '<button type="button" class="oh-wr8" data-wr="' + esc(w) + '">✎ ' + T('wrEdit') + '</button>' : '') + '</span></div><div class="oh-bg">' + tiles + '</div></section>';
     });
     host.innerHTML = h;
     bnDigits(host);
@@ -525,6 +532,7 @@
   }
   function bedClick(e) {
     var f = e.target.closest('[data-bf]'); if (f) { BM.f = f.getAttribute('data-bf'); drawBeds(); return; }
+    var wr = e.target.closest('[data-wr]'); if (wr) { rateModal(wr.getAttribute('data-wr')); return; }
     var wd = e.target.closest('[data-wd]');
     if (wd) {
       var aa = (BM.wd || []).filter(function (x) { return String(x.id) === wd.getAttribute('data-wd'); })[0]; if (!aa) return;
@@ -535,6 +543,7 @@
     var t = e.target.closest('[data-bid]'); if (!t || !BM.data) return;
     var b = BM.data.beds.filter(function (x) { return String(x.id) === t.getAttribute('data-bid'); })[0]; if (!b) return;
     var a = BM.data.adm[b.id], s = window.AuraBeds ? AuraBeds.state(b, a) : (a ? 'occupied' : 'free'), ward = b.ward || 'General';
+    if (a) { openDrawer(a.id, b.bed_number); return; }
     if (PAGE === 'reception') {
       if (a && a.patient_id && typeof openBedProfile === 'function') openBedProfile(b.id, b.bed_number, ward, String(b.status || 'vacant').toLowerCase(), a.id, a.patient_id, a.patient_name, daysSince(a.admission_date));
       else if (s === 'free' && typeof admitToBed === 'function') admitToBed(b.id, b.daily_rate || 0, b.bed_number, ward);
@@ -764,7 +773,7 @@
     bmCss(); bottomCss(); css(); await info(cid); try { skin(); } catch (e) {}
     var list = await staffToday(cid).catch(function () { return null; }) || [];
     var came = list.filter(function (x) { return x.came; }).length;
-    pageHead('v-staff', 'staff', T('stfT'), T('stfS'), '<span class="oh-st p" style="font-size:14px;padding:10px 14px">' + T('stfCame', { a: came, b: list.length }) + '</span><button type="button" class="oh-b s" data-sb="book">' + T('attBook') + '</button>');
+    pageHead('v-staff', 'staff', T('stfT'), T('stfS'), '<span class="oh-st p" style="font-size:14px;padding:10px 14px">' + T('stfCame', { a: came, b: list.length }) + '</span><button type="button" class="oh-b s" data-sb="book">' + T('attBook') + '</button><button type="button" class="oh-b p" onclick="openStaffInvite()">+ ' + T('invite') + '</button>');
     var host = document.getElementById('oh-staff');
     if (!host) {
       host = document.createElement('div'); host.id = 'oh-staff';
@@ -915,7 +924,7 @@
     return '<div class="oh-wd oh-pn" style="margin-bottom:18px"><div class="oh-pnh"><h3>' + T('wdT') + ' <span style="color:var(--text-tertiary);font-weight:500">· ' + list.length + '</span></h3></div><div class="oh-pnb">'
       + list.map(function (a) {
         var m = D.M[a.id] || { tot: 0, paid: 0 }, due = Math.round(m.tot - m.paid);
-        return '<div class="oh-py">' + av(a.patient_name) + '<div style="min-width:0"><b>' + esc(a.patient_name || '') + ' · ' + (lang() === 'en' ? 'Bed ' : lang() === 'hi' ? 'बेड ' : 'বেড ') + '<span class="nob">' + esc(bn[a.bed_id] || '') + '</span></b><span>' + T('wdSub', { doc: a.discharge_advised_by ? esc(a.discharge_advised_by) + (lang() === 'bn' ? '-এর ' : lang() === 'hi' ? ' की ' : ' ') : '', bill: due > 0 ? T('wdBill', { amt: rs(due) }) : T('wdClear') }) + '</span></div><button type="button" class="oh-b s" style="margin-left:auto;min-height:44px" data-wd="' + esc(a.id) + '">' + T('wdGo') + '</button></div>';
+        return '<div class="oh-py">' + av(a.patient_name) + '<div style="min-width:0"><b>' + esc(a.patient_name || '') + ' · ' + (lang() === 'en' ? 'Bed ' : lang() === 'hi' ? 'बेड ' : 'বেড ') + '<span class="nob">' + esc(bn[a.bed_id] || '') + '</span></b><span>' + T('wdSub', { doc: a.discharge_advised_by ? esc(a.discharge_advised_by) + (lang() === 'bn' ? '-এর ' : lang() === 'hi' ? ' की ' : ' ') : '', bill: due > 0 ? '<span class="r">' + T('wdBill', { amt: rs(due) }) + '</span>' : T('wdClear') }) + '</span></div><button type="button" class="oh-b s" style="margin-left:auto;min-height:44px" data-wd="' + esc(a.id) + '">' + ic('out', 17) + T('wdGo') + '</button></div>';
       }).join('') + '</div></div>';
   }
   async function adviseToggle(admId, on, by) {
@@ -945,6 +954,281 @@
       return res;
     };
     w._ohAdv = true; window.openBedProfile = w;
+  }
+
+  /* ---------------- initials (Lokman Khan → LK) ---------------- */
+  function ini(name) {
+    var w = String(name || '').replace(/^(dr\.?|ডা\.?|sister|সিস্টার|mr\.?|mrs\.?|md\.?|মো\.?)\s+/i, '').trim().split(/\s+/).filter(Boolean);
+    if (!w.length) return '?';
+    var a = w[0].charAt(0), b = w.length > 1 ? w[w.length - 1].charAt(0) : '';
+    if (!/[A-Za-z]/.test(a)) return a;   /* Bengali / Hindi names: one letter, like the demo */
+    return (a + b).toUpperCase();
+  }
+
+  /* ---------------- solid green sidebar (owner + reception) ---------------- */
+  function greenCss() {
+    if (document.getElementById('oh-green-css')) return;
+    var s = document.createElement('style'); s.id = 'oh-green-css';
+    s.textContent = [
+      'body.oh-skin #sidebar{background:#0E6B4C!important;border-right:0!important;color:#fff}',
+      'body.oh-skin #sidebar .sb-logo{background:#0A5039!important}',
+      'body.oh-skin #sidebar .nav-sec{color:rgba(255,255,255,.55)!important}',
+      'body.oh-skin #sidebar .nb{color:rgba(255,255,255,.92)!important;background:transparent}',
+      'body.oh-skin #sidebar .nb .nb-ic,body.oh-skin #sidebar .nb svg{color:inherit!important;stroke:currentColor}',
+      'body.oh-skin #sidebar .nb:hover{background:rgba(255,255,255,.08)!important}',
+      'body.oh-skin #sidebar .nb.on{background:#fff!important;color:#0A6B4B!important;font-weight:700}',
+      'body.oh-skin #sidebar .nb-badge,body.oh-skin #sidebar .nb .badge,body.oh-skin #sidebar [id^=nav-][id$=-count]{background:#E5484D!important;color:#fff!important;border-color:transparent!important}',
+      'body.oh-skin #sidebar .sb-facility-inner,body.oh-skin #sidebar .sb-fac,body.oh-skin #sidebar .sb-facility>div{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.16)!important;color:#fff!important}',
+      'body.oh-skin #sidebar .sb-facility *{color:#fff!important}',
+      'body.oh-skin #sidebar .sb-foot,body.oh-skin #sidebar .sb-bottom{border-top-color:rgba(255,255,255,.14)!important}',
+      'body.oh-skin #sidebar .sb-foot *,body.oh-skin #sidebar .sb-bottom *,body.oh-skin #sidebar a{color:rgba(255,255,255,.8)!important}',
+      'body.oh-skin #sidebar .sb-user,body.oh-skin #sidebar .sb-me{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.16)!important}',
+      'body.oh-skin #sidebar hr,body.oh-skin #sidebar .nav-div,body.oh-skin #sidebar .sb-div{border-color:rgba(255,255,255,.14)!important;background:rgba(255,255,255,.14)!important}',
+      '.oh-sbadm{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 14px 6px;min-height:52px;border-radius:12px;border:0;background:#fff;color:#0A6B4B;font:inherit;font-size:16px;font-weight:700;cursor:pointer;width:calc(100% - 28px);box-shadow:0 2px 0 rgba(0,0,0,.08)}',
+      '.oh-sbadm:hover{background:#F1FBF6}'
+    ].join('\n');
+    document.head.appendChild(s);
+  }
+  function sidebarAdmit() {
+    if (document.getElementById('oh-sbadm')) return;
+    var lg = document.querySelector('#sidebar .sb-logo'); if (!lg) return;
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'oh-sbadm'; b.className = 'oh-sbadm';
+    b.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>' + T('newAdm') + '</span>';
+    b.onclick = function () { if (PAGE === 'reception' && typeof openRegisterModal === 'function') openRegisterModal(); else if (typeof openAdmitModal === 'function') openAdmitModal(); };
+    lg.parentNode.insertBefore(b, lg.nextSibling);
+  }
+
+  /* ---------------- ward price + ward-letter bed numbers (owner) ---------------- */
+  function wardPrefix(ward, beds) {
+    var same = (beds || []).filter(function (b) { return (b.ward || 'General') === ward; });
+    var cnt = {};
+    same.forEach(function (b) { var m = String(b.bed_number || '').match(/^([A-Za-z]+)\s*-?\s*\d/); if (m) cnt[m[1].toUpperCase()] = (cnt[m[1].toUpperCase()] || 0) + 1; });
+    var best = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; })[0];
+    if (best) return best;
+    var k = String(ward).toLowerCase();
+    if (k.indexOf('icu') >= 0) return 'I'; if (k.indexOf('hdu') >= 0) return 'H'; if (k.indexOf('mater') >= 0) return 'M';
+    if (k.indexOf('female') >= 0) return 'F'; if (k === 'male' || k.indexOf('male ') === 0) return 'ML'; if (k.indexOf('general') >= 0) return 'G';
+    if (k.indexOf('emerg') >= 0) return 'E'; if (k.indexOf('semi') >= 0) return 'SP'; if (k.indexOf('cabin') >= 0) return 'C'; if (k.indexOf('private') >= 0) return 'P';
+    return (String(ward).match(/[A-Za-z]/) || ['B'])[0].toUpperCase();
+  }
+  function nextBedNo(ward, beds) {
+    var p = wardPrefix(ward, beds), max = 0;
+    (beds || []).forEach(function (b) { var m = String(b.bed_number || '').match(/^([A-Za-z]+)\s*-?\s*(\d+)/); if (m && m[1].toUpperCase() === p) max = Math.max(max, +m[2]); });
+    return p + (max + 1);
+  }
+  function wardRate(ward, beds) {
+    var r = {}; (beds || []).forEach(function (b) { if ((b.ward || 'General') === ward && +b.daily_rate > 0) r[b.daily_rate] = (r[b.daily_rate] || 0) + 1; });
+    var k = Object.keys(r).sort(function (a, b) { return r[b] - r[a]; })[0]; return k ? +k : 0;
+  }
+  async function allBeds() { if (BM.data && BM.data.beds) return BM.data.beds; var r = await _supa.from('beds').select('id,bed_number,ward,daily_rate').eq('clinic_id', cidNow()); return r.data || []; }
+  function bedModalHooks() {
+    if (PAGE !== 'owner') return;
+    var hide = function (id) { var el = document.getElementById(id); if (!el) return null; var box = el.closest('.fg,.form-group,.frow,.field') || el.parentElement; return box; };
+    if (typeof window.openAddBedModal === 'function' && !window.openAddBedModal._oh) {
+      var f = window.openAddBedModal;
+      window.openAddBedModal = async function () {
+        var res = f.apply(this, arguments);
+        var beds = await allBeds(), w = document.getElementById('bed-ward'), n = document.getElementById('bed-num'), rt = document.getElementById('bed-rate-add');
+        var sync = function () { if (!w) return; if (n) n.value = nextBedNo(w.value, beds); var r = wardRate(w.value, beds), box = hide('bed-rate-add'); if (rt) rt.value = r || ''; if (box) box.style.display = r ? 'none' : ''; };
+        if (w && !w._oh) { w._oh = 1; w.addEventListener('change', sync); }
+        sync();
+        return res;
+      };
+      window.openAddBedModal._oh = true;
+    }
+    if (typeof window.openEditBed === 'function' && !window.openEditBed._ohr) {
+      var g = window.openEditBed;
+      window.openEditBed = async function () {
+        var res = g.apply(this, arguments);
+        var beds = await allBeds(), w = document.getElementById('edit-bed-ward'), rt = document.getElementById('edit-bed-rate');
+        var sync = function () { var r = wardRate(w.value, beds), box = hide('edit-bed-rate'); if (r && rt) rt.value = r; if (box) box.style.display = r ? 'none' : ''; };
+        if (w && !w._oh) { w._oh = 1; w.addEventListener('change', sync); }
+        if (w) sync();
+        return res;
+      };
+      window.openEditBed._ohr = true;
+    }
+  }
+  function rateModal(ward) {
+    var beds = (BM.data && BM.data.beds) || [], cur = wardRate(ward, beds);
+    var old = document.getElementById('oh-rmod'); if (old) old.remove();
+    var m = document.createElement('div'); m.className = 'oh-mod'; m.id = 'oh-rmod';
+    m.innerHTML = '<div class="oh-mbox"><h3>' + esc(wardName(ward)) + ' — ' + T('wrT') + '</h3><p style="margin:0 0 6px;color:var(--text-secondary);font-size:14px">' + T('wrS') + '</p><label>' + T('wrL') + '</label><input id="oh-rf" type="number" min="0" step="50" value="' + (cur || '') + '"><div class="oh-mbtn"><button type="button" class="oh-b s" data-rm="x">' + T('lcCancel') + '</button><button type="button" class="oh-b p" data-rm="ok">' + T('lcSave') + '</button></div></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', async function (e) {
+      if (e.target === m || e.target.closest('[data-rm=x]')) { m.remove(); return; }
+      if (!e.target.closest('[data-rm=ok]')) return;
+      var v = +document.getElementById('oh-rf').value; if (!(v > 0)) return;
+      var r = await _supa.from('beds').update({ daily_rate: v }).eq('clinic_id', cidNow()).eq('ward', ward);
+      if (r.error) { if (typeof showToast === 'function') showToast(r.error.message); return; }
+      m.remove(); if (typeof showToast === 'function') showToast(T('wrDone')); bedMap();
+    });
+  }
+
+  /* ---------------- patient drawer (opens from the right) ---------------- */
+  var DR = { id: null };
+  function drCss() {
+    if (document.getElementById('oh-dr-css')) return;
+    var s = document.createElement('style'); s.id = 'oh-dr-css';
+    s.textContent = [
+      '.oh-drov{position:fixed;inset:0;background:rgba(8,20,14,.42);z-index:150;opacity:0;transition:opacity .2s}.oh-drov.on{opacity:1}',
+      '.oh-dr{position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);background:var(--surface);z-index:151;display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.18);transform:translateX(100%);transition:transform .25s ease}.oh-dr.on{transform:none}',
+      '.oh-drh{display:flex;gap:14px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--border)}.oh-drh .oh-av{width:48px;height:48px;font-size:16px;border-radius:12px}',
+      '.oh-drh b{display:block;font-size:19px;font-weight:700;color:var(--text-primary)}.oh-drh span{font-size:14px;color:var(--text-tertiary)}',
+      '.oh-x{margin-left:auto;width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:grid;place-items:center;color:var(--text-secondary);flex:none}',
+      '.oh-drb{flex:1;overflow:auto;padding:18px 20px}',
+      '.oh-drs{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px}.oh-drs:first-child{margin-top:0}.oh-drs h4{margin:0;font-size:15px;font-weight:700;color:var(--text-primary)}.oh-drs span{font-size:13px;color:var(--text-tertiary)}',
+      '.oh-tri{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border);border-radius:12px;overflow:hidden}.oh-tri div{padding:14px;border-left:1px solid var(--border)}.oh-tri div:first-child{border-left:0}.oh-tri span{display:block;font-size:13px;color:var(--text-tertiary)}.oh-tri b{display:block;font-size:19px;font-weight:700;margin-top:6px;color:var(--text-primary)}.oh-tri .due{background:var(--red-bg)}.oh-tri .due span,.oh-tri .due b{color:var(--red)}',
+      '.oh-kv2{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;margin-top:18px}.oh-kv2 span{display:block;font-size:13px;color:var(--text-tertiary);margin-bottom:4px}.oh-kv2 b{font-size:15px;font-weight:600;color:var(--text-primary)}.oh-kv2 a{color:var(--green);font-weight:600;text-decoration:none;display:inline-flex;gap:6px;align-items:center;font-size:15px}',
+      '.oh-nil{color:var(--text-tertiary)!important;font-weight:500!important;letter-spacing:.04em}',
+      '.oh-vit{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.oh-vit div{background:var(--surface2);border-radius:10px;padding:10px}.oh-vit span{display:block;font-size:12.5px;color:var(--text-tertiary)}.oh-vit b{display:block;font-size:17px;font-weight:700;color:var(--text-primary);margin:2px 0}.oh-vit svg{width:100%;height:20px}',
+      '.oh-cg{border:1px solid var(--border);border-radius:12px;overflow:hidden}.oh-cgr{border-top:1px solid var(--border)}.oh-cgr:first-child{border-top:0}',
+      '.oh-cgh{display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;border:0;background:none;font:inherit;text-align:left;cursor:pointer;color:inherit}.oh-cgh:hover{background:var(--surface2)}',
+      '.oh-cgi{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);display:grid;place-items:center;color:var(--text-secondary);flex:none}',
+      '.oh-cgh b{display:block;font-size:14.5px;font-weight:600;color:var(--text-primary)}.oh-cgh span{font-size:12.5px;color:var(--text-tertiary)}.oh-cgh em{margin-left:auto;font-style:normal;font-weight:700;color:var(--text-primary)}',
+      '.oh-cgh .cv{transition:transform .15s;color:var(--text-tertiary)}.oh-cgr.open .cv{transform:rotate(90deg)}',
+      '.oh-cgl{display:none;background:var(--surface2);padding:4px 14px 10px 64px}.oh-cgr.open .oh-cgl{display:block}',
+      '.oh-cgl div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:7px 0;border-top:1px dashed var(--border)}.oh-cgl div:first-child{border-top:0}.oh-cgl span{color:var(--text-secondary)}.oh-cgl b{font-weight:600;color:var(--text-primary);white-space:nowrap}',
+      '.oh-tot2{display:flex;justify-content:space-between;padding:12px 14px;border-top:1px solid var(--border);font-weight:700;background:var(--surface2)}',
+      '.oh-pyl div{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border)}.oh-pyl div:first-child{border-top:0}.oh-pyl b{font-weight:600}.oh-pyl span{font-size:12.5px;color:var(--text-tertiary);display:block}',
+      '.oh-drf{border-top:1px solid var(--border);padding:14px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface)}',
+      '.oh-drf .oh-b{width:100%}.oh-drf .w{grid-column:1/-1}.oh-b.dis{background:var(--red-bg);color:var(--red);border-color:transparent}',
+      '.oh-advbox{margin-top:14px}',
+      '@media(max-width:560px){.oh-vit{grid-template-columns:repeat(2,1fr)}.oh-tri b{font-size:16px}}'
+    ].join('\n');
+    document.head.appendChild(s);
+  }
+  function grpName(t) {
+    var k = String(t || '').toLowerCase();
+    if (k.indexOf('bed') >= 0 || k.indexOf('room') >= 0) return [T('cgBed'), 'bed'];
+    if (k.indexOf('doctor') >= 0 || k.indexOf('visit') >= 0 || k.indexOf('consult') >= 0) return [T('cgDoc'), 'doc'];
+    if (k.indexOf('medic') >= 0 || k.indexOf('pharm') >= 0 || k.indexOf('drug') >= 0) return [T('cgMed'), 'med'];
+    if (k.indexOf('lab') >= 0 || k.indexOf('test') >= 0 || k.indexOf('invest') >= 0 || k.indexOf('x-ray') >= 0 || k.indexOf('usg') >= 0) return [T('cgLab'), 'lab'];
+    if (k.indexOf('ot') === 0 || k.indexOf('surg') >= 0 || k.indexOf('operation') >= 0) return [T('cgOt'), 'ot'];
+    if (k.indexOf('nurs') >= 0) return [T('cgNur'), 'nur'];
+    return [t || T('other'), 'oth'];
+  }
+  var GIC = { bed: IC.bed, doc: '<path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/>', med: '<path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7z"/><path d="M8.5 8.5l7 7"/>', lab: '<path d="M9 2v6l-5 9a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-5-9V2M8 2h8"/>', ot: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/>', nur: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>', oth: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>' };
+  function nil(v) { return (v === null || v === undefined || String(v).trim() === '') ? '<b class="oh-nil">NIL</b>' : '<b>' + esc(v) + '</b>'; }
+  function dShort(d) { if (!d) return ''; var l = lang(); return new Date(d).toLocaleDateString(l === 'bn' ? 'bn-IN' : l === 'hi' ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }); }
+  function spark(vals) {
+    var v = vals.filter(function (x) { return isFinite(x); }); if (v.length < 2) return '';
+    var mn = Math.min.apply(null, v), mx = Math.max.apply(null, v), rg = mx - mn || 1;
+    var pts = v.map(function (x, i) { return (i * 100 / (v.length - 1)).toFixed(1) + ',' + (18 - (x - mn) / rg * 14).toFixed(1); }).join(' ');
+    return '<svg viewBox="0 0 100 20" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="#1BB880" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>';
+  }
+  function closeDrawer() {
+    var o = document.getElementById('oh-drov'), d = document.getElementById('oh-dr');
+    if (d) d.classList.remove('on'); if (o) o.classList.remove('on');
+    setTimeout(function () { if (o) o.remove(); if (d) d.remove(); }, 250); DR.id = null;
+  }
+  async function openDrawer(admId, bedNo) {
+    drCss(); css(); bmCss();
+    DR.id = admId; DR.bed = bedNo || DR.bed;
+    var o = document.getElementById('oh-drov'), d = document.getElementById('oh-dr');
+    if (!d) {
+      o = document.createElement('div'); o.id = 'oh-drov'; o.className = 'oh-drov'; o.onclick = closeDrawer; document.body.appendChild(o);
+      d = document.createElement('aside'); d.id = 'oh-dr'; d.className = 'oh-dr'; d.setAttribute('role', 'dialog'); document.body.appendChild(d);
+      d.innerHTML = '<div class="oh-drb" style="display:grid;place-items:center;color:var(--text-tertiary)">…</div>';
+      d.addEventListener('click', drClick);
+      requestAnimationFrame(function () { o.classList.add('on'); d.classList.add('on'); });
+    }
+    var cid = cidNow();
+    var r = await Promise.all([
+      _supa.from('admissions').select('*').eq('id', admId).maybeSingle(),
+      _supa.from('admission_charges').select('*').eq('admission_id', admId).order('created_at'),
+      _supa.from('nh_payments').select('*').eq('admission_id', admId).order('created_at'),
+      _supa.from('progress_notes').select('*').eq('admission_id', admId).order('created_at', { ascending: false }).limit(6)
+    ]);
+    if (DR.id !== admId) return;
+    var a = r[0].data; if (Array.isArray(a)) a = a.filter(function (x) { return String(x.id) === String(admId); })[0] || a[0]; a = a || {};
+    var p = {};
+    if (a.patient_id) { var pr = await _supa.from('nh_patients').select('*').eq('id', a.patient_id).maybeSingle(); p = pr.data || {}; if (Array.isArray(p)) p = p.filter(function (x) { return String(x.id) === String(a.patient_id); })[0] || {}; }
+    var ch = (r[1].data || []).filter(function (x) { return String(x.admission_id) === String(admId); }), pays = (r[2].data || []).filter(function (x) { return String(x.admission_id) === String(admId); }), notes = (r[3].data || []).filter(function (x) { return !x.admission_id || String(x.admission_id) === String(admId); });
+    DR.a = a; DR.p = p;
+    var tot = ch.reduce(function (s, x) { return s + (+x.total_price || 0); }, 0), paid = pays.reduce(function (s, x) { return s + (+x.amount || 0); }, 0), due = tot - paid;
+    var st = due <= 0 ? ['full', T('stFull')] : paid <= 0 ? ['none', T('stNone')] : due >= BIG_DUE ? ['urg', T('stUrg')] : ['part', T('stPart')];
+    var name = a.patient_name || p.full_name || '';
+    var sex = String(p.gender || '').toLowerCase(), sexT = sex.indexOf('f') === 0 ? T('female') : sex.indexOf('m') === 0 ? T('male') : (p.gender || '');
+    var sub = [p.age ? p.age + ' ' + T('yrs') : '', sexT, (DR.bed ? (lang() === 'en' ? 'Bed ' : lang() === 'hi' ? 'बेड ' : 'বেড ') + '<span class="nob">' + esc(DR.bed) + '</span>' : '')].filter(Boolean).join(' · ');
+    var days = a.admission_date ? daysSince(a.admission_date) : null;
+    var ph = function (v) { return v ? '<a class="nob" href="tel:' + esc(String(v).replace(/[^\d+]/g, '')) + '">' + ic2('phone', 16) + esc(v) + '</a>' : '<b class="oh-nil">NIL</b>'; };
+    var fam = p.guardian_phone || p.family_phone || p.attendant_phone || '';
+    var famLbl = T('famPh') + (p.guardian ? ' (' + esc(p.guardian) + ')' : '');
+    var v0 = notes[0] || {}, vs = notes.slice().reverse();
+    var vit = function (lab, key, unit) { var val = v0[key]; return '<div><span>' + lab + '</span>' + (val ? '<b class="nob">' + esc(val) + (unit || '') + '</b>' : '<b class="oh-nil">NIL</b>') + spark(vs.map(function (n) { return parseFloat(String(n[key] || '').split('/')[0]); })) + '</div>'; };
+    var G = {}, GO = [];
+    ch.forEach(function (x) { var g = grpName(x.charge_type); if (!G[g[1]]) { G[g[1]] = { n: g[0], items: [], sum: 0 }; GO.push(g[1]); } G[g[1]].items.push(x); G[g[1]].sum += (+x.total_price || 0); });
+    var grows = GO.map(function (k) {
+      var g = G[k], it = g.items, qty = it.reduce(function (s, x) { return s + (+x.quantity || 1); }, 0), up = it[0] && it[0].unit_price, same = it.every(function (x) { return +x.unit_price === +up; });
+      var line = (k === 'bed' || k === 'doc') && same && up ? T('daysN', { n: qty }) + ' × ' + rs(up) + ' · ' + dShort(it[0].created_at) : (it.length > 1 ? T('itemsN', { n: it.length }) + ' · ' : '') + dShort(it[0].created_at);
+      return '<div class="oh-cgr" data-g="' + k + '"><button type="button" class="oh-cgh" data-cg="' + k + '"><span class="oh-cgi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + GIC[k] + '</svg></span><span><b>' + esc(g.n) + '</b><span>' + line + '</span></span><em>' + rs(g.sum) + '</em><svg class="cv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>'
+        + '<div class="oh-cgl">' + it.map(function (x) { return '<div><span>' + esc(x.description || x.charge_type || '') + ' · ' + dShort(x.created_at) + ((+x.quantity || 1) > 1 ? ' · ' + x.quantity + ' × ' + rs(x.unit_price) : '') + '</span><b>' + rs(x.total_price) + '</b></div>'; }).join('') + '</div></div>';
+    }).join('');
+    var byM = {}; pays.forEach(function (x) { var m = methodName(x.method); byM[m] = (byM[m] || 0) + (+x.amount || 0); });
+    var pmSum = Object.keys(byM).map(function (k) { return esc(k) + ' ' + rs(byM[k]); }).join(' · ');
+    var h = '<div class="oh-drh">' + av(name) + '<div style="min-width:0"><b>' + esc(name) + '</b><span>' + (sub || '<span class="oh-nil">NIL</span>') + '</span></div><button type="button" class="oh-x" data-dr="x" aria-label="close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>'
+      + '<div class="oh-drb"><div class="oh-drs"><h4>' + T('blTotal') + '</h4><span class="oh-chip ' + st[0] + '">' + st[1] + '</span></div>'
+      + '<div class="oh-tri"><div><span>' + T('blTotal') + '</span><b>' + rs(tot) + '</b></div><div><span>' + T('colPaid') + '</span><b>' + rs(paid) + '</b></div><div class="' + (due > 0 ? 'due' : '') + '"><span>' + T('colDue') + '</span><b>' + rs(Math.max(0, due)) + '</b></div></div>'
+      + '<div class="oh-kv2"><div><span>' + T('ptPh') + '</span>' + ph(p.phone) + '</div><div><span>' + famLbl + '</span>' + ph(fam) + '</div>'
+      + '<div><span>' + T('admBy') + '</span>' + nil(a.admitting_doctor) + '</div><div><span>' + T('admWhy') + '</span>' + nil(a.admission_diagnosis || a.reason || a.chief_complaint) + '</div>'
+      + '<div><span>' + T('admOn') + '</span>' + (a.admission_date ? '<b>' + dLong(String(a.admission_date).slice(0, 10)) + '</b>' : '<b class="oh-nil">NIL</b>') + '</div><div><span>' + T('howLong') + '</span>' + (days ? '<b>' + T('daysN', { n: days }) + '</b>' : '<b class="oh-nil">NIL</b>') + '</div></div>'
+      + '<div class="oh-drs"><h4>' + T('vitals') + '</h4><span>' + (v0.created_at ? T('lastAt') + ' ' + dShort(v0.created_at) : '') + '</span></div>'
+      + '<div class="oh-vit">' + vit(T('vBp'), 'bp') + vit(T('vPulse'), 'pulse') + vit(T('vTemp'), 'temperature', '°') + vit(T('vSpo2'), 'spo2', '%') + '</div>'
+      + '<div class="oh-drs"><h4>' + T('chgList') + '</h4><span>' + GO.length + '</span></div>'
+      + (grows ? '<div class="oh-cg">' + grows + '<div class="oh-tot2"><span>' + T('blTotal') + '</span><span>' + rs(tot) + '</span></div></div>' : '<div class="oh-cg"><div style="padding:14px;color:var(--text-tertiary)">NIL</div></div>')
+      + '<div class="oh-drs"><h4>' + T('paidSoFar') + '</h4><span>' + (pmSum || '') + '</span></div>'
+      + '<div class="oh-pyl">' + (pays.length ? pays.slice().reverse().map(function (x) { return '<div><div style="border:0;padding:0;display:block"><b>' + esc(methodName(x.method)) + '</b><span>' + dShort(x.created_at) + '</span></div><b>' + rs(x.amount) + '</b></div>'; }).join('') : '<div><b class="oh-nil">NIL</b></div>') + '</div>'
+      + '<div class="oh-advbox" id="oh-dr-adv"></div></div>'
+      + '<div class="oh-drf">'
+      + (PAGE === 'reception'
+        ? '<button type="button" class="oh-b s" data-dr="chg">+ ' + T('addChg') + '</button><button type="button" class="oh-b p" data-dr="pay">' + ic('rupee', 18) + T('takePay') + '</button><button type="button" class="oh-b dis w" data-dr="dis">' + ic('out', 18) + T('wdGo') + '</button>'
+        : '<button type="button" class="oh-b s" data-dr="chg">+ ' + T('addChg') + '</button><button type="button" class="oh-b p" data-dr="full">' + T('fullProf') + '</button><button type="button" class="oh-b dis w" data-dr="dis">' + ic('out', 18) + T('wdGo') + '</button>')
+      + '</div>';
+    d.innerHTML = h; bnDigits(d);
+    var ab = document.getElementById('oh-dr-adv');
+    if (ab && 'discharge_advised_at' in a) {
+      var draw = function (on) { ab.innerHTML = on ? '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="oh-chip full">' + T('advOn') + '</span><button type="button" class="oh-lnk" data-adv="0">' + T('advUndo') + '</button></div>' : '<button type="button" class="oh-b s" style="width:100%" data-adv="1">' + ic('ok', 16) + T('advOff') + '</button>'; };
+      draw(!!a.discharge_advised_at);
+      ab.onclick = async function (e) { var b = e.target.closest('[data-adv]'); if (!b) return; var on = b.getAttribute('data-adv') === '1'; if (await adviseToggle(admId, on, a.admitting_doctor)) { a.discharge_advised_at = on ? new Date().toISOString() : null; draw(on); if (BM.data) bedMap(); } };
+    }
+  }
+  function drClick(e) {
+    var g = e.target.closest('[data-cg]'); if (g) { g.parentNode.classList.toggle('open'); return; }
+    var b = e.target.closest('[data-dr]'); if (!b) return;
+    var k = b.getAttribute('data-dr'), a = DR.a || {}, name = a.patient_name || (DR.p && DR.p.full_name) || '';
+    if (k === 'x') { closeDrawer(); return; }
+    try {
+      if (k === 'pay' && typeof openTransactionPayment === 'function') openTransactionPayment(a.id, name);
+      else if (k === 'chg' && PAGE === 'reception') { _bpAdmId = a.id; _bpPatientId = a.patient_id; openExpenseModal(); }
+      else if (k === 'chg') { _currentBillingPatient = a.id; openAddChargeModal(); }
+      else if (k === 'dis' && PAGE === 'reception' && typeof openDischargeConfirm === 'function') { closeDrawer(); openDischargeConfirm(a.id, a.bed_id, name); }
+      else if (k === 'dis' && typeof openDischargeModal === 'function') { closeDrawer(); openDischargeModal(a.id); }
+      else if (k === 'full' && typeof openPatientFromBed === 'function') { closeDrawer(); openPatientFromBed(a.patient_id, name, DR.bed || '', ''); }
+    } catch (err) { console.warn('nh-home drawer', err); }
+  }
+  function refreshDrawer() { if (DR.id && document.getElementById('oh-dr')) openDrawer(DR.id); }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && DR.id) closeDrawer(); });
+
+  /* ---------------- staff Team list: initials, role, phone ---------------- */
+  var ROLE = { owner: ['Owner', 'মালিক', 'मालिक'], receptionist: ['Receptionist', 'রিসেপশনিস্ট', 'रिसेप्शनिस्ट'], doctor: ['Doctor', 'ডাক্তার', 'डॉक्टर'], nurse: ['Nurse', 'নার্স', 'नर्स'], pharmacist: ['Pharmacist', 'ফার্মাসিস্ট', 'फार्मासिस्ट'], lab: ['Lab staff', 'ল্যাব', 'लैब'], accountant: ['Accountant', 'হিসাবরক্ষক', 'लेखाकार'] };
+  function roleName(r) { var x = ROLE[String(r || '').toLowerCase()]; if (!x) return r || ''; var l = lang(); return x[l === 'bn' ? 1 : l === 'hi' ? 2 : 0]; }
+  async function teamList() {
+    var el = document.getElementById('staff-list'), cid = cidNow(); if (!el || !cid || PAGE !== 'owner') return;
+    var r = await _supa.from('nh_staff').select('*').eq('clinic_id', cid).order('created_at');
+    if (r.error || !r.data || !r.data.length) return;
+    var hr = await _supa.from('hr_staff').select('user_id,name,phone,designation').eq('clinic_id', cid);
+    var byU = {}; ((hr && hr.data) || []).forEach(function (h) { if (h.user_id) byU[h.user_id] = h; });
+    if (!document.getElementById('oh-team-css')) { var c = document.createElement('style'); c.id = 'oh-team-css'; c.textContent = '#staff-list.oh-team{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px}.oh-tm{display:flex;gap:14px;align-items:center;border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--surface)}.oh-tm .oh-av{width:44px;height:44px;font-size:15px;font-weight:700}.oh-tm .i{flex:1;min-width:0}.oh-tm b{display:block;font-size:15px;font-weight:700;color:var(--text-primary)}.oh-tm .d{font-size:13px;color:var(--text-tertiary);margin:2px 0 6px}.oh-tm a{color:var(--green);text-decoration:none;font-size:14.5px;display:inline-flex;gap:6px;align-items:center}.oh-tm .act{display:flex;flex-direction:column;gap:6px}.oh-tm .act button{min-height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);font:inherit;font-size:13px;cursor:pointer;color:var(--text-secondary)}.oh-tm .act button.r{color:var(--red)}body.oh-skin #v-staff .panel .pt{font-size:16px!important;font-weight:700!important;letter-spacing:0!important;text-transform:none!important}'; document.head.appendChild(c); }
+    el.classList.add('oh-team');
+    el.innerHTML = r.data.map(function (s) {
+      var h = byU[s.id] || {}, phn = s.phone || h.phone || '';
+      return '<div class="oh-tm">' + av(s.full_name) + '<div class="i"><b>' + esc(s.full_name || '—') + '</b><div class="d">' + esc(roleName(s.role)) + (h.designation ? ' · ' + esc(h.designation) : '') + (s.is_active === false ? ' · ' + T('inactive') : '') + '</div>' + (phn ? '<a class="nob" href="tel:' + esc(phn) + '">' + ic2('phone', 15) + esc(phn) + '</a>' : '<span class="oh-nil" style="font-size:13px">NIL</span>') + '</div>'
+        + (s.role !== 'owner' ? '<div class="act"><button type="button" data-tg="' + esc(s.id) + '" data-on="' + (s.is_active === false) + '">' + (s.is_active === false ? T('activate') : T('deactivate')) + '</button><button type="button" class="r" data-rv="' + esc(s.id) + '" data-n="' + esc(s.full_name || '') + '">' + T('revoke') + '</button></div>' : '') + '</div>';
+    }).join('');
+    if (!el._oh) { el._oh = 1; el.addEventListener('click', function (e) { var t = e.target.closest('[data-tg]'); if (t && typeof toggleStaffActive === 'function') toggleStaffActive(t.getAttribute('data-tg'), t.getAttribute('data-on') === 'true'); var v = e.target.closest('[data-rv]'); if (v && typeof removeStaff === 'function') removeStaff(v.getAttribute('data-rv'), v.getAttribute('data-n')); }); }
+    var pts = document.querySelectorAll('#v-staff .panel .pt'); if (pts[0]) pts[0].textContent = T('teamT'); if (pts[1]) pts[1].textContent = T('invT');
+    bnDigits(el);
   }
 
   function click(e) {
@@ -1064,11 +1348,14 @@
     wrap('loadHome', function () { return load(); });
     wrap('loadBeds', function () { return bedMap(); });
     wrap('loadBillingPage', function () { return billing(); });
-    wrap('tpRefreshScreens', function () { if (document.getElementById('oh-bill')) billing(); if (BM.data) bedMap(); load(); });
+    wrap('saveExpense', function () { refreshDrawer(); if (BM.data) bedMap(); });
+    wrap('saveCharge', function () { refreshDrawer(); if (BM.data) bedMap(); });
+    wrap('loadStaffList', function () { return teamList(); });
+    wrap('tpRefreshScreens', function () { refreshDrawer(); if (document.getElementById('oh-bill')) billing(); if (BM.data) bedMap(); load(); });
     wrap('setLanguage', relang);
     wrap('setFamLanguage', relang);
   }
-  try { early(); licNav(); } catch (e) {}
+  try { early(); licNav(); greenCss(); sidebarAdmit(); bedModalHooks(); } catch (e) {}
   hook();
   if (typeof window.nav === 'function' && !window.nav._oh) { var nv = window.nav; window.nav = function () { var x = nv.apply(this, arguments); try { if (document.getElementById('oh-bn')) bottomNav(); if (arguments[0] === 'bills' && PAGE === 'owner') billing(); if (arguments[0] === 'staff') staffBoard(); if (arguments[0] === 'licences') licences(); } catch (e) {} return x; }; window.nav._oh = true; }
   window.ohLoad = function () { return load().catch(function (e) { console.warn('nh-home', e); }); };
