@@ -11,14 +11,21 @@ AuraUI.mounted = false;
   st.textContent = 'body.aura-ui-on #app-shell{display:none!important}'
     + 'body.aura-ui-on{background:#f6f7f5}'
     + 'body.aura-ui-on .mod-ov{z-index:1000!important}'
-    + 'body.aura-ui-on .ap-ov{z-index:1001!important}'
+    + 'body.aura-ui-on .ap-ov,body.aura-ui-on .as-ov,body.aura-ui-on .aura-tp-ov{z-index:1001!important}'
     + 'body.aura-ui-on .toast,body.aura-ui-on #nh-toast{z-index:1002!important}'
     + '#aura-ui{display:block}'
+    + '#aura-ui>.aui-lg{display:flex!important;flex-direction:column;gap:16px;font-family:"IBM Plex Sans","Noto Sans Bengali",system-ui,sans-serif;font-size:14.5px;color:var(--text-primary,#18170f);min-width:0}'
+    + '#aura-ui>.aui-lg:not([slot]){display:none!important}'
+    + '#aura-ui>.aui-lg>.sh{display:none!important}'
+    + '#aura-ui>.aui-lg .panel{border-radius:16px}'
+    + '#aura-ui>.aui-only>*{display:none!important}#aura-ui>.aui-only>#sb-panel{display:block!important}'
+    + '#aura-ui>#v-dashboard.aui-lg .dash-tab:first-child,#aura-ui>#v-dashboard.aui-lg #dtab-overview{display:none!important}'
+    + '#aura-ui>#v-patients.aui-lg #pv-all,#aura-ui>#v-patients.aui-lg #pv-fam{display:none!important}'
     + '.aura-ui-back{position:fixed;right:14px;bottom:84px;z-index:90;border:0;border-radius:999px;padding:11px 16px;font:600 13px/1 system-ui,sans-serif;background:#0b4f3a;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.2);cursor:pointer}'
     + '@media(min-width:900px){.aura-ui-back{bottom:20px}}';
   (document.head || document.documentElement).appendChild(st);
 })();
-AuraUI.want = function () { try { return sessionStorage.getItem('aura-ui-classic') !== '1'; } catch (e) { return true; } };
+AuraUI.want = function () { try { sessionStorage.removeItem('aura-ui-classic'); } catch (e) {} return true; };
 AuraUI.unmount = function (classic) {
   var h = document.getElementById('aura-ui'); if (h) h.remove();
   document.body.classList.remove('aura-ui-on'); document.documentElement.style.overflow = '';
@@ -62,6 +69,17 @@ AuraUI.mount = function (LIVE) {
   AuraUI.host = host; AuraUI.root = root;
   AuraUI.mounted = true;
   RUN(root, host, BODY, LIVE || null);
+  /* old screens' colours follow the new design's light / dark */
+  var syncTh = function () { var th = host.dataset.theme === 'dark' ? 'dark' : 'light', d = document.documentElement; d.setAttribute('data-theme', th); d.setAttribute('data-aura-base', th); d.removeAttribute('data-aura-theme'); d.setAttribute('data-aura-side', th); };
+  new MutationObserver(syncTh).observe(host, { attributes: true, attributeFilter: ['data-theme'] }); syncTh();
+  /* when a window from the old screens closes (it may have saved something), refresh the numbers */
+  var rlT = null, rl = function () { clearTimeout(rlT); rlT = setTimeout(function () { if (AuraUI.mounted && AuraUI.reload) AuraUI.reload(); }, 700); };
+  new MutationObserver(function (ms) {
+    for (var i = 0; i < ms.length; i++) { var m = ms[i];
+      if (m.type === 'attributes' && m.target.classList && m.target.classList.contains('mod-ov') && /\bopen\b/.test(m.oldValue || '') && !m.target.classList.contains('open')) { rl(); return; }
+      if (m.type === 'childList') for (var j = 0; j < m.removedNodes.length; j++) { var n = m.removedNodes[j]; if (n.nodeType === 1 && (n.id === 'as-claims' || /\b(as-ov|ap-ov)\b/.test(n.className || ''))) { rl(); return; } }
+    }
+  }).observe(document.body, { subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['class'], childList: true });
   return true;
 };
 
@@ -1299,7 +1317,7 @@ function vPatients(){
   if (S.patId && getP(S.patId)) return vPatRecord(getP(S.patId));
   const cnt = {all:P.length, in:P.filter(p => !p.disc).length, today:P.filter(p => !p.disc && p.days === 0).length, out:P.filter(p => p.disc).length, due:P.filter(p => totals(p).bal > 0).length};
   const F = [['all','fAll'],['in','fIn'],['today','fToday'],['out','fOut'],['due','fDue']];
-  return `<div class="ph"><div><h1>${t('plT')}</h1><p class="sub">${t('plS')}</p></div><div class="ph-actions">${R().fab ? `<button class="btn btn-primary" data-act="admit">${ic('plus')}${t('newAdmission')}</button>` : ''}</div></div>
+  return `<div class="ph"><div><h1>${t('plT')}</h1><p class="sub">${t('plS')}</p></div><div class="ph-actions"><button class="btn btn-secondary" data-act="nav" data-v="families">${ic('users')}${t('navFam')}</button>${R().fab ? `<button class="btn btn-primary" data-act="admit">${ic('plus')}${t('newAdmission')}</button>` : ''}</div></div>
   <div class="pstats">${F.map(([k, l]) => `<button class="pstat ${S.patF === k ? 'on' : ''}" data-act="patF" data-v="${k}" aria-pressed="${S.patF === k}"><b>${num(cnt[k])}</b><span>${t(l)}</span></button>`).join('')}</div>
   <div class="toolbar ptool">
     <label class="search"><span class="vh">${t('plSearch')}</span>${ic('search')}<input class="input" id="patQ" type="search" placeholder="${t('plSearch')}" value="${esc(S.patQ)}" autocomplete="off"></label>
@@ -1334,10 +1352,10 @@ function vPatRecord(p){
       <span class="pava ${avClass(p.id)}" aria-hidden="true">${esc(initials(p))}</span>
       <div class="prec-id">
         <h1>${esc(nm(p))} ${patChip(p)} ${!p.disc ? `<span class="st st-dis latin">${p.bed}</span>` : ''}</h1>
-        <p><span>${num(p.age)} ${S.lang === 'bn' ? 'বছর' : 'yrs'} · ${sexTxt(p.sex)}</span><span>·</span><span>${t('uhid')} <b class="latin">${x.uhid}</b></span>${x.bg !== '—' ? `<span>·</span><span>${t('blood')} <b class="latin">${x.bg}</b></span>` : ''}<span>·</span>${p.phone ? `<span>·</span><a href="tel:+91${p.phone}" class="latin">${ic('phone', 14)}${fmtPhone(p.phone)}</a>` : ''}</p>
+        <p><span>${num(p.age)} ${S.lang === 'bn' ? 'বছর' : 'yrs'} · ${sexTxt(p.sex)}</span><span>·</span><span>${t('uhid')} <b class="latin">${x.uhid}</b></span>${x.bg !== '—' ? `<span>·</span><span>${t('blood')} <b class="latin">${x.bg}</b></span>` : ''}${p.phone ? `<span>·</span><a href="tel:+91${p.phone}" class="latin">${ic('phone', 14)}${fmtPhone(p.phone)}</a>` : ''}</p>
         <div class="prec-tags">${x.alg.length ? x.alg.map(a => `<span class="ptag ${a[2] ? 'red' : 'amber'}">${ic('alert', 13)}${t('allergy')}: ${a[li()]}${a[2] ? (S.lang === 'bn' ? ' (গুরুতর)' : ' (severe)') : ''}</span>`).join('') : ''}<span class="ptag">${t(x.payer)}</span>${p.advice && !p.disc ? `<span class="ptag green">${ic('exit', 13)}${t('advBy', {doc:advName(p)})}</span>` : ''}</div>
       </div>
-      <div class="prec-act">${!p.disc ? `<button class="btn btn-secondary" data-act="skIssue" data-pid="${p.id}">${ic('box')}${t('stkGive')}</button>` : ''}${canMoney ? `${tt.bal ? `<button class="btn btn-secondary" data-act="pay" data-id="${p.id}">${ic('rupee')}${t('recordPayment')}</button>` : ''}${!p.disc ? `<button class="btn btn-secondary" data-act="charge" data-id="${p.id}">${ic('plus')}${t('addCharge')}</button><button class="btn btn-secondary" data-act="discharge" data-id="${p.id}">${ic('exit')}${t('discharge')}</button>` : ''}` : ''}<button class="btn btn-ghost" data-act="printBill" data-id="${p.id}">${ic('download')}${t('printSum')}</button></div>
+      <div class="prec-act"><button class="btn btn-secondary" data-act="lgScheme" data-id="${p.id}">${ic('shield')}${t('lgScheme')}</button>${!p.disc ? `<button class="btn btn-secondary" data-act="skIssue" data-pid="${p.id}">${ic('box')}${t('stkGive')}</button>` : ''}${canMoney ? `${tt.bal ? `<button class="btn btn-secondary" data-act="pay" data-id="${p.id}">${ic('rupee')}${t('recordPayment')}</button>` : ''}${!p.disc ? `<button class="btn btn-secondary" data-act="charge" data-id="${p.id}">${ic('plus')}${t('addCharge')}</button><button class="btn btn-secondary" data-act="discharge" data-id="${p.id}">${ic('exit')}${t('discharge')}</button>` : ''}` : ''}<button class="btn btn-ghost" data-act="printBill" data-id="${p.id}">${ic('download')}${t('printSum')}</button></div>
     </div>
     <div class="prec-kpi">
       <div><span>${t('kLos')}</span><b>${p.days === 0 ? t('admittedToday') : daysTxt(Math.max(1, p.days))}</b></div>
@@ -3292,6 +3310,7 @@ const subOffer = () => new Date() < SUB_OFFER_END;
 const subBonus = term => subOffer() ? (term === 'h' ? 1 : term === 'y' ? 2 : 0) : 0;
 const subFmt = d => fdate(d, {day:'numeric', month:'short', year:'numeric'});
 function subInfo(){
+  if (SUB.srvLocked) return {tone:'locked', days:-99, lockIn:0};
   if (SUB.free || !SUB.exp) return {tone:'free', days:null};
   const days = Math.ceil((SUB.exp - Date.now()) / DAY), lockIn = days < 0 ? Math.max(SUB_GRACE + days, 0) : null;
   const tone = days > 7 ? 'ok' : days >= 0 ? 'soon' : lockIn > 0 ? 'grace' : 'locked';
@@ -3667,7 +3686,7 @@ function auTitleOf(act, d){
 }
 function sbFootExtra(){
   const many = window.AURA_BIZ_LIST && window.AURA_BIZ_LIST.length > 1;
-  return `<div style="display:flex;gap:8px;margin-top:10px">${many ? `<button class="btn btn-mint btn-sm" style="flex:1" data-act="bizSwitch">${ic('users', 16)}${t('bizSwitch')}</button>` : ''}<button class="btn btn-mint btn-sm" style="flex:1" data-act="signOut">${ic('exit', 16)}${t('signOut')}</button></div>`;
+  return `<div style="display:flex;gap:8px;margin-top:10px">${many ? `<button class="btn btn-mint btn-sm" style="flex:1" data-act="bizSwitch">${ic('users', 16)}${t('bizSwitch')}</button>` : ''}<button class="btn btn-mint btn-sm" style="flex:1" data-act="signOut">${ic('exit', 16)}${t('signOut')}</button></div><p style="font-size:11.5px;margin:10px 2px 0;opacity:.75"><a href="https://aurascale.in/privacy" target="_blank" rel="noopener" style="color:inherit">${t('lgLinks')}</a> · <a href="https://aurascale.in/terms" target="_blank" rel="noopener" style="color:inherit">${t('lgTerms')}</a> · <a href="https://aurascale.in/agreement" target="_blank" rel="noopener" style="color:inherit">${t('lgAgr')}</a></p>`;
 }
 async function loadDocs(p){
   if (p.docsBusy) return; p.docsBusy = true;
@@ -4084,11 +4103,12 @@ async function liveExtra(){
   RATES.length = 0; WARDS.forEach(W => RATES.push({svc:T[W.key] || two(W.id), cat:'bed', rate:W.rate, unit:['প্রতিদিন', 'per day']}));
   /* import history */
   IMHIST.length = 0; LV.audit.filter(a => a.action === 'data_import').forEach(a => { const d = a.details || {}; IMHIST.push({at:new Date(a.created_at), type:IMT.includes(d.type) ? d.type : 'stock', file:d.file || '—', ok:+d.ok || 0, err:+d.err || 0, by:two(d.by || '')}); });
+  try { await expLoad(); } catch (e) {}
   /* subscription */
   const plan = SUB_PLANS[c.aura_plan] ? c.aura_plan : 'nh_15', bm = /_(15|30|50)$/.exec(plan);
   SUB.plan = plan; if (!SUB.bedsSet) { SUB.beds = bm ? bm[1] : '15'; SUB.bedsSet = true; }
   SUB.free = !!c.billing_exempt || !!window._auraComplimentary; SUB.price = Number(c.monthly_price) > 0 ? Number(c.monthly_price) : 0;
-  SUB.trial = !c.subscription_expires_at;
+  SUB.trial = !c.subscription_expires_at; SUB.srvLocked = !!(LIVE && LIVE.__locked);
   SUB.exp = c.subscription_expires_at ? new Date(c.subscription_expires_at) : (c.created_at ? new Date(new Date(c.created_at).getTime() + 7 * DAYMS) : null);
   SUB.ocrUsed = Number(c.ocr_used_this_period) || 0; SUB.ocrBonus = Number(c.ocr_bonus_remaining) || 0;
   const inv = await safe(sb.from('aurascale_invoices').select('*').eq('clinic_id', cid).order('invoice_date', {ascending:false}));
@@ -4223,16 +4243,114 @@ Object.assign(T, {
   emTaken:['এই ইমেল অন্য একটি অ্যাকাউন্টে আছে। অন্য ইমেল দিন।','This email belongs to another account. Use a different one.']
 });
 
+/* ---------- pages that still use the old screen's working parts, shown inside the new design ----------
+   The old page's content is moved (not copied) into the new design, so every button and every
+   save keeps working exactly as before; only the old header and menu are gone. */
+Object.assign(T, {
+  navAcc:['হিসাব ও রিপোর্ট','Accounts & reports'], navNotes:['প্রগ্রেস নোট','Progress notes'], navDsum:['ছুটির কাগজ','Discharge papers'],
+  navAyu:['আয়ুষ্মান / স্কিম','Ayushman / schemes'], navHelp:['সাহায্য','Help'], navFam:['পরিবার','Families'],
+  lgAccS:['সব জমা টাকা, আয়, খরচ, বকেয়া আর দৈনিক / মাসিক রিপোর্ট','All payments, revenue, expenses, dues and daily / monthly reports'],
+  lgNotesS:['রোগী বেছে আজকের নোট লিখুন বা আগের নোট দেখুন','Pick a patient to write today’s note or read earlier ones'],
+  lgDsumS:['ছুটির সারাংশ, চূড়ান্ত বিল আর পরিবারকে হোয়াটসঅ্যাপ','Discharge summary, final bill and WhatsApp to the family'],
+  lgAyuS:['PM-JAY, স্বাস্থ্যসাথী আর বীমার কেস ও ক্লেম — নিজেদের হিসেবের জন্য, সরকারি যাচাই নয়','PM-JAY, Swasthya Sathi and insurance cases & claims — for your own tracking, not a government check'],
+  lgHelpS:['ছবি সহ ধাপে ধাপে গাইড, আর AuraScale-এর সাথে যোগাযোগ','Step-by-step guides with pictures, and how to reach AuraScale'],
+  lgFamS:['একই পরিবারের রোগীদের একসঙ্গে দেখুন','See patients of the same family together'],
+  lgClaims:['সব ক্লেম','All claims'], lgScheme:['স্কিম / বীমা','Scheme / insurance'], lgStaffT:['আমন্ত্রণ, হাজিরা আর বেতন','Invites, attendance and salary'],
+  lgInvite:['স্টাফকে আমন্ত্রণ','Invite staff'],
+  lgMissing:['এই অংশটি লোড হয়নি। পাতা রিফ্রেশ করুন।','This part did not load. Please refresh the page.'],
+  lgLinks:['গোপনীয়তা','Privacy'], lgTerms:['শর্তাবলি','Terms'], lgAgr:['চুক্তি','Agreement']
+});
+Object.assign(IC, {chart:'<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>', book:'<path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h11"/>', help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14"/><circle cx="12" cy="17.5" r=".6"/>'});
+
+/* key -> old page id, the old menu name that loads its data, and what to do after it opens */
+const LEG = {
+  accounts:{id:'v-dashboard', nav:'dashboard', icon:'chart', t:'navAcc', s:'lgAccS', after:() => { const b = document.querySelector('#v-dashboard .dash-tab:not(.on):nth-child(2)') || null; const cur = document.querySelector('#v-dashboard .dash-tab.on'); if (!cur || /overview/.test(cur.getAttribute('onclick') || '')) { const pb = [...document.querySelectorAll('#v-dashboard .dash-tab')].find(x => /payments/.test(x.getAttribute('onclick') || '')); if (pb && window.dashTab) window.dashTab('payments', pb); } }},
+  notes:{id:'v-rounds', nav:'rounds', icon:'note', t:'navNotes', s:'lgNotesS'},
+  dsum:{id:'v-discharge', nav:'discharge', icon:'exit', t:'navDsum', s:'lgDsumS'},
+  ayushman:{id:'v-ayushman', nav:'ayushman', icon:'shield', t:'navAyu', s:'lgAyuS', act:() => `<button class="btn btn-secondary" data-act="lgClaims">${ic('receipt')}${t('lgClaims')}</button>`},
+  help:{id:'v-help', nav:'help', icon:'help', t:'navHelp', s:'lgHelpS'},
+  families:{id:'v-patients', nav:'patients', icon:'users', t:'navFam', s:'lgFamS', back:'patients', after:() => { if (window.setPatientsView) window.setPatientsView('families'); }},
+  staff:{id:'v-staff', nav:'staff', embed:true},
+  stock:{id:'v-stock', nav:'stock', embed:true, only:'sb-panel'}
+};
+const legEl = k => document.getElementById(LEG[k].id);
+function legPark(){ legShow.cur = null; Object.keys(LEG).forEach(k => { const el = legEl(k); if (el && el.getAttribute('slot')) el.removeAttribute('slot'); }); }
+function legShow(k){
+  const L = LEG[k], el = legEl(k); if (!el) { const h = $('lgHost'); if (h) h.innerHTML = `<p class="sknote">${ic('info', 15)}${t('lgMissing')}</p>`; return; }
+  legPark();
+  if (el.parentNode !== HOST) HOST.appendChild(el);
+  el.classList.add('aui-lg'); el.classList.toggle('aui-only', !!L.only); if (L.only) el.dataset.only = L.only;
+  el.setAttribute('slot', 'lg');
+  if (!legShow.done) legShow.done = {};
+  try { if (typeof window.nav === 'function') window.nav(L.nav); } catch (e) { console.warn('old page', k, e); }
+  el.classList.add('on');
+  try { L.after && L.after(); } catch (e) {}
+  legShow.done[k] = true;
+}
+const legView = k => () => { const L = LEG[k];
+  return `${L.back ? `<p class="crumb"><button class="link" data-act="nav" data-v="${L.back}">${ic('chevR', 14).replace('class="ic"', 'class="ic" style="transform:rotate(180deg)"')}${t('plT')}</button></p>` : ''}<div class="ph"><div><h1>${t(L.t)}</h1><p class="sub">${t(L.s)}</p></div>${L.act ? `<div class="ph-actions">${L.act()}</div>` : ''}</div><div class="lg-host" id="lgHost"><slot name="lg"></slot></div>`; };
+['accounts', 'notes', 'dsum', 'ayushman', 'help', 'families'].forEach(k => { VIEWS[k] = legView(k); NAVI[k] = [LEG[k].icon, LEG[k].t]; });
+/* staff and stock: the new page first, then the old working part below it */
+const _vStaff = VIEWS.staff, _vStock = VIEWS.stock;
+VIEWS.staff = () => _vStaff() + `<div class="lg-host lg-under" id="lgHost"><div class="lg-h"><h2>${t('lgStaffT')}</h2><button class="btn btn-primary" data-act="lgInvite">${ic('plus')}${t('lgInvite')}</button></div><slot name="lg"></slot></div>`;
+VIEWS.stock = () => _vStock() + `<div class="lg-host lg-under" id="lgHost"><slot name="lg"></slot></div>`;
+
+function legHook(){
+  const st = document.createElement('style'); st.textContent = '#main:focus,#main:focus-visible{outline:none}.lg-host{display:block;min-width:0}.lg-under{margin-top:28px}.lg-h{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px}.lg-h h2{font-size:20px;margin:0}'; ROOT.appendChild(st);
+  const _rm = renderMain;
+  renderMain = function(){ _rm(); if (S.loading || !LEG[S.view] || (S.view === 'patients')) { legPark(); legShow.cur = null; return; } if (legShow.cur === S.view && legEl(S.view) && legEl(S.view).getAttribute('slot')) return; legShow(S.view); legShow.cur = S.view; };
+  Object.assign(H, {
+    exAdd: () => { if (typeof window.openAddExpense === 'function') window.openAddExpense(); },
+    lgInvite: () => { if (typeof window.openStaffInvite === 'function') window.openStaffInvite(); },
+    lgClaims: () => { if (typeof window.auraSchemeClaimsOpen === 'function') window.auraSchemeClaimsOpen(); },
+    lgScheme: el => { if (typeof window.auraSchemeEdit === 'function') window.auraSchemeEdit(el.dataset.id); }
+  });
+}
+
+/* ---------- expenses (new page; the "add" window is the existing one) ---------- */
+Object.assign(T, {
+  navExp:['খরচ','Expenses'], exS:['বেতন, বিদ্যুৎ, ভাড়া, সামগ্রী — হাসপাতালের সব খরচ এক জায়গায়','Salaries, power, rent, supplies — every hospital expense in one place'],
+  exAdd:['খরচ লিখুন','Add expense'], exMonth:['এই মাসের খরচ','This month'], exN:['এই মাসে কতগুলো','Entries this month'], exTop:['সবচেয়ে বেশি খরচ','Biggest category'],
+  exNet:['এই মাসে আয় − খরচ','This month: collected − spent'], exNone:['এখনও কোনো খরচ লেখা হয়নি','No expenses yet'], exNoneS:['“খরচ লিখুন” চাপুন — বেতন, বিদ্যুৎ বিল, ভাড়া, যা কিছু।','Tap “Add expense” — salaries, electricity, rent, anything.'],
+  exOff:['খরচের খাতা এখনও চালু হয়নি (nh_expenses টেবিল নেই)। AuraScale-কে জানান।','The expense book is not switched on yet (no nh_expenses table). Please tell AuraScale.']
+});
+const EXCAT = {Staff:['স্টাফ','Staff'], Supplies:['সামগ্রী','Supplies'], Utilities:['বিদ্যুৎ / জল','Utilities'], Maintenance:['মেরামত','Maintenance'], 'Medical Supplies':['চিকিৎসা সামগ্রী','Medical supplies'], Equipment:['যন্ত্রপাতি','Equipment'], Rent:['ভাড়া','Rent'], Other:['অন্যান্য','Other']};
+NAVI.expenses = ['cash', 'navExp'];
+const exCatT = c => { const x = EXCAT[c || 'Other']; return x ? x[li()] : c; };
+VIEWS.expenses = () => {
+  const L = LV.exp || [], now = new Date(), m0 = ymd(new Date(now.getFullYear(), now.getMonth(), 1));
+  const mon = L.filter(e => String(e.expense_date || '') >= m0), tot = mon.reduce((a, e) => a + (Number(e.amount) || 0), 0);
+  const by = {}; mon.forEach(e => by[e.category || 'Other'] = (by[e.category || 'Other'] || 0) + (Number(e.amount) || 0));
+  const top = Object.keys(by).sort((a, b) => by[b] - by[a])[0];
+  const col = (LV.monthPay || 0);
+  const head = `<div class="ph"><div><h1>${t('navExp')}</h1><p class="sub">${t('exS')}</p></div><div class="ph-actions"><button class="btn btn-primary" data-act="exAdd" ${LV.expOk === false ? 'disabled' : ''}>${ic('plus')}${t('exAdd')}</button></div></div>`;
+  if (LV.expOk === false) return head + `<div class="card">${emptyState('alert', t('exOff'), '')}</div>`;
+  return head + `<div class="sumrow bpsum">
+    <div class="card sum due"><span>${t('exMonth')}</span><b>${money(tot)}</b></div>
+    <div class="card sum"><span>${t('exN')}</span><b>${num(mon.length)}</b></div>
+    <div class="card sum"><span>${t('exTop')}</span><b style="font-size:20px">${top ? esc(exCatT(top)) + ' · ' + money(by[top]) : '—'}</b></div>
+    <div class="card sum"><span>${t('exNet')}</span><b>${money(col - tot)}</b></div></div>
+  <div class="card flush">${L.length ? L.slice(0, 200).map(e => `<div class="iss"><span class="sk-ic c-cons">${ic('cash', 18)}</span><div class="tt"><b>${esc(exCatT(e.category))}${e.notes ? ' — ' + esc(e.notes) : ''}</b><span>${e.expense_date ? fdate(new Date(String(e.expense_date).slice(0, 10) + 'T12:00:00'), {day:'numeric', month:'short', year:'numeric'}) : ''} · ${esc(e.payment_method || '—')}</span></div><b class="due" style="white-space:nowrap">${money(Number(e.amount) || 0)}</b></div>`).join('') : emptyState('cash', t('exNone'), t('exNoneS'))}</div>`;
+};
+async function expLoad(){
+  const sb = SB(), cid = CID(), now = new Date(), m0 = new Date(now.getFullYear(), now.getMonth(), 1);
+  const r = await safe(sb.from('nh_expenses').select('*').eq('clinic_id', cid).order('expense_date', {ascending:false}).limit(300));
+  LV.expOk = !r.error; LV.exp = r.data || [];
+  const pm = await safe(sb.from('nh_payments').select('amount,created_at').eq('clinic_id', cid).gte('created_at', m0.toISOString()).limit(5000));
+  LV.monthPay = (pm.data || []).reduce((a, x) => a + (Number(x.amount) || 0), 0);
+}
+
 /* ---------- Boot ---------- */
 (function boot(){
   try {
     const sk = localStorage.getItem('as3-skin'); if (SKINS.some(k => k.id === sk)) S.skin = sk;
     const l = localStorage.getItem('aurascale_lang'); S.lang = l === 'en' || l === 'hi' ? 'en' : 'bn';
-    const th = localStorage.getItem('as-theme');
+    const th = localStorage.getItem('as-theme') || localStorage.getItem('nh-theme');
     HOST.dataset.theme = th || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   } catch (e) { HOST.dataset.theme = 'light'; }
   S.role = 'owner'; S.view = ROLES.owner.home;
-  if (!ROLES.owner.nav.includes('classic')) ROLES.owner.nav.push('classic');
+  ROLES.owner.nav.splice(0, ROLES.owner.nav.length, 'dashboard', 'beds', 'patients', 'billing', 'bills', 'accounts', 'expenses', 'stock', 'notes', 'dsum', 'ayushman', 'compliance', 'staff', 'notif', 'import', 'audit', 'settings', 'subscription', 'help');
+  if (LIVE && LIVE.__locked) { SUB.srvLocked = true; S.view = 'subscription'; }
   HOST.lang = S.lang;
   extraHandlers();
   extraHandlers2();
@@ -4245,14 +4363,16 @@ Object.assign(T, {
   extraHandlers9();
   liveHandlers();
   liveHandlers2();
+  legHook();
   AuraUI.toast = (m, kind) => toast(esc(String(m || '')), kind || 'info');
   AuraUI.reload = () => liveReload(); AuraUI.go = v => go(v);
   HOST.dataset.skin = S.skin;
   S.loading = true; renderAll();
   LIVE_LOAD().then(() => { S.loading = false; renderAll(); }).catch(e => {
     console.error('AuraUI load', e); S.loading = false; LV.err = errMsg(e);
+    if (SUB.srvLocked) { LV.clinic = Object.assign({}, LIVE); liveExtra().catch(() => {}).then(() => renderAll()); return; }
     renderAll();
-    const m = $('main'); if (m) m.innerHTML = `<div class="card" style="max-width:560px;margin:40px auto;text-align:center;padding:28px"><h2>${t('loadErr')}</h2><p class="sub">${esc(LV.err)}</p><div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"><button class="btn btn-primary" onclick="location.reload()">${S.lang === 'bn' ? 'আবার চেষ্টা করুন' : 'Try again'}</button><button class="btn btn-secondary" data-act="classic">${t('navClassic')}</button></div></div>`;
+    const m = $('main'); if (m) m.innerHTML = `<div class="card" style="max-width:560px;margin:40px auto;text-align:center;padding:28px"><h2>${t('loadErr')}</h2><p class="sub">${esc(LV.err)}</p><div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"><button class="btn btn-primary" onclick="location.reload()">${S.lang === 'bn' ? 'আবার চেষ্টা করুন' : 'Try again'}</button></div></div>`;
   });
 })();
 
