@@ -2940,11 +2940,16 @@ async function _initApp(){
     if(_myRole==='owner'&&cl.data.business_type==='wholesale_pharmacy'){ goTo('wholesale.html',true); return; }
     /* role and facility are now known: this IS the owner portal, show it */
     showOwnerPortal();
-    if(auraIsLocked(cl.data.subscription_status, cl.data.subscription_expires_at)){ auraEnterLockMode(); return; }
+    if(auraIsLocked(cl.data.subscription_status, cl.data.subscription_expires_at)){
+      /* locked: the new design opens on the Subscription page only */
+      var _lkOn=false; try{ _lkOn=!!(window.AuraUI&&AuraUI.mount(Object.assign({},cl.data,{__locked:true}))); }catch(_le){ console.error('AuraUI',_le); try{AuraUI.unmount(false);}catch(_x){} }
+      if(!_lkOn) auraEnterLockMode();
+      return;
+    }
     if(typeof auraCheckAgreement==='function') auraCheckAgreement(cl.data.name);
     _auraAppReady=true;
-    /* new design (nh-ui.js); "Classic screens" in its menu returns to the old screens */
-    var _auiOn=false; try{ _auiOn=!!(window.AuraUI&&AuraUI.want()&&AuraUI.mount(cl.data)); }catch(_ue){ console.error('AuraUI',_ue); try{AuraUI.unmount(false);}catch(_x){} _auiOn=false; }
+    /* the owner portal's screens (nh-ui.js). The old screens show only if the new ones fail to start. */
+    var _auiOn=false; try{ _auiOn=!!(window.AuraUI&&AuraUI.mount(cl.data)); }catch(_ue){ console.error('AuraUI',_ue); try{AuraUI.unmount(false);}catch(_x){} _auiOn=false; }
     if(!_auiOn) loadDashboard();
     renderSubscriptionBanner();
   }catch(e){
@@ -5380,7 +5385,7 @@ async function auraPatientQuery(cols, limit, rawQ) {
 </script>
 <!-- FINAL BILL PDF (generate, store privately, download): one shared engine for reception and owner -->
 <script src="aura-nh-bill.js?v=2"></script>
-<script src="nh-ui.js?v=1"></script>
+<script src="nh-ui.js?v=2"></script>
 <script src="aura-scheme.js?v=2"></script>
 
 
