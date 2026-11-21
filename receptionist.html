@@ -351,6 +351,7 @@ main.content{flex:1;padding:20px;overflow-y:auto}
 <script src="aura-beds.js?v=1"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261018a"/>
 <script src="aura-themes.js?v=1"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@600&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -1427,6 +1428,9 @@ async function init(){
   document.getElementById('home-date-pill').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('loading').style.display='none';
   document.getElementById('app-shell').classList.add('on');
+  /* the reception portal's screens (nh-ui.js, same new design as the owner portal). The old screens show only if the new ones fail to start. */
+  var _auiOn=false; try{ _auiOn=!!(window.AuraUI&&AuraUI.mount(Object.assign({},_subCheck.data||{},{__role:'reception',__name:g.name||''}))); }catch(_ue){ console.error('AuraUI',_ue); try{AuraUI.unmount(false);}catch(_x){} _auiOn=false; }
+  if(_auiOn) return;
   nav('home',document.querySelector('.nb'));
   startRealtime();
 }
@@ -4954,5 +4958,6 @@ async function stockSaveFix() {
 <script src="aura-drop.js?v=1"></script>
 <script src="aura-attend.js?v=4"></script>
 <script src="nh-home.js?v=6"></script>
+<script src="nh-ui.js?v=5"></script>
 </body>
 </html>
