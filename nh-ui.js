@@ -9,7 +9,7 @@ AuraUI.mounted = false;
   if (document.getElementById('aura-ui-page-css')) return;
   var st = document.createElement('style'); st.id = 'aura-ui-page-css';
   st.textContent = 'body.aura-ui-on #app-shell{display:none!important}'
-    + 'body.aura-ui-on{background:#f6f7f5}'
+    + 'body.aura-ui-on{background:#f6f7f5;overflow:visible!important;overflow-x:clip!important;height:auto!important;min-height:100vh}'
     + 'body.aura-ui-on .mod-ov{z-index:1000!important}'
     + 'body.aura-ui-on .ap-ov,body.aura-ui-on .as-ov,body.aura-ui-on .aura-tp-ov{z-index:1001!important}'
     + 'body.aura-ui-on .toast,body.aura-ui-on #nh-toast{z-index:1002!important}'
@@ -3891,9 +3891,9 @@ function vDischarge(){
     <div class="dpr">${p ? `<section class="card setc dped"><div class="setc-h"><span class="setc-ic">${ic('edit', 20)}</span><div><h2>${t('dpEdit')}</h2><p>${esc(nm(p))}${p.bed ? ` · <span class="latin">${esc(p.bed)}</span>` : ''}</p></div><button class="btn btn-ghost btn-sm" data-act="dpReset">${t('dpReset')}</button></div>
         <div class="row2"><div class="field"><label for="dp-dx">${t('dpDx')}</label><input id="dp-dx" class="input" data-dp="dx" value="${esc(e.dx)}"></div>
         <div class="field"><label for="dp-cond">${t('dpCond')}</label><select id="dp-cond" class="input" data-dp="cond">${[['G', 'dpCondG'], ['F', 'dpCondF'], ['L', 'dpCondL'], ['R', 'dpCondR']].map(([v, k]) => `<option value="${v}" ${e.cond === v ? 'selected' : ''}>${t(k)}</option>`).join('')}</select></div></div>
-        <div class="field"><label for="dp-course">${t('dpCourse')}</label><textarea id="dp-course" class="input ta" rows="2" data-dp="course">${esc(e.course)}</textarea></div>
-        <div class="field"><label for="dp-adv">${t('dpAdv')}</label><textarea id="dp-adv" class="input ta" rows="2" data-dp="adv">${esc(e.adv)}</textarea></div>
-        <div class="row2"><div class="field"><label for="dp-home">${t('dpHome')}</label><textarea id="dp-home" class="input ta" rows="2" data-dp="home">${esc(e.home || '')}</textarea></div>
+        <div class="field"><label for="dp-course">${t('dpCourse')}</label><div class="micw"><textarea id="dp-course" class="input ta" rows="2" data-dp="course">${esc(e.course)}</textarea>${micBtn('dp-course')}</div></div>
+        <div class="field"><label for="dp-adv">${t('dpAdv')}</label><div class="micw"><textarea id="dp-adv" class="input ta" rows="2" data-dp="adv">${esc(e.adv)}</textarea>${micBtn('dp-adv')}</div></div>
+        <div class="row2"><div class="field"><label for="dp-home">${t('dpHome')}</label><div class="micw"><textarea id="dp-home" class="input ta" rows="2" data-dp="home">${esc(e.home || '')}</textarea>${micBtn('dp-home')}</div></div>
         <div class="field"><label for="dp-fu">${t('dpFu')}</label><input id="dp-fu" class="input latin" inputmode="numeric" maxlength="3" data-dp="fu" value="${esc(e.fu || '')}"></div></div>
         <div class="setbtns"><button class="btn btn-primary btn-lg grow" data-act="dpPrint">${ic('download')}${t('dpPrint')}</button>${!p.disc && (S.role === 'owner' || S.role === 'reception') ? `<button class="btn btn-secondary btn-lg" data-act="discharge" data-id="${p.id}">${ic('exit')}${t('dpDischarge')}</button>` : ''}</div><p class="dp-st" id="dpSt" aria-live="polite"></p></section>
       <div class="dpaper" id="dpPaper">${dsBody(p)}</div>` : `<div class="card">${emptyState('exit', t('dpPick'), '')}</div>`}</div>
@@ -4843,8 +4843,7 @@ Object.assign(IC, {chart:'<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>', 
 
 /* key -> old page id, the old menu name that loads its data, and what to do after it opens */
 const LEG = {
-  notes:{id:'v-rounds', nav:'rounds', icon:'note', t:'navNotes', s:'lgNotesS'},
-  ayushman:{id:'v-ayushman', nav:'ayushman', icon:'shield', t:'navAyu', s:'lgAyuS', act:() => `<button class="btn btn-secondary" data-act="lgClaims">${ic('receipt')}${t('lgClaims')}</button>`},
+  ayushman:{id:'v-ayushman', nav:'ayushman', icon:'shield', t:'navAyu', s:'lgAyuS', dev:true, act:() => `<button class="btn btn-secondary" data-act="lgClaims">${ic('receipt')}${t('lgClaims')}</button>`},
   families:{id:'v-patients', nav:'patients', icon:'users', t:'navFam', s:'lgFamS', back:'patients', after:() => { if (window.setPatientsView) window.setPatientsView('families'); }},
   stock:{id:'v-stock', nav:'stock', embed:true, only:'sb-panel'}
 };
@@ -4863,8 +4862,8 @@ function legShow(k){
   legShow.done[k] = true;
 }
 const legView = k => () => { const L = LEG[k];
-  return `${L.back ? `<p class="crumb"><button class="link" data-act="nav" data-v="${L.back}">${ic('chevR', 14).replace('class="ic"', 'class="ic" style="transform:rotate(180deg)"')}${t('plT')}</button></p>` : ''}<div class="ph"><div><h1>${t(L.t)}</h1><p class="sub">${t(L.s)}</p></div>${L.act ? `<div class="ph-actions">${L.act()}</div>` : ''}</div><div class="lg-host" id="lgHost"><slot name="lg"></slot></div>`; };
-['notes', 'ayushman', 'families'].forEach(k => { VIEWS[k] = legView(k); NAVI[k] = [LEG[k].icon, LEG[k].t]; });
+  return `${L.back ? `<p class="crumb"><button class="link" data-act="nav" data-v="${L.back}">${ic('chevR', 14).replace('class="ic"', 'class="ic" style="transform:rotate(180deg)"')}${t('plT')}</button></p>` : ''}<div class="ph"><div><h1>${t(L.t)}</h1><p class="sub">${t(L.s)}</p></div>${L.act ? `<div class="ph-actions">${L.act()}</div>` : ''}</div>${L.dev ? devNote() : ''}<div class="lg-host" id="lgHost"><slot name="lg"></slot></div>`; };
+['ayushman', 'families'].forEach(k => { VIEWS[k] = legView(k); NAVI[k] = [LEG[k].icon, LEG[k].t]; });
 /* staff and stock: the new page first, then the old working part below it */
 const _vStock = VIEWS.stock;
 VIEWS.stock = () => _vStock() + `<div class="lg-host lg-under" id="lgHost"><slot name="lg"></slot></div>`;
@@ -5178,6 +5177,141 @@ function liveHandlers3(){
   ROOT.addEventListener('change', e => { const el = e.target; if (el.dataset && el.dataset.dp && S.dpId) { const p = getP(S.dpId); if (p) dpQueue(p); } });
 }
 
+/* ---------- progress notes (new design), Ayushman "in development" notice, voice typing ---------- */
+Object.assign(T, {
+  ntT:['প্রগ্রেস নোট','Progress notes'], ntSub:['বাঁদিকে রোগী বাছুন — ডানদিকে আজকের নোট লিখুন, আগের সব নোট নিচে','Pick a patient on the left — write today’s note on the right, earlier notes below'],
+  ntTodo:['আজ নোট লেখা হয়নি','No note yet today'], ntDone:['আজ নোট লেখা হয়েছে','Note written today'], ntNoneAdm:['এখন কোনো রোগী ভর্তি নেই','No patients admitted right now'],
+  ntNew:['নতুন নোট','New note'], ntDoc:['ডাক্তার / যিনি দেখলেন','Doctor / seen by'], ntBp:['রক্তচাপ (BP)','Blood pressure'], ntPulse:['পালস','Pulse'], ntTemp:['তাপমাত্রা °F','Temp °F'], ntSpo2:['SpO₂ %','SpO₂ %'], ntWt:['ওজন কেজি','Weight kg'],
+  ntS:['রোগীর অবস্থা / কী দেখা গেল','Condition / findings'], ntSPh:['যেমন: জ্বর কমেছে, খাওয়া-দাওয়া ঠিক আছে, কাশি একটু আছে','e.g. Fever down, eating well, mild cough'],
+  ntP:['চিকিৎসা ও পরিকল্পনা','Treatment & plan'], ntPPh:['যেমন: স্যালাইন বন্ধ, Tab PCM 500 দিনে ৩ বার, কাল আবার CBC','e.g. Stop IV fluids, Tab PCM 500 TDS, repeat CBC tomorrow'],
+  ntSave:['নোট সেভ করুন','Save note'], ntSaved:['নোট সেভ হয়েছে — {n}','Note saved — {n}'], ntErr:['অবস্থা বা পরিকল্পনা — অন্তত একটা লিখুন','Write the condition or the plan — at least one'],
+  ntBpErr:['রক্তচাপ এভাবে লিখুন: 120/80','Write BP like 120/80'],
+  ntHist:['আগের নোট','Earlier notes'], ntNo:['এখনও কোনো নোট নেই — প্রথম নোটটি লিখুন','No notes yet — write the first one'], ntToday:['আজ','Today'], ntBy:['লিখেছেন {n}','By {n}'],
+  ntAdmDay:['ভর্তির {n} দিন','Day {n} of stay'], ntOpenPat:['রোগীর পাতা','Patient page'], ntCount:['{n}টি নোট','{n} notes'],
+  devT:['এই অংশটি এখনও তৈরি হচ্ছে (ডেভেলপমেন্ট পর্যায়ে)','This part is still being built (in development)'],
+  devS:['আয়ুষ্মান / স্কিমের কাজ এখনও পুরোপুরি তৈরি হয়নি। দেখে নিতে পারেন, কিন্তু এখনই এর উপর ভরসা করে ক্লেমের কাজ করবেন না। তৈরি হলে আমরা জানিয়ে দেব।','Ayushman / scheme work is not finished yet. You can look around, but don’t rely on it for claims yet. We’ll let you know when it’s ready.'],
+  micA:['মুখে বলুন — বাংলা বা ইংরেজি, যেভাবে খুশি','Speak — Bengali or English, any mix'], micOn:['বলুন… শেষ হলে আবার মাইক চাপুন','Speak… tap the mic again when done'], micBusy:['লেখা হচ্ছে…','Writing it down…'],
+  micNoPerm:['মাইক ব্যবহারের অনুমতি দেওয়া নেই — ব্রাউজারের ঠিকানা বারের তালা চিহ্নে চাপুন','Microphone permission is off — tap the lock in the browser’s address bar'],
+  micNoSup:['এই ব্রাউজারে মাইক থেকে লেখা চলে না — Chrome ব্যবহার করুন','Voice typing does not work in this browser — use Chrome'],
+  micOff:['ভয়েস লেখা এখনও চালু হয়নি — AuraScale-কে জানান','Voice typing is not switched on yet — tell AuraScale'], micEmpty:['কিছু শোনা যায়নি — আবার বলুন','Nothing heard — please try again'],
+  micFail:['লেখা গেল না — আবার চেষ্টা করুন','Could not write it — try again'], micMax:['৩০ সেকেন্ড হয়ে গেছে — এটুকু লেখা হচ্ছে','30 seconds reached — writing this part']
+});
+Object.assign(IC, {mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>', stopsq:'<rect x="7" y="7" width="10" height="10" rx="2"/>'});
+NAVI.notes = ['note', 'ntT'];
+const devNote = () => `<div class="devnote" role="status"><span class="devic">${ic('alert', 20)}</span><div><b>${t('devT')}</b><p>${t('devS')}</p></div></div>`;
+
+/* ---------- voice typing ---------- */
+const MIC = {rec:null, stream:null, chunks:[], target:null, busy:false, tm:null};
+const micBtn = id => `<button type="button" class="micb${MIC.target === id ? (MIC.busy ? ' busy' : ' on') : ''}" data-act="mic" data-v="${id}" aria-label="${t('micA')}" title="${t('micA')}">${ic(MIC.target === id && !MIC.busy ? 'stopsq' : 'mic', 18)}</button>`;
+function micPaint(){ ROOT.querySelectorAll('.micb').forEach(b => { const on = MIC.target === b.dataset.v; b.classList.toggle('on', on && !MIC.busy); b.classList.toggle('busy', on && MIC.busy); b.innerHTML = ic(on && !MIC.busy ? 'stopsq' : 'mic', 18); }); }
+function micStop(){ clearTimeout(MIC.tm); try { if (MIC.rec && MIC.rec.state !== 'inactive') MIC.rec.stop(); } catch (e) {} }
+function micDrop(){ try { MIC.stream && MIC.stream.getTracks().forEach(x => x.stop()); } catch (e) {} MIC.rec = null; MIC.stream = null; MIC.target = null; MIC.busy = false; micPaint(); }
+async function micStart(id){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof window.MediaRecorder === 'undefined') { toast(t('micNoSup'), 'info'); return; }
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}); } catch (e) { toast(t('micNoPerm'), 'info'); return; }
+  const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'].find(m => { try { return MediaRecorder.isTypeSupported(m); } catch (e) { return false; } }) || '';
+  const rec = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream);
+  Object.assign(MIC, {rec, stream, chunks:[], target:id, busy:false});
+  rec.ondataavailable = e => { if (e.data && e.data.size) MIC.chunks.push(e.data); };
+  rec.onstop = () => micSend(id, new Blob(MIC.chunks, {type:rec.mimeType || mime || 'audio/webm'}));
+  rec.start(); micPaint(); toast(t('micOn'), 'info');
+  MIC.tm = setTimeout(() => { toast(t('micMax'), 'info'); micStop(); }, 29000);
+}
+async function micSend(id, blob){
+  try { MIC.stream && MIC.stream.getTracks().forEach(x => x.stop()); } catch (e) {}
+  if (!blob || blob.size < 1500) { micDrop(); toast(t('micEmpty'), 'info'); return; }
+  MIC.busy = true; micPaint();
+  try {
+    const b64 = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = no; r.readAsDataURL(blob); });
+    const r = await SB().functions.invoke('voice-transcribe', {body:{audio:b64, mime:blob.type, clinic_id:CID()}});
+    if (r.error) { const st = r.error.context && r.error.context.status; toast(st === 404 || st === 503 ? t('micOff') : t('micFail'), 'info'); return; }
+    const tx = String((r.data && r.data.text) || '').trim(); if (!tx) { toast(t('micEmpty'), 'info'); return; }
+    const el = ROOT.getElementById(id); if (!el) return;
+    const foc = ROOT.activeElement === el, v = el.value, a = foc && el.selectionStart != null ? el.selectionStart : v.length, e2 = foc && el.selectionEnd != null ? el.selectionEnd : a;
+    const pre = v.slice(0, a), sp = pre && !/\s$/.test(pre) ? ' ' : '';
+    el.value = pre + sp + tx + v.slice(e2); el.dispatchEvent(new Event('input', {bubbles:true}));
+    try { el.focus({preventScroll:true}); const c = (pre + sp + tx).length; el.setSelectionRange(c, c); } catch (e) {}
+  } catch (e) { toast(t('micFail'), 'info'); }
+  finally { micDrop(); }
+}
+
+/* ---------- progress notes page ---------- */
+S.ntId = null; S.nt = {doc:'', bp:'', pulse:'', temp:'', spo2:'', wt:'', s:'', p:'', err:''};
+const ntRows = id => ((LV.maps && LV.maps[2] && LV.maps[2][id]) || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+const ntToday = id => ntRows(id).some(n => ymd(new Date(n.created_at)) === ymd(new Date()));
+function vNotes(){
+  const act = P.filter(p => !p.disc).sort((a, b) => String(a.bed).localeCompare(String(b.bed), 'en', {numeric:true}));
+  if (!S.ntId || !act.some(p => p.id === S.ntId)) S.ntId = (act.find(p => !ntToday(p.id)) || act[0] || {}).id || null;
+  const todo = act.filter(p => !ntToday(p.id)), done = act.filter(p => ntToday(p.id)), p = S.ntId ? getP(S.ntId) : null, f = S.nt;
+  const item = p2 => { const n = ntRows(p2.id).length; return `<button class="dpi ${S.ntId === p2.id ? 'on' : ''}" data-act="ntPick" data-id="${p2.id}" aria-pressed="${S.ntId === p2.id}">${avatar(p2)}<span class="tt"><b>${esc(nm(p2))}</b><small>${p2.bed ? `<span class="latin">${esc(p2.bed)}</span> · ` : ''}${p2.reason[li()] ? esc(p2.reason[li()]) + ' · ' : ''}${daysTxt(Math.max(1, p2.days))}</small></span>${n ? `<span class="nt-c">${num(n)}</span>` : ''}</button>`; };
+  const grp = (k, L, cls) => L.length ? `<div class="dpg"><h3>${t(k)} <span class="${cls || ''}">${num(L.length)}</span></h3>${L.map(item).join('')}</div>` : '';
+  const docs = Object.keys(DOC || {}).map(k => docName(k)).filter((v, i, a) => v && v !== '—' && a.indexOf(v) === i);
+  const fld = (k, l, ph, w) => `<div class="field nt-v"><label for="nt-${k}">${t(l)}</label><input id="nt-${k}" class="input latin" inputmode="${k === 'bp' ? 'text' : 'decimal'}" maxlength="${w || 6}" data-nt="${k}" value="${esc(f[k])}" placeholder="${ph}"></div>`;
+  const rows = p ? ntRows(p.id) : [];
+  const ok = v => v != null && v !== '' && !isNaN(+v);
+  const pill = (lab, v, ab) => `<span class="vpill ${ab ? 'ab' : ''}"><small>${lab}</small><b class="latin">${esc(v)}</b></span>`;
+  const note = n => { const at = new Date(n.created_at), bp = String(n.bp || '').split('/'), sys = +bp[0], dia = +bp[1];
+    const vit = [n.bp ? pill('BP', n.bp, (sys && vAb.sys(sys)) || (dia && vAb.dia(dia))) : '', ok(n.pulse) ? pill(t('ntPulse'), n.pulse, vAb.pulse(+n.pulse)) : '', ok(n.temperature) ? pill('°F', n.temperature, vAb.temp(+n.temperature)) : '', ok(n.spo2) ? pill('SpO₂', n.spo2 + '%', vAb.spo2(+n.spo2)) : '', ok(n.weight) ? pill(S.lang === 'bn' ? 'ওজন' : 'Wt', n.weight + ' kg', false) : ''].join('');
+    return `<li class="nt-i"><span class="nt-dot" aria-hidden="true"></span><div class="nt-b"><div class="nt-h"><b>${ymd(at) === ymd(new Date()) ? t('ntToday') : fdate(at, {day:'numeric', month:'short'})}, ${tm(at)}</b><span>${n.doctor_name ? t('ntBy', {n:esc(n.doctor_name)}) : ''}</span></div>
+      ${vit ? `<div class="vpills">${vit}</div>` : ''}${n.subjective ? `<p><span class="nt-k">${t('ntS')}</span>${esc(n.subjective).replace(/\n/g, '<br>')}</p>` : ''}${n.plan ? `<p><span class="nt-k">${t('ntP')}</span>${esc(n.plan).replace(/\n/g, '<br>')}</p>` : ''}</div></li>`; };
+  return `<div class="ph"><div><h1>${t('ntT')}</h1><p class="sub">${t('ntSub')}</p></div></div>
+  <div class="dpw ntw">
+    <aside class="card dpl">${act.length ? grp('ntTodo', todo, 'nt-warn') + grp('ntDone', done) : `<p class="nf-none">${t('ntNoneAdm')}</p>`}</aside>
+    <div class="dpr">${p ? `<section class="card setc"><div class="setc-h"><span class="setc-ic">${ic('note', 20)}</span><div><h2>${t('ntNew')}</h2><p>${esc(nm(p))}${p.bed ? ` · <span class="latin">${esc(p.bed)}</span>` : ''} · ${t('ntAdmDay', {n:num(Math.max(1, p.days))})}</p></div><button class="btn btn-ghost btn-sm" data-act="open" data-id="${p.id}">${t('ntOpenPat')}</button></div>
+        <div class="field"><label for="nt-doc">${t('ntDoc')}</label><input id="nt-doc" class="input" data-nt="doc" list="nt-docs" value="${esc(f.doc)}" autocomplete="off"><datalist id="nt-docs">${docs.map(d => `<option value="${esc(d)}">`).join('')}</datalist></div>
+        <div class="nt-vg">${fld('bp', 'ntBp', '120/80', 7)}${fld('pulse', 'ntPulse', '80', 3)}${fld('temp', 'ntTemp', '98.6', 5)}${fld('spo2', 'ntSpo2', '98', 3)}${fld('wt', 'ntWt', '60', 5)}</div>
+        <div class="field"><label for="nt-s">${t('ntS')}</label><div class="micw"><textarea id="nt-s" class="input ta" rows="3" data-nt="s" placeholder="${t('ntSPh')}">${esc(f.s)}</textarea>${micBtn('nt-s')}</div></div>
+        <div class="field"><label for="nt-p">${t('ntP')}</label><div class="micw"><textarea id="nt-p" class="input ta" rows="3" data-nt="p" placeholder="${t('ntPPh')}">${esc(f.p)}</textarea>${micBtn('nt-p')}</div></div>
+        ${f.err ? `<p class="setmsg bad">${ic('alert', 15)}${t(f.err)}</p>` : ''}
+        <div class="setbtns"><button class="btn btn-primary btn-lg grow" data-act="ntSave">${ic('check')}${t('ntSave')}</button></div></section>
+      <section class="card"><div class="card-h"><h2>${t('ntHist')}</h2><span class="meta">${t('ntCount', {n:num(rows.length)})}</span></div>${rows.length ? `<ul class="nt-tl">${rows.map(note).join('')}</ul>` : `<p class="nf-none">${t('ntNo')}</p>`}</section>`
+      : `<div class="card">${emptyState('note', t('ntNoneAdm'), '')}</div>`}</div>
+  </div>`;
+}
+VIEWS.notes = vNotes;
+
+function liveHandlers4(){
+  const st = document.createElement('style');
+  st.textContent = `.devnote{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin:0 0 18px;border-radius:14px;background:#FFF4DB;border:1px solid #F2D28B;color:#6B4A00}
+  .devnote b{display:block;font-size:15px;margin-bottom:2px}.devnote p{margin:0;font-size:13.5px;line-height:1.5}.devic{flex:none;color:#B7791F;margin-top:1px}
+  :host([data-theme="dark"]) .devnote{background:#2B2210;border-color:#5C4718;color:#F3D9A4}
+  .micw{position:relative}.micw .ta{padding-right:52px}
+  .micb{position:absolute;right:8px;bottom:8px;width:38px;height:38px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface);color:var(--brand-ink,var(--brand));display:grid;place-items:center;cursor:pointer;transition:background .15s,transform .15s}
+  .micb:hover{background:var(--brand-50,#E6F4EE)}.micb svg{width:18px;height:18px}
+  .micb.on{background:#D92D20;border-color:#D92D20;color:#fff;animation:micp 1.2s ease-in-out infinite}
+  .micb.busy{opacity:.7;cursor:progress;animation:micr 1s linear infinite}
+  @keyframes micp{50%{box-shadow:0 0 0 7px rgba(217,45,32,.18)}}@keyframes micr{to{transform:rotate(360deg)}}
+  .nt-vg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.nt-vg .field{margin:0 0 14px}
+  @media (max-width:700px){.nt-vg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .nt-c{margin-left:auto;font-size:12px;font-weight:600;color:var(--text-3);background:var(--surface-2,#F1F4F2);border-radius:999px;padding:2px 8px}
+  .dpg h3 .nt-warn{background:#FDECEA;color:#B42318}
+  .nt-tl{list-style:none;margin:0;padding:4px 18px 10px}
+  .nt-i{display:grid;grid-template-columns:14px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}.nt-i:last-child{border-bottom:0}
+  .nt-dot{width:10px;height:10px;border-radius:50%;background:var(--brand);margin-top:6px;box-shadow:0 0 0 4px var(--brand-50,#E6F4EE)}
+  .nt-h{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:14px}.nt-h span{color:var(--text-3);font-size:13px}
+  .nt-b p{margin:8px 0 0;font-size:14px;line-height:1.55}.nt-k{display:block;font-size:12px;font-weight:600;color:var(--text-3);margin-bottom:1px}
+  .vpills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.vpill{display:inline-flex;align-items:baseline;gap:5px;padding:3px 9px;border-radius:8px;background:var(--surface-2,#F1F4F2);font-size:13px}
+  .vpill small{color:var(--text-3);font-size:11.5px}.vpill.ab{background:#FDECEA;color:#B42318}.vpill.ab small{color:#B42318}
+  :host([data-theme="dark"]) .vpill.ab,:host([data-theme="dark"]) .dpg h3 .nt-warn{background:#3A1A17;color:#F7A9A0}`;
+  ROOT.appendChild(st);
+  ROOT.addEventListener('input', e => { const el = e.target; if (el.dataset && el.dataset.nt) { S.nt[el.dataset.nt] = el.value; if (S.nt.err) { S.nt.err = ''; } } });
+  Object.assign(H, {
+    ntPick: el => { if (MIC.target) micStop(); S.ntId = el.dataset.id; S.nt = {doc:S.nt.doc, bp:'', pulse:'', temp:'', spo2:'', wt:'', s:'', p:'', err:''}; renderMain(); const r = ROOT.querySelector('.ntw .dpr'); if (r && window.innerWidth < 900) r.scrollIntoView({block:'start'}); else window.scrollTo(0, 0); },
+    ntSave: async el => {
+      const f = S.nt, p = getP(S.ntId); if (!p) return;
+      if (!f.s.trim() && !f.p.trim()) { f.err = 'ntErr'; renderMain(); return; }
+      if (f.bp.trim() && !/^\d{2,3}\s*\/\s*\d{2,3}$/.test(f.bp.trim())) { f.err = 'ntBpErr'; renderMain(); return; }
+      busy(el, true);
+      const row = {clinic_id:CID(), admission_id:p.id, patient_id:p.row && p.row.patient_id || null, created_by:UID(), doctor_name:f.doc.trim() || null, bp:f.bp.replace(/\s/g, '') || null, temperature:f.temp.trim() || null, spo2:f.spo2.trim() || null, pulse:f.pulse.trim() || null, weight:f.wt.trim() || null, subjective:f.s.trim() || null, plan:f.p.trim() || null, note_date:ymd(new Date())};
+      const r = await SB().from('progress_notes').insert(row);
+      if (r.error) { busy(el, false); toast(t('saveErr') + ' ' + esc(errMsg(r.error)), 'info'); return; }
+      audLog('progress_note_added', 'admissions', p.id, {doctor:row.doctor_name});
+      S.nt = {doc:f.doc, bp:'', pulse:'', temp:'', spo2:'', wt:'', s:'', p:'', err:''}; await liveReload(); toast(t('ntSaved', {n:esc(nm(p))}), 'success');
+    },
+    mic: el => { const id = el.dataset.v; if (MIC.busy) return; if (MIC.target === id) { micStop(); return; } if (MIC.target) micStop(); micStart(id); }
+  });
+}
+
 /* ---------- Boot ---------- */
 (function boot(){
   try {
@@ -5206,6 +5340,7 @@ function liveHandlers3(){
   liveHandlers();
   liveHandlers2();
   liveHandlers3();
+  liveHandlers4();
   legHook();
   AuraUI.toast = (m, kind) => toast(esc(String(m || '')), kind || 'info');
   AuraUI.reload = () => liveReload(); AuraUI.go = v => go(v);
