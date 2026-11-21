@@ -16,6 +16,7 @@
 <script src="aura-biz.js?v=1"></script>
 <script src="nh-shared.js?v=20261019z"></script>
 <script src="aura-dept.js?v=20261106g"></script>
+<script src="ph-ui.js?v=1"></script>
 <script src="aura-loader.js?v=2"></script>
 <link rel="stylesheet" href="aura-theme.css?v=20261021a"/>
 <script src="aura-themes.js?v=1"></script>
@@ -301,6 +302,17 @@ function ph() { return DEPT.clinic.ph_settings || {}; }
 
 async function init() {
   var ok = await deptInit('pharmacy', 'Pharmacy'); if (!ok) return;
+  /* the new design (ph-ui.js); the old screens stay underneath for "Old design" and as a safety net */
+  if (window.AuraPH && !AuraPH.classic()) {
+    try { AuraPH.mount({ role: DEPT.role, name: (typeof _myName !== 'undefined' && _myName) || '' }); return; }
+    catch (e) { console.error('new design', e); try { AuraPH.unmount(); } catch (e2) {} }
+  }
+  await initClassic();
+}
+var _classicDone = false;
+async function initClassic() {
+  if (_classicDone) { deptStartTab('pos'); return; }
+  _classicDone = true;
   setupNote();
   await Promise.all([loadMeds(), deptLoadAdmissions()]);
   dEl('c-adm').innerHTML = deptAdmissionOptions();
